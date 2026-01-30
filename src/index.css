@@ -178,13 +178,30 @@ body {
 
 /* Border Beam */
 @keyframes border-beam {
+  0% {
+    offset-distance: 0%;
+  }
   100% {
     offset-distance: 100%;
   }
 }
 
 .animate-border-beam {
-  animation: border-beam 4s linear infinite;
+  animation: border-beam var(--duration, 12s) infinite linear;
+}
+
+/* Spotlight Rotate */
+@keyframes spotlight-rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spotlight-rotate {
+  animation: spotlight-rotate 8s linear infinite;
 }
 
 /* Float Animation */

@@ -1,5 +1,6 @@
-import { cn } from '../../lib/utils'
 import { motion } from 'framer-motion'
+import { cn } from '../../lib/utils'
+import { SpotlightCard } from './spotlight-card'
 
 interface BentoGridProps {
   children: React.ReactNode
@@ -10,8 +11,7 @@ export function BentoGrid({ children, className }: BentoGridProps) {
   return (
     <div
       className={cn(
-        'grid gap-4 auto-rows-[minmax(180px,auto)]',
-        'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4',
+        'grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 auto-rows-[minmax(120px,auto)]',
         className
       )}
     >
@@ -23,9 +23,11 @@ export function BentoGrid({ children, className }: BentoGridProps) {
 interface BentoGridItemProps {
   children: React.ReactNode
   className?: string
-  colSpan?: 1 | 2
-  rowSpan?: 1 | 2
+  colSpan?: 1 | 2 | 3 | 4
+  rowSpan?: 1 | 2 | 3
+  spotlightColor?: string
   onClick?: () => void
+  delay?: number
 }
 
 export function BentoGridItem({
@@ -33,50 +35,83 @@ export function BentoGridItem({
   className,
   colSpan = 1,
   rowSpan = 1,
+  spotlightColor,
   onClick,
+  delay = 0,
 }: BentoGridItemProps) {
+  const colSpanClasses = {
+    1: 'col-span-1',
+    2: 'col-span-1 md:col-span-2',
+    3: 'col-span-2 md:col-span-3',
+    4: 'col-span-2 md:col-span-4',
+  }
+
+  const rowSpanClasses = {
+    1: 'row-span-1',
+    2: 'row-span-2',
+    3: 'row-span-3',
+  }
+
   return (
     <motion.div
-      className={cn(
-        'relative group rounded-2xl overflow-hidden',
-        'bg-[#0d0d14]/80 backdrop-blur-xl',
-        'border border-white/5 hover:border-white/10',
-        'transition-all duration-500',
-        colSpan === 2 && 'sm:col-span-2',
-        rowSpan === 2 && 'row-span-2',
-        className
-      )}
-      onClick={onClick}
+      className={cn(colSpanClasses[colSpan], rowSpanClasses[rowSpan])}
       initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      whileHover={{ 
-        scale: 1.02,
-        transition: { duration: 0.3 }
-      }}
-      whileTap={{ scale: 0.98 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay, duration: 0.4, ease: 'easeOut' }}
     >
-      {/* Hover Glow */}
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-br from-nebula-purple/10 via-transparent to-nebula-pink/10" />
-      </div>
-
-      {/* Animated Border */}
-      <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none">
-        <div 
-          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-          style={{
-            background: 'linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.3), transparent)',
-            backgroundSize: '200% 100%',
-            animation: 'shimmer 2s linear infinite',
-          }}
-        />
-      </div>
-
-      {/* Content */}
-      <div className="relative z-10 h-full p-6">
+      <SpotlightCard
+        className={cn('h-full', className)}
+        spotlightColor={spotlightColor}
+        onClick={onClick}
+      >
         {children}
-      </div>
+      </SpotlightCard>
     </motion.div>
+  )
+}
+
+// 预设的 Bento 布局模板
+export function BentoHeroLayout({
+  heroContent,
+  sideContent,
+  gridItems,
+}: {
+  heroContent: React.ReactNode
+  sideContent?: React.ReactNode
+  gridItems: React.ReactNode[]
+}) {
+  return (
+    <div className="space-y-4">
+      {/* Top Row - Hero + Side */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <motion.div
+          className="lg:col-span-2"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <SpotlightCard className="h-full min-h-[200px]" size="lg">
+            {heroContent}
+          </SpotlightCard>
+        </motion.div>
+        
+        {sideContent && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1, duration: 0.5 }}
+          >
+            <SpotlightCard className="h-full min-h-[200px]" size="lg">
+              {sideContent}
+            </SpotlightCard>
+          </motion.div>
+        )}
+      </div>
+
+      {/* Grid Items */}
+      <BentoGrid>
+        {gridItems}
+      </BentoGrid>
+    </div>
   )
 }

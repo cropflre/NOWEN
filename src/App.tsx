@@ -5,7 +5,6 @@ import {
   Search, 
   Home, 
   Bookmark as BookmarkIcon, 
-  Settings, 
   Github, 
   Code2, 
   Zap,
@@ -17,28 +16,34 @@ import {
   BookMarked,
   Edit2,
   Trash2,
-  Command
+  Command,
+  LayoutDashboard
 } from 'lucide-react'
 import { AuroraBackground } from './components/ui/aurora-background'
 import { Card3D, CardItem } from './components/ui/3d-card'
 import { BentoGrid, BentoGridItem } from './components/ui/bento-grid'
+import { SpotlightCard } from './components/ui/spotlight-card'
 import { FloatingDock } from './components/ui/floating-dock'
 import { SpotlightSearch } from './components/ui/spotlight-search'
 import { Typewriter } from './components/ui/typewriter'
 import { Meteors, Sparkles } from './components/ui/effects'
+import { BorderBeam, BreathingDot } from './components/ui/advanced-effects'
 import { AddBookmarkModal } from './components/AddBookmarkModal'
+import { Admin } from './pages/Admin'
+import { AdminLogin } from './components/AdminLogin'
 import { useBookmarkStore } from './hooks/useBookmarkStore'
 import { useTheme } from './hooks/useTheme'
 import { useTime } from './hooks/useTime'
-import { Bookmark, Category } from './types/bookmark'
+import { Bookmark } from './types/bookmark'
 import { cn } from './lib/utils'
+import { checkAuthStatus, clearAuthStatus } from './lib/api'
 
 // Dock 导航项
 const dockItems = [
   { id: 'home', title: '首页', icon: <Home className="w-5 h-5" /> },
   { id: 'search', title: '搜索', icon: <Search className="w-5 h-5" /> },
   { id: 'add', title: '添加', icon: <Plus className="w-5 h-5" /> },
-  { id: 'bookmarks', title: '书签', icon: <BookmarkIcon className="w-5 h-5" /> },
+  { id: 'admin', title: '管理', icon: <LayoutDashboard className="w-5 h-5" /> },
   { id: 'github', title: 'GitHub', icon: <Github className="w-5 h-5" />, href: 'https://github.com' },
 ]
 
@@ -52,11 +57,13 @@ const categoryIcons: Record<string, React.ReactNode> = {
 }
 
 function App() {
+  const [currentPage, setCurrentPage] = useState<'home' | 'admin' | 'admin-login'>('home')
   const [isSpotlightOpen, setIsSpotlightOpen] = useState(false)
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [editingBookmark, setEditingBookmark] = useState<Bookmark | null>(null)
   const [pendingUrl, setPendingUrl] = useState('')
   const [hoveredCard, setHoveredCard] = useState<string | null>(null)
+  const [adminUsername, setAdminUsername] = useState<string>('')
 
   const { greeting, formattedTime, formattedDate } = useTime()
 
@@ -70,6 +77,9 @@ function App() {
     deleteBookmark,
     togglePin,
     toggleReadLater,
+    addCategory,
+    updateCategory,
+    deleteCategory,
   } = useBookmarkStore()
 
   useTheme()
@@ -91,16 +101,50 @@ function App() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
 
+  // 检查是否已登录后台
+  const checkAdminAuth = () => {
+    const { isValid, username } = checkAuthStatus()
+    if (isValid && username) {
+      setAdminUsername(username)
+      return true
+    }
+    return false
+  }
+
   // Dock 点击处理
   const handleDockClick = (id: string) => {
     switch (id) {
+      case 'home':
+        setCurrentPage('home')
+        break
       case 'search':
         setIsSpotlightOpen(true)
         break
       case 'add':
         setIsAddModalOpen(true)
         break
+      case 'admin':
+        // 检查登录状态
+        if (checkAdminAuth()) {
+          setCurrentPage('admin')
+        } else {
+          setCurrentPage('admin-login')
+        }
+        break
     }
+  }
+
+  // 后台登录成功
+  const handleAdminLogin = (username: string) => {
+    setAdminUsername(username)
+    setCurrentPage('admin')
+  }
+
+  // 后台退出登录
+  const handleAdminLogout = () => {
+    clearAuthStatus()
+    setAdminUsername('')
+    setCurrentPage('home')
   }
 
   // 书签操作
@@ -134,6 +178,55 @@ function App() {
     return acc
   }, {} as Record<string, Bookmark[]>)
 
+  // 后台登录页面
+  if (currentPage === 'admin-login') {
+    return (
+      <AdminLogin
+        onLogin={handleAdminLogin}
+        onBack={() => setCurrentPage('home')}
+      />
+    )
+  }
+
+  // 后台管理页面
+  if (currentPage === 'admin') {
+    return (
+      <>
+        <Admin
+          bookmarks={bookmarks}
+          categories={categories}
+          username={adminUsername}
+          onBack={() => setCurrentPage('home')}
+          onLogout={handleAdminLogout}
+          onAddBookmark={() => setIsAddModalOpen(true)}
+          onEditBookmark={(bookmark) => {
+            setEditingBookmark(bookmark)
+            setIsAddModalOpen(true)
+          }}
+          onDeleteBookmark={deleteBookmark}
+          onTogglePin={togglePin}
+          onToggleReadLater={toggleReadLater}
+          onUpdateBookmark={updateBookmark}
+          onAddCategory={addCategory}
+          onUpdateCategory={updateCategory}
+          onDeleteCategory={deleteCategory}
+        />
+        <AddBookmarkModal
+          isOpen={isAddModalOpen}
+          onClose={() => {
+            setIsAddModalOpen(false)
+            setEditingBookmark(null)
+            setPendingUrl('')
+          }}
+          onAdd={handleSaveBookmark}
+          categories={categories}
+          initialUrl={pendingUrl}
+          editBookmark={editingBookmark}
+        />
+      </>
+    )
+  }
+
   return (
     <AuroraBackground>
       {/* Meteors Effect */}
@@ -157,15 +250,15 @@ function App() {
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.2 }}
             >
-              <div className="text-7xl sm:text-8xl lg:text-9xl font-light tracking-tight text-white/90 font-mono">
+              <div className="text-7xl sm:text-8xl lg:text-9xl font-semibold tracking-tighter text-white/90 font-mono">
                 {formattedTime}
               </div>
-              <div className="text-lg text-white/40 mt-2">{formattedDate}</div>
+              <div className="text-base tracking-[0.2em] uppercase text-white/30 mt-3">{formattedDate}</div>
             </motion.div>
 
             {/* Greeting with Typewriter */}
             <motion.h1
-              className="text-3xl sm:text-4xl lg:text-5xl font-serif font-medium text-white mb-6"
+              className="text-2xl sm:text-3xl lg:text-4xl font-serif font-medium text-white/80 mb-8 tracking-wide"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4 }}
@@ -185,22 +278,30 @@ function App() {
               </Sparkles>
             </motion.h1>
 
-            {/* Search Hint */}
-            <motion.button
-              onClick={() => setIsSpotlightOpen(true)}
-              className="inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all duration-300 group"
+            {/* Search Hint - 带 Border Beam */}
+            <motion.div
+              className="relative inline-block"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
             >
-              <Search className="w-4 h-4 text-white/40 group-hover:text-white/60" />
-              <span className="text-white/40 group-hover:text-white/60">搜索或输入命令...</span>
-              <kbd className="px-2 py-1 rounded bg-white/5 text-xs text-white/30 flex items-center gap-1">
-                <Command className="w-3 h-3" /> K
-              </kbd>
-            </motion.button>
+              <button
+                onClick={() => setIsSpotlightOpen(true)}
+                className="relative inline-flex items-center gap-3 px-6 py-3.5 rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] hover:border-white/20 transition-all duration-300 group overflow-hidden"
+              >
+                <BorderBeam 
+                  size={80} 
+                  duration={10} 
+                  colorFrom="rgba(102, 126, 234, 0.6)" 
+                  colorTo="rgba(0, 242, 254, 0.6)" 
+                />
+                <Search className="w-4 h-4 text-white/40 group-hover:text-white/60" />
+                <span className="text-white/40 group-hover:text-white/60 tracking-wide">搜索或输入命令...</span>
+                <kbd className="px-2 py-1 rounded bg-white/5 text-xs text-white/30 flex items-center gap-1 ml-2">
+                  <Command className="w-3 h-3" /> K
+                </kbd>
+              </button>
+            </motion.div>
           </motion.section>
 
           {/* Read Later Hero Card */}
@@ -268,7 +369,7 @@ function App() {
             </motion.section>
           )}
 
-          {/* Pinned Bookmarks - Bento Grid */}
+          {/* Pinned Bookmarks - Bento Grid 非对称布局 */}
           {pinnedBookmarks.length > 0 && (
             <motion.section
               className="mb-12"
@@ -277,30 +378,44 @@ function App() {
               transition={{ delay: 1 }}
             >
               <div className="flex items-center gap-3 mb-6">
-                <Pin className="w-5 h-5 text-yellow-400" />
-                <h2 className="text-xl font-medium text-white">常用</h2>
+                <div className="relative">
+                  <Pin className="w-5 h-5 text-yellow-400" />
+                  <BreathingDot color="#eab308" size="sm" className="absolute -top-1 -right-1" />
+                </div>
+                <h2 className="text-xl font-medium text-white tracking-wide">常用</h2>
+                <span className="text-sm text-white/30">{pinnedBookmarks.length}</span>
               </div>
 
               <BentoGrid>
-                {pinnedBookmarks.slice(0, 6).map((bookmark, index) => (
-                  <BentoGridItem
-                    key={bookmark.id}
-                    colSpan={index === 0 ? 2 : 1}
-                    onClick={() => window.open(bookmark.url, '_blank')}
-                  >
-                    <BookmarkCardContent
-                      bookmark={bookmark}
-                      isNew={bookmark.id === newlyAddedId}
-                      onTogglePin={() => togglePin(bookmark.id)}
-                      onToggleReadLater={() => toggleReadLater(bookmark.id)}
-                      onEdit={() => {
-                        setEditingBookmark(bookmark)
-                        setIsAddModalOpen(true)
-                      }}
-                      onDelete={() => handleDelete(bookmark.id)}
-                    />
-                  </BentoGridItem>
-                ))}
+                {pinnedBookmarks.slice(0, 6).map((bookmark, index) => {
+                  // 非对称布局：第一个占 2 列 2 行，其他 1 列
+                  const colSpan = index === 0 ? 2 : 1
+                  const rowSpan = index === 0 ? 2 : 1
+                  
+                  return (
+                    <BentoGridItem
+                      key={bookmark.id}
+                      colSpan={colSpan as 1 | 2}
+                      rowSpan={rowSpan as 1 | 2}
+                      spotlightColor="rgba(234, 179, 8, 0.15)"
+                      onClick={() => window.open(bookmark.url, '_blank')}
+                      delay={index * 0.05}
+                    >
+                      <BookmarkCardContent
+                        bookmark={bookmark}
+                        isLarge={index === 0}
+                        isNew={bookmark.id === newlyAddedId}
+                        onTogglePin={() => togglePin(bookmark.id)}
+                        onToggleReadLater={() => toggleReadLater(bookmark.id)}
+                        onEdit={() => {
+                          setEditingBookmark(bookmark)
+                          setIsAddModalOpen(true)
+                        }}
+                        onDelete={() => handleDelete(bookmark.id)}
+                      />
+                    </BentoGridItem>
+                  )
+                })}
               </BentoGrid>
             </motion.section>
           )}
@@ -313,23 +428,31 @@ function App() {
             return (
               <motion.section
                 key={category.id}
-                className="mb-12"
+                className="mb-12 relative"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1.2 + catIndex * 0.1 }}
               >
-                <div className="flex items-center gap-3 mb-6">
+                {/* 背景装饰文字 */}
+                <div 
+                  className="absolute -top-8 left-0 text-[120px] font-bold text-white/[0.02] pointer-events-none select-none leading-none"
+                  style={{ fontFamily: 'Inter, sans-serif' }}
+                >
+                  {category.name}
+                </div>
+
+                <div className="flex items-center gap-3 mb-6 relative z-10">
                   <div 
-                    className="w-8 h-8 rounded-lg flex items-center justify-center"
-                    style={{ backgroundColor: `${category.color}20`, color: category.color }}
+                    className="w-8 h-8 rounded-lg flex items-center justify-center backdrop-blur-sm"
+                    style={{ backgroundColor: `${category.color}15`, color: category.color }}
                   >
                     {categoryIcons[category.id] || <BookmarkIcon className="w-4 h-4" />}
                   </div>
-                  <h2 className="text-xl font-medium text-white">{category.name}</h2>
+                  <h2 className="text-xl font-medium text-white tracking-wide">{category.name}</h2>
                   <span className="text-sm text-white/30">{categoryBookmarks.length}</span>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 relative z-10">
                   {categoryBookmarks.map((bookmark, index) => (
                     <motion.div
                       key={bookmark.id}
@@ -337,34 +460,28 @@ function App() {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
                     >
-                      <Card3D
+                      <SpotlightCard
                         className="h-full cursor-pointer"
-                        glowColor={category.color}
+                        spotlightColor={`${category.color}20`}
+                        onClick={() => window.open(bookmark.url, '_blank')}
                       >
-                        <div 
-                          className="p-5 h-full flex flex-col"
-                          onClick={() => window.open(bookmark.url, '_blank')}
-                        >
-                          <CardItem translateZ={30} className="mb-4">
-                            <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center">
-                              {bookmark.favicon ? (
-                                <img src={bookmark.favicon} alt="" className="w-5 h-5" />
-                              ) : (
-                                <ExternalLink className="w-5 h-5 text-white/30" />
-                              )}
-                            </div>
-                          </CardItem>
+                        <div className="flex flex-col h-full">
+                          <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center mb-4">
+                            {bookmark.favicon ? (
+                              <img src={bookmark.favicon} alt="" className="w-5 h-5" />
+                            ) : (
+                              <ExternalLink className="w-5 h-5 text-white/30" />
+                            )}
+                          </div>
 
-                          <CardItem translateZ={40} className="flex-1">
-                            <h3 className="font-medium text-white line-clamp-1 mb-1">
-                              {bookmark.title}
-                            </h3>
-                            <p className="text-sm text-white/40 line-clamp-2">
-                              {bookmark.description || new URL(bookmark.url).hostname}
-                            </p>
-                          </CardItem>
+                          <h3 className="font-medium text-white line-clamp-1 mb-1">
+                            {bookmark.title}
+                          </h3>
+                          <p className="text-sm text-white/40 line-clamp-2 flex-1">
+                            {bookmark.description || new URL(bookmark.url).hostname}
+                          </p>
                         </div>
-                      </Card3D>
+                      </SpotlightCard>
                     </motion.div>
                   ))}
                 </div>
@@ -441,6 +558,7 @@ function App() {
 // 书签卡片内容组件
 function BookmarkCardContent({
   bookmark,
+  isLarge,
   isNew,
   onTogglePin,
   onToggleReadLater,
@@ -448,6 +566,7 @@ function BookmarkCardContent({
   onDelete,
 }: {
   bookmark: Bookmark
+  isLarge?: boolean
   isNew?: boolean
   onTogglePin: () => void
   onToggleReadLater: () => void
@@ -464,11 +583,14 @@ function BookmarkCardContent({
     >
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
-        <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center">
+        <div className={cn(
+          'rounded-xl bg-white/5 flex items-center justify-center',
+          isLarge ? 'w-14 h-14' : 'w-12 h-12'
+        )}>
           {bookmark.favicon ? (
-            <img src={bookmark.favicon} alt="" className="w-6 h-6" />
+            <img src={bookmark.favicon} alt="" className={isLarge ? 'w-7 h-7' : 'w-6 h-6'} />
           ) : (
-            <ExternalLink className="w-6 h-6 text-white/30" />
+            <ExternalLink className={cn('text-white/30', isLarge ? 'w-7 h-7' : 'w-6 h-6')} />
           )}
         </div>
 
@@ -518,11 +640,17 @@ function BookmarkCardContent({
 
       {/* Content */}
       <div className="flex-1">
-        <h3 className="text-lg font-medium text-white mb-2 line-clamp-1">
+        <h3 className={cn(
+          'font-medium text-white mb-2',
+          isLarge ? 'text-xl line-clamp-2' : 'text-lg line-clamp-1'
+        )}>
           {bookmark.title}
         </h3>
         {bookmark.description && (
-          <p className="text-sm text-white/40 line-clamp-2 mb-4">
+          <p className={cn(
+            'text-white/40 mb-4',
+            isLarge ? 'text-base line-clamp-3' : 'text-sm line-clamp-2'
+          )}>
             {bookmark.description}
           </p>
         )}

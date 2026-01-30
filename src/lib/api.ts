@@ -1,50 +1,70 @@
-// API 基础路径：开发环境通过 vite proxy 代理，生产环境直接访问
-const API_BASE = '/api'
+// API 基础地址 - 支持环境变量配置
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3001'
 
-// 通用请求函数
+// ========== 请求工具函数 ==========
+
+interface RequestOptions extends RequestInit {
+  requireAuth?: boolean
+}
+
+// 获取存储的 Token
+function getToken(): string | null {
+  return localStorage.getItem('admin_token')
+}
+
+// 统一请求处理
 async function request<T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestOptions = {}
 ): Promise<T> {
-  const response = await fetch(`${API_BASE}${endpoint}`, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-    ...options,
+  const { requireAuth = false, ...fetchOptions } = options
+  
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(fetchOptions.headers as Record<string, string>),
+  }
+  
+  // 需要认证时添加 Token
+  if (requireAuth) {
+    const token = getToken()
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+  }
+  
+  const res = await fetch(`${API_BASE}${endpoint}`, {
+    ...fetchOptions,
+    headers,
   })
   
-  if (!response.ok) {
-    throw new Error(`API Error: ${response.status}`)
+  // 处理无内容响应
+  if (res.status === 204) {
+    return undefined as T
   }
   
-  if (response.status === 204) {
-    return null as T
+  const data = await res.json()
+  
+  if (!res.ok) {
+    // 401 未授权 - 清除登录状态
+    if (res.status === 401) {
+      localStorage.removeItem('admin_authenticated')
+      localStorage.removeItem('admin_login_time')
+      localStorage.removeItem('admin_token')
+      localStorage.removeItem('admin_username')
+    }
+    throw new Error(data.error || data.message || `请求失败: ${res.status}`)
   }
   
-  return response.json()
+  return data
 }
 
 // ========== 书签 API ==========
 
-export interface BookmarkData {
-  id: string
-  url: string
-  title: string
-  description?: string | null
-  favicon?: string | null
-  ogImage?: string | null
-  category?: string | null
-  tags?: string | null
-  orderIndex: number
-  isPinned: boolean
-  isReadLater: boolean
-  isRead: boolean
-  createdAt: string
-  updatedAt: string
+export async function fetchBookmarks() {
+  return request<any[]>('/api/bookmarks')
 }
 
-export interface CreateBookmarkInput {
+export async function createBookmark(data: {
   url: string
   title: string
   description?: string
@@ -53,67 +73,181 @@ export interface CreateBookmarkInput {
   category?: string
   tags?: string
   isReadLater?: boolean
+}) {
+  return request<any>('/api/bookmarks', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
 }
 
-export const bookmarkApi = {
-  getAll: () => request<BookmarkData[]>('/bookmarks'),
-  
-  create: (data: CreateBookmarkInput) => 
-    request<BookmarkData>('/bookmarks', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }),
-  
-  update: (id: string, data: Partial<BookmarkData>) =>
-    request<BookmarkData>(`/bookmarks/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify(data),
-    }),
-  
-  delete: (id: string) =>
-    request<void>(`/bookmarks/${id}`, { method: 'DELETE' }),
-  
-  reorder: (items: { id: string; orderIndex: number }[]) =>
-    request<{ success: boolean }>('/bookmarks/reorder', {
-      method: 'PATCH',
-      body: JSON.stringify({ items }),
-    }),
+export async function updateBookmark(id: string, data: Record<string, any>) {
+  return request<any>(`/api/bookmarks/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  })
 }
 
-// ========== 元数据 API ==========
-
-export interface MetadataResult {
-  title: string
-  description: string
-  favicon: string
-  ogImage?: string
-  error?: string
+export async function deleteBookmark(id: string) {
+  return request<void>(`/api/bookmarks/${id}`, {
+    method: 'DELETE',
+  })
 }
 
-export const metadataApi = {
-  parse: (url: string) =>
-    request<MetadataResult>('/metadata', {
-      method: 'POST',
-      body: JSON.stringify({ url }),
-    }),
+export async function reorderBookmarks(items: { id: string; orderIndex: number }[]) {
+  return request<{ success: boolean }>('/api/bookmarks/reorder', {
+    method: 'PATCH',
+    body: JSON.stringify({ items }),
+  })
 }
 
 // ========== 分类 API ==========
 
-export interface CategoryData {
-  id: string
-  name: string
-  icon?: string | null
-  color?: string | null
-  orderIndex: number
+export async function fetchCategories() {
+  return request<any[]>('/api/categories')
+}
+
+export async function createCategory(data: { name: string; icon?: string; color: string }) {
+  return request<any>('/api/categories', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
+}
+
+export async function updateCategory(id: string, data: Record<string, any>) {
+  return request<any>(`/api/categories/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  })
+}
+
+export async function deleteCategory(id: string) {
+  return request<void>(`/api/categories/${id}`, {
+    method: 'DELETE',
+  })
+}
+
+// ========== 元数据 API ==========
+
+export async function fetchMetadata(url: string) {
+  return request<{
+    title?: string
+    description?: string
+    favicon?: string
+    ogImage?: string
+    error?: string
+  }>('/api/metadata', {
+    method: 'POST',
+    body: JSON.stringify({ url }),
+  })
+}
+
+// 兼容旧导入名称
+export const metadataApi = {
+  parse: fetchMetadata,
+}
+
+// ========== 管理员 API ==========
+
+export async function adminLogin(username: string, password: string) {
+  const data = await request<{
+    success: boolean
+    token: string
+    user: { id: string; username: string }
+  }>('/api/admin/login', {
+    method: 'POST',
+    body: JSON.stringify({ username, password }),
+  })
+  
+  // 保存登录状态
+  if (data.success && data.token) {
+    localStorage.setItem('admin_authenticated', 'true')
+    localStorage.setItem('admin_login_time', Date.now().toString())
+    localStorage.setItem('admin_token', data.token)
+    localStorage.setItem('admin_username', data.user.username)
+  }
+  
+  return data
+}
+
+export async function adminChangePassword(
+  currentPassword: string,
+  newPassword: string
+) {
+  return request<{ success: boolean; message: string }>('/api/admin/change-password', {
+    method: 'POST',
+    body: JSON.stringify({ currentPassword, newPassword }),
+    requireAuth: true,
+  })
+}
+
+// 验证 Token 有效性
+export async function adminVerify() {
+  return request<{ valid: boolean; user: { id: string; username: string } }>('/api/admin/verify', {
+    requireAuth: true,
+  })
+}
+
+// 退出登录
+export async function adminLogout() {
+  try {
+    await request<{ success: boolean }>('/api/admin/logout', {
+      method: 'POST',
+      requireAuth: true,
+    })
+  } finally {
+    clearAuthStatus()
+  }
+}
+
+// 验证登录状态
+export function checkAuthStatus(): { isValid: boolean; username: string | null } {
+  const authenticated = localStorage.getItem('admin_authenticated')
+  const loginTime = localStorage.getItem('admin_login_time')
+  const username = localStorage.getItem('admin_username')
+  
+  if (authenticated === 'true' && loginTime) {
+    // 登录有效期 24 小时
+    const isValid = Date.now() - parseInt(loginTime) < 24 * 60 * 60 * 1000
+    if (isValid) {
+      return { isValid: true, username }
+    }
+  }
+  
+  // 已过期，清除登录状态
+  clearAuthStatus()
+  return { isValid: false, username: null }
+}
+
+// 清除登录状态
+export function clearAuthStatus() {
+  localStorage.removeItem('admin_authenticated')
+  localStorage.removeItem('admin_login_time')
+  localStorage.removeItem('admin_token')
+  localStorage.removeItem('admin_username')
+}
+
+// ========== API 导出对象 (便于统一使用) ==========
+
+export const bookmarkApi = {
+  list: fetchBookmarks,
+  create: createBookmark,
+  update: updateBookmark,
+  delete: deleteBookmark,
+  reorder: reorderBookmarks,
 }
 
 export const categoryApi = {
-  getAll: () => request<CategoryData[]>('/categories'),
-  
-  create: (data: { name: string; icon?: string; color?: string }) =>
-    request<CategoryData>('/categories', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    }),
+  list: fetchCategories,
+  create: createCategory,
+  update: updateCategory,
+  delete: deleteCategory,
+}
+
+export const adminApi = {
+  login: adminLogin,
+  changePassword: adminChangePassword,
+  verify: adminVerify,
+  logout: adminLogout,
+  checkStatus: checkAuthStatus,
+  clearStatus: clearAuthStatus,
 }

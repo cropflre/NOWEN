@@ -52,9 +52,19 @@ export function Typewriter({
     return () => clearTimeout(timeout)
   }, [currentText, isDeleting, currentWordIndex, words, typingSpeed, deletingSpeed, delayBetweenWords])
 
+  // 计算最长文字的宽度作为最小宽度
+  const longestWord = words.reduce((a, b) => (a.length > b.length ? a : b), '')
+
   return (
-    <span className={cn('inline-flex items-center', className)}>
-      <span>{currentText}</span>
+    <span className={cn('inline-flex items-center justify-center', className)}>
+      <span className="relative">
+        {/* 隐藏的占位符，保持最小宽度 */}
+        <span className="invisible">{longestWord}</span>
+        {/* 实际显示的文字，绝对定位居中 */}
+        <span className="absolute inset-0 flex items-center justify-center">
+          {currentText}
+        </span>
+      </span>
       <motion.span
         className={cn(
           'inline-block w-[3px] h-[1em] ml-1 bg-current',

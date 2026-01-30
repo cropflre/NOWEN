@@ -2,6 +2,7 @@ import initSqlJs, { Database as SqlJsDatabase } from 'sql.js'
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import crypto from 'crypto'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const dbPath = path.join(__dirname, '..', 'data', 'zen-garden.db')
@@ -55,6 +56,17 @@ export async function initDatabase() {
     )
   `)
   
+  // 管理员表
+  db.run(`
+    CREATE TABLE IF NOT EXISTS admins (
+      id TEXT PRIMARY KEY,
+      username TEXT NOT NULL UNIQUE,
+      password TEXT NOT NULL,
+      createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `)
+  
   // 初始化默认分类
   const defaultCategories = [
     { id: 'dev', name: '开发', icon: 'code', color: '#667eea', orderIndex: 0 },
@@ -70,6 +82,13 @@ export async function initDatabase() {
       [cat.id, cat.name, cat.icon, cat.color, cat.orderIndex]
     )
   }
+  
+  // 初始化默认管理员（密码: admin123）
+  const defaultPassword = hashPassword('admin123')
+  db.run(
+    `INSERT OR IGNORE INTO admins (id, username, password, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?)`,
+    ['admin_default', 'admin', defaultPassword, new Date().toISOString(), new Date().toISOString()]
+  )
   
   saveDatabase()
   
@@ -91,4 +110,14 @@ export function saveDatabase() {
 // 生成唯一 ID
 export function generateId(): string {
   return Math.random().toString(36).substring(2, 9) + Date.now().toString(36)
+}
+
+// 密码哈希
+export function hashPassword(password: string): string {
+  return crypto.createHash('sha256').update(password).digest('hex')
+}
+
+// 验证密码
+export function verifyPassword(password: string, hash: string): boolean {
+  return hashPassword(password) === hash
 }
