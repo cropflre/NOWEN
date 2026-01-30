@@ -10,9 +10,10 @@
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "cheerio": "^1.0.0",
-    "cors": "^2.8.5",
+    "cors": "^2.8.6",
     "express": "^4.21.2",
-    "sql.js": "^1.11.0"
+    "sql.js": "^1.11.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
