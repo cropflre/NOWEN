@@ -9,27 +9,34 @@ export function useBookmarkStore() {
   const [newlyAddedId, setNewlyAddedId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  // 加载数据
-  useEffect(() => {
-    async function loadData() {
-      try {
-        setIsLoading(true)
-        const [bookmarksData, categoriesData] = await Promise.all([
-          api.fetchBookmarks(),
-          api.fetchCategories(),
-        ])
-        setBookmarks(bookmarksData)
-        setCategories(categoriesData)
-        setError(null)
-      } catch (err) {
-        console.error('加载数据失败:', err)
-        setError('加载数据失败，请确保后端服务已启动')
-      } finally {
-        setIsLoading(false)
-      }
+  // 加载数据函数
+  const loadData = useCallback(async () => {
+    try {
+      setIsLoading(true)
+      const [bookmarksData, categoriesData] = await Promise.all([
+        api.fetchBookmarks(),
+        api.fetchCategories(),
+      ])
+      setBookmarks(bookmarksData)
+      setCategories(categoriesData)
+      setError(null)
+    } catch (err) {
+      console.error('加载数据失败:', err)
+      setError('加载数据失败，请确保后端服务已启动')
+    } finally {
+      setIsLoading(false)
     }
-    loadData()
   }, [])
+
+  // 初始加载数据
+  useEffect(() => {
+    loadData()
+  }, [loadData])
+
+  // 刷新数据（导入后调用）
+  const refreshData = useCallback(async () => {
+    await loadData()
+  }, [loadData])
 
   // 添加书签
   const addBookmark = useCallback(async (bookmark: Omit<Bookmark, 'id' | 'orderIndex' | 'createdAt' | 'updatedAt'>) => {
@@ -221,5 +228,6 @@ export function useBookmarkStore() {
     bookmarksByCategory,
     uncategorizedBookmarks,
     readLaterBookmarks,
+    refreshData,
   }
 }

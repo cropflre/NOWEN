@@ -226,6 +226,25 @@ export function clearAuthStatus() {
   localStorage.removeItem('admin_username')
 }
 
+// ========== 站点设置 API ==========
+
+export interface SiteSettings {
+  siteTitle?: string
+  siteFavicon?: string
+}
+
+export async function fetchSettings() {
+  return request<SiteSettings>('/api/settings')
+}
+
+export async function updateSettings(settings: SiteSettings) {
+  return request<SiteSettings>('/api/settings', {
+    method: 'PATCH',
+    body: JSON.stringify(settings),
+    requireAuth: true,
+  })
+}
+
 // ========== API 导出对象 (便于统一使用) ==========
 
 export const bookmarkApi = {
@@ -250,4 +269,40 @@ export const adminApi = {
   logout: adminLogout,
   checkStatus: checkAuthStatus,
   clearStatus: clearAuthStatus,
+}
+
+export const settingsApi = {
+  get: fetchSettings,
+  update: updateSettings,
+}
+
+// ========== 数据导入导出 API ==========
+
+export interface ExportData {
+  version: string
+  exportedAt: string
+  data: {
+    bookmarks: any[]
+    categories: any[]
+    settings: SiteSettings
+  }
+}
+
+export async function exportData() {
+  return request<ExportData>('/api/export', {
+    requireAuth: true,
+  })
+}
+
+export async function importData(data: ExportData['data']) {
+  return request<{ success: boolean; message: string }>('/api/import', {
+    method: 'POST',
+    body: JSON.stringify(data),
+    requireAuth: true,
+  })
+}
+
+export const dataApi = {
+  export: exportData,
+  import: importData,
 }

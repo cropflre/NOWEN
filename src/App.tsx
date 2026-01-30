@@ -29,6 +29,7 @@ import { Typewriter } from './components/ui/typewriter'
 import { Meteors, Sparkles } from './components/ui/effects'
 import { BorderBeam, BreathingDot } from './components/ui/advanced-effects'
 import { AddBookmarkModal } from './components/AddBookmarkModal'
+import { ContextMenu, useBookmarkContextMenu } from './components/ContextMenu'
 import { Admin } from './pages/Admin'
 import { AdminLogin } from './components/AdminLogin'
 import { useBookmarkStore } from './hooks/useBookmarkStore'
@@ -36,7 +37,7 @@ import { useTheme } from './hooks/useTheme'
 import { useTime } from './hooks/useTime'
 import { Bookmark } from './types/bookmark'
 import { cn } from './lib/utils'
-import { checkAuthStatus, clearAuthStatus } from './lib/api'
+import { checkAuthStatus, clearAuthStatus, fetchSettings, SiteSettings } from './lib/api'
 
 // Dock 导航项
 const dockItems = [
@@ -62,8 +63,21 @@ function App() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [editingBookmark, setEditingBookmark] = useState<Bookmark | null>(null)
   const [pendingUrl, setPendingUrl] = useState('')
-  const [hoveredCard, setHoveredCard] = useState<string | null>(null)
   const [adminUsername, setAdminUsername] = useState<string>('')
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [siteSettings, setSiteSettings] = useState<SiteSettings>({
+    siteTitle: 'Nebula Portal',
+    siteFavicon: '',
+  })
+  
+  // 右键菜单状态
+  const [contextMenu, setContextMenu] = useState<{
+    isOpen: boolean
+    position: { x: number; y: number }
+    bookmark: Bookmark | null
+  }>({ isOpen: false, position: { x: 0, y: 0 }, bookmark: null })
+  
+  const { getMenuItems } = useBookmarkContextMenu()
 
   const { greeting, formattedTime, formattedDate } = useTime()
 
@@ -80,9 +94,40 @@ function App() {
     addCategory,
     updateCategory,
     deleteCategory,
+    refreshData,
   } = useBookmarkStore()
 
   useTheme()
+
+  // 初始化时检查登录状态和加载站点设置
+  useEffect(() => {
+    const { isValid, username } = checkAuthStatus()
+    if (isValid && username) {
+      setIsLoggedIn(true)
+      setAdminUsername(username)
+    }
+    
+    // 加载站点设置
+    fetchSettings().then(settings => {
+      setSiteSettings(settings)
+      // 应用站点标题
+      if (settings.siteTitle) {
+        document.title = settings.siteTitle
+      }
+      // 应用站点图标
+      if (settings.siteFavicon) {
+        const link = document.querySelector("link[rel~='icon']") as HTMLLinkElement
+        if (link) {
+          link.href = settings.siteFavicon
+        } else {
+          const newLink = document.createElement('link')
+          newLink.rel = 'icon'
+          newLink.href = settings.siteFavicon
+          document.head.appendChild(newLink)
+        }
+      }
+    }).catch(console.error)
+  }, [])
 
   // 全局快捷键
   useEffect(() => {
@@ -137,6 +182,7 @@ function App() {
   // 后台登录成功
   const handleAdminLogin = (username: string) => {
     setAdminUsername(username)
+    setIsLoggedIn(true)
     setCurrentPage('admin')
   }
 
@@ -144,8 +190,26 @@ function App() {
   const handleAdminLogout = () => {
     clearAuthStatus()
     setAdminUsername('')
+    setIsLoggedIn(false)
     setCurrentPage('home')
   }
+
+  // 右键菜单处理
+  const handleContextMenu = useCallback((e: React.MouseEvent, bookmark: Bookmark) => {
+    if (!isLoggedIn) return // 未登录不显示右键菜单
+    
+    e.preventDefault()
+    e.stopPropagation()
+    setContextMenu({
+      isOpen: true,
+      position: { x: e.clientX, y: e.clientY },
+      bookmark,
+    })
+  }, [isLoggedIn])
+
+  const closeContextMenu = useCallback(() => {
+    setContextMenu(prev => ({ ...prev, isOpen: false }))
+  }, [])
 
   // 书签操作
   const handleAddFromSpotlight = useCallback((url: string) => {
@@ -210,6 +274,7 @@ function App() {
           onAddCategory={addCategory}
           onUpdateCategory={updateCategory}
           onDeleteCategory={deleteCategory}
+          onRefreshData={refreshData}
         />
         <AddBookmarkModal
           isOpen={isAddModalOpen}
@@ -399,12 +464,14 @@ function App() {
                       rowSpan={rowSpan as 1 | 2}
                       spotlightColor="rgba(234, 179, 8, 0.15)"
                       onClick={() => window.open(bookmark.url, '_blank')}
+                      onContextMenu={(e) => handleContextMenu(e, bookmark)}
                       delay={index * 0.05}
                     >
                       <BookmarkCardContent
                         bookmark={bookmark}
                         isLarge={index === 0}
                         isNew={bookmark.id === newlyAddedId}
+                        isLoggedIn={isLoggedIn}
                         onTogglePin={() => togglePin(bookmark.id)}
                         onToggleReadLater={() => toggleReadLater(bookmark.id)}
                         onEdit={() => {
@@ -464,6 +531,7 @@ function App() {
                         className="h-full cursor-pointer"
                         spotlightColor={`${category.color}20`}
                         onClick={() => window.open(bookmark.url, '_blank')}
+                        onContextMenu={(e) => handleContextMenu(e, bookmark)}
                       >
                         <div className="flex flex-col h-full">
                           <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center mb-4">
@@ -551,6 +619,24 @@ function App() {
         initialUrl={pendingUrl}
         editBookmark={editingBookmark}
       />
+
+      {/* Context Menu */}
+      {contextMenu.bookmark && (
+        <ContextMenu
+          isOpen={contextMenu.isOpen}
+          position={contextMenu.position}
+          onClose={closeContextMenu}
+          items={getMenuItems(contextMenu.bookmark, {
+            onEdit: () => {
+              setEditingBookmark(contextMenu.bookmark)
+              setIsAddModalOpen(true)
+            },
+            onDelete: () => handleDelete(contextMenu.bookmark!.id),
+            onTogglePin: () => togglePin(contextMenu.bookmark!.id),
+            onToggleReadLater: () => toggleReadLater(contextMenu.bookmark!.id),
+          })}
+        />
+      )}
     </AuroraBackground>
   )
 }
@@ -560,6 +646,7 @@ function BookmarkCardContent({
   bookmark,
   isLarge,
   isNew,
+  isLoggedIn,
   onTogglePin,
   onToggleReadLater,
   onEdit,
@@ -568,6 +655,7 @@ function BookmarkCardContent({
   bookmark: Bookmark
   isLarge?: boolean
   isNew?: boolean
+  isLoggedIn?: boolean
   onTogglePin: () => void
   onToggleReadLater: () => void
   onEdit: () => void
@@ -594,9 +682,9 @@ function BookmarkCardContent({
           )}
         </div>
 
-        {/* Actions */}
+        {/* Actions - 只有登录后才显示 */}
         <AnimatePresence>
-          {showActions && (
+          {showActions && isLoggedIn && (
             <motion.div
               className="flex items-center gap-1"
               initial={{ opacity: 0, x: 10 }}

@@ -10,7 +10,8 @@ const PORT = process.env.PORT || 3001
 const validTokens = new Map<string, { userId: string; username: string; expiresAt: number }>()
 
 app.use(cors())
-app.use(express.json())
+app.use(express.json({ limit: '10mb' }))
+app.use(express.urlencoded({ limit: '10mb', extended: true }))
 
 // Token 验证中间件
 function authMiddleware(req: Request, res: Response, next: NextFunction) {
@@ -396,6 +397,162 @@ app.post('/api/admin/logout', authMiddleware, (req: Request, res: Response) => {
     validTokens.delete(token)
   }
   res.json({ success: true })
+})
+
+// ========== 站点设置 API ==========
+
+// 获取站点设置
+app.get('/api/settings', (req, res) => {
+  try {
+    const settings = queryAll('SELECT * FROM settings')
+    const result: Record<string, string> = {}
+    settings.forEach((s: any) => {
+      result[s.key] = s.value
+    })
+    res.json(result)
+  } catch (error) {
+    console.error('获取设置失败:', error)
+    res.status(500).json({ error: '获取设置失败' })
+  }
+})
+
+// 更新站点设置（需要认证）
+app.patch('/api/settings', authMiddleware, (req: Request, res: Response) => {
+  try {
+    const updates = req.body
+    const now = new Date().toISOString()
+    
+    for (const [key, value] of Object.entries(updates)) {
+      const existing = queryOne('SELECT * FROM settings WHERE key = ?', [key])
+      if (existing) {
+        run('UPDATE settings SET value = ?, updatedAt = ? WHERE key = ?', [value, now, key])
+      } else {
+        run('INSERT INTO settings (key, value, updatedAt) VALUES (?, ?, ?)', [key, value, now])
+      }
+    }
+    
+    // 返回更新后的所有设置
+    const settings = queryAll('SELECT * FROM settings')
+    const result: Record<string, string> = {}
+    settings.forEach((s: any) => {
+      result[s.key] = s.value
+    })
+    res.json(result)
+  } catch (error) {
+    console.error('更新设置失败:', error)
+    res.status(500).json({ error: '更新设置失败' })
+  }
+})
+
+// ========== 数据导入导出 API ==========
+
+// 导出所有数据
+app.get('/api/export', authMiddleware, (req: Request, res: Response) => {
+  try {
+    const bookmarks = queryAll(`
+      SELECT * FROM bookmarks 
+      ORDER BY isPinned DESC, orderIndex ASC, createdAt DESC
+    `).map((b: any) => ({
+      ...b,
+      isPinned: Boolean(b.isPinned),
+      isReadLater: Boolean(b.isReadLater),
+      isRead: Boolean(b.isRead),
+    }))
+    
+    const categories = queryAll('SELECT * FROM categories ORDER BY orderIndex ASC')
+    
+    const settingsRows = queryAll('SELECT * FROM settings')
+    const settings: Record<string, string> = {}
+    settingsRows.forEach((s: any) => {
+      settings[s.key] = s.value
+    })
+    
+    res.json({
+      version: '1.0',
+      exportedAt: new Date().toISOString(),
+      data: {
+        bookmarks,
+        categories,
+        settings,
+      }
+    })
+  } catch (error) {
+    console.error('导出数据失败:', error)
+    res.status(500).json({ error: '导出数据失败' })
+  }
+})
+
+// 导入数据（覆盖现有数据）
+app.post('/api/import', authMiddleware, (req: Request, res: Response) => {
+  try {
+    const { bookmarks, categories, settings } = req.body
+    
+    if (!bookmarks || !Array.isArray(bookmarks)) {
+      return res.status(400).json({ error: '无效的导入数据' })
+    }
+    
+    const db = getDatabase()
+    
+    // 清空现有数据
+    db.run('DELETE FROM bookmarks')
+    db.run('DELETE FROM categories')
+    
+    // 导入分类
+    if (categories && Array.isArray(categories)) {
+      for (const cat of categories) {
+        db.run(`
+          INSERT INTO categories (id, name, icon, color, orderIndex)
+          VALUES (?, ?, ?, ?, ?)
+        `, [cat.id, cat.name, cat.icon || null, cat.color, cat.orderIndex || 0])
+      }
+    }
+    
+    // 导入书签
+    for (const bookmark of bookmarks) {
+      db.run(`
+        INSERT INTO bookmarks (id, url, title, description, favicon, ogImage, category, tags, orderIndex, isPinned, isReadLater, isRead, createdAt, updatedAt)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `, [
+        bookmark.id || generateId(),
+        bookmark.url,
+        bookmark.title,
+        bookmark.description || null,
+        bookmark.favicon || null,
+        bookmark.ogImage || null,
+        bookmark.category || null,
+        bookmark.tags || null,
+        bookmark.orderIndex || 0,
+        bookmark.isPinned ? 1 : 0,
+        bookmark.isReadLater ? 1 : 0,
+        bookmark.isRead ? 1 : 0,
+        bookmark.createdAt || new Date().toISOString(),
+        bookmark.updatedAt || new Date().toISOString(),
+      ])
+    }
+    
+    // 导入设置
+    if (settings && typeof settings === 'object') {
+      const now = new Date().toISOString()
+      for (const [key, value] of Object.entries(settings)) {
+        const existing = queryOne('SELECT * FROM settings WHERE key = ?', [key])
+        if (existing) {
+          db.run('UPDATE settings SET value = ?, updatedAt = ? WHERE key = ?', [value, now, key])
+        } else {
+          db.run('INSERT INTO settings (key, value, updatedAt) VALUES (?, ?, ?)', [key, value, now])
+        }
+      }
+    }
+    
+    saveDatabase()
+    
+    res.json({ 
+      success: true, 
+      message: `成功导入 ${bookmarks.length} 个书签和 ${categories?.length || 0} 个分类` 
+    })
+  } catch (error) {
+    console.error('导入数据失败:', error)
+    res.status(500).json({ error: '导入数据失败' })
+  }
 })
 
 // 初始化数据库并启动服务器

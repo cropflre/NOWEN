@@ -1,8 +1,64 @@
 import { useRef, useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Command, ArrowRight, Loader2, Globe, Github, Plus, X } from 'lucide-react'
+import { Search, Command, ArrowRight, Globe, Github, Plus, ChevronDown } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { Bookmark } from '../../types/bookmark'
+
+// 搜索引擎配置
+interface SearchEngine {
+  id: string
+  name: string
+  icon: React.ReactNode
+  url: string // {query} 会被替换为搜索词
+  shortcut: string
+}
+
+const SEARCH_ENGINES: SearchEngine[] = [
+  {
+    id: 'google',
+    name: 'Google',
+    icon: <Globe className="w-4 h-4 text-blue-400" />,
+    url: 'https://www.google.com/search?q={query}',
+    shortcut: 'g',
+  },
+  {
+    id: 'bing',
+    name: 'Bing',
+    icon: <Globe className="w-4 h-4 text-cyan-400" />,
+    url: 'https://www.bing.com/search?q={query}',
+    shortcut: 'b',
+  },
+  {
+    id: 'baidu',
+    name: '百度',
+    icon: <Globe className="w-4 h-4 text-blue-500" />,
+    url: 'https://www.baidu.com/s?wd={query}',
+    shortcut: 'bd',
+  },
+  {
+    id: 'github',
+    name: 'GitHub',
+    icon: <Github className="w-4 h-4" />,
+    url: 'https://github.com/search?q={query}',
+    shortcut: 'gh',
+  },
+  {
+    id: 'duckduckgo',
+    name: 'DuckDuckGo',
+    icon: <Globe className="w-4 h-4 text-orange-400" />,
+    url: 'https://duckduckgo.com/?q={query}',
+    shortcut: 'dd',
+  },
+  {
+    id: 'bilibili',
+    name: 'Bilibili',
+    icon: <Globe className="w-4 h-4 text-pink-400" />,
+    url: 'https://search.bilibili.com/all?keyword={query}',
+    shortcut: 'bili',
+  },
+]
+
+const STORAGE_KEY = 'spotlight_default_engine'
 
 interface SpotlightSearchProps {
   isOpen: boolean
@@ -20,7 +76,39 @@ export function SpotlightSearch({
   const [query, setQuery] = useState('')
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [isVanishing, setIsVanishing] = useState(false)
+  const [showEngineSelector, setShowEngineSelector] = useState(false)
+  const [defaultEngine, setDefaultEngine] = useState<SearchEngine>(SEARCH_ENGINES[0])
   const inputRef = useRef<HTMLInputElement>(null)
+  const engineSelectorRef = useRef<HTMLDivElement>(null)
+
+  // 加载保存的默认搜索引擎
+  useEffect(() => {
+    const savedEngineId = localStorage.getItem(STORAGE_KEY)
+    if (savedEngineId) {
+      const engine = SEARCH_ENGINES.find(e => e.id === savedEngineId)
+      if (engine) setDefaultEngine(engine)
+    }
+  }, [])
+
+  // 保存默认搜索引擎
+  const handleSelectEngine = (engine: SearchEngine) => {
+    setDefaultEngine(engine)
+    localStorage.setItem(STORAGE_KEY, engine.id)
+    setShowEngineSelector(false)
+  }
+
+  // 点击外部关闭引擎选择器
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (engineSelectorRef.current && !engineSelectorRef.current.contains(e.target as Node)) {
+        setShowEngineSelector(false)
+      }
+    }
+    if (showEngineSelector) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [showEngineSelector])
 
   // 判断是否为 URL
   const isUrl = (str: string) => {
@@ -30,6 +118,19 @@ export function SpotlightSearch({
     } catch {
       return false
     }
+  }
+
+  // 检测快捷键前缀并获取对应引擎
+  const getEngineFromShortcut = (q: string): { engine: SearchEngine; searchTerm: string } | null => {
+    for (const engine of SEARCH_ENGINES) {
+      if (q.startsWith(engine.shortcut + ' ') && q.length > engine.shortcut.length + 1) {
+        return {
+          engine,
+          searchTerm: q.slice(engine.shortcut.length + 1),
+        }
+      }
+    }
+    return null
   }
 
   // 生成结果
@@ -51,31 +152,18 @@ export function SpotlightSearch({
       }))
     }
 
-    // Google 搜索
-    if (q.startsWith('g ') && q.length > 2) {
+    // 检测快捷键搜索
+    const shortcutMatch = getEngineFromShortcut(q)
+    if (shortcutMatch) {
+      const { engine, searchTerm } = shortcutMatch
       results.push({
-        id: 'google',
+        id: engine.id,
         type: 'command',
-        title: `搜索 "${q.slice(2)}"`,
-        subtitle: 'Google',
-        icon: <Globe className="w-5 h-5 text-blue-400" />,
+        title: `搜索 "${searchTerm}"`,
+        subtitle: engine.name,
+        icon: engine.icon,
         action: () => {
-          window.open(`https://www.google.com/search?q=${encodeURIComponent(q.slice(2))}`, '_blank')
-          onClose()
-        },
-      })
-    }
-
-    // GitHub 搜索
-    if (q.startsWith('gh ') && q.length > 3) {
-      results.push({
-        id: 'github',
-        type: 'command',
-        title: `搜索 "${q.slice(3)}"`,
-        subtitle: 'GitHub',
-        icon: <Github className="w-5 h-5" />,
-        action: () => {
-          window.open(`https://github.com/search?q=${encodeURIComponent(q.slice(3))}`, '_blank')
+          window.open(engine.url.replace('{query}', encodeURIComponent(searchTerm)), '_blank')
           onClose()
         },
       })
@@ -117,16 +205,16 @@ export function SpotlightSearch({
       })
     })
 
-    // 默认 Google 搜索
-    if (results.length === 0 && q) {
+    // 默认搜索引擎搜索（无快捷键时）
+    if (!shortcutMatch && q && !isUrl(q)) {
       results.push({
-        id: 'google-default',
+        id: 'default-search',
         type: 'command',
-        title: `在 Google 搜索 "${q}"`,
+        title: `在 ${defaultEngine.name} 搜索 "${q}"`,
         subtitle: 'Enter 确认',
-        icon: <Globe className="w-5 h-5 text-blue-400" />,
+        icon: defaultEngine.icon,
         action: () => {
-          window.open(`https://www.google.com/search?q=${encodeURIComponent(q)}`, '_blank')
+          window.open(defaultEngine.url.replace('{query}', encodeURIComponent(q)), '_blank')
           onClose()
         },
       })
@@ -141,6 +229,7 @@ export function SpotlightSearch({
     if (isOpen) {
       setQuery('')
       setSelectedIndex(0)
+      setShowEngineSelector(false)
       setTimeout(() => inputRef.current?.focus(), 50)
     }
   }, [isOpen])
@@ -243,16 +332,64 @@ export function SpotlightSearch({
               </div>
 
               {/* Hints */}
-              <div className="px-6 py-3 border-b border-white/5 flex items-center gap-6 text-xs text-white/30">
-                <span className="flex items-center gap-1.5">
-                  <kbd className="px-1.5 py-0.5 rounded bg-white/5">g</kbd> Google
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <kbd className="px-1.5 py-0.5 rounded bg-white/5">gh</kbd> GitHub
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <Command className="w-3 h-3" /> URL 自动识别
-                </span>
+              <div className="px-6 py-3 border-b border-white/5 flex items-center justify-between text-xs text-white/30">
+                <div className="flex items-center gap-4 flex-wrap">
+                  {SEARCH_ENGINES.slice(0, 4).map(engine => (
+                    <span key={engine.id} className="flex items-center gap-1.5">
+                      <kbd className="px-1.5 py-0.5 rounded bg-white/5">{engine.shortcut}</kbd> {engine.name}
+                    </span>
+                  ))}
+                  <span className="flex items-center gap-1.5">
+                    <Command className="w-3 h-3" /> URL 自动识别
+                  </span>
+                </div>
+                
+                {/* 搜索引擎选择器 */}
+                <div className="relative" ref={engineSelectorRef}>
+                  <button
+                    onClick={() => setShowEngineSelector(!showEngineSelector)}
+                    className="flex items-center gap-1.5 px-2 py-1 rounded-lg hover:bg-white/5 transition-colors"
+                  >
+                    {defaultEngine.icon}
+                    <span className="text-white/50">{defaultEngine.name}</span>
+                    <ChevronDown className={cn(
+                      "w-3 h-3 transition-transform",
+                      showEngineSelector && "rotate-180"
+                    )} />
+                  </button>
+                  
+                  <AnimatePresence>
+                    {showEngineSelector && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                        transition={{ duration: 0.15 }}
+                        className="absolute right-0 top-full mt-2 w-44 py-1 rounded-lg bg-[#1a1a24] border border-white/10 shadow-xl z-20 max-h-64 overflow-y-auto"
+                      >
+                        <div className="px-3 py-1.5 text-[10px] text-white/30 uppercase tracking-wide sticky top-0 bg-[#1a1a24]">
+                          默认搜索引擎
+                        </div>
+                        {SEARCH_ENGINES.map(engine => (
+                          <button
+                            key={engine.id}
+                            onClick={() => handleSelectEngine(engine)}
+                            className={cn(
+                              "w-full px-3 py-2 flex items-center gap-2 text-left hover:bg-white/5 transition-colors",
+                              engine.id === defaultEngine.id && "bg-white/5"
+                            )}
+                          >
+                            {engine.icon}
+                            <span className="text-white/70 text-sm">{engine.name}</span>
+                            {engine.id === defaultEngine.id && (
+                              <span className="ml-auto text-green-400 text-xs">✓</span>
+                            )}
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
 
               {/* Results */}

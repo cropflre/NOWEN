@@ -8,6 +8,7 @@ interface SpotlightCardProps {
   spotlightColor?: string
   size?: 'sm' | 'md' | 'lg' | 'xl'
   onClick?: () => void
+  onContextMenu?: (e: React.MouseEvent) => void
 }
 
 export function SpotlightCard({
@@ -16,6 +17,7 @@ export function SpotlightCard({
   spotlightColor = 'rgba(102, 126, 234, 0.15)',
   size = 'md',
   onClick,
+  onContextMenu,
 }: SpotlightCardProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [position, setPosition] = useState({ x: 0, y: 0 })
@@ -55,6 +57,7 @@ export function SpotlightCard({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
       onClick={onClick}
+      onContextMenu={onContextMenu}
       className={cn(
         'relative overflow-hidden rounded-2xl',
         'bg-white/[0.03] backdrop-blur-xl',

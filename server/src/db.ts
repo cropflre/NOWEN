@@ -67,6 +67,28 @@ export async function initDatabase() {
     )
   `)
   
+  // 站点设置表
+  db.run(`
+    CREATE TABLE IF NOT EXISTS settings (
+      key TEXT PRIMARY KEY,
+      value TEXT,
+      updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `)
+  
+  // 初始化默认设置
+  const defaultSettings = [
+    { key: 'siteTitle', value: 'Nebula Portal' },
+    { key: 'siteFavicon', value: '' },
+  ]
+  
+  for (const setting of defaultSettings) {
+    db.run(
+      `INSERT OR IGNORE INTO settings (key, value, updatedAt) VALUES (?, ?, ?)`,
+      [setting.key, setting.value, new Date().toISOString()]
+    )
+  }
+  
   // 初始化默认分类
   const defaultCategories = [
     { id: 'dev', name: '开发', icon: 'code', color: '#667eea', orderIndex: 0 },

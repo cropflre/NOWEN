@@ -171,14 +171,13 @@ export function AddBookmarkModal({
 
           {/* 模态框 */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            initial={{ opacity: 0, scale: 0.95 }}
             animate={{ 
               opacity: 1, 
-              scale: 1, 
-              y: 0,
+              scale: 1,
               x: shake ? [0, -10, 10, -10, 10, 0] : 0,
             }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            exit={{ opacity: 0, scale: 0.95 }}
             transition={{ 
               type: 'spring', 
               damping: 25, 
@@ -186,8 +185,9 @@ export function AddBookmarkModal({
               x: { duration: 0.4 }
             }}
             className={cn(
-              'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50',
-              'w-full max-w-lg',
+              'fixed z-50',
+              'inset-0 m-auto',
+              'w-full max-w-lg h-fit',
               'rounded-2xl glass shadow-2xl'
             )}
           >

@@ -27,6 +27,7 @@ interface BentoGridItemProps {
   rowSpan?: 1 | 2 | 3
   spotlightColor?: string
   onClick?: () => void
+  onContextMenu?: (e: React.MouseEvent) => void
   delay?: number
 }
 
@@ -37,6 +38,7 @@ export function BentoGridItem({
   rowSpan = 1,
   spotlightColor,
   onClick,
+  onContextMenu,
   delay = 0,
 }: BentoGridItemProps) {
   const colSpanClasses = {
@@ -63,6 +65,7 @@ export function BentoGridItem({
         className={cn('h-full', className)}
         spotlightColor={spotlightColor}
         onClick={onClick}
+        onContextMenu={onContextMenu}
       >
         {children}
       </SpotlightCard>
