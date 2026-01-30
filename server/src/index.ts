@@ -23,7 +23,8 @@ import {
 } from './schemas.js'
 
 const app = express()
-const PORT = process.env.PORT || 3001
+// 确保端口被解析为数字，默认 3001
+const PORT = parseInt(process.env.PORT || '3001', 10)
 
 // ========== 请求频率限制 (Rate Limiter) ==========
 
@@ -89,13 +90,13 @@ function createRateLimiter(options: {
 // 不同接口的限流策略
 const generalLimiter = createRateLimiter({
   windowMs: 60 * 1000,    // 1 分钟
-  maxRequests: 100,       // 每分钟 100 次
+  maxRequests: 300,       // [修改] 稍微调高一点，避免前端并发请求被误伤
   message: '请求过于频繁，请稍后再试'
 })
 
 const authLimiter = createRateLimiter({
   windowMs: 15 * 60 * 1000,  // 15 分钟
-  maxRequests: 10,           // 每 15 分钟 10 次登录尝试
+  maxRequests: 20,           // [修改] 稍微放宽一点
   message: '登录尝试次数过多，请15分钟后再试'
 })
 
@@ -105,35 +106,14 @@ const metadataLimiter = createRateLimiter({
   message: '元数据抓取请求过于频繁，请稍后再试'
 })
 
-// CORS 白名单配置
-const CORS_WHITELIST = [
-  'http://localhost:5173',
-  'http://localhost:5174',
-  'http://localhost:3000',
-  'http://127.0.0.1:5173',
-  'http://127.0.0.1:5174',
-  'http://127.0.0.1:3000',
-  // 生产环境域名（根据实际情况添加）
-  process.env.FRONTEND_URL,
-].filter(Boolean) as string[]
+// ========== [核心修改] CORS 配置 ==========
+// 允许所有来源访问，这对 NAS 内网部署最方便
+app.use(cors({
+  origin: true,       // 允许任何来源（自动反射 Origin 头）
+  credentials: true,  // 允许携带 Cookie/认证头
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'] // 明确允许的方法
+}))
 
-const corsOptions: cors.CorsOptions = {
-  origin: (origin, callback) => {
-    // 允许无 origin 的请求（如移动端应用或 Postman）
-    if (!origin) {
-      return callback(null, true)
-    }
-    if (CORS_WHITELIST.includes(origin)) {
-      callback(null, true)
-    } else {
-      console.warn(`CORS blocked: ${origin}`)
-      callback(new Error('Not allowed by CORS'))
-    }
-  },
-  credentials: true,
-}
-
-app.use(cors(corsOptions))
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ limit: '10mb', extended: true }))
 
@@ -907,9 +887,10 @@ app.put('/api/quotes', authMiddleware, validateBody(updateQuotesSchema), (req: R
   }
 })
 
-// 初始化数据库并启动服务器
+// ========== [核心修改] 启动监听 ==========
+// 使用 0.0.0.0 允许 Docker 外部访问
 initDatabase().then(() => {
-  app.listen(PORT, () => {
-    console.log(`🪴 Zen Garden Server running at http://localhost:${PORT}`)
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🪴 Zen Garden Server running at http://0.0.0.0:${PORT}`)
   })
 }).catch(console.error)
