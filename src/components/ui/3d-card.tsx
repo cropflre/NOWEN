@@ -102,8 +102,13 @@ export function Card3D({
 
         {/* Card Content */}
         <div
-          className="relative z-10 rounded-2xl bg-[#0d0d14]/90 backdrop-blur-xl border border-white/10"
-          style={{ transform: 'translateZ(0)' }}
+          className="relative z-10 rounded-2xl backdrop-blur-xl"
+          style={{ 
+            transform: 'translateZ(0)',
+            background: 'var(--color-glass)',
+            border: '1px solid var(--color-glass-border)',
+            boxShadow: 'var(--color-shadow)',
+          }}
         >
           {children}
         </div>

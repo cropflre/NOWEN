@@ -59,41 +59,45 @@ export function SpotlightCard({
       onClick={onClick}
       onContextMenu={onContextMenu}
       className={cn(
-        'relative overflow-hidden rounded-2xl',
-        'bg-white/[0.03] backdrop-blur-xl',
-        'border border-white/[0.08]',
-        'transition-all duration-300',
+        'relative overflow-hidden rounded-2xl backdrop-blur-xl',
+        'transition-all duration-500',
         onClick && 'cursor-pointer',
         sizeClasses[size],
         className
       )}
+      style={{
+        background: 'var(--color-glass)',
+        border: '1px solid var(--color-glass-border)',
+        boxShadow: 'var(--color-shadow)',
+      }}
       whileHover={{ 
-        scale: 1.02,
-        transition: { duration: 0.2 }
+        y: -4,
+        boxShadow: 'var(--color-shadow-hover)',
+        transition: { duration: 0.3 }
       }}
       whileTap={onClick ? { scale: 0.98 } : undefined}
     >
-      {/* Spotlight Gradient - 跟随鼠标的聚光灯效果 */}
+      {/* Spotlight Gradient - 跟随鼠标的聚光灯效果（夜间模式专属） */}
       <div
-        className="pointer-events-none absolute -inset-px rounded-2xl transition-opacity duration-300"
+        className="pointer-events-none absolute -inset-px rounded-2xl transition-opacity duration-300 dark:block hidden"
         style={{
           opacity,
           background: `radial-gradient(600px circle at ${position.x}px ${position.y}px, ${spotlightColor}, transparent 40%)`,
         }}
       />
 
-      {/* Border Spotlight - 边缘发光 */}
+      {/* Border Spotlight - 边缘发光（夜间模式专属） */}
       <div
-        className="pointer-events-none absolute -inset-px rounded-2xl transition-opacity duration-300"
+        className="pointer-events-none absolute -inset-px rounded-2xl transition-opacity duration-300 dark:block hidden"
         style={{
           opacity,
           background: `radial-gradient(400px circle at ${position.x}px ${position.y}px, rgba(255,255,255,0.06), transparent 40%)`,
         }}
       />
 
-      {/* Animated Border Beam */}
+      {/* Animated Border Beam - 夜间模式专属 */}
       {isHovered && (
-        <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none">
+        <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none dark:block hidden">
           <div
             className="absolute w-20 h-20 bg-gradient-to-r from-transparent via-white/20 to-transparent blur-sm animate-border-beam"
             style={{

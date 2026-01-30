@@ -306,3 +306,27 @@ export const dataApi = {
   export: exportData,
   import: importData,
 }
+
+// ========== 名言 API ==========
+
+export interface QuotesData {
+  quotes: string[]
+  useDefaultQuotes: boolean
+}
+
+export async function fetchQuotes() {
+  return request<QuotesData>('/api/quotes')
+}
+
+export async function updateQuotes(quotes: string[], useDefaultQuotes?: boolean) {
+  return request<{ success: boolean; count: number }>('/api/quotes', {
+    method: 'PUT',
+    body: JSON.stringify({ quotes, useDefaultQuotes }),
+    requireAuth: true,
+  })
+}
+
+export const quotesApi = {
+  list: fetchQuotes,
+  update: updateQuotes,
+}

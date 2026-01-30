@@ -4,12 +4,40 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================
+   专业级主题系统 - Solar Clarity / Deep Space
+   ============================================ */
+
 :root {
+  /* 旧版兼容 */
   --nebula-cyan: #00f2fe;
   --nebula-blue: #4facfe;
   --nebula-purple: #667eea;
   --nebula-pink: #f093fb;
   --nebula-orange: #f5576c;
+  
+  /* 主题系统变量 - 默认深色 */
+  --color-primary: #667eea;
+  --color-primary-light: #818cf8;
+  --color-primary-dark: #4f46e5;
+  --color-accent: #06b6d4;
+  --color-accent-light: #22d3ee;
+  --color-bg-primary: #0a0a0a;
+  --color-bg-secondary: #0f0f12;
+  --color-bg-tertiary: #171720;
+  --color-bg-gradient: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(102, 126, 234, 0.15), transparent);
+  --color-text-primary: rgba(255, 255, 255, 0.95);
+  --color-text-secondary: rgba(255, 255, 255, 0.72);
+  --color-text-muted: rgba(255, 255, 255, 0.45);
+  --color-border: rgba(255, 255, 255, 0.1);
+  --color-border-light: rgba(255, 255, 255, 0.05);
+  --color-glass: rgba(23, 23, 32, 0.5);
+  --color-glass-border: rgba(255, 255, 255, 0.1);
+  --color-glass-hover: rgba(255, 255, 255, 0.05);
+  --color-shadow: none;
+  --color-shadow-hover: none;
+  --color-glow: rgba(102, 126, 234, 0.5);
+  --color-glow-secondary: rgba(6, 182, 212, 0.4);
 }
 
 * {
@@ -29,11 +57,78 @@ body {
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
   min-height: 100vh;
-  background: #0a0a0f;
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+  transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+              color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 背景渐变层 */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: var(--color-bg-gradient);
+  pointer-events: none;
+  z-index: -1;
+  transition: background 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================================
+   主题切换动画 - 圆圈扩散效果
+   ============================================ */
+
+@keyframes theme-transition-expand {
+  from {
+    clip-path: circle(0% at var(--origin-x, 50%) var(--origin-y, 50%));
+  }
+  to {
+    clip-path: circle(150% at var(--origin-x, 50%) var(--origin-y, 50%));
+  }
+}
+
+.theme-transitioning {
+  animation: theme-transition-expand 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* ============================================
+   日间模式 - Solar Clarity
+   高品质纸张质感 + 弥散阴影
+   ============================================ */
+
+/* 滚动条 - 日间 */
+.light ::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.light ::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+/* 文字选中 - 日间 */
+.light ::selection {
+  background: var(--color-primary);
   color: white;
 }
 
-/* Font Classes */
+/* ============================================
+   夜间模式 - Deep Space
+   深邃层次 + 流光发光
+   ============================================ */
+
+/* 滚动条 - 夜间 */
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* ============================================
+   字体类
+   ============================================ */
+
 .font-serif {
   font-family: 'Playfair Display', Georgia, serif;
 }
@@ -42,7 +137,10 @@ body {
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
 }
 
-/* Custom Scrollbar - Ultra Minimal */
+/* ============================================
+   滚动条 - 极简风格
+   ============================================ */
+
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -61,13 +159,16 @@ body {
   background: rgba(255, 255, 255, 0.2);
 }
 
-/* Selection */
+/* 默认选中 */
 ::selection {
-  background: rgba(102, 126, 234, 0.4);
+  background: var(--color-primary);
   color: white;
 }
 
-/* Line Clamp Utilities */
+/* ============================================
+   行数限制
+   ============================================ */
+
 .line-clamp-1 {
   display: -webkit-box;
   -webkit-line-clamp: 1;
@@ -89,35 +190,171 @@ body {
   overflow: hidden;
 }
 
-/* Gradient Text */
+/* ============================================
+   渐变文字 - 主题自适应
+   ============================================ */
+
 .gradient-text {
-  background: linear-gradient(135deg, var(--nebula-cyan), var(--nebula-purple), var(--nebula-pink));
+  background: linear-gradient(135deg, var(--color-accent), var(--color-primary), var(--color-primary-light));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-/* Glass Morphism */
-.glass {
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(24px) saturate(180%);
-  -webkit-backdrop-filter: blur(24px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+.light .gradient-text {
+  background: linear-gradient(135deg, var(--color-primary-dark), var(--color-primary), var(--color-accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-/* Glow Effects */
+/* ============================================
+   玻璃态容器 - 专业级
+   ============================================ */
+
+/* 深色模式玻璃 - bg-neutral-900/50 */
+.glass {
+  background: var(--color-glass);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid var(--color-glass-border);
+  box-shadow: var(--color-shadow);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass:hover {
+  background: var(--color-glass-hover);
+  box-shadow: var(--color-shadow-hover);
+}
+
+/* 日间模式玻璃 - 纯白80% + 超强模糊 */
+.light .glass {
+  background: var(--color-glass);
+  backdrop-filter: blur(40px) saturate(200%);
+  -webkit-backdrop-filter: blur(40px) saturate(200%);
+  border: 1px solid var(--color-glass-border);
+  box-shadow: var(--color-shadow);
+}
+
+.light .glass:hover {
+  background: var(--color-glass-hover);
+  box-shadow: var(--color-shadow-hover);
+}
+
+/* ============================================
+   专业卡片 - Bento Grid 优化
+   ============================================ */
+
+.theme-card {
+  position: relative;
+  background: var(--color-glass);
+  border: 1px solid var(--color-glass-border);
+  border-radius: 1.5rem;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  box-shadow: var(--color-shadow);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+/* 日间卡片 Hover - 上浮 + 阴影加深 */
+.light .theme-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--color-shadow-hover);
+}
+
+/* 夜间卡片 Hover - 边框流光 */
+.dark .theme-card {
+  position: relative;
+}
+
+.dark .theme-card::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    transparent 40%,
+    var(--color-primary) 50%,
+    var(--color-accent) 60%,
+    transparent 70%
+  );
+  background-size: 300% 300%;
+  background-position: 0% 0%;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.4s, background-position 0.6s;
+  pointer-events: none;
+}
+
+.dark .theme-card:hover::before {
+  opacity: 1;
+  background-position: 100% 100%;
+}
+
+/* ============================================
+   夜间 Spotlight 效果 - 鼠标跟随光晕
+   ============================================ */
+
+.dark .spotlight-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.dark .spotlight {
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(
+    circle at center,
+    var(--color-glow-secondary) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, -50%);
+  transition: opacity 0.3s;
+  z-index: 1;
+}
+
+.dark .spotlight-container:hover .spotlight {
+  opacity: 0.6;
+}
+
+/* ============================================
+   发光效果 - 主题自适应
+   ============================================ */
+
 .glow-sm {
-  box-shadow: 0 0 15px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 0 15px var(--color-glow);
 }
 
 .glow-md {
-  box-shadow: 0 0 30px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 0 30px var(--color-glow);
 }
 
 .glow-lg {
-  box-shadow: 0 0 60px rgba(102, 126, 234, 0.5);
+  box-shadow: 0 0 60px var(--color-glow);
 }
 
+.glow-accent {
+  box-shadow: 0 0 40px var(--color-glow-secondary);
+}
+
+/* 日间模式：用弥散阴影替代发光 */
+.light .glow-sm,
+.light .glow-md,
+.light .glow-lg,
+.light .glow-accent {
+  box-shadow: var(--color-shadow);
+}
+
+/* 旧版兼容 */
 .glow-cyan {
   box-shadow: 0 0 40px rgba(0, 242, 254, 0.3);
 }
@@ -126,7 +363,10 @@ body {
   box-shadow: 0 0 40px rgba(240, 147, 251, 0.3);
 }
 
-/* Shimmer Animation */
+/* ============================================
+   动画
+   ============================================ */
+
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
@@ -136,14 +376,13 @@ body {
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(255, 255, 255, 0.05) 50%,
+    var(--color-glass-hover) 50%,
     transparent 100%
   );
   background-size: 200% 100%;
   animation: shimmer 2s linear infinite;
 }
 
-/* Meteor Animation */
 @keyframes meteor {
   0% {
     transform: rotate(215deg) translateX(0);
@@ -162,13 +401,12 @@ body {
   animation: meteor 5s linear infinite;
 }
 
-/* Pulse Glow */
 @keyframes pulse-glow {
   0%, 100% {
-    box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 0 20px var(--color-glow);
   }
   50% {
-    box-shadow: 0 0 40px rgba(102, 126, 234, 0.6);
+    box-shadow: 0 0 40px var(--color-glow);
   }
 }
 
@@ -176,42 +414,27 @@ body {
   animation: pulse-glow 2s ease-in-out infinite;
 }
 
-/* Border Beam */
 @keyframes border-beam {
-  0% {
-    offset-distance: 0%;
-  }
-  100% {
-    offset-distance: 100%;
-  }
+  0% { offset-distance: 0%; }
+  100% { offset-distance: 100%; }
 }
 
 .animate-border-beam {
   animation: border-beam var(--duration, 12s) infinite linear;
 }
 
-/* Spotlight Rotate */
 @keyframes spotlight-rotate {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .animate-spotlight-rotate {
   animation: spotlight-rotate 8s linear infinite;
 }
 
-/* Float Animation */
 @keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-20px);
-  }
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
 }
 
 .animate-float {
@@ -222,36 +445,67 @@ body {
   animation: float 8s ease-in-out infinite;
 }
 
-/* Skeleton Loading */
+/* ============================================
+   骨架屏加载 - 主题自适应
+   ============================================ */
+
 .skeleton {
   background: linear-gradient(
     90deg,
-    rgba(255, 255, 255, 0.02) 25%,
-    rgba(255, 255, 255, 0.05) 50%,
-    rgba(255, 255, 255, 0.02) 75%
+    var(--color-border-light) 25%,
+    var(--color-border) 50%,
+    var(--color-border-light) 75%
   );
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
   border-radius: 8px;
 }
 
-/* Vanish Text Effect */
+.light .skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.03) 25%,
+    rgba(0, 0, 0, 0.06) 50%,
+    rgba(0, 0, 0, 0.03) 75%
+  );
+  background-size: 200% 100%;
+}
+
+/* ============================================
+   表单元素
+   ============================================ */
+
 .vanish-text {
   opacity: 0;
   transition: opacity 0.3s ease;
 }
 
-/* Focus States */
 input:focus,
 button:focus {
   outline: none;
 }
 
 .focus-ring:focus {
-  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.5);
+  box-shadow: 0 0 0 2px var(--color-primary);
 }
 
-/* Noise Texture */
+/* 日间搜索框 */
+.light .search-input {
+  background: #f4f4f5;
+  border: 1px solid transparent;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.light .search-input:focus {
+  background: white;
+  border-color: var(--color-border);
+  box-shadow: 0 0 0 4px var(--color-glow);
+}
+
+/* ============================================
+   噪点纹理 - 若隐若现（0.03 透明度）
+   ============================================ */
+
 .noise::after {
   content: '';
   position: fixed;
@@ -260,18 +514,30 @@ button:focus {
   width: 100%;
   height: 100%;
   pointer-events: none;
-  opacity: 0.015;
+  opacity: 0.03;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  z-index: 9999;
 }
 
-/* Responsive Typography */
+/* 日间模式噪点更淡 */
+.light .noise::after {
+  opacity: 0.015;
+}
+
+/* ============================================
+   响应式排版
+   ============================================ */
+
 @media (max-width: 640px) {
   html {
     font-size: 14px;
   }
 }
 
-/* Print Styles */
+/* ============================================
+   打印样式
+   ============================================ */
+
 @media print {
   .no-print {
     display: none !important;

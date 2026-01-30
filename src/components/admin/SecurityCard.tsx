@@ -114,9 +114,15 @@ export function SecurityCard({
       className="relative group"
     >
       {/* Card Container */}
-      <div className="relative overflow-hidden rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.08]">
+      <div 
+        className="relative overflow-hidden rounded-2xl backdrop-blur-xl"
+        style={{
+          background: 'var(--color-glass)',
+          border: '1px solid var(--color-glass-border)',
+        }}
+      >
         {/* Animated Border Gradient */}
-        <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-purple-500/20 via-transparent to-pink-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-purple-500/20 via-transparent to-pink-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 dark:block hidden" />
         
         {/* Header - Always Visible */}
         <button
@@ -126,22 +132,23 @@ export function SecurityCard({
           <div className="flex items-center gap-4">
             <div className="relative">
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-600/20 border border-purple-500/20 flex items-center justify-center">
-                <Shield className="w-6 h-6 text-purple-400" />
+                <Shield className="w-6 h-6 text-purple-500" />
               </div>
-              <div className="absolute -inset-2 rounded-xl bg-purple-500/20 blur-xl opacity-50 -z-10" />
+              <div className="absolute -inset-2 rounded-xl bg-purple-500/20 blur-xl opacity-50 -z-10 dark:block hidden" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-white">安全设置</h3>
-              <p className="text-sm text-white/40">管理您的账户密码</p>
+              <h3 className="text-lg font-semibold" style={{ color: 'var(--color-text-primary)' }}>安全设置</h3>
+              <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>管理您的账户密码</p>
             </div>
           </div>
           
           <motion.div
             animate={{ rotate: isExpanded ? 180 : 0 }}
             transition={{ duration: 0.3 }}
-            className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center"
+            className="w-8 h-8 rounded-lg flex items-center justify-center"
+            style={{ background: 'var(--color-bg-tertiary)' }}
           >
-            <ChevronDown className="w-5 h-5 text-white/40" />
+            <ChevronDown className="w-5 h-5" style={{ color: 'var(--color-text-muted)' }} />
           </motion.div>
         </button>
 
@@ -157,11 +164,11 @@ export function SecurityCard({
             >
               <div className="px-6 pb-6 space-y-5">
                 {/* Divider */}
-                <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+                <div className="h-px" style={{ background: 'linear-gradient(to right, transparent, var(--color-glass-border), transparent)' }} />
 
                 {/* Current Password */}
                 <div className="space-y-2">
-                  <label className="flex items-center gap-2 text-sm font-medium text-white/60">
+                  <label className="flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--color-text-muted)' }}>
                     <Lock className="w-4 h-4" />
                     当前密码
                   </label>
@@ -175,18 +182,18 @@ export function SecurityCard({
                         onClearError()
                       }}
                       placeholder="请输入当前密码"
-                      className={cn(
-                        'w-full px-4 py-3 pr-12 rounded-xl',
-                        'bg-black/20 border border-white/10',
-                        'text-white placeholder:text-white/30',
-                        'focus:outline-none focus:border-purple-500/50 focus:shadow-[0_0_20px_rgba(168,85,247,0.15)]',
-                        'transition-all duration-300'
-                      )}
+                      className="w-full px-4 py-3 pr-12 rounded-xl focus:outline-none transition-all duration-300"
+                      style={{
+                        background: 'var(--color-bg-tertiary)',
+                        border: '1px solid var(--color-glass-border)',
+                        color: 'var(--color-text-primary)',
+                      }}
                     />
                     <button
                       type="button"
                       onClick={() => setShowCurrentPwd(!showCurrentPwd)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-white/30 hover:text-white/50 transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1 transition-colors"
+                      style={{ color: 'var(--color-text-muted)' }}
                     >
                       {showCurrentPwd ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
@@ -195,7 +202,7 @@ export function SecurityCard({
 
                 {/* New Password */}
                 <div className="space-y-2">
-                  <label className="flex items-center gap-2 text-sm font-medium text-white/60">
+                  <label className="flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--color-text-muted)' }}>
                     <Lock className="w-4 h-4" />
                     新密码
                   </label>
@@ -209,18 +216,18 @@ export function SecurityCard({
                         onClearError()
                       }}
                       placeholder="请输入新密码（至少6位）"
-                      className={cn(
-                        'w-full px-4 py-3 pr-12 rounded-xl',
-                        'bg-black/20 border border-white/10',
-                        'text-white placeholder:text-white/30',
-                        'focus:outline-none focus:border-purple-500/50 focus:shadow-[0_0_20px_rgba(168,85,247,0.15)]',
-                        'transition-all duration-300'
-                      )}
+                      className="w-full px-4 py-3 pr-12 rounded-xl focus:outline-none transition-all duration-300"
+                      style={{
+                        background: 'var(--color-bg-tertiary)',
+                        border: '1px solid var(--color-glass-border)',
+                        color: 'var(--color-text-primary)',
+                      }}
                     />
                     <button
                       type="button"
                       onClick={() => setShowNewPwd(!showNewPwd)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-white/30 hover:text-white/50 transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1 transition-colors"
+                      style={{ color: 'var(--color-text-muted)' }}
                     >
                       {showNewPwd ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
@@ -234,12 +241,12 @@ export function SecurityCard({
                       className="space-y-2"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-white/40">密码强度</span>
+                        <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>密码强度</span>
                         <div className="flex items-center gap-1.5">
                           <Zap className={cn(
                             'w-3.5 h-3.5 transition-colors',
-                            passwordStrength.score >= 80 ? 'text-green-400' : 'text-white/30'
-                          )} />
+                            passwordStrength.score >= 80 ? 'text-green-400' : ''
+                          )} style={{ color: passwordStrength.score >= 80 ? undefined : 'var(--color-text-muted)' }} />
                           <span className={cn(
                             'text-xs font-medium',
                             passwordStrength.score < 30 ? 'text-red-400' :
@@ -252,7 +259,7 @@ export function SecurityCard({
                       </div>
                       
                       {/* Animated Progress Bar */}
-                      <div className="h-1.5 rounded-full bg-white/10 overflow-hidden">
+                      <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--color-bg-tertiary)' }}>
                         <motion.div
                           initial={{ width: 0 }}
                           animate={{ width: `${passwordStrength.score}%` }}
@@ -280,7 +287,7 @@ export function SecurityCard({
 
                 {/* Confirm Password */}
                 <div className="space-y-2">
-                  <label className="flex items-center gap-2 text-sm font-medium text-white/60">
+                  <label className="flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--color-text-muted)' }}>
                     <Lock className="w-4 h-4" />
                     确认新密码
                   </label>
@@ -295,18 +302,22 @@ export function SecurityCard({
                       }}
                       placeholder="请再次输入新密码"
                       className={cn(
-                        'w-full px-4 py-3 pr-12 rounded-xl',
-                        'bg-black/20 border border-white/10',
-                        'text-white placeholder:text-white/30',
-                        'focus:outline-none focus:border-purple-500/50 focus:shadow-[0_0_20px_rgba(168,85,247,0.15)]',
-                        'transition-all duration-300',
+                        'w-full px-4 py-3 pr-12 rounded-xl focus:outline-none transition-all duration-300',
                         confirmPassword && newPassword !== confirmPassword && 'border-red-500/50'
                       )}
+                      style={{
+                        background: 'var(--color-bg-tertiary)',
+                        border: confirmPassword && newPassword !== confirmPassword 
+                          ? '1px solid rgba(239, 68, 68, 0.5)' 
+                          : '1px solid var(--color-glass-border)',
+                        color: 'var(--color-text-primary)',
+                      }}
                     />
                     <button
                       type="button"
                       onClick={() => setShowConfirmPwd(!showConfirmPwd)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-white/30 hover:text-white/50 transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1 transition-colors"
+                      style={{ color: 'var(--color-text-muted)' }}
                     >
                       {showConfirmPwd ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>

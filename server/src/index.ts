@@ -466,6 +466,8 @@ app.get('/api/export', authMiddleware, (req: Request, res: Response) => {
     settingsRows.forEach((s: any) => {
       settings[s.key] = s.value
     })
+
+    const quotes = queryAll('SELECT * FROM quotes ORDER BY orderIndex ASC')
     
     res.json({
       version: '1.0',
@@ -474,6 +476,7 @@ app.get('/api/export', authMiddleware, (req: Request, res: Response) => {
         bookmarks,
         categories,
         settings,
+        quotes,
       }
     })
   } catch (error) {
@@ -552,6 +555,66 @@ app.post('/api/import', authMiddleware, (req: Request, res: Response) => {
   } catch (error) {
     console.error('导入数据失败:', error)
     res.status(500).json({ error: '导入数据失败' })
+  }
+})
+
+// ========== 名言 API ==========
+
+// 获取所有名言（包含设置）
+app.get('/api/quotes', (req, res) => {
+  try {
+    const quotes = queryAll('SELECT * FROM quotes ORDER BY orderIndex ASC')
+    const useDefaultSetting = queryOne('SELECT value FROM settings WHERE key = ?', ['useDefaultQuotes'])
+    const useDefaultQuotes = useDefaultSetting?.value !== 'false'
+    
+    res.json({
+      quotes: quotes.map((q: any) => q.content),
+      useDefaultQuotes
+    })
+  } catch (error) {
+    console.error('获取名言失败:', error)
+    res.status(500).json({ error: '获取名言失败' })
+  }
+})
+
+// 更新名言列表（需要认证）
+app.put('/api/quotes', authMiddleware, (req: Request, res: Response) => {
+  try {
+    const { quotes, useDefaultQuotes } = req.body
+    
+    if (!quotes || !Array.isArray(quotes)) {
+      return res.status(400).json({ error: '无效的名言数据' })
+    }
+    
+    const db = getDatabase()
+    
+    // 更新 useDefaultQuotes 设置
+    if (typeof useDefaultQuotes === 'boolean') {
+      db.run(
+        'INSERT OR REPLACE INTO settings (key, value, updatedAt) VALUES (?, ?, ?)',
+        ['useDefaultQuotes', useDefaultQuotes.toString(), new Date().toISOString()]
+      )
+    }
+    
+    // 清空现有名言
+    db.run('DELETE FROM quotes')
+    
+    // 插入新名言
+    const now = new Date().toISOString()
+    quotes.forEach((content: string, index: number) => {
+      const id = generateId()
+      db.run(
+        'INSERT INTO quotes (id, content, orderIndex, createdAt) VALUES (?, ?, ?, ?)',
+        [id, content, index, now]
+      )
+    })
+    
+    saveDatabase()
+    
+    res.json({ success: true, count: quotes.length })
+  } catch (error) {
+    console.error('更新名言失败:', error)
+    res.status(500).json({ error: '更新名言失败' })
   }
 })
 

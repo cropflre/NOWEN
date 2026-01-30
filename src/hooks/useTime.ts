@@ -12,7 +12,8 @@ export function useTime() {
 
   const hours = time.getHours()
   const minutes = time.getMinutes()
-  const formattedTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
+  const seconds = time.getSeconds()
+  const formattedTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
   
   const greeting = useMemo(() => {
     if (hours < 6) return '夜深了，注意休息'

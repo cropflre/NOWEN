@@ -144,46 +144,70 @@ export function DataManagementCard({
       className="relative group"
     >
       {/* Card Container */}
-      <div className="relative overflow-hidden rounded-2xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] p-6">
+      <div 
+        className="relative overflow-hidden rounded-2xl backdrop-blur-xl p-6"
+        style={{
+          background: 'var(--color-glass)',
+          border: '1px solid var(--color-glass-border)',
+        }}
+      >
         {/* Animated Border Gradient */}
-        <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-emerald-500/20 via-transparent to-teal-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-emerald-500/20 via-transparent to-teal-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 dark:block hidden" />
         
         {/* Header */}
         <div className="relative flex items-center gap-4 mb-6">
           <div className="relative">
             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-600/20 border border-emerald-500/20 flex items-center justify-center">
-              <Database className="w-6 h-6 text-emerald-400" />
+              <Database className="w-6 h-6 text-emerald-500" />
             </div>
-            <div className="absolute -inset-2 rounded-xl bg-emerald-500/20 blur-xl opacity-50 -z-10" />
+            <div className="absolute -inset-2 rounded-xl bg-emerald-500/20 blur-xl opacity-50 -z-10 dark:block hidden" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold text-white">数据管理</h3>
-            <p className="text-sm text-white/40">导入导出您的书签数据</p>
+            <h3 className="text-lg font-semibold" style={{ color: 'var(--color-text-primary)' }}>数据管理</h3>
+            <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>导入导出您的书签数据</p>
           </div>
         </div>
 
         {/* Stats */}
         <div className="relative grid grid-cols-3 gap-4 mb-6">
-          <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-            <div className="flex items-center gap-2 text-white/40 mb-1">
+          <div 
+            className="p-3 rounded-xl"
+            style={{
+              background: 'var(--color-bg-tertiary)',
+              border: '1px solid var(--color-glass-border)',
+            }}
+          >
+            <div className="flex items-center gap-2 mb-1" style={{ color: 'var(--color-text-muted)' }}>
               <FileText className="w-4 h-4" />
               <span className="text-xs">书签</span>
             </div>
-            <p className="text-xl font-semibold text-white">{bookmarks.length}</p>
+            <p className="text-xl font-semibold" style={{ color: 'var(--color-text-primary)' }}>{bookmarks.length}</p>
           </div>
-          <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-            <div className="flex items-center gap-2 text-white/40 mb-1">
+          <div 
+            className="p-3 rounded-xl"
+            style={{
+              background: 'var(--color-bg-tertiary)',
+              border: '1px solid var(--color-glass-border)',
+            }}
+          >
+            <div className="flex items-center gap-2 mb-1" style={{ color: 'var(--color-text-muted)' }}>
               <Layers className="w-4 h-4" />
               <span className="text-xs">分类</span>
             </div>
-            <p className="text-xl font-semibold text-white">{categories.length}</p>
+            <p className="text-xl font-semibold" style={{ color: 'var(--color-text-primary)' }}>{categories.length}</p>
           </div>
-          <div className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-            <div className="flex items-center gap-2 text-white/40 mb-1">
+          <div 
+            className="p-3 rounded-xl"
+            style={{
+              background: 'var(--color-bg-tertiary)',
+              border: '1px solid var(--color-glass-border)',
+            }}
+          >
+            <div className="flex items-center gap-2 mb-1" style={{ color: 'var(--color-text-muted)' }}>
               <Calendar className="w-4 h-4" />
               <span className="text-xs">今日</span>
             </div>
-            <p className="text-xl font-semibold text-white">
+            <p className="text-xl font-semibold" style={{ color: 'var(--color-text-primary)' }}>
               {new Date().toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })}
             </p>
           </div>
@@ -213,12 +237,12 @@ export function DataManagementCard({
                   className="w-5 h-5 border-2 border-emerald-400/30 border-t-emerald-400 rounded-full"
                 />
               ) : (
-                <Download className="w-5 h-5 text-emerald-400" />
+                <Download className="w-5 h-5 text-emerald-500" />
               )}
             </div>
             <div className="text-center">
-              <p className="font-medium text-white">导出备份</p>
-              <p className="text-xs text-white/40 mt-1">下载 JSON 文件</p>
+              <p className="font-medium" style={{ color: 'var(--color-text-primary)' }}>导出备份</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>下载 JSON 文件</p>
             </div>
           </motion.button>
 
@@ -244,12 +268,12 @@ export function DataManagementCard({
                   className="w-5 h-5 border-2 border-blue-400/30 border-t-blue-400 rounded-full"
                 />
               ) : (
-                <Upload className="w-5 h-5 text-blue-400" />
+                <Upload className="w-5 h-5 text-blue-500" />
               )}
             </div>
             <div className="text-center">
-              <p className="font-medium text-white">导入备份</p>
-              <p className="text-xs text-white/40 mt-1">恢复 JSON 文件</p>
+              <p className="font-medium" style={{ color: 'var(--color-text-primary)' }}>导入备份</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>恢复 JSON 文件</p>
             </div>
           </motion.button>
 
@@ -263,8 +287,14 @@ export function DataManagementCard({
         </div>
 
         {/* File Format Info */}
-        <div className="relative mt-4 p-3 rounded-xl bg-white/[0.02] border border-white/[0.05]">
-          <div className="flex items-center gap-2 text-white/40">
+        <div 
+          className="relative mt-4 p-3 rounded-xl"
+          style={{
+            background: 'var(--color-bg-tertiary)',
+            border: '1px solid var(--color-glass-border)',
+          }}
+        >
+          <div className="flex items-center gap-2" style={{ color: 'var(--color-text-muted)' }}>
             <FileJson className="w-4 h-4" />
             <span className="text-xs">支持格式: JSON 备份文件 (.json)</span>
           </div>

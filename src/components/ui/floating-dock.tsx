@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion'
 import { cn } from '../../lib/utils'
 
@@ -15,16 +15,41 @@ interface FloatingDockProps {
 
 export function FloatingDock({ items, className }: FloatingDockProps) {
   const mouseX = useMotionValue(Infinity)
+  const [isDark, setIsDark] = useState(true)
+
+  // 监听主题变化
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDark(document.documentElement.classList.contains('dark'))
+    })
+    
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    })
+
+    setIsDark(document.documentElement.classList.contains('dark'))
+
+    return () => observer.disconnect()
+  }, [])
 
   return (
     <motion.div
       className={cn(
         'fixed bottom-6 left-1/2 -translate-x-1/2 z-50',
         'flex items-end gap-2 px-4 py-3 rounded-2xl',
-        'bg-[#0d0d14]/80 backdrop-blur-2xl border border-white/10',
-        'shadow-2xl shadow-black/50',
         className
       )}
+      style={{
+        background: isDark ? 'var(--color-glass)' : 'var(--color-glass)',
+        backdropFilter: 'blur(24px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+        border: '1px solid var(--color-glass-border)',
+        boxShadow: isDark 
+          ? 'none' 
+          : 'var(--color-shadow)',
+        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+      }}
       onMouseMove={(e) => mouseX.set(e.pageX)}
       onMouseLeave={() => mouseX.set(Infinity)}
       initial={{ y: 100, opacity: 0 }}
@@ -32,7 +57,7 @@ export function FloatingDock({ items, className }: FloatingDockProps) {
       transition={{ delay: 0.5, type: 'spring', stiffness: 200, damping: 20 }}
     >
       {items.map((item) => (
-        <DockItem key={item.id} mouseX={mouseX} {...item} />
+        <DockItem key={item.id} mouseX={mouseX} isDark={isDark} {...item} />
       ))}
     </motion.div>
   )
@@ -45,9 +70,10 @@ interface DockItemProps {
   href?: string
   onClick?: () => void
   mouseX: ReturnType<typeof useMotionValue<number>>
+  isDark: boolean
 }
 
-function DockItem({ title, icon, href, onClick, mouseX }: DockItemProps) {
+function DockItem({ title, icon, href, onClick, mouseX, isDark }: DockItemProps) {
   const ref = useRef<HTMLDivElement>(null)
   const [isHovered, setIsHovered] = useState(false)
 
@@ -82,27 +108,44 @@ function DockItem({ title, icon, href, onClick, mouseX }: DockItemProps) {
       <AnimatePresence>
         {isHovered && (
           <motion.div
-            className="absolute -top-12 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-lg bg-[#1a1a24] border border-white/10 whitespace-nowrap"
+            className="absolute -top-12 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-lg whitespace-nowrap"
+            style={{
+              background: 'var(--color-bg-secondary)',
+              border: '1px solid var(--color-glass-border)',
+              boxShadow: isDark ? 'none' : 'var(--color-shadow)',
+            }}
             initial={{ opacity: 0, y: 10, scale: 0.8 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 10, scale: 0.8 }}
             transition={{ duration: 0.15 }}
           >
-            <span className="text-sm text-white font-medium">{title}</span>
-            <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-[#1a1a24] border-r border-b border-white/10 rotate-45" />
+            <span className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>
+              {title}
+            </span>
+            <div 
+              className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 rotate-45"
+              style={{
+                background: 'var(--color-bg-secondary)',
+                borderRight: '1px solid var(--color-glass-border)',
+                borderBottom: '1px solid var(--color-glass-border)',
+              }}
+            />
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Icon Button */}
+      {/* Icon Button - 主题自适应样式 */}
       <motion.button
         onClick={handleClick}
-        className={cn(
-          'w-full h-full rounded-xl flex items-center justify-center',
-          'bg-white/5 hover:bg-white/10 border border-white/10',
-          'transition-colors duration-200 cursor-pointer',
-          'text-white/70 hover:text-white'
-        )}
+        className="w-full h-full rounded-xl flex items-center justify-center cursor-pointer overflow-hidden"
+        style={{
+          background: isHovered 
+            ? 'var(--color-glass-hover)' 
+            : 'var(--color-glass)',
+          border: `1px solid ${isHovered ? 'var(--color-primary)' : 'var(--color-glass-border)'}`,
+          color: isHovered ? 'var(--color-primary)' : 'var(--color-text-secondary)',
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        }}
         whileTap={{ scale: 0.9 }}
       >
         <motion.div
@@ -114,15 +157,49 @@ function DockItem({ title, icon, href, onClick, mouseX }: DockItemProps) {
         </motion.div>
       </motion.button>
 
-      {/* Glow Effect */}
-      <motion.div
-        className="absolute inset-0 rounded-xl pointer-events-none"
-        style={{
-          boxShadow: '0 0 20px rgba(102, 126, 234, 0.3)',
-        }}
-        animate={{ opacity: isHovered ? 1 : 0 }}
-        transition={{ duration: 0.2 }}
-      />
+      {/* 夜间模式：发光效果 */}
+      {isDark && (
+        <motion.div
+          className="absolute inset-0 rounded-xl pointer-events-none"
+          style={{
+            boxShadow: `0 0 25px var(--color-glow)`,
+          }}
+          animate={{ opacity: isHovered ? 0.8 : 0 }}
+          transition={{ duration: 0.2 }}
+        />
+      )}
+
+      {/* 日间模式：悬浮阴影 */}
+      {!isDark && (
+        <motion.div
+          className="absolute inset-0 rounded-xl pointer-events-none"
+          animate={{ 
+            boxShadow: isHovered 
+              ? 'var(--color-shadow-hover)' 
+              : 'none',
+            y: isHovered ? -2 : 0,
+          }}
+          transition={{ duration: 0.2 }}
+        />
+      )}
+
+      {/* 夜间模式：边框流光效果 */}
+      {isDark && isHovered && (
+        <motion.div
+          className="absolute inset-0 rounded-xl pointer-events-none"
+          style={{
+            background: `linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%)`,
+            padding: '1px',
+            WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+            WebkitMaskComposite: 'xor',
+            maskComposite: 'exclude',
+          }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.6 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3 }}
+        />
+      )}
     </motion.div>
   )
 }

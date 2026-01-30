@@ -320,16 +320,19 @@ export function AddBookmarkModal({
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
                   className={cn(
-                    'w-full px-4 py-3 rounded-xl glass',
-                    'border border-white/10 focus:border-white/30',
-                    'outline-none transition-colors',
-                    'bg-transparent cursor-pointer'
+                    'w-full px-4 py-3 rounded-xl',
+                    'border outline-none transition-colors',
+                    'cursor-pointer'
                   )}
-                  style={{ color: 'var(--text-primary)' }}
+                  style={{ 
+                    color: 'var(--color-text-primary)',
+                    background: 'var(--color-bg-secondary)',
+                    borderColor: 'var(--color-glass-border)',
+                  }}
                 >
-                  <option value="" className="bg-gray-900">未分类</option>
+                  <option value="" style={{ background: 'var(--color-bg-secondary)', color: 'var(--color-text-primary)' }}>未分类</option>
                   {categories.map(cat => (
-                    <option key={cat.id} value={cat.id} className="bg-gray-900">
+                    <option key={cat.id} value={cat.id} style={{ background: 'var(--color-bg-secondary)', color: 'var(--color-text-primary)' }}>
                       {cat.name}
                     </option>
                   ))}

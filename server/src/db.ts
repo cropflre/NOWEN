@@ -75,11 +75,22 @@ export async function initDatabase() {
       updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
     )
   `)
+
+  // 名言表
+  db.run(`
+    CREATE TABLE IF NOT EXISTS quotes (
+      id TEXT PRIMARY KEY,
+      content TEXT NOT NULL,
+      orderIndex INTEGER DEFAULT 0,
+      createdAt TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `)
   
   // 初始化默认设置
   const defaultSettings = [
     { key: 'siteTitle', value: 'Nebula Portal' },
     { key: 'siteFavicon', value: '' },
+    { key: 'useDefaultQuotes', value: 'true' },
   ]
   
   for (const setting of defaultSettings) {

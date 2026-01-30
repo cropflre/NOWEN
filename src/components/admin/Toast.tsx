@@ -1,4 +1,4 @@
-import { useEffect, useState, createContext, useContext, useCallback } from 'react'
+import { useEffect, useState, createContext, useContext, useCallback, forwardRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CheckCircle, AlertCircle, Info, X } from 'lucide-react'
 import { cn } from '../../lib/utils'
@@ -68,7 +68,7 @@ interface ToastItemProps {
   onRemove: (id: string) => void
 }
 
-function ToastItem({ toast, onRemove }: ToastItemProps) {
+const ToastItem = forwardRef<HTMLDivElement, ToastItemProps>(({ toast, onRemove }, ref) => {
   useEffect(() => {
     if (toast.duration) {
       const timer = setTimeout(() => {
@@ -110,6 +110,7 @@ function ToastItem({ toast, onRemove }: ToastItemProps) {
 
   return (
     <motion.div
+      ref={ref}
       layout
       initial={{ opacity: 0, y: 50, scale: 0.9 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -172,4 +173,6 @@ function ToastItem({ toast, onRemove }: ToastItemProps) {
       </div>
     </motion.div>
   )
-}
+})
+
+ToastItem.displayName = 'ToastItem'
