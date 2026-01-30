@@ -6,9 +6,11 @@ import React, { useRef, useState, useEffect } from "react"
 export const BackgroundBeamsWithCollision = ({
   children,
   className,
+  isDark = true,
 }: {
   children?: React.ReactNode
   className?: string
+  isDark?: boolean
 }) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const parentRef = useRef<HTMLDivElement>(null)
@@ -26,6 +28,23 @@ export const BackgroundBeamsWithCollision = ({
     { initialX: 300, translateX: 300, duration: 9, repeatDelay: 4, delay: 3, className: "h-16" },
   ]
 
+  // 日间模式使用不同的颜色
+  const beamGradient = isDark
+    ? "linear-gradient(to top, var(--color-glow), var(--color-glow-secondary), transparent)"
+    : "linear-gradient(to top, rgba(59, 130, 246, 0.6), rgba(147, 51, 234, 0.4), transparent)"
+  
+  const beamShadow = isDark
+    ? "0 0 8px var(--color-glow), 0 0 16px var(--color-glow-secondary)"
+    : "0 0 8px rgba(59, 130, 246, 0.5), 0 0 16px rgba(147, 51, 234, 0.3)"
+  
+  const lineGradient = isDark
+    ? "linear-gradient(90deg, transparent 10%, var(--color-glow) 50%, transparent 90%)"
+    : "linear-gradient(90deg, transparent 10%, rgba(59, 130, 246, 0.5) 50%, transparent 90%)"
+  
+  const lineShadow = isDark
+    ? "0 0 20px 5px var(--color-glow), 0 0 40px 10px var(--color-glow-secondary)"
+    : "0 0 15px 3px rgba(59, 130, 246, 0.4), 0 0 30px 8px rgba(147, 51, 234, 0.2)"
+
   return (
     <div
       ref={parentRef}
@@ -40,6 +59,9 @@ export const BackgroundBeamsWithCollision = ({
           beamOptions={beam}
           containerRef={containerRef}
           parentRef={parentRef}
+          isDark={isDark}
+          beamGradient={beamGradient}
+          beamShadow={beamShadow}
         />
       ))}
 
@@ -50,8 +72,8 @@ export const BackgroundBeamsWithCollision = ({
         ref={containerRef}
         className="absolute bottom-0 w-full inset-x-0 pointer-events-none h-1"
         style={{
-          background: "linear-gradient(90deg, transparent 10%, var(--color-glow) 50%, transparent 90%)",
-          boxShadow: "0 0 20px 5px var(--color-glow), 0 0 40px 10px var(--color-glow-secondary)",
+          background: lineGradient,
+          boxShadow: lineShadow,
         }}
       />
     </div>
@@ -63,6 +85,9 @@ const CollisionMechanism = React.forwardRef<
   {
     containerRef: React.RefObject<HTMLDivElement>
     parentRef: React.RefObject<HTMLDivElement>
+    isDark?: boolean
+    beamGradient?: string
+    beamShadow?: string
     beamOptions?: {
       initialX?: number
       translateX?: number
@@ -75,7 +100,7 @@ const CollisionMechanism = React.forwardRef<
       repeatDelay?: number
     }
   }
->(({ parentRef, containerRef, beamOptions = {} }, _ref) => {
+>(({ parentRef, containerRef, beamOptions = {}, isDark = true, beamGradient, beamShadow }, _ref) => {
   const beamRef = useRef<HTMLDivElement>(null)
   const [collision, setCollision] = useState<{
     detected: boolean
@@ -160,14 +185,15 @@ const CollisionMechanism = React.forwardRef<
           beamOptions.className
         )}
         style={{
-          background: "linear-gradient(to top, var(--color-glow), var(--color-glow-secondary), transparent)",
-          boxShadow: "0 0 8px var(--color-glow), 0 0 16px var(--color-glow-secondary)",
+          background: beamGradient || "linear-gradient(to top, var(--color-glow), var(--color-glow-secondary), transparent)",
+          boxShadow: beamShadow || "0 0 8px var(--color-glow), 0 0 16px var(--color-glow-secondary)",
         }}
       />
       <AnimatePresence>
         {collision.detected && collision.coordinates && (
           <Explosion
             key={`${collision.coordinates.x}-${collision.coordinates.y}`}
+            isDark={isDark}
             style={{
               left: `${collision.coordinates.x}px`,
               top: `${collision.coordinates.y}px`,
@@ -182,7 +208,7 @@ const CollisionMechanism = React.forwardRef<
 
 CollisionMechanism.displayName = "CollisionMechanism"
 
-const Explosion = ({ ...props }: React.HTMLProps<HTMLDivElement>) => {
+const Explosion = ({ isDark = true, ...props }: React.HTMLProps<HTMLDivElement> & { isDark?: boolean }) => {
   const spans = Array.from({ length: 20 }, (_, index) => ({
     id: index,
     initialX: 0,
@@ -190,6 +216,19 @@ const Explosion = ({ ...props }: React.HTMLProps<HTMLDivElement>) => {
     directionX: Math.floor(Math.random() * 80 - 40),
     directionY: Math.floor(Math.random() * -50 - 10),
   }))
+
+  // 日间模式使用更明亮的颜色
+  const glowGradient = isDark
+    ? "linear-gradient(to right, transparent, var(--color-glow), transparent)"
+    : "linear-gradient(to right, transparent, rgba(59, 130, 246, 0.7), transparent)"
+  
+  const particleGradient = isDark
+    ? "linear-gradient(to bottom, var(--color-glow), var(--color-glow-secondary))"
+    : "linear-gradient(to bottom, rgba(59, 130, 246, 0.8), rgba(147, 51, 234, 0.6))"
+  
+  const particleShadow = isDark
+    ? "0 0 4px var(--color-glow)"
+    : "0 0 4px rgba(59, 130, 246, 0.6)"
 
   return (
     <div {...props} className={cn("absolute z-50 h-2 w-2", props.className)}>
@@ -201,7 +240,7 @@ const Explosion = ({ ...props }: React.HTMLProps<HTMLDivElement>) => {
         transition={{ duration: 1.5, ease: "easeOut" }}
         className="absolute -inset-x-10 top-0 m-auto h-2 w-10 rounded-full blur-sm"
         style={{
-          background: "linear-gradient(to right, transparent, var(--color-glow), transparent)",
+          background: glowGradient,
         }}
       />
       {/* 粒子散射 */}
@@ -217,8 +256,8 @@ const Explosion = ({ ...props }: React.HTMLProps<HTMLDivElement>) => {
           transition={{ duration: Math.random() * 1.5 + 0.5, ease: "easeOut" }}
           className="absolute h-1 w-1 rounded-full"
           style={{
-            background: "linear-gradient(to bottom, var(--color-glow), var(--color-glow-secondary))",
-            boxShadow: "0 0 4px var(--color-glow)",
+            background: particleGradient,
+            boxShadow: particleShadow,
           }}
         />
       ))}

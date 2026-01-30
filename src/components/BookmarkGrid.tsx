@@ -123,8 +123,23 @@ export function BookmarkGrid({
     show: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.05,
+        staggerChildren: 0.08,
+        delayChildren: 0.1,
       },
+    },
+  }
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 30, scale: 0.9 },
+    show: { 
+      opacity: 1, 
+      y: 0, 
+      scale: 1,
+      transition: {
+        type: 'spring',
+        stiffness: 300,
+        damping: 24,
+      }
     },
   }
 
@@ -152,17 +167,24 @@ export function BookmarkGrid({
         {/* 稍后阅读区域 */}
         {readLaterBookmarks.length > 0 && (
           <motion.section
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
+            transition={{ duration: 0.5, ease: 'easeOut' }}
           >
-            <div className="flex items-center gap-3 mb-5">
-              <div 
+            <motion.div 
+              className="flex items-center gap-3 mb-5"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2, duration: 0.4 }}
+            >
+              <motion.div 
                 className="p-2 rounded-lg glass"
                 style={{ color: '#f97316' }}
+                whileHover={{ scale: 1.1, rotate: 5 }}
+                transition={{ type: 'spring', stiffness: 400 }}
               >
                 <Clock className="w-4 h-4" />
-              </div>
+              </motion.div>
               <h2 
                 className="text-lg font-medium"
                 style={{ color: 'var(--text-primary)' }}
@@ -175,7 +197,7 @@ export function BookmarkGrid({
               >
                 {readLaterBookmarks.length}
               </span>
-            </div>
+            </motion.div>
 
             <SortableContext
               items={readLaterBookmarks.map(b => b.id)}
@@ -204,23 +226,30 @@ export function BookmarkGrid({
           return (
             <motion.section
               key={category.id}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
+              transition={{ duration: 0.5, ease: 'easeOut' }}
             >
               {/* 分类标题 */}
-              <div className="flex items-center gap-3 mb-5">
-                <div 
+              <motion.div 
+                className="flex items-center gap-3 mb-5"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2, duration: 0.4 }}
+              >
+                <motion.div 
                   className={cn(
                     'p-2 rounded-lg glass'
                   )}
                   style={{ color: category.color }}
+                  whileHover={{ scale: 1.1, rotate: 5 }}
+                  transition={{ type: 'spring', stiffness: 400 }}
                 >
                   {(() => {
                     const IconComp = getIconComponent(category.icon)
                     return <IconComp className="w-4 h-4" />
                   })()}
-                </div>
+                </motion.div>
                 <h2 
                   className="text-lg font-medium"
                   style={{ color: 'var(--text-primary)' }}
@@ -233,7 +262,7 @@ export function BookmarkGrid({
                 >
                   {categoryBookmarks.length}
                 </span>
-              </div>
+              </motion.div>
 
               {/* 书签网格 */}
               <SortableContext
@@ -258,14 +287,24 @@ export function BookmarkGrid({
         {/* 未分类书签 */}
         {groupedBookmarks['uncategorized']?.filter(b => !b.isReadLater || b.isRead).length > 0 && (
           <motion.section
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
+            transition={{ duration: 0.5, ease: 'easeOut' }}
           >
-            <div className="flex items-center gap-3 mb-5">
-              <div className="p-2 rounded-lg glass" style={{ color: 'var(--text-muted)' }}>
+            <motion.div 
+              className="flex items-center gap-3 mb-5"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2, duration: 0.4 }}
+            >
+              <motion.div 
+                className="p-2 rounded-lg glass" 
+                style={{ color: 'var(--text-muted)' }}
+                whileHover={{ scale: 1.1, rotate: 5 }}
+                transition={{ type: 'spring', stiffness: 400 }}
+              >
                 <Folder className="w-4 h-4" />
-              </div>
+              </motion.div>
               <h2 className="text-lg font-medium" style={{ color: 'var(--text-primary)' }}>
                 未分类
               </h2>
@@ -275,7 +314,7 @@ export function BookmarkGrid({
               >
                 {groupedBookmarks['uncategorized'].filter(b => !b.isReadLater || b.isRead).length}
               </span>
-            </div>
+            </motion.div>
 
             <SortableContext
               items={groupedBookmarks['uncategorized'].filter(b => !b.isReadLater || b.isRead).map(b => b.id)}

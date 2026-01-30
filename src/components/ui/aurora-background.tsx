@@ -190,8 +190,8 @@ export function AuroraBackground({
       </AnimatePresence>
 
       {/* ============================================
-          日间模式 - Solar Clarity
-          高品质纸张质感 + 柔和渐变
+          日间模式 - Solar Aurora
+          Aceternity UI 风格：极光 + 漂浮光球 + 脉冲
           ============================================ */}
       <AnimatePresence>
         {!isDark && (
@@ -202,7 +202,7 @@ export function AuroraBackground({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.5 }}
           >
-            {/* 淡蓝色径向渐变 - 左上角 */}
+            {/* 基础渐变背景 */}
             <div
               className="absolute inset-0"
               style={{
@@ -210,44 +210,165 @@ export function AuroraBackground({
               }}
             />
 
-            {/* 柔和的漂浮云朵 - 极低透明度 */}
+            {/* Primary Aurora - 跟随鼠标 (更明显的蓝紫色) */}
             <motion.div
-              className="absolute w-[800px] h-[800px] rounded-full"
+              className="absolute -inset-[10px]"
               style={{
-                background: 'radial-gradient(circle, var(--color-primary) 0%, transparent 60%)',
-                left: '-10%',
-                top: '-20%',
-                filter: 'blur(120px)',
-                opacity: 0.08,
+                background: `
+                  radial-gradient(
+                    ellipse 80% 50% at var(--mouse-x, 50%) var(--mouse-y, 50%),
+                    rgba(59, 130, 246, 0.35) 0%,
+                    transparent 50%
+                  ),
+                  radial-gradient(
+                    ellipse 60% 40% at 20% 20%,
+                    rgba(147, 51, 234, 0.3) 0%,
+                    transparent 50%
+                  ),
+                  radial-gradient(
+                    ellipse 50% 60% at 80% 80%,
+                    rgba(59, 130, 246, 0.25) 0%,
+                    transparent 50%
+                  )
+                `,
+                opacity: 1,
               }}
               animate={{
-                x: [0, 50, 0],
-                y: [0, 30, 0],
+                scale: [1, 1.15, 1],
+                opacity: [0.8, 1, 0.8],
               }}
               transition={{
-                duration: 25,
+                duration: 5,
                 repeat: Infinity,
                 ease: 'easeInOut',
               }}
             />
 
+            {/* Floating Orb 1 - 蓝色 (更大更明显) */}
+            <motion.div
+              className="absolute w-[700px] h-[700px] rounded-full"
+              style={{
+                background: 'radial-gradient(circle, rgba(59, 130, 246, 0.4) 0%, transparent 70%)',
+                left: '5%',
+                top: '15%',
+                filter: 'blur(40px)',
+                opacity: 0.8,
+              }}
+              animate={{
+                x: [0, 150, 0],
+                y: [0, -80, 0],
+                scale: [1, 1.1, 1],
+              }}
+              transition={{
+                duration: 12,
+                repeat: Infinity,
+                ease: 'easeInOut',
+              }}
+            />
+
+            {/* Floating Orb 2 - 紫色 (更大更明显) */}
             <motion.div
               className="absolute w-[600px] h-[600px] rounded-full"
               style={{
-                background: 'radial-gradient(circle, var(--color-accent) 0%, transparent 60%)',
-                right: '-5%',
-                bottom: '10%',
-                filter: 'blur(120px)',
-                opacity: 0.06,
+                background: 'radial-gradient(circle, rgba(147, 51, 234, 0.35) 0%, transparent 70%)',
+                right: '5%',
+                bottom: '15%',
+                filter: 'blur(40px)',
+                opacity: 0.7,
               }}
               animate={{
-                x: [0, -40, 0],
-                y: [0, -30, 0],
+                x: [0, -120, 0],
+                y: [0, 100, 0],
+                scale: [1, 1.15, 1],
               }}
               transition={{
-                duration: 20,
+                duration: 10,
                 repeat: Infinity,
                 ease: 'easeInOut',
+              }}
+            />
+
+            {/* Floating Orb 3 - 青色 */}
+            <motion.div
+              className="absolute w-[500px] h-[500px] rounded-full"
+              style={{
+                background: 'radial-gradient(circle, rgba(6, 182, 212, 0.3) 0%, transparent 70%)',
+                left: '55%',
+                top: '5%',
+                filter: 'blur(35px)',
+                opacity: 0.7,
+              }}
+              animate={{
+                x: [0, -100, 0],
+                y: [0, 80, 0],
+                scale: [1, 1.2, 1],
+              }}
+              transition={{
+                duration: 14,
+                repeat: Infinity,
+                ease: 'easeInOut',
+              }}
+            />
+
+            {/* Floating Orb 4 - 粉色 (新增) */}
+            <motion.div
+              className="absolute w-[450px] h-[450px] rounded-full"
+              style={{
+                background: 'radial-gradient(circle, rgba(236, 72, 153, 0.25) 0%, transparent 70%)',
+                left: '20%',
+                bottom: '10%',
+                filter: 'blur(35px)',
+                opacity: 0.6,
+              }}
+              animate={{
+                x: [0, 80, 0],
+                y: [0, -60, 0],
+                scale: [1, 1.1, 1],
+              }}
+              transition={{
+                duration: 16,
+                repeat: Infinity,
+                ease: 'easeInOut',
+              }}
+            />
+
+            {/* Center Pulse - 中心脉冲 (更强烈) */}
+            <motion.div
+              className="absolute w-[500px] h-[500px] rounded-full"
+              style={{
+                background: 'radial-gradient(circle, rgba(59, 130, 246, 0.35) 0%, transparent 70%)',
+                left: '50%',
+                top: '50%',
+                transform: 'translate(-50%, -50%)',
+                filter: 'blur(60px)',
+              }}
+              animate={{
+                scale: [1, 1.5, 1],
+                opacity: [0.5, 0.8, 0.5],
+              }}
+              transition={{
+                duration: 6,
+                repeat: Infinity,
+                ease: 'easeInOut',
+              }}
+            />
+
+            {/* 流动光带 (新增) */}
+            <motion.div
+              className="absolute w-full h-[300px]"
+              style={{
+                background: 'linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.2), rgba(147, 51, 234, 0.2), transparent)',
+                top: '30%',
+                filter: 'blur(30px)',
+              }}
+              animate={{
+                x: ['-100%', '100%'],
+                opacity: [0.3, 0.6, 0.3],
+              }}
+              transition={{
+                duration: 8,
+                repeat: Infinity,
+                ease: 'linear',
               }}
             />
 
@@ -255,8 +376,8 @@ export function AuroraBackground({
             <div
               className="absolute top-0 left-0 right-0 h-[40vh]"
               style={{
-                background: 'linear-gradient(to bottom, var(--color-bg-tertiary) 0%, transparent 100%)',
-                opacity: 0.3,
+                background: 'linear-gradient(to bottom, rgba(255,255,255,0.3) 0%, transparent 100%)',
+                opacity: 0.5,
               }}
             />
           </motion.div>
@@ -287,12 +408,13 @@ export function AuroraBackground({
         }}
       />
 
-      {/* 碰撞光束效果 - 仅在暗色模式下显示 */}
-      {showBeams && isDark && (
+      {/* 碰撞光束效果 - 日间和夜间模式都显示 */}
+      {showBeams && (
         <div className="absolute inset-0 pointer-events-none">
           <BackgroundBeamsWithCollision
             containerClassName="absolute inset-0"
             className="w-full h-full"
+            isDark={isDark}
           />
         </div>
       )}

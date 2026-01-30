@@ -35,24 +35,30 @@ export function BookmarkCard({
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, scale: 0.9 }}
+      initial={{ opacity: 0, scale: 0.8, y: 20 }}
       animate={{ 
         opacity: isDragging ? 0.5 : 1, 
-        scale: isDragging ? 1.05 : 1,
+        scale: isDragging ? 1.08 : 1,
+        y: 0,
       }}
-      exit={{ opacity: 0, scale: 0.9 }}
-      whileHover={{ y: -4, scale: 1.02 }}
+      exit={{ opacity: 0, scale: 0.8, y: -20 }}
+      whileHover={{ 
+        y: -8, 
+        scale: 1.03,
+        boxShadow: '0 20px 40px -12px rgba(0, 0, 0, 0.25), 0 0 30px -5px var(--color-glow)',
+      }}
+      whileTap={{ scale: 0.98 }}
       transition={{ 
         type: 'spring', 
-        stiffness: 300, 
+        stiffness: 400, 
         damping: 25,
-        layout: { duration: 0.2 }
+        layout: { duration: 0.3 }
       }}
       className={cn(
         'group relative rounded-2xl overflow-hidden cursor-pointer',
         'glass card-glow',
-        'transition-shadow duration-300',
-        isDragging && 'shadow-2xl'
+        'transition-all duration-300',
+        isDragging && 'shadow-2xl ring-2 ring-[var(--color-glow)]/30'
       )}
       onClick={handleClick}
       onMouseEnter={() => setShowMenu(true)}
@@ -61,10 +67,16 @@ export function BookmarkCard({
       {/* 新卡片高亮光环 */}
       {isNew && (
         <motion.div
-          initial={{ opacity: 0.8 }}
-          animate={{ opacity: 0 }}
-          transition={{ duration: 2 }}
+          initial={{ opacity: 1, scale: 1 }}
+          animate={{ 
+            opacity: [1, 0.5, 1, 0],
+            scale: [1, 1.02, 1, 1],
+          }}
+          transition={{ duration: 2.5, times: [0, 0.3, 0.6, 1] }}
           className="absolute inset-0 rounded-2xl ring-2 ring-[var(--gradient-1)] ring-offset-2 ring-offset-transparent pointer-events-none"
+          style={{
+            boxShadow: '0 0 20px var(--gradient-1), inset 0 0 20px rgba(255,255,255,0.1)',
+          }}
         />
       )}
 
@@ -250,8 +262,23 @@ export function BookmarkCard({
       </div>
 
       {/* Hover 光效 */}
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
-        <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent" />
+      <motion.div 
+        className="absolute inset-0 pointer-events-none"
+        initial={{ opacity: 0 }}
+        whileHover={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+      >
+        {/* 顶部高光 */}
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+        {/* 渐变光晕 */}
+        <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-[var(--color-glow)]/5" />
+        {/* 底部反光 */}
+        <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[var(--color-glow)]/10 to-transparent" />
+      </motion.div>
+
+      {/* 悬停时的边框光效 */}
+      <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
+        <div className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/20" />
       </div>
     </motion.div>
   )
