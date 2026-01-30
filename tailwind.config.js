@@ -13,10 +13,45 @@ export default {
         mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
       },
       colors: {
-        glass: {
-          light: 'rgba(255, 255, 255, 0.08)',
-          dark: 'rgba(0, 0, 0, 0.15)',
+        // 从 CSS 变量引用主题颜色
+        primary: {
+          DEFAULT: 'var(--color-primary)',
+          light: 'var(--color-primary-light)',
+          dark: 'var(--color-primary-dark)',
         },
+        accent: {
+          DEFAULT: 'var(--color-accent)',
+          light: 'var(--color-accent-light)',
+        },
+        // 背景色
+        bg: {
+          primary: 'var(--color-bg-primary)',
+          secondary: 'var(--color-bg-secondary)',
+          tertiary: 'var(--color-bg-tertiary)',
+        },
+        // 文字色
+        text: {
+          primary: 'var(--color-text-primary)',
+          secondary: 'var(--color-text-secondary)',
+          muted: 'var(--color-text-muted)',
+        },
+        // 边框色
+        border: {
+          DEFAULT: 'var(--color-border)',
+          light: 'var(--color-border-light)',
+        },
+        // 玻璃效果
+        glass: {
+          DEFAULT: 'var(--color-glass)',
+          border: 'var(--color-glass-border)',
+          hover: 'var(--color-glass-hover)',
+        },
+        // 发光效果
+        glow: {
+          DEFAULT: 'var(--color-glow)',
+          secondary: 'var(--color-glow-secondary)',
+        },
+        // 旧版星云色保留兼容
         nebula: {
           cyan: '#00f2fe',
           blue: '#4facfe',
@@ -28,11 +63,15 @@ export default {
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'aurora': 'linear-gradient(135deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #667eea 100%)',
+        'bg-gradient': 'var(--color-bg-gradient)',
       },
       boxShadow: {
-        'glow-sm': '0 0 15px rgba(102, 126, 234, 0.3)',
-        'glow-md': '0 0 30px rgba(102, 126, 234, 0.4)',
-        'glow-lg': '0 0 60px rgba(102, 126, 234, 0.5)',
+        'theme': 'var(--color-shadow)',
+        'theme-hover': 'var(--color-shadow-hover)',
+        'glow': '0 0 30px var(--color-glow)',
+        'glow-sm': '0 0 15px var(--color-glow)',
+        'glow-md': '0 0 30px var(--color-glow)',
+        'glow-lg': '0 0 60px var(--color-glow)',
         'glow-cyan': '0 0 40px rgba(0, 242, 254, 0.3)',
         'glow-pink': '0 0 40px rgba(240, 147, 251, 0.3)',
       },
@@ -43,10 +82,11 @@ export default {
         'float-slow': 'float 8s ease-in-out infinite',
         'shimmer': 'shimmer 2s linear infinite',
         'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
         'spin-slow': 'spin 20s linear infinite',
         'spotlight': 'spotlight 2s ease .75s 1 forwards',
         'meteor': 'meteor 5s linear infinite',
-        'border-beam': 'border-beam 4s linear infinite',
+        'border-beam': 'border-beam var(--duration, 12s) linear infinite',
       },
       keyframes: {
         gradient: {
@@ -88,6 +128,10 @@ export default {
         },
         'border-beam': {
           '100%': { offsetDistance: '100%' },
+        },
+        'pulse-glow': {
+          '0%, 100%': { boxShadow: '0 0 20px var(--color-glow)' },
+          '50%': { boxShadow: '0 0 40px var(--color-glow)' },
         },
       },
     },

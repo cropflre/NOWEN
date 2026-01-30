@@ -3,9 +3,13 @@ import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import crypto from 'crypto'
+import bcrypt from 'bcrypt'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const dbPath = path.join(__dirname, '..', 'data', 'zen-garden.db')
+
+// bcrypt 加密轮数
+const BCRYPT_ROUNDS = 12
 
 // 确保目录存在
 const dataDir = path.dirname(dbPath)
@@ -62,6 +66,7 @@ export async function initDatabase() {
       id TEXT PRIMARY KEY,
       username TEXT NOT NULL UNIQUE,
       password TEXT NOT NULL,
+      isDefaultPassword INTEGER DEFAULT 0,
       createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
       updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
     )
@@ -85,6 +90,20 @@ export async function initDatabase() {
       createdAt TEXT DEFAULT CURRENT_TIMESTAMP
     )
   `)
+
+  // Token 持久化表
+  db.run(`
+    CREATE TABLE IF NOT EXISTS tokens (
+      token TEXT PRIMARY KEY,
+      userId TEXT NOT NULL,
+      username TEXT NOT NULL,
+      expiresAt INTEGER NOT NULL,
+      createdAt TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `)
+
+  // 清理过期的 Token
+  db.run('DELETE FROM tokens WHERE expiresAt < ?', [Date.now()])
   
   // 初始化默认设置
   const defaultSettings = [
@@ -117,11 +136,15 @@ export async function initDatabase() {
   }
   
   // 初始化默认管理员（密码: admin123）
-  const defaultPassword = hashPassword('admin123')
-  db.run(
-    `INSERT OR IGNORE INTO admins (id, username, password, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?)`,
-    ['admin_default', 'admin', defaultPassword, new Date().toISOString(), new Date().toISOString()]
-  )
+  // 检查是否已有管理员，避免重复初始化
+  const existingAdmin = db.exec('SELECT id FROM admins WHERE id = ?', ['admin_default'])
+  if (existingAdmin.length === 0 || existingAdmin[0].values.length === 0) {
+    const defaultPassword = await hashPassword('admin123')
+    db.run(
+      `INSERT OR IGNORE INTO admins (id, username, password, isDefaultPassword, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?)`,
+      ['admin_default', 'admin', defaultPassword, 1, new Date().toISOString(), new Date().toISOString()]
+    )
+  }
   
   saveDatabase()
   
@@ -145,12 +168,18 @@ export function generateId(): string {
   return Math.random().toString(36).substring(2, 9) + Date.now().toString(36)
 }
 
-// 密码哈希
-export function hashPassword(password: string): string {
-  return crypto.createHash('sha256').update(password).digest('hex')
+// 密码哈希 (使用 bcrypt)
+export async function hashPassword(password: string): Promise<string> {
+  return bcrypt.hash(password, BCRYPT_ROUNDS)
 }
 
-// 验证密码
-export function verifyPassword(password: string, hash: string): boolean {
-  return hashPassword(password) === hash
+// 验证密码 (使用 bcrypt)
+export async function verifyPassword(password: string, hash: string): Promise<boolean> {
+  // 兼容旧的 SHA256 哈希格式
+  if (hash.length === 64 && /^[a-f0-9]+$/i.test(hash)) {
+    const sha256Hash = crypto.createHash('sha256').update(password).digest('hex')
+    return sha256Hash === hash
+  }
+  // 使用 bcrypt 验证
+  return bcrypt.compare(password, hash)
 }

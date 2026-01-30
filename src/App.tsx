@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Plus,
   Search,
@@ -9,8 +9,6 @@ import {
   ExternalLink,
   Pin,
   BookMarked,
-  Edit2,
-  Trash2,
   Command,
   LayoutDashboard,
 } from "lucide-react";
@@ -24,14 +22,16 @@ import { Typewriter } from "./components/ui/typewriter";
 import { Meteors, Sparkles } from "./components/ui/effects";
 import { BorderBeam, BreathingDot } from "./components/ui/advanced-effects";
 import { AddBookmarkModal } from "./components/AddBookmarkModal";
+import { BookmarkCardContent } from "./components/BookmarkCardContent";
 import { ContextMenu, useBookmarkContextMenu } from "./components/ContextMenu";
 import { Admin } from "./pages/Admin";
 import { AdminLogin } from "./components/AdminLogin";
+import { ForcePasswordChange } from "./components/ForcePasswordChange";
 import { useBookmarkStore } from "./hooks/useBookmarkStore";
 import { useTheme } from "./hooks/useTheme";
 import { useTime } from "./hooks/useTime";
 import { Bookmark } from "./types/bookmark";
-import { cn, getIconComponent } from "./lib/utils";
+import { getIconComponent } from "./lib/utils";
 import {
   checkAuthStatus,
   clearAuthStatus,
@@ -39,6 +39,11 @@ import {
   fetchQuotes,
   SiteSettings,
 } from "./lib/api";
+import {
+  setActiveQuotes,
+  getRandomWisdom,
+  handleQuotesChange,
+} from "./data/quotes";
 
 // Dock 导航项
 const dockItems = [
@@ -54,125 +59,9 @@ const dockItems = [
   },
 ];
 
-// 名言库
-const wisdomQuotes = [
-  // 乔治·奥威尔
-  "战争即和平，自由即奴役，无知即力量。 —— 乔治·奥威尔《1984》",
-  "谁控制了过去，谁就控制了未来；谁控制了现在，谁就控制了过去。 —— 乔治·奥威尔《1984》",
-  "在欺骗盛行的时代，说出真相就是革命行为。 —— 乔治·奥威尔",
-  "我们将在没有黑暗的地方相见。 —— 乔治·奥威尔《1984》",
-  "如果你感到保持人性是值得的，即使这不能有任何结果，你也已经打败了他们。 —— 乔治·奥威尔《1984》",
-  "所谓自由就是可以说二加二等于四的自由。承认这一点，其他一切就迎刃而解。 —— 乔治·奥威尔《1984》",
-  "如果说思想会腐蚀语言的话，那么语言也会腐蚀思想。 —— 乔治·奥威尔《1984》",
-  "他们不到觉悟的时候，就不会造反；他们不造反，就不会觉悟。 —— 乔治·奥威尔《1984》",
-  "政治语言的目的就是使谎言听起来像真理，谋杀听起来值得尊敬，同时给完全虚无飘渺之物以实实在在之感。 —— 乔治·奥威尔",
-  "用逻辑来反逻辑，一边表示拥护道德一边又否定道德，一边相信民主是办不到的一边又相信党是民主的捍卫者。 —— 乔治·奥威尔《1984》",
-  "我们很明白，没有人会为了废除权力而夺取权力。权力不是手段，权力是目的。 —— 乔治·奥威尔《1984》",
-  "你爱一个人，就去爱他，你什么也不能给他时，你仍然给他以爱。 —— 乔治·奥威尔",
-  "他们说时间能治愈一切创伤，他们说你总能把它忘得精光；但是这些年来的笑容和泪痕，却仍使我心痛像刀割一样！ —— 乔治·奥威尔",
-  "所有动物一律平等，但有些动物比其他动物更平等。 —— 乔治·奥威尔《动物农场》",
-  "真正的权力，我们日日夜夜为之奋战的权力，不是控制事物的权力，而是控制人的权力。 —— 乔治·奥威尔《1984》",
-  "历史不是一面镜子，而是黑板上的记号，可以随时擦去，随时填补。 —— 乔治·奥威尔《1984》",
-  "一切都消失在迷雾之中了。过去给抹掉了，而抹掉本身又被遗忘了，谎言便变成了真话。 —— 乔治·奥威尔《1984》",
-  "思想罪不会带来死亡，思想罪本身就是死亡。 —— 乔治·奥威尔《1984》",
-  "也许和被人爱比起来，人们更想要的是被理解。 —— 乔治·奥威尔《1984》",
-  "世界上有真理，也有非真理，如果你坚持真理，即使这会让你与世界为敌，你也不是疯子。 —— 乔治·奥威尔《1984》",
-  "一个人如果将他自己描述得很好的话，他十有八九是在撒谎，因为任何生命从内部审视只不过是一系列的失败。 —— 乔治·奥威尔",
-  "所有的战争宣传，所有的叫嚣、谎言和仇恨，都来自那些不上战场的人。 —— 乔治·奥威尔",
-  "把人们的意愿撕成碎片，然后再按照你的意愿拼出新的形状，这就是权力。 —— 乔治·奥威尔《1984》",
-  "我注意到，许多人在独处的时候从来不笑，我想如果一个人独处时不笑，他的内心生活一定比较贫乏。 —— 乔治·奥威尔",
-  "一个社会离真相越远，它就越仇恨那些说出真相的人。 —— 乔治·奥威尔",
-  "坚定不移地相信能征服世界的人正是那些知道这件事是不可能实现的人。 —— 乔治·奥威尔",
-  "你越是以为自己正确，那么也就更自然胁迫别人也抱有同你一样的思想。 —— 乔治·奥威尔",
-  "你要准备最终被生活所打垮，这是把你的爱献给其他人的不可避免的代价。 —— 乔治·奥威尔",
-  "被洗脑者最可悲之处，在于他们真诚地捍卫那些根本不了解的东西。 —— 乔治·奥威尔",
-  "群众是软弱的、无能的动物，既不能面对真理，又不会珍惜自由，因此必须受人统治。 —— 乔治·奥威尔《1984》",
-  "我最害怕的是，我以为自己是那只特别的，清醒的又无可奈何的猪，到头来其实也只是埋头吃食的一员。 —— 乔治·奥威尔《动物农场》",
-  "那些你钟爱的缎带，其实是奴隶主烙印在你身上的标志，你难道还不明白吗？自由比缎带更有价值。 —— 乔治·奥威尔《动物农场》",
-  "愚蠢像智慧一样必要，也同样难以学到。 —— 乔治·奥威尔《1984》",
-  "过一天算一天，过一星期算一星期，虽然没有前途，却还是尽量拖长现在的时间，这似乎是一种无法压制的本能。 —— 乔治·奥威尔《1984》",
-  "我理解如何，我不理解为何。 —— 乔治·奥威尔《1984》",
-  "只要等级化结构永远保持不变，至于是谁掌握权力并非重要。 —— 乔治·奥威尔《1984》",
-  // 尼采
-  "上帝死了，是我们杀死了他。 —— 尼采《快乐的科学》",
-  "虚无主义就在门口，这个最不速之客是从哪里来的？ —— 尼采",
-  "如果你长时间凝视深渊，深渊也会凝视你。 —— 尼采《善恶的彼岸》",
-  "没有真理，只有解释。 —— 尼采",
-  "凡具有价值的思想，都是在与虚无的对抗中产生的。 —— 尼采",
-  // 叔本华
-  "人生就像钟摆，在痛苦与无聊之间摆荡。 —— 叔本华《人生的智慧》",
-  "生存本身就是一种徒劳，因为死神最终会赢得一切。 —— 叔本华",
-  "世界是我的表象，也是一种虚幻的梦境。 —— 叔本华《作为意志和表象的世界》",
-  // 萨特
-  "人是一根无用的桅杆。 —— 萨特",
-  "人生本身没有意义，直到你赋予它意义。 —— 萨特《存在与虚无》",
-  "人是注定要自由的，这种自由包含着对虚无的承担。 —— 萨特",
-  // 加缪
-  "推石上山的西西弗斯是快乐的，因为他知晓这种徒劳。 —— 加缪《西西弗神话》",
-  // 齐奥朗
-  "意识到生命之虚妄，本该让我们获得某种类似平静的心态。 —— 齐奥朗",
-  "除了失眠，我从未在任何地方找到过真相。 —— 齐奥朗",
-  "人类的诞生本身就是一种灾难性的偶然。 —— 齐奥朗《生而为人的麻烦》",
-  // 莎士比亚
-  "生活是一个愚人所讲的故事，充满着喧嚣和骚动，却没有任何意义。 —— 莎士比亚《麦克白》",
-  // 影视作品
-  "宇宙并不在乎你，这既是恐惧，也是自由。 —— 《瑞克和莫蒂》",
-  "我们是被历史遗忘的一代，没有目的，没有地位。 —— 《搏击俱乐部》",
-  "在这个世界上，唯一公平的事情就是死亡。 —— 《怪物》",
-  // 其他
-  "我们只是尘埃，最终也将回归尘埃。",
-  "万物皆空，一切皆无可取。",
-  "你所谓的追求，在时间的尺度上不过是瞬息的幻影。",
-  "既然结局注定是无，那么过程的优劣也毫无意义。",
-  "文明不过是覆盖在虚无之上的一层薄冰。",
-  "人类所有的努力，最终都会被热寂所抹平。",
-  "虚无不是终点，而是唯一的真相。",
-  "我们从虚无中来，又向虚无中去。",
-  "所有的价值都是人类为了逃避恐惧而编织的谎言。",
-  "承认一切都没有意义，是成熟的第一步。",
-  "在无边无际的荒原中，连痛苦都显得微不足道。",
-];
-
-// 当前使用的名言列表（可被后端数据覆盖）
-let activeQuotes = [...wisdomQuotes];
-
-// 设置名言列表
-function setActiveQuotes(customQuotes: string[], useDefault: boolean) {
-  if (useDefault) {
-    // 合并系统默认名言和自定义名言
-    const combined = [...wisdomQuotes];
-    if (customQuotes && customQuotes.length > 0) {
-      customQuotes.forEach(q => {
-        if (!combined.includes(q)) {
-          combined.push(q);
-        }
-      });
-    }
-    activeQuotes = combined;
-  } else {
-    // 仅使用自定义名言
-    if (customQuotes && customQuotes.length > 0) {
-      activeQuotes = customQuotes;
-    } else {
-      // 如果没有自定义名言，回退到系统默认
-      activeQuotes = [...wisdomQuotes];
-    }
-  }
-}
-
-// 获取随机名言（不限制，每次随机）
-function getRandomWisdom(): string {
-  return activeQuotes[Math.floor(Math.random() * activeQuotes.length)];
-}
-
-// 处理名言更新的回调（供外部组件调用）
-function handleQuotesChange(customQuotes: string[], useDefault: boolean) {
-  setActiveQuotes(customQuotes, useDefault);
-}
-
 function App() {
   const [currentPage, setCurrentPage] = useState<
-    "home" | "admin" | "admin-login"
+    "home" | "admin" | "admin-login" | "force-password-change"
   >("home");
   const [isSpotlightOpen, setIsSpotlightOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -216,10 +105,14 @@ function App() {
 
   // 初始化时检查登录状态和加载站点设置
   useEffect(() => {
-    const { isValid, username } = checkAuthStatus();
+    const { isValid, username, requirePasswordChange } = checkAuthStatus();
     if (isValid && username) {
       setIsLoggedIn(true);
       setAdminUsername(username);
+      // 检查是否需要强制修改密码
+      if (requirePasswordChange) {
+        setCurrentPage("force-password-change");
+      }
     }
 
     // 加载站点设置
@@ -274,9 +167,13 @@ function App() {
 
   // 检查是否已登录后台
   const checkAdminAuth = () => {
-    const { isValid, username } = checkAuthStatus();
+    const { isValid, username, requirePasswordChange } = checkAuthStatus();
     if (isValid && username) {
       setAdminUsername(username);
+      // 如果需要强制修改密码，返回特殊标识
+      if (requirePasswordChange) {
+        return "require-password-change";
+      }
       return true;
     }
     return false;
@@ -296,7 +193,10 @@ function App() {
         break;
       case "admin":
         // 检查登录状态
-        if (checkAdminAuth()) {
+        const authResult = checkAdminAuth();
+        if (authResult === "require-password-change") {
+          setCurrentPage("force-password-change");
+        } else if (authResult) {
           setCurrentPage("admin");
         } else {
           setCurrentPage("admin-login");
@@ -306,9 +206,19 @@ function App() {
   };
 
   // 后台登录成功
-  const handleAdminLogin = (username: string) => {
+  const handleAdminLogin = (username: string, requirePasswordChange?: boolean) => {
     setAdminUsername(username);
     setIsLoggedIn(true);
+    // 如果需要强制修改密码，跳转到密码修改页面
+    if (requirePasswordChange) {
+      setCurrentPage("force-password-change");
+    } else {
+      setCurrentPage("admin");
+    }
+  };
+
+  // 密码修改成功后的处理
+  const handlePasswordChangeSuccess = () => {
     setCurrentPage("admin");
   };
 
@@ -389,6 +299,17 @@ function App() {
     );
   }
 
+  // 强制修改密码页面
+  if (currentPage === "force-password-change") {
+    return (
+      <ForcePasswordChange
+        username={adminUsername}
+        onSuccess={handlePasswordChangeSuccess}
+        onLogout={handleAdminLogout}
+      />
+    );
+  }
+
   // 后台管理页面
   if (currentPage === "admin") {
     return (
@@ -431,7 +352,7 @@ function App() {
   }
 
   return (
-    <AuroraBackground>
+    <AuroraBackground showBeams>
       {/* Meteors Effect */}
       <Meteors number={15} />
 
@@ -887,180 +808,6 @@ function App() {
         />
       )}
     </AuroraBackground>
-  );
-}
-
-// 书签卡片内容组件
-function BookmarkCardContent({
-  bookmark,
-  isLarge,
-  isNew,
-  isLoggedIn,
-  onTogglePin,
-  onToggleReadLater,
-  onEdit,
-  onDelete,
-}: {
-  bookmark: Bookmark;
-  isLarge?: boolean;
-  isNew?: boolean;
-  isLoggedIn?: boolean;
-  onTogglePin: () => void;
-  onToggleReadLater: () => void;
-  onEdit: () => void;
-  onDelete: () => void;
-}) {
-  const [showActions, setShowActions] = useState(false);
-
-  return (
-    <div
-      className="h-full flex flex-col"
-      onMouseEnter={() => setShowActions(true)}
-      onMouseLeave={() => setShowActions(false)}
-    >
-      {/* Header */}
-      <div className="flex items-start justify-between mb-4">
-        <div
-          className={cn(
-            "rounded-xl flex items-center justify-center",
-            isLarge ? "w-14 h-14" : "w-12 h-12"
-          )}
-          style={{ background: "var(--color-bg-tertiary)" }}
-        >
-          {bookmark.favicon ? (
-            <img
-              src={bookmark.favicon}
-              alt=""
-              className={isLarge ? "w-7 h-7" : "w-6 h-6"}
-            />
-          ) : (
-            <ExternalLink
-              className={cn(isLarge ? "w-7 h-7" : "w-6 h-6")}
-              style={{ color: "var(--color-text-muted)" }}
-            />
-          )}
-        </div>
-
-        {/* Actions - 只有登录后才显示 */}
-        <AnimatePresence>
-          {showActions && isLoggedIn && (
-            <motion.div
-              className="flex items-center gap-1"
-              initial={{ opacity: 0, x: 10 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 10 }}
-            >
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onTogglePin();
-                }}
-                className={cn(
-                  "p-1.5 rounded-lg transition-colors",
-                  bookmark.isPinned
-                    ? "bg-yellow-500/20 text-yellow-400"
-                    : "hover:bg-[var(--color-glass-hover)]"
-                )}
-                style={{
-                  color: bookmark.isPinned
-                    ? undefined
-                    : "var(--color-text-muted)",
-                }}
-              >
-                <Pin className="w-3.5 h-3.5" />
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onToggleReadLater();
-                }}
-                className={cn(
-                  "p-1.5 rounded-lg transition-colors",
-                  bookmark.isReadLater
-                    ? "bg-orange-500/20 text-orange-400"
-                    : "hover:bg-[var(--color-glass-hover)]"
-                )}
-                style={{
-                  color: bookmark.isReadLater
-                    ? undefined
-                    : "var(--color-text-muted)",
-                }}
-              >
-                <BookMarked className="w-3.5 h-3.5" />
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEdit();
-                }}
-                className="p-1.5 rounded-lg hover:bg-[var(--color-glass-hover)] transition-colors"
-                style={{ color: "var(--color-text-muted)" }}
-              >
-                <Edit2 className="w-3.5 h-3.5" />
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete();
-                }}
-                className="p-1.5 rounded-lg hover:bg-red-500/20 hover:text-red-400 transition-colors"
-                style={{ color: "var(--color-text-muted)" }}
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      {/* Content */}
-      <div className="flex-1">
-        <h3
-          className={cn(
-            "font-medium mb-2",
-            isLarge ? "text-xl line-clamp-2" : "text-lg line-clamp-1"
-          )}
-          style={{ color: "var(--color-text-primary)" }}
-        >
-          {bookmark.title}
-        </h3>
-        {bookmark.description && (
-          <p
-            className={cn(
-              "mb-4",
-              isLarge ? "text-base line-clamp-3" : "text-sm line-clamp-2"
-            )}
-            style={{ color: "var(--color-text-muted)" }}
-          >
-            {bookmark.description}
-          </p>
-        )}
-      </div>
-
-      {/* Footer */}
-      <div
-        className="flex items-center justify-between text-xs pt-4"
-        style={{
-          color: "var(--color-text-muted)",
-          borderTop: "1px solid var(--color-border-light)",
-        }}
-      >
-        <span>{new URL(bookmark.url).hostname}</span>
-        <ExternalLink className="w-3.5 h-3.5" />
-      </div>
-
-      {/* New Badge */}
-      {isNew && (
-        <motion.div
-          className="absolute top-3 right-3 px-2 py-1 rounded-full bg-nebula-cyan/20 text-nebula-cyan text-xs"
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: "spring" }}
-        >
-          NEW
-        </motion.div>
-      )}
-    </div>
   );
 }
 

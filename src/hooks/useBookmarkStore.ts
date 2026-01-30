@@ -102,50 +102,71 @@ export function useBookmarkStore() {
     }
   }, [])
 
-  // 切换置顶
+  // 切换置顶 - 使用函数式更新减少依赖
   const togglePin = useCallback(async (id: string) => {
-    const bookmark = bookmarks.find(b => b.id === id)
-    if (!bookmark) return
+    // 先获取当前状态用于 API 调用
+    let currentPinned: boolean | undefined
+    setBookmarks(prev => {
+      const bookmark = prev.find(b => b.id === id)
+      currentPinned = bookmark?.isPinned
+      return prev
+    })
+    
+    if (currentPinned === undefined) return
     
     try {
-      const updated = await api.updateBookmark(id, { isPinned: !bookmark.isPinned })
+      const updated = await api.updateBookmark(id, { isPinned: !currentPinned })
       setBookmarks(prev => prev.map(b => b.id === id ? updated : b))
     } catch (err) {
       console.error('切换置顶失败:', err)
       throw err
     }
-  }, [bookmarks])
+  }, [])
 
-  // 切换稍后阅读
+  // 切换稍后阅读 - 使用函数式更新减少依赖
   const toggleReadLater = useCallback(async (id: string) => {
-    const bookmark = bookmarks.find(b => b.id === id)
-    if (!bookmark) return
+    let currentState: { isReadLater?: boolean; isRead?: boolean } = {}
+    setBookmarks(prev => {
+      const bookmark = prev.find(b => b.id === id)
+      if (bookmark) {
+        currentState = { isReadLater: bookmark.isReadLater, isRead: bookmark.isRead }
+      }
+      return prev
+    })
+    
+    if (currentState.isReadLater === undefined) return
     
     try {
       const updated = await api.updateBookmark(id, { 
-        isReadLater: !bookmark.isReadLater,
-        isRead: !bookmark.isReadLater ? false : bookmark.isRead,
+        isReadLater: !currentState.isReadLater,
+        isRead: !currentState.isReadLater ? false : currentState.isRead,
       })
       setBookmarks(prev => prev.map(b => b.id === id ? updated : b))
     } catch (err) {
       console.error('切换稍后阅读失败:', err)
       throw err
     }
-  }, [bookmarks])
+  }, [])
 
-  // 标记已读/未读
+  // 标记已读/未读 - 使用函数式更新减少依赖
   const toggleRead = useCallback(async (id: string) => {
-    const bookmark = bookmarks.find(b => b.id === id)
-    if (!bookmark) return
+    let currentRead: boolean | undefined
+    setBookmarks(prev => {
+      const bookmark = prev.find(b => b.id === id)
+      currentRead = bookmark?.isRead
+      return prev
+    })
+    
+    if (currentRead === undefined) return
     
     try {
-      const updated = await api.updateBookmark(id, { isRead: !bookmark.isRead })
+      const updated = await api.updateBookmark(id, { isRead: !currentRead })
       setBookmarks(prev => prev.map(b => b.id === id ? updated : b))
     } catch (err) {
       console.error('切换已读失败:', err)
       throw err
     }
-  }, [bookmarks])
+  }, [])
 
   // 添加分类
   const addCategory = useCallback(async (category: Omit<Category, 'id' | 'orderIndex'>) => {

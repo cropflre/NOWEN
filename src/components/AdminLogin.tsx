@@ -5,7 +5,7 @@ import { BorderBeam } from './ui/advanced-effects'
 import { adminLogin } from '../lib/api'
 
 interface AdminLoginProps {
-  onLogin: (username: string) => void
+  onLogin: (username: string, requirePasswordChange?: boolean) => void
   onBack: () => void
 }
 
@@ -31,7 +31,7 @@ export function AdminLogin({ onLogin, onBack }: AdminLoginProps) {
     try {
       const result = await adminLogin(username, password)
       // 登录状态已在 adminLogin 函数中自动保存
-      onLogin(result.user.username)
+      onLogin(result.user.username, result.requirePasswordChange)
     } catch (err: any) {
       setError(err.message || '登录失败，请重试')
       setIsShaking(true)
@@ -217,7 +217,7 @@ export function AdminLogin({ onLogin, onBack }: AdminLoginProps) {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.8 }}
           >
-            默认账号: admin / admin123
+            首次登录请使用默认账号
           </motion.p>
         </motion.div>
       </motion.div>

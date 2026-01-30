@@ -1,17 +1,20 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '../../lib/utils'
+import { BackgroundBeamsWithCollision } from './background-beams-with-collision'
 
 interface AuroraBackgroundProps {
   children?: React.ReactNode
   className?: string
   showRadialGradient?: boolean
+  showBeams?: boolean  // 新增：是否显示碰撞光束
 }
 
 export function AuroraBackground({
   children,
   className,
   showRadialGradient = true,
+  showBeams = false,  // 默认关闭碰撞光束
 }: AuroraBackgroundProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [isDark, setIsDark] = useState(true)
@@ -273,6 +276,7 @@ export function AuroraBackground({
         />
       )}
 
+
       {/* 噪点纹理 - 若隐若现（0.03 深色 / 0.015 浅色） */}
       <div 
         className="absolute inset-0 pointer-events-none"
@@ -282,6 +286,16 @@ export function AuroraBackground({
           transition: 'opacity 0.5s',
         }}
       />
+
+      {/* 碰撞光束效果 - 仅在暗色模式下显示 */}
+      {showBeams && isDark && (
+        <div className="absolute inset-0 pointer-events-none">
+          <BackgroundBeamsWithCollision
+            containerClassName="absolute inset-0"
+            className="w-full h-full"
+          />
+        </div>
+      )}
 
       {/* Content */}
       <div className="relative z-10">{children}</div>

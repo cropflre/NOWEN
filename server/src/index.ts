@@ -2,16 +2,182 @@ import express, { Request, Response, NextFunction } from 'express'
 import cors from 'cors'
 import { initDatabase, getDatabase, saveDatabase, generateId, hashPassword, verifyPassword } from './db.js'
 import { parseMetadata } from './services/metadata.js'
+import {
+  validateBody,
+  validateParams,
+  validateQuery,
+  idParamSchema,
+  createBookmarkSchema,
+  updateBookmarkSchema,
+  reorderBookmarksSchema,
+  createCategorySchema,
+  updateCategorySchema,
+  loginSchema,
+  changePasswordSchema,
+  metadataSchema,
+  updateSettingsSchema,
+  updateQuotesSchema,
+  importDataSchema,
+  paginationQuerySchema,
+  PaginationQuery,
+} from './schemas.js'
 
 const app = express()
 const PORT = process.env.PORT || 3001
 
-// 存储有效的 token（实际项目应该使用 Redis 或数据库）
-const validTokens = new Map<string, { userId: string; username: string; expiresAt: number }>()
+// ========== 请求频率限制 (Rate Limiter) ==========
 
-app.use(cors())
+interface RateLimitRecord {
+  count: number
+  resetTime: number
+}
+
+// 存储每个 IP 的请求记录
+const rateLimitStore = new Map<string, RateLimitRecord>()
+
+// 清理过期的限制记录（每5分钟）
+setInterval(() => {
+  const now = Date.now()
+  for (const [ip, record] of rateLimitStore.entries()) {
+    if (now > record.resetTime) {
+      rateLimitStore.delete(ip)
+    }
+  }
+}, 5 * 60 * 1000)
+
+// 创建限流中间件
+function createRateLimiter(options: {
+  windowMs: number      // 时间窗口（毫秒）
+  maxRequests: number   // 时间窗口内最大请求数
+  message?: string      // 超限时的错误消息
+}) {
+  const { windowMs, maxRequests, message = '请求过于频繁，请稍后再试' } = options
+
+  return (req: Request, res: Response, next: NextFunction) => {
+    // 获取客户端 IP
+    const ip = req.ip || req.socket.remoteAddress || 'unknown'
+    const key = `${ip}:${req.path}`
+    const now = Date.now()
+
+    let record = rateLimitStore.get(key)
+
+    if (!record || now > record.resetTime) {
+      // 新记录或已过期，重置
+      record = { count: 1, resetTime: now + windowMs }
+      rateLimitStore.set(key, record)
+    } else {
+      // 增加计数
+      record.count++
+    }
+
+    // 设置响应头
+    res.setHeader('X-RateLimit-Limit', maxRequests.toString())
+    res.setHeader('X-RateLimit-Remaining', Math.max(0, maxRequests - record.count).toString())
+    res.setHeader('X-RateLimit-Reset', Math.ceil(record.resetTime / 1000).toString())
+
+    if (record.count > maxRequests) {
+      return res.status(429).json({ 
+        error: message,
+        retryAfter: Math.ceil((record.resetTime - now) / 1000)
+      })
+    }
+
+    next()
+  }
+}
+
+// 不同接口的限流策略
+const generalLimiter = createRateLimiter({
+  windowMs: 60 * 1000,    // 1 分钟
+  maxRequests: 100,       // 每分钟 100 次
+  message: '请求过于频繁，请稍后再试'
+})
+
+const authLimiter = createRateLimiter({
+  windowMs: 15 * 60 * 1000,  // 15 分钟
+  maxRequests: 10,           // 每 15 分钟 10 次登录尝试
+  message: '登录尝试次数过多，请15分钟后再试'
+})
+
+const metadataLimiter = createRateLimiter({
+  windowMs: 60 * 1000,    // 1 分钟
+  maxRequests: 30,        // 每分钟 30 次元数据抓取
+  message: '元数据抓取请求过于频繁，请稍后再试'
+})
+
+// CORS 白名单配置
+const CORS_WHITELIST = [
+  'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:3000',
+  'http://127.0.0.1:5173',
+  'http://127.0.0.1:5174',
+  'http://127.0.0.1:3000',
+  // 生产环境域名（根据实际情况添加）
+  process.env.FRONTEND_URL,
+].filter(Boolean) as string[]
+
+const corsOptions: cors.CorsOptions = {
+  origin: (origin, callback) => {
+    // 允许无 origin 的请求（如移动端应用或 Postman）
+    if (!origin) {
+      return callback(null, true)
+    }
+    if (CORS_WHITELIST.includes(origin)) {
+      callback(null, true)
+    } else {
+      console.warn(`CORS blocked: ${origin}`)
+      callback(new Error('Not allowed by CORS'))
+    }
+  },
+  credentials: true,
+}
+
+app.use(cors(corsOptions))
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ limit: '10mb', extended: true }))
+
+// 应用全局请求频率限制
+app.use(generalLimiter)
+
+// ========== Token 管理函数 (持久化到数据库) ==========
+
+function getTokenFromDb(token: string): { userId: string; username: string; expiresAt: number } | null {
+  const db = getDatabase()
+  const stmt = db.prepare('SELECT userId, username, expiresAt FROM tokens WHERE token = ?')
+  stmt.bind([token])
+  if (stmt.step()) {
+    const result = stmt.getAsObject() as { userId: string; username: string; expiresAt: number }
+    stmt.free()
+    return result
+  }
+  stmt.free()
+  return null
+}
+
+function saveTokenToDb(token: string, userId: string, username: string, expiresAt: number): void {
+  const db = getDatabase()
+  db.run(
+    'INSERT INTO tokens (token, userId, username, expiresAt, createdAt) VALUES (?, ?, ?, ?, ?)',
+    [token, userId, username, expiresAt, new Date().toISOString()]
+  )
+  saveDatabase()
+}
+
+function deleteTokenFromDb(token: string): void {
+  const db = getDatabase()
+  db.run('DELETE FROM tokens WHERE token = ?', [token])
+  saveDatabase()
+}
+
+function cleanExpiredTokens(): void {
+  const db = getDatabase()
+  db.run('DELETE FROM tokens WHERE expiresAt < ?', [Date.now()])
+  saveDatabase()
+}
+
+// 定期清理过期 Token (每小时)
+setInterval(cleanExpiredTokens, 60 * 60 * 1000)
 
 // Token 验证中间件
 function authMiddleware(req: Request, res: Response, next: NextFunction) {
@@ -22,14 +188,14 @@ function authMiddleware(req: Request, res: Response, next: NextFunction) {
   }
   
   const token = authHeader.substring(7)
-  const tokenData = validTokens.get(token)
+  const tokenData = getTokenFromDb(token)
   
   if (!tokenData) {
     return res.status(401).json({ error: '无效的 Token' })
   }
   
   if (Date.now() > tokenData.expiresAt) {
-    validTokens.delete(token)
+    deleteTokenFromDb(token)
     return res.status(401).json({ error: 'Token 已过期' })
   }
   
@@ -44,7 +210,7 @@ function optionalAuthMiddleware(req: Request, res: Response, next: NextFunction)
   
   if (authHeader && authHeader.startsWith('Bearer ')) {
     const token = authHeader.substring(7)
-    const tokenData = validTokens.get(token)
+    const tokenData = getTokenFromDb(token)
     
     if (tokenData && Date.now() <= tokenData.expiresAt) {
       ;(req as any).user = { id: tokenData.userId, username: tokenData.username }
@@ -82,6 +248,7 @@ function run(sql: string, params: any[] = []) {
 
 // ========== 书签 API ==========
 
+// 获取所有书签（兼容旧版）
 app.get('/api/bookmarks', (req, res) => {
   try {
     const bookmarks = queryAll(`
@@ -103,7 +270,91 @@ app.get('/api/bookmarks', (req, res) => {
   }
 })
 
-app.post('/api/bookmarks', (req, res) => {
+// 分页获取书签
+app.get('/api/bookmarks/paginated', validateQuery(paginationQuerySchema), (req, res) => {
+  try {
+    const query = (req as any).validatedQuery as PaginationQuery
+    const { page, pageSize, search, category, isPinned, isReadLater, sortBy, sortOrder } = query
+    
+    // 构建 WHERE 条件
+    const conditions: string[] = []
+    const params: any[] = []
+    
+    if (search) {
+      conditions.push('(title LIKE ? OR url LIKE ? OR description LIKE ?)')
+      const searchPattern = `%${search}%`
+      params.push(searchPattern, searchPattern, searchPattern)
+    }
+    
+    if (category) {
+      if (category === 'uncategorized') {
+        conditions.push('(category IS NULL OR category = "")')
+      } else {
+        conditions.push('category = ?')
+        params.push(category)
+      }
+    }
+    
+    if (typeof isPinned === 'boolean') {
+      conditions.push('isPinned = ?')
+      params.push(isPinned ? 1 : 0)
+    }
+    
+    if (typeof isReadLater === 'boolean') {
+      conditions.push('isReadLater = ?')
+      params.push(isReadLater ? 1 : 0)
+    }
+    
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
+    
+    // 获取总数
+    const countResult = queryOne(`SELECT COUNT(*) as total FROM bookmarks ${whereClause}`, params)
+    const total = countResult?.total || 0
+    
+    // 计算分页
+    const offset = (page - 1) * pageSize
+    const totalPages = Math.ceil(total / pageSize)
+    
+    // 构建排序 - 始终优先按 isPinned 排序
+    let orderClause = 'ORDER BY isPinned DESC'
+    if (sortBy === 'orderIndex') {
+      orderClause += `, orderIndex ${sortOrder.toUpperCase()}, createdAt DESC`
+    } else {
+      orderClause += `, ${sortBy} ${sortOrder.toUpperCase()}`
+    }
+    
+    // 查询数据
+    const bookmarks = queryAll(`
+      SELECT * FROM bookmarks 
+      ${whereClause}
+      ${orderClause}
+      LIMIT ? OFFSET ?
+    `, [...params, pageSize, offset])
+    
+    const items = bookmarks.map((b: any) => ({
+      ...b,
+      isPinned: Boolean(b.isPinned),
+      isReadLater: Boolean(b.isReadLater),
+      isRead: Boolean(b.isRead),
+    }))
+    
+    res.json({
+      items,
+      pagination: {
+        page,
+        pageSize,
+        total,
+        totalPages,
+        hasMore: page < totalPages,
+      }
+    })
+  } catch (error) {
+    console.error('分页获取书签失败:', error)
+    res.status(500).json({ error: '分页获取书签失败' })
+  }
+})
+
+app.post('/api/bookmarks', validateBody(createBookmarkSchema), (req, res) => {
   try {
     const { url, title, description, favicon, ogImage, category, tags, isReadLater } = req.body
     
@@ -132,7 +383,7 @@ app.post('/api/bookmarks', (req, res) => {
   }
 })
 
-app.patch('/api/bookmarks/:id', (req, res) => {
+app.patch('/api/bookmarks/:id', validateParams(idParamSchema), validateBody(updateBookmarkSchema), (req, res) => {
   try {
     const { id } = req.params
     const updates = req.body
@@ -173,7 +424,7 @@ app.patch('/api/bookmarks/:id', (req, res) => {
   }
 })
 
-app.delete('/api/bookmarks/:id', (req, res) => {
+app.delete('/api/bookmarks/:id', validateParams(idParamSchema), (req, res) => {
   try {
     const { id } = req.params
     run('DELETE FROM bookmarks WHERE id = ?', [id])
@@ -184,7 +435,7 @@ app.delete('/api/bookmarks/:id', (req, res) => {
   }
 })
 
-app.patch('/api/bookmarks/reorder', (req, res) => {
+app.patch('/api/bookmarks/reorder', validateBody(reorderBookmarksSchema), (req, res) => {
   try {
     const { items } = req.body
     
@@ -201,13 +452,10 @@ app.patch('/api/bookmarks/reorder', (req, res) => {
 
 // ========== 元数据抓取 API ==========
 
-app.post('/api/metadata', async (req, res) => {
+// 元数据抓取使用专门的限流
+app.post('/api/metadata', metadataLimiter, validateBody(metadataSchema), async (req, res) => {
   try {
     const { url } = req.body
-    
-    if (!url) {
-      return res.status(400).json({ error: 'URL 不能为空' })
-    }
     
     const metadata = await parseMetadata(url)
     res.json(metadata)
@@ -234,7 +482,7 @@ app.get('/api/categories', (req, res) => {
   }
 })
 
-app.post('/api/categories', (req, res) => {
+app.post('/api/categories', validateBody(createCategorySchema), (req, res) => {
   try {
     const { name, icon, color } = req.body
     
@@ -256,7 +504,7 @@ app.post('/api/categories', (req, res) => {
   }
 })
 
-app.patch('/api/categories/:id', (req, res) => {
+app.patch('/api/categories/:id', validateParams(idParamSchema), validateBody(updateCategorySchema), (req, res) => {
   try {
     const { id } = req.params
     const { name, icon, color, orderIndex } = req.body
@@ -286,7 +534,7 @@ app.patch('/api/categories/:id', (req, res) => {
   }
 })
 
-app.delete('/api/categories/:id', (req, res) => {
+app.delete('/api/categories/:id', validateParams(idParamSchema), (req, res) => {
   try {
     const { id } = req.params
     
@@ -305,13 +553,10 @@ app.delete('/api/categories/:id', (req, res) => {
 
 // ========== 管理员认证 API ==========
 
-app.post('/api/admin/login', (req, res) => {
+// 登录接口使用更严格的限流
+app.post('/api/admin/login', authLimiter, validateBody(loginSchema), async (req, res) => {
   try {
     const { username, password } = req.body
-    
-    if (!username || !password) {
-      return res.status(400).json({ error: '用户名和密码不能为空' })
-    }
     
     const admin = queryOne('SELECT * FROM admins WHERE username = ?', [username])
     
@@ -319,7 +564,8 @@ app.post('/api/admin/login', (req, res) => {
       return res.status(401).json({ error: '用户名或密码错误' })
     }
     
-    if (!verifyPassword(password, admin.password)) {
+    const isValidPassword = await verifyPassword(password, admin.password)
+    if (!isValidPassword) {
       return res.status(401).json({ error: '用户名或密码错误' })
     }
     
@@ -327,12 +573,8 @@ app.post('/api/admin/login', (req, res) => {
     const token = generateId() + generateId()
     const expiresAt = Date.now() + 24 * 60 * 60 * 1000 // 24小时有效期
     
-    // 存储 Token
-    validTokens.set(token, {
-      userId: admin.id,
-      username: admin.username,
-      expiresAt,
-    })
+    // 存储 Token 到数据库
+    saveTokenToDb(token, admin.id, admin.username, expiresAt)
     
     res.json({
       success: true,
@@ -340,7 +582,8 @@ app.post('/api/admin/login', (req, res) => {
       user: {
         id: admin.id,
         username: admin.username,
-      }
+      },
+      requirePasswordChange: admin.isDefaultPassword === 1
     })
   } catch (error) {
     console.error('登录失败:', error)
@@ -348,18 +591,10 @@ app.post('/api/admin/login', (req, res) => {
   }
 })
 
-app.post('/api/admin/change-password', authMiddleware, (req: Request, res: Response) => {
+app.post('/api/admin/change-password', authMiddleware, validateBody(changePasswordSchema), async (req: Request, res: Response) => {
   try {
     const { currentPassword, newPassword } = req.body
     const user = (req as any).user
-    
-    if (!currentPassword || !newPassword) {
-      return res.status(400).json({ error: '参数不完整' })
-    }
-    
-    if (newPassword.length < 6) {
-      return res.status(400).json({ error: '新密码长度至少6位' })
-    }
     
     const admin = queryOne('SELECT * FROM admins WHERE username = ?', [user.username])
     
@@ -367,14 +602,16 @@ app.post('/api/admin/change-password', authMiddleware, (req: Request, res: Respo
       return res.status(404).json({ error: '用户不存在' })
     }
     
-    if (!verifyPassword(currentPassword, admin.password)) {
+    const isValidPassword = await verifyPassword(currentPassword, admin.password)
+    if (!isValidPassword) {
       return res.status(401).json({ error: '当前密码错误' })
     }
     
-    const newHash = hashPassword(newPassword)
+    const newHash = await hashPassword(newPassword)
     const now = new Date().toISOString()
     
-    run('UPDATE admins SET password = ?, updatedAt = ? WHERE username = ?', [newHash, now, user.username])
+    // 修改密码同时清除默认密码标记
+    run('UPDATE admins SET password = ?, isDefaultPassword = 0, updatedAt = ? WHERE username = ?', [newHash, now, user.username])
     
     res.json({ success: true, message: '密码修改成功' })
   } catch (error) {
@@ -394,7 +631,7 @@ app.post('/api/admin/logout', authMiddleware, (req: Request, res: Response) => {
   const authHeader = req.headers.authorization
   if (authHeader && authHeader.startsWith('Bearer ')) {
     const token = authHeader.substring(7)
-    validTokens.delete(token)
+    deleteTokenFromDb(token)
   }
   res.json({ success: true })
 })
@@ -417,7 +654,7 @@ app.get('/api/settings', (req, res) => {
 })
 
 // 更新站点设置（需要认证）
-app.patch('/api/settings', authMiddleware, (req: Request, res: Response) => {
+app.patch('/api/settings', authMiddleware, validateBody(updateSettingsSchema), (req: Request, res: Response) => {
   try {
     const updates = req.body
     const now = new Date().toISOString()
@@ -486,13 +723,9 @@ app.get('/api/export', authMiddleware, (req: Request, res: Response) => {
 })
 
 // 导入数据（覆盖现有数据）
-app.post('/api/import', authMiddleware, (req: Request, res: Response) => {
+app.post('/api/import', authMiddleware, validateBody(importDataSchema), (req: Request, res: Response) => {
   try {
     const { bookmarks, categories, settings } = req.body
-    
-    if (!bookmarks || !Array.isArray(bookmarks)) {
-      return res.status(400).json({ error: '无效的导入数据' })
-    }
     
     const db = getDatabase()
     
@@ -578,13 +811,9 @@ app.get('/api/quotes', (req, res) => {
 })
 
 // 更新名言列表（需要认证）
-app.put('/api/quotes', authMiddleware, (req: Request, res: Response) => {
+app.put('/api/quotes', authMiddleware, validateBody(updateQuotesSchema), (req: Request, res: Response) => {
   try {
     const { quotes, useDefaultQuotes } = req.body
-    
-    if (!quotes || !Array.isArray(quotes)) {
-      return res.status(400).json({ error: '无效的名言数据' })
-    }
     
     const db = getDatabase()
     
