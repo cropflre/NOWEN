@@ -791,6 +791,66 @@ app.post('/api/import', authMiddleware, validateBody(importDataSchema), (req: Re
   }
 })
 
+// 恢复出厂设置
+app.post('/api/factory-reset', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const db = getDatabase()
+    
+    // 清空所有数据
+    db.run('DELETE FROM bookmarks')
+    db.run('DELETE FROM categories')
+    db.run('DELETE FROM quotes')
+    db.run('DELETE FROM settings')
+    
+    // 重新初始化默认设置
+    const defaultSettings = [
+      { key: 'siteTitle', value: 'Nebula Portal' },
+      { key: 'siteFavicon', value: '' },
+      { key: 'useDefaultQuotes', value: 'true' },
+    ]
+    
+    for (const setting of defaultSettings) {
+      db.run(
+        `INSERT INTO settings (key, value, updatedAt) VALUES (?, ?, ?)`,
+        [setting.key, setting.value, new Date().toISOString()]
+      )
+    }
+    
+    // 重新初始化默认分类
+    const defaultCategories = [
+      { id: 'dev', name: '开发', icon: 'code', color: '#667eea', orderIndex: 0 },
+      { id: 'productivity', name: '效率', icon: 'zap', color: '#f093fb', orderIndex: 1 },
+      { id: 'design', name: '设计', icon: 'palette', color: '#f5576c', orderIndex: 2 },
+      { id: 'reading', name: '阅读', icon: 'book', color: '#43e97b', orderIndex: 3 },
+      { id: 'media', name: '媒体', icon: 'play', color: '#fa709a', orderIndex: 4 },
+    ]
+    
+    for (const cat of defaultCategories) {
+      db.run(
+        `INSERT INTO categories (id, name, icon, color, orderIndex) VALUES (?, ?, ?, ?, ?)`,
+        [cat.id, cat.name, cat.icon, cat.color, cat.orderIndex]
+      )
+    }
+    
+    // 重置管理员密码为默认密码
+    const defaultPassword = await hashPassword('admin123')
+    db.run(
+      'UPDATE admins SET password = ?, isDefaultPassword = 1, updatedAt = ? WHERE username = ?',
+      [defaultPassword, new Date().toISOString(), 'admin']
+    )
+    
+    saveDatabase()
+    
+    res.json({ 
+      success: true, 
+      message: '已恢复出厂设置，管理员密码已重置为 admin123' 
+    })
+  } catch (error) {
+    console.error('恢复出厂设置失败:', error)
+    res.status(500).json({ error: '恢复出厂设置失败' })
+  }
+})
+
 // ========== 名言 API ==========
 
 // 获取所有名言（包含设置）

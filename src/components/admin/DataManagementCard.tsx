@@ -9,11 +9,13 @@ import {
   AlertCircle,
   FileText,
   Calendar,
-  Layers
+  Layers,
+  RotateCcw,
+  AlertTriangle
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { Bookmark, Category } from '../../types/bookmark'
-import { SiteSettings } from '../../lib/api'
+import { SiteSettings, factoryReset } from '../../lib/api'
 
 interface ExportData {
   version: string
@@ -30,6 +32,7 @@ interface DataManagementCardProps {
   categories: Category[]
   settings: SiteSettings
   onImport: (data: ExportData['data']) => Promise<void>
+  onFactoryReset?: () => void
 }
 
 export function DataManagementCard({
@@ -37,9 +40,12 @@ export function DataManagementCard({
   categories,
   settings,
   onImport,
+  onFactoryReset,
 }: DataManagementCardProps) {
   const [isExporting, setIsExporting] = useState(false)
   const [isImporting, setIsImporting] = useState(false)
+  const [isResetting, setIsResetting] = useState(false)
+  const [showResetConfirm, setShowResetConfirm] = useState(false)
   const [success, setSuccess] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -133,6 +139,30 @@ export function DataManagementCard({
       if (fileInputRef.current) {
         fileInputRef.current.value = ''
       }
+    }
+  }
+
+  // 恢复出厂设置
+  const handleFactoryReset = async () => {
+    setIsResetting(true)
+    setError(null)
+    setSuccess(null)
+
+    try {
+      await factoryReset()
+      setSuccess('已恢复出厂设置，管理员密码已重置为 admin123')
+      setShowResetConfirm(false)
+      
+      // 通知父组件刷新数据
+      if (onFactoryReset) {
+        onFactoryReset()
+      }
+      
+      setTimeout(() => setSuccess(null), 5000)
+    } catch (err: any) {
+      setError(err.message || '恢复出厂设置失败')
+    } finally {
+      setIsResetting(false)
     }
   }
 
@@ -285,6 +315,124 @@ export function DataManagementCard({
             className="hidden"
           />
         </div>
+
+        {/* Factory Reset Button */}
+        <motion.button
+          onClick={() => setShowResetConfirm(true)}
+          disabled={isResetting}
+          whileHover={{ scale: isResetting ? 1 : 1.02 }}
+          whileTap={{ scale: isResetting ? 1 : 0.98 }}
+          className={cn(
+            'relative w-full mt-4 flex items-center justify-center gap-3 p-4 rounded-xl',
+            'bg-gradient-to-br from-red-500/10 to-orange-500/10',
+            'border border-red-500/20 hover:border-red-500/40',
+            'transition-all duration-300',
+            'disabled:opacity-50 disabled:cursor-not-allowed'
+          )}
+        >
+          <div className="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center">
+            {isResetting ? (
+              <motion.span
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                className="w-5 h-5 border-2 border-red-400/30 border-t-red-400 rounded-full"
+              />
+            ) : (
+              <RotateCcw className="w-5 h-5 text-red-500" />
+            )}
+          </div>
+          <div className="text-left">
+            <p className="font-medium" style={{ color: 'var(--color-text-primary)' }}>恢复出厂设置</p>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>清除所有数据并重置为默认状态</p>
+          </div>
+        </motion.button>
+
+        {/* Factory Reset Confirmation Modal */}
+        <AnimatePresence>
+          {showResetConfirm && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+              onClick={() => setShowResetConfirm(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                onClick={e => e.stopPropagation()}
+                className="w-full max-w-md rounded-2xl p-6"
+                style={{
+                  background: 'var(--color-bg-secondary)',
+                  border: '1px solid var(--color-glass-border)',
+                }}
+              >
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center">
+                    <AlertTriangle className="w-6 h-6 text-red-500" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold" style={{ color: 'var(--color-text-primary)' }}>
+                      确认恢复出厂设置？
+                    </h3>
+                    <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+                      此操作不可撤销
+                    </p>
+                  </div>
+                </div>
+
+                <div 
+                  className="p-4 rounded-xl mb-6"
+                  style={{
+                    background: 'var(--color-bg-tertiary)',
+                    border: '1px solid var(--color-glass-border)',
+                  }}
+                >
+                  <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+                    此操作将会:
+                  </p>
+                  <ul className="mt-2 space-y-1 text-sm" style={{ color: 'var(--color-text-muted)' }}>
+                    <li>• 删除所有书签数据</li>
+                    <li>• 删除所有分类数据</li>
+                    <li>• 删除所有自定义名言</li>
+                    <li>• 重置站点设置为默认值</li>
+                    <li>• 重置管理员密码为 <span className="text-red-400">admin123</span></li>
+                  </ul>
+                </div>
+
+                <div className="flex gap-3">
+                  <motion.button
+                    onClick={() => setShowResetConfirm(false)}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="flex-1 py-3 rounded-xl font-medium transition-colors"
+                    style={{
+                      background: 'var(--color-bg-tertiary)',
+                      border: '1px solid var(--color-glass-border)',
+                      color: 'var(--color-text-primary)',
+                    }}
+                  >
+                    取消
+                  </motion.button>
+                  <motion.button
+                    onClick={handleFactoryReset}
+                    disabled={isResetting}
+                    whileHover={{ scale: isResetting ? 1 : 1.02 }}
+                    whileTap={{ scale: isResetting ? 1 : 0.98 }}
+                    className={cn(
+                      'flex-1 py-3 rounded-xl font-medium',
+                      'bg-gradient-to-r from-red-500 to-orange-500 text-white',
+                      'disabled:opacity-50 disabled:cursor-not-allowed'
+                    )}
+                  >
+                    {isResetting ? '重置中...' : '确认重置'}
+                  </motion.button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* File Format Info */}
         <div 

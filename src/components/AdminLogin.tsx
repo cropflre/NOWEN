@@ -7,9 +7,10 @@ import { adminLogin } from '../lib/api'
 interface AdminLoginProps {
   onLogin: (username: string, requirePasswordChange?: boolean) => void
   onBack: () => void
+  isDark?: boolean
 }
 
-export function AdminLogin({ onLogin, onBack }: AdminLoginProps) {
+export function AdminLogin({ onLogin, onBack, isDark = true }: AdminLoginProps) {
   const [username, setUsername] = useState('admin')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -48,17 +49,32 @@ export function AdminLogin({ onLogin, onBack }: AdminLoginProps) {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center p-4">
+    <div className={`min-h-screen flex items-center justify-center p-4 ${
+      isDark ? 'bg-[#0a0a0f]' : 'bg-gradient-to-br from-slate-50 to-blue-50'
+    }`}>
       {/* Background Effects */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-nebula-purple/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-nebula-pink/10 rounded-full blur-3xl" />
+        {isDark ? (
+          <>
+            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-nebula-purple/10 rounded-full blur-3xl" />
+            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-nebula-pink/10 rounded-full blur-3xl" />
+          </>
+        ) : (
+          <>
+            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-200/30 rounded-full blur-3xl" />
+            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-200/30 rounded-full blur-3xl" />
+          </>
+        )}
       </div>
 
       {/* Back Button */}
       <motion.button
         onClick={onBack}
-        className="absolute top-6 left-6 p-2 rounded-xl hover:bg-white/5 text-white/60 hover:text-white transition-colors z-10"
+        className={`absolute top-6 left-6 p-2 rounded-xl transition-colors z-10 ${
+          isDark 
+            ? 'hover:bg-white/5 text-white/60 hover:text-white' 
+            : 'hover:bg-black/5 text-slate-500 hover:text-slate-800'
+        }`}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
       >
@@ -73,30 +89,38 @@ export function AdminLogin({ onLogin, onBack }: AdminLoginProps) {
         transition={{ duration: 0.5 }}
       >
         <motion.div
-          className="relative p-8 rounded-3xl bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] overflow-hidden"
+          className={`relative p-8 rounded-3xl backdrop-blur-xl overflow-hidden ${
+            isDark 
+              ? 'bg-white/[0.03] border border-white/[0.08]' 
+              : 'bg-white/80 border border-slate-200/60 shadow-xl shadow-slate-200/50'
+          }`}
           animate={isShaking ? { x: [-10, 10, -10, 10, 0] } : {}}
           transition={{ duration: 0.4 }}
         >
           <BorderBeam
             size={100}
             duration={12}
-            colorFrom="rgba(102, 126, 234, 0.5)"
-            colorTo="rgba(236, 72, 153, 0.5)"
+            colorFrom={isDark ? "rgba(102, 126, 234, 0.5)" : "rgba(59, 130, 246, 0.4)"}
+            colorTo={isDark ? "rgba(236, 72, 153, 0.5)" : "rgba(147, 51, 234, 0.4)"}
           />
 
           {/* Header */}
           <div className="text-center mb-8">
             <motion.div
-              className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-nebula-purple/20 to-nebula-pink/20 flex items-center justify-center"
+              className={`w-20 h-20 mx-auto mb-6 rounded-2xl flex items-center justify-center ${
+                isDark 
+                  ? 'bg-gradient-to-br from-nebula-purple/20 to-nebula-pink/20' 
+                  : 'bg-gradient-to-br from-blue-100 to-purple-100'
+              }`}
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.2, type: 'spring' }}
             >
-              <Shield className="w-10 h-10 text-nebula-purple" />
+              <Shield className={`w-10 h-10 ${isDark ? 'text-nebula-purple' : 'text-blue-600'}`} />
             </motion.div>
             
             <motion.h1
-              className="text-2xl font-medium text-white mb-2"
+              className={`text-2xl font-medium mb-2 ${isDark ? 'text-white' : 'text-slate-800'}`}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
@@ -104,7 +128,7 @@ export function AdminLogin({ onLogin, onBack }: AdminLoginProps) {
               后台管理
             </motion.h1>
             <motion.p
-              className="text-white/40 text-sm"
+              className={`text-sm ${isDark ? 'text-white/40' : 'text-slate-500'}`}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4 }}
@@ -122,11 +146,13 @@ export function AdminLogin({ onLogin, onBack }: AdminLoginProps) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.45 }}
               >
-                <label className="block text-sm text-white/50 mb-2">
+                <label className={`block text-sm mb-2 ${isDark ? 'text-white/50' : 'text-slate-600'}`}>
                   用户名
                 </label>
                 <div className="relative">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+                  <User className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 ${
+                    isDark ? 'text-white/30' : 'text-slate-400'
+                  }`} />
                   <input
                     type="text"
                     value={username}
@@ -135,7 +161,11 @@ export function AdminLogin({ onLogin, onBack }: AdminLoginProps) {
                       setError('')
                     }}
                     placeholder="请输入用户名"
-                    className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/30 focus:outline-none focus:border-nebula-purple/50 transition-colors"
+                    className={`w-full pl-11 pr-4 py-3.5 rounded-xl border transition-colors ${
+                      isDark 
+                        ? 'bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-nebula-purple/50' 
+                        : 'bg-slate-50 border-slate-200 text-slate-800 placeholder:text-slate-400 focus:border-blue-400 focus:bg-white'
+                    } focus:outline-none`}
                   />
                 </div>
               </motion.div>
@@ -146,11 +176,13 @@ export function AdminLogin({ onLogin, onBack }: AdminLoginProps) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
               >
-                <label className="block text-sm text-white/50 mb-2">
+                <label className={`block text-sm mb-2 ${isDark ? 'text-white/50' : 'text-slate-600'}`}>
                   密码
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+                  <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 ${
+                    isDark ? 'text-white/30' : 'text-slate-400'
+                  }`} />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={password}
@@ -160,12 +192,18 @@ export function AdminLogin({ onLogin, onBack }: AdminLoginProps) {
                     }}
                     onKeyDown={handleKeyDown}
                     placeholder="请输入密码"
-                    className="w-full pl-11 pr-12 py-3.5 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/30 focus:outline-none focus:border-nebula-purple/50 transition-colors"
+                    className={`w-full pl-11 pr-12 py-3.5 rounded-xl border transition-colors ${
+                      isDark 
+                        ? 'bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-nebula-purple/50' 
+                        : 'bg-slate-50 border-slate-200 text-slate-800 placeholder:text-slate-400 focus:border-blue-400 focus:bg-white'
+                    } focus:outline-none`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/50 transition-colors"
+                    className={`absolute right-4 top-1/2 -translate-y-1/2 transition-colors ${
+                      isDark ? 'text-white/30 hover:text-white/50' : 'text-slate-400 hover:text-slate-600'
+                    }`}
                   >
                     {showPassword ? (
                       <EyeOff className="w-4 h-4" />
@@ -194,7 +232,11 @@ export function AdminLogin({ onLogin, onBack }: AdminLoginProps) {
               <motion.button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-nebula-purple to-nebula-pink text-white font-medium relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed"
+                className={`w-full py-3.5 rounded-xl text-white font-medium relative overflow-hidden group disabled:opacity-50 disabled:cursor-not-allowed ${
+                  isDark 
+                    ? 'bg-gradient-to-r from-nebula-purple to-nebula-pink' 
+                    : 'bg-gradient-to-r from-blue-500 to-purple-500'
+                }`}
                 whileHover={{ scale: isLoading ? 1 : 1.01 }}
                 whileTap={{ scale: isLoading ? 1 : 0.99 }}
                 initial={{ opacity: 0, y: 10 }}
@@ -205,14 +247,18 @@ export function AdminLogin({ onLogin, onBack }: AdminLoginProps) {
                   <KeyRound className="w-4 h-4" />
                   {isLoading ? '登录中...' : '登录'}
                 </span>
-                <div className="absolute inset-0 bg-gradient-to-r from-nebula-pink to-nebula-purple opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity ${
+                  isDark 
+                    ? 'bg-gradient-to-r from-nebula-pink to-nebula-purple' 
+                    : 'bg-gradient-to-r from-purple-500 to-blue-500'
+                }`} />
               </motion.button>
             </div>
           </form>
 
           {/* Hint */}
           <motion.p
-            className="text-center text-xs text-white/20 mt-6"
+            className={`text-center text-xs mt-6 ${isDark ? 'text-white/20' : 'text-slate-400'}`}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.8 }}

@@ -472,9 +472,17 @@ export async function importData(data: ExportData['data']): Promise<SuccessRespo
   })
 }
 
+export async function factoryReset(): Promise<SuccessResponse> {
+  return request<SuccessResponse>('/api/factory-reset', {
+    method: 'POST',
+    requireAuth: true,
+  })
+}
+
 export const dataApi = {
   export: exportData,
   import: importData,
+  factoryReset,
 }
 
 // ========== 名言 API ==========

@@ -1,13 +1,38 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Bookmark, Category } from '../types/bookmark'
+import { Bookmark, Category, CustomIcon } from '../types/bookmark'
 import * as api from '../lib/api'
+
+// 自定义图标本地存储 Key
+const CUSTOM_ICONS_KEY = 'zen-garden-custom-icons'
 
 export function useBookmarkStore() {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
   const [categories, setCategories] = useState<Category[]>([])
+  const [customIcons, setCustomIcons] = useState<CustomIcon[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [newlyAddedId, setNewlyAddedId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+
+  // 加载自定义图标
+  const loadCustomIcons = useCallback(() => {
+    try {
+      const stored = localStorage.getItem(CUSTOM_ICONS_KEY)
+      if (stored) {
+        setCustomIcons(JSON.parse(stored))
+      }
+    } catch (err) {
+      console.error('加载自定义图标失败:', err)
+    }
+  }, [])
+
+  // 保存自定义图标到本地存储
+  const saveCustomIcons = useCallback((icons: CustomIcon[]) => {
+    try {
+      localStorage.setItem(CUSTOM_ICONS_KEY, JSON.stringify(icons))
+    } catch (err) {
+      console.error('保存自定义图标失败:', err)
+    }
+  }, [])
 
   // 加载数据函数
   const loadData = useCallback(async () => {
@@ -31,7 +56,8 @@ export function useBookmarkStore() {
   // 初始加载数据
   useEffect(() => {
     loadData()
-  }, [loadData])
+    loadCustomIcons()
+  }, [loadData, loadCustomIcons])
 
   // 刷新数据（导入后调用）
   const refreshData = useCallback(async () => {
@@ -46,6 +72,8 @@ export function useBookmarkStore() {
         title: bookmark.title,
         description: bookmark.description,
         favicon: bookmark.favicon,
+        icon: bookmark.icon,
+        iconUrl: bookmark.iconUrl,
         ogImage: bookmark.ogImage,
         category: bookmark.category,
         tags: bookmark.tags,
@@ -230,9 +258,46 @@ export function useBookmarkStore() {
   // 稍后阅读的书签
   const readLaterBookmarks = sortedBookmarks.filter(b => b.isReadLater && !b.isRead)
 
+  // 添加自定义图标
+  const addCustomIcon = useCallback((icon: Omit<CustomIcon, 'id' | 'createdAt'>) => {
+    const newIcon: CustomIcon = {
+      id: `custom-${Date.now()}`,
+      name: icon.name,
+      url: icon.url,
+      createdAt: Date.now(),
+    }
+    setCustomIcons(prev => {
+      const updated = [...prev, newIcon]
+      saveCustomIcons(updated)
+      return updated
+    })
+    return newIcon
+  }, [saveCustomIcons])
+
+  // 删除自定义图标
+  const deleteCustomIcon = useCallback((id: string) => {
+    setCustomIcons(prev => {
+      const updated = prev.filter(icon => icon.id !== id)
+      saveCustomIcons(updated)
+      return updated
+    })
+  }, [saveCustomIcons])
+
+  // 更新自定义图标
+  const updateCustomIcon = useCallback((id: string, updates: Partial<CustomIcon>) => {
+    setCustomIcons(prev => {
+      const updated = prev.map(icon => 
+        icon.id === id ? { ...icon, ...updates } : icon
+      )
+      saveCustomIcons(updated)
+      return updated
+    })
+  }, [saveCustomIcons])
+
   return {
     bookmarks: sortedBookmarks,
     categories,
+    customIcons,
     isLoading,
     error,
     newlyAddedId,
@@ -246,6 +311,9 @@ export function useBookmarkStore() {
     addCategory,
     updateCategory,
     deleteCategory,
+    addCustomIcon,
+    deleteCustomIcon,
+    updateCustomIcon,
     bookmarksByCategory,
     uncategorizedBookmarks,
     readLaterBookmarks,

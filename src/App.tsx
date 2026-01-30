@@ -24,6 +24,7 @@ import { BorderBeam, BreathingDot } from "./components/ui/advanced-effects";
 import { AddBookmarkModal } from "./components/AddBookmarkModal";
 import { BookmarkCardContent } from "./components/BookmarkCardContent";
 import { ContextMenu, useBookmarkContextMenu } from "./components/ContextMenu";
+import { IconManager } from "./components/IconManager";
 import { Admin } from "./pages/Admin";
 import { AdminLogin } from "./components/AdminLogin";
 import { ForcePasswordChange } from "./components/ForcePasswordChange";
@@ -55,7 +56,7 @@ const dockItems = [
     id: "github",
     title: "GitHub",
     icon: <Github className="w-5 h-5" />,
-    href: "https://github.com",
+    href: "https://github.com/cropflre/NOWEN",
   },
 ];
 
@@ -65,6 +66,7 @@ function App() {
   >("home");
   const [isSpotlightOpen, setIsSpotlightOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isIconManagerOpen, setIsIconManagerOpen] = useState(false);
   const [editingBookmark, setEditingBookmark] = useState<Bookmark | null>(null);
   const [pendingUrl, setPendingUrl] = useState("");
   const [adminUsername, setAdminUsername] = useState<string>("");
@@ -88,6 +90,7 @@ function App() {
   const {
     bookmarks,
     categories,
+    customIcons,
     isLoading,
     newlyAddedId,
     addBookmark,
@@ -98,10 +101,12 @@ function App() {
     addCategory,
     updateCategory,
     deleteCategory,
+    addCustomIcon,
+    deleteCustomIcon,
     refreshData,
   } = useBookmarkStore();
 
-  useTheme();
+  const { isDark } = useTheme();
 
   // 初始化时检查登录状态和加载站点设置
   useEffect(() => {
@@ -295,6 +300,7 @@ function App() {
       <AdminLogin
         onLogin={handleAdminLogin}
         onBack={() => setCurrentPage("home")}
+        isDark={isDark}
       />
     );
   }
@@ -317,6 +323,7 @@ function App() {
         <Admin
           bookmarks={bookmarks}
           categories={categories}
+          customIcons={customIcons}
           username={adminUsername}
           onBack={() => setCurrentPage("home")}
           onLogout={handleAdminLogout}
@@ -332,6 +339,8 @@ function App() {
           onAddCategory={addCategory}
           onUpdateCategory={updateCategory}
           onDeleteCategory={deleteCategory}
+          onAddCustomIcon={addCustomIcon}
+          onDeleteCustomIcon={deleteCustomIcon}
           onRefreshData={refreshData}
           onQuotesUpdate={handleQuotesChange}
         />
@@ -344,8 +353,17 @@ function App() {
           }}
           onAdd={handleSaveBookmark}
           categories={categories}
+          customIcons={customIcons}
           initialUrl={pendingUrl}
           editBookmark={editingBookmark}
+          onOpenIconManager={() => setIsIconManagerOpen(true)}
+        />
+        <IconManager
+          isOpen={isIconManagerOpen}
+          onClose={() => setIsIconManagerOpen(false)}
+          customIcons={customIcons}
+          onAddIcon={addCustomIcon}
+          onDeleteIcon={deleteCustomIcon}
         />
       </>
     );
@@ -786,8 +804,19 @@ function App() {
         }}
         onAdd={handleSaveBookmark}
         categories={categories}
+        customIcons={customIcons}
         initialUrl={pendingUrl}
         editBookmark={editingBookmark}
+        onOpenIconManager={() => setIsIconManagerOpen(true)}
+      />
+
+      {/* Icon Manager */}
+      <IconManager
+        isOpen={isIconManagerOpen}
+        onClose={() => setIsIconManagerOpen(false)}
+        customIcons={customIcons}
+        onAddIcon={addCustomIcon}
+        onDeleteIcon={deleteCustomIcon}
       />
 
       {/* Context Menu */}

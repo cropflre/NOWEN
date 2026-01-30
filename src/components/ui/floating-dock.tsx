@@ -2,18 +2,21 @@ import { useRef, useState, useEffect } from 'react'
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion'
 import { cn } from '../../lib/utils'
 
+interface DockItemType {
+  id: string
+  title: string
+  icon: React.ReactNode
+  href?: string
+  onClick?: () => void
+}
+
 interface FloatingDockProps {
-  items: {
-    id: string
-    title: string
-    icon: React.ReactNode
-    href?: string
-    onClick?: () => void
-  }[]
+  items: DockItemType[]
+  leftItems?: DockItemType[]
   className?: string
 }
 
-export function FloatingDock({ items, className }: FloatingDockProps) {
+export function FloatingDock({ items, leftItems, className }: FloatingDockProps) {
   const mouseX = useMotionValue(Infinity)
   const [isDark, setIsDark] = useState(true)
 
@@ -56,6 +59,19 @@ export function FloatingDock({ items, className }: FloatingDockProps) {
       animate={{ y: 0, opacity: 1 }}
       transition={{ delay: 0.5, type: 'spring', stiffness: 200, damping: 20 }}
     >
+      {/* Left Items */}
+      {leftItems && leftItems.length > 0 && (
+        <>
+          {leftItems.map((item) => (
+            <DockItem key={item.id} mouseX={mouseX} isDark={isDark} {...item} />
+          ))}
+          <div 
+            className="w-px h-8 mx-1" 
+            style={{ background: 'var(--color-glass-border)' }}
+          />
+        </>
+      )}
+      {/* Main Items */}
       {items.map((item) => (
         <DockItem key={item.id} mouseX={mouseX} isDark={isDark} {...item} />
       ))}

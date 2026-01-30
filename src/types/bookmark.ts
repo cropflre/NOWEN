@@ -4,6 +4,8 @@ export interface Bookmark {
   title: string
   description?: string
   favicon?: string
+  icon?: string  // 自定义图标名称（lucide-react图标）
+  iconUrl?: string  // 自定义图标URL（支持上传或外链）
   ogImage?: string
   category?: string
   tags?: string[]
@@ -13,6 +15,14 @@ export interface Bookmark {
   isPinned?: boolean
   isReadLater?: boolean
   isRead?: boolean
+}
+
+// 用户自定义图标库
+export interface CustomIcon {
+  id: string
+  name: string
+  url: string  // base64 或 URL
+  createdAt: number
 }
 
 export interface Category {
@@ -26,6 +36,7 @@ export interface Category {
 export interface BookmarkStore {
   bookmarks: Bookmark[]
   categories: Category[]
+  customIcons: CustomIcon[]  // 用户自定义图标库
 }
 
 // 初始示例数据

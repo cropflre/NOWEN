@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { MoreHorizontal, Pin, Edit3, Trash2, ExternalLink, BookOpen, CheckCircle2 } from 'lucide-react'
 import { Bookmark } from '../types/bookmark'
 import { cn } from '../lib/utils'
+import { getIconComponent } from '../lib/icons'
 
 interface BookmarkCardProps {
   bookmark: Bookmark
@@ -209,13 +210,25 @@ export function BookmarkCard({
       {/* 卡片内容 */}
       <div className="p-5">
         <div className="flex items-start gap-4">
-          {/* Favicon - 统一容器 */}
+          {/* Favicon/Icon - 统一容器 */}
           <div className={cn(
             'flex-shrink-0 w-12 h-12 rounded-xl',
             'flex items-center justify-center',
             'bg-white/10 p-1.5'
           )}>
-            {bookmark.favicon && !imageError ? (
+            {bookmark.iconUrl ? (
+              <img
+                src={bookmark.iconUrl}
+                alt=""
+                className="w-full h-full object-contain rounded-lg"
+                onError={() => setImageError(true)}
+              />
+            ) : bookmark.icon ? (
+              (() => {
+                const IconComp = getIconComponent(bookmark.icon)
+                return <IconComp className="w-7 h-7" style={{ color: 'var(--gradient-1)' }} />
+              })()
+            ) : bookmark.favicon && !imageError ? (
               <img
                 src={bookmark.favicon}
                 alt=""

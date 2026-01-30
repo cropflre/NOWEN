@@ -9,11 +9,12 @@ import {
   Sparkles,
   Quote,
   Menu,
-  X
+  X,
+  ImageIcon
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 
-type TabType = 'bookmarks' | 'categories' | 'quotes' | 'settings'
+type TabType = 'bookmarks' | 'categories' | 'quotes' | 'icons' | 'settings'
 
 interface AdminSidebarProps {
   activeTab: TabType
@@ -23,12 +24,14 @@ interface AdminSidebarProps {
   bookmarkCount: number
   categoryCount: number
   quoteCount?: number
+  iconCount?: number
 }
 
 const navItems = [
   { id: 'bookmarks' as TabType, label: '书签', fullLabel: '书签管理', icon: Bookmark },
   { id: 'categories' as TabType, label: '分类', fullLabel: '分类管理', icon: FolderOpen },
   { id: 'quotes' as TabType, label: '名言', fullLabel: '名言管理', icon: Quote },
+  { id: 'icons' as TabType, label: '图标', fullLabel: '图标管理', icon: ImageIcon },
   { id: 'settings' as TabType, label: '设置', fullLabel: '系统设置', icon: Settings },
 ]
 
@@ -40,6 +43,7 @@ export function AdminSidebar({
   bookmarkCount,
   categoryCount,
   quoteCount,
+  iconCount,
 }: AdminSidebarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
@@ -47,6 +51,7 @@ export function AdminSidebar({
     if (id === 'bookmarks') return bookmarkCount
     if (id === 'categories') return categoryCount
     if (id === 'quotes') return quoteCount ?? null
+    if (id === 'icons') return iconCount ?? null
     return null
   }
 

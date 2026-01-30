@@ -1,5 +1,5 @@
 import { createContext, useContext, ReactNode, useCallback, useState } from 'react'
-import { Bookmark, Category } from '../types/bookmark'
+import { Bookmark, Category, CustomIcon } from '../types/bookmark'
 
 // ========== Context 类型定义 ==========
 
@@ -7,6 +7,7 @@ export interface AdminContextValue {
   // 数据
   bookmarks: Bookmark[]
   categories: Category[]
+  customIcons: CustomIcon[]
   username: string
   
   // 导航操作
@@ -25,6 +26,10 @@ export interface AdminContextValue {
   addCategory: (category: Omit<Category, 'id' | 'orderIndex'>) => void
   updateCategory: (id: string, updates: Partial<Category>) => void
   deleteCategory: (id: string) => void
+  
+  // 图标操作
+  addCustomIcon: (icon: Omit<CustomIcon, 'id' | 'createdAt'>) => void
+  deleteCustomIcon: (id: string) => void
   
   // 其他操作
   refreshData: () => void
@@ -48,6 +53,7 @@ export interface AdminProviderProps {
   // 数据
   bookmarks: Bookmark[]
   categories: Category[]
+  customIcons: CustomIcon[]
   username: string
   // 导航
   onBack: () => void
@@ -63,6 +69,9 @@ export interface AdminProviderProps {
   onAddCategory: (category: Omit<Category, 'id' | 'orderIndex'>) => void
   onUpdateCategory: (id: string, updates: Partial<Category>) => void
   onDeleteCategory: (id: string) => void
+  // 图标回调
+  onAddCustomIcon: (icon: Omit<CustomIcon, 'id' | 'createdAt'>) => void
+  onDeleteCustomIcon: (id: string) => void
   // 其他回调
   onRefreshData?: () => void
   onQuotesUpdate?: (quotes: string[], useDefault: boolean) => void
@@ -74,6 +83,7 @@ export function AdminProvider({
   children,
   bookmarks,
   categories,
+  customIcons,
   username,
   onBack,
   onLogout,
@@ -86,6 +96,8 @@ export function AdminProvider({
   onAddCategory,
   onUpdateCategory,
   onDeleteCategory,
+  onAddCustomIcon,
+  onDeleteCustomIcon,
   onRefreshData,
   onQuotesUpdate,
 }: AdminProviderProps) {
@@ -118,6 +130,7 @@ export function AdminProvider({
     // 数据
     bookmarks,
     categories,
+    customIcons,
     username,
     
     // 导航
@@ -136,6 +149,10 @@ export function AdminProvider({
     addCategory: onAddCategory,
     updateCategory: onUpdateCategory,
     deleteCategory: onDeleteCategory,
+    
+    // 图标操作
+    addCustomIcon: onAddCustomIcon,
+    deleteCustomIcon: onDeleteCustomIcon,
     
     // 其他操作
     refreshData: handleRefreshData,
@@ -215,6 +232,14 @@ export function useCategoryActions() {
  * 获取数据
  */
 export function useAdminData() {
-  const { bookmarks, categories, username } = useAdmin()
-  return { bookmarks, categories, username }
+  const { bookmarks, categories, customIcons, username } = useAdmin()
+  return { bookmarks, categories, customIcons, username }
+}
+
+/**
+ * 获取图标相关操作
+ */
+export function useIconActions() {
+  const { addCustomIcon, deleteCustomIcon, customIcons } = useAdmin()
+  return { addCustomIcon, deleteCustomIcon, customIcons }
 }

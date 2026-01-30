@@ -16,7 +16,7 @@ import {
   Sparkles,
   X,
 } from 'lucide-react'
-import { Bookmark, Category } from '../types/bookmark'
+import { Bookmark, Category, CustomIcon } from '../types/bookmark'
 import { cn, presetIcons, getIconComponent } from '../lib/utils'
 import { adminChangePassword, fetchSettings, updateSettings, SiteSettings, importData, fetchQuotes, updateQuotes } from '../lib/api'
 import { AdminSidebar } from '../components/admin/AdminSidebar'
@@ -27,8 +27,9 @@ import { ThemeCard } from '../components/admin/ThemeCard'
 import { QuotesCard } from '../components/admin/QuotesCard'
 import { ToastProvider, useToast } from '../components/admin/Toast'
 import { useTheme, ThemeId } from '../hooks/useTheme.tsx'
-import { AdminProvider, useAdmin, useBookmarkActions, useCategoryActions } from '../contexts/AdminContext'
+import { AdminProvider, useAdmin, useBookmarkActions, useCategoryActions, useIconActions } from '../contexts/AdminContext'
 import { VirtualBookmarkList } from '../components/VirtualBookmarkList'
+import { IconManager } from '../components/IconManager'
 
 // 虚拟滚动阈值：超过此数量启用虚拟滚动
 const VIRTUAL_SCROLL_THRESHOLD = 50
@@ -37,6 +38,7 @@ const VIRTUAL_SCROLL_THRESHOLD = 50
 export interface AdminProps {
   bookmarks: Bookmark[]
   categories: Category[]
+  customIcons: CustomIcon[]
   username: string
   onBack: () => void
   onLogout: () => void
@@ -49,6 +51,8 @@ export interface AdminProps {
   onAddCategory: (category: Omit<Category, 'id' | 'orderIndex'>) => void
   onUpdateCategory: (id: string, updates: Partial<Category>) => void
   onDeleteCategory: (id: string) => void
+  onAddCustomIcon: (icon: Omit<CustomIcon, 'id' | 'createdAt'>) => void
+  onDeleteCustomIcon: (id: string) => void
   onRefreshData?: () => void
   onQuotesUpdate?: (quotes: string[], useDefault: boolean) => void
 }
@@ -63,7 +67,8 @@ function AdminContent() {
   // 从 Context 获取数据和操作
   const { 
     bookmarks, 
-    categories, 
+    categories,
+    customIcons,
     username, 
     onBack, 
     onLogout,
@@ -86,9 +91,14 @@ function AdminContent() {
     deleteCategory: onDeleteCategory,
   } = useCategoryActions()
 
+  const {
+    addCustomIcon: onAddCustomIcon,
+    deleteCustomIcon: onDeleteCustomIcon,
+  } = useIconActions()
+
   const { showToast } = useToast()
   const { themeId, isDark, setTheme, toggleDarkMode, autoMode, setAutoMode } = useTheme()
-  const [activeTab, setActiveTab] = useState<'bookmarks' | 'categories' | 'quotes' | 'settings'>('bookmarks')
+  const [activeTab, setActiveTab] = useState<'bookmarks' | 'categories' | 'quotes' | 'icons' | 'settings'>('bookmarks')
   const [searchQuery, setSearchQuery] = useState('')
   const [filterCategory, setFilterCategory] = useState<string>('all')
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
@@ -285,6 +295,7 @@ function AdminContent() {
     bookmarks: '书签管理',
     categories: '分类管理',
     quotes: '名言管理',
+    icons: '图标管理',
     settings: '系统设置',
   }
 
@@ -305,6 +316,7 @@ function AdminContent() {
         bookmarkCount={bookmarks.length}
         categoryCount={categories.length}
         quoteCount={quotes.length}
+        iconCount={customIcons.length}
       />
 
       {/* Main Content */}
@@ -335,6 +347,7 @@ function AdminContent() {
                 {activeTab === 'bookmarks' && `共 ${bookmarks.length} 个书签`}
                 {activeTab === 'categories' && `共 ${categories.length} 个分类`}
                 {activeTab === 'quotes' && `共 ${quotes.length} 条名言`}
+                {activeTab === 'icons' && `共 ${customIcons.length} 个图标`}
                 {activeTab === 'settings' && '管理您的网站配置'}
               </p>
             </div>
@@ -1164,6 +1177,26 @@ function AdminContent() {
               </motion.div>
             )}
 
+            {/* Icons Tab */}
+            {activeTab === 'icons' && (
+              <motion.div
+                key="icons"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="max-w-4xl"
+              >
+                <IconManager
+                  isOpen={true}
+                  onClose={() => {}}
+                  customIcons={customIcons}
+                  onAddIcon={onAddCustomIcon}
+                  onDeleteIcon={onDeleteCustomIcon}
+                  embedded
+                />
+              </motion.div>
+            )}
+
             {/* Settings Tab */}
             {activeTab === 'settings' && (
               <motion.div
@@ -1218,6 +1251,11 @@ function AdminContent() {
                       // 刷新数据
                       refreshData()
                     }}
+                    onFactoryReset={() => {
+                      showToast('success', '已恢复出厂设置，正在刷新...')
+                      // 刷新数据
+                      refreshData()
+                    }}
                   />
                 </div>
               </motion.div>
@@ -1235,6 +1273,7 @@ export function Admin(props: AdminProps) {
     <AdminProvider
       bookmarks={props.bookmarks}
       categories={props.categories}
+      customIcons={props.customIcons}
       username={props.username}
       onBack={props.onBack}
       onLogout={props.onLogout}
@@ -1247,6 +1286,8 @@ export function Admin(props: AdminProps) {
       onAddCategory={props.onAddCategory}
       onUpdateCategory={props.onUpdateCategory}
       onDeleteCategory={props.onDeleteCategory}
+      onAddCustomIcon={props.onAddCustomIcon}
+      onDeleteCustomIcon={props.onDeleteCustomIcon}
       onRefreshData={props.onRefreshData}
       onQuotesUpdate={props.onQuotesUpdate}
     >
