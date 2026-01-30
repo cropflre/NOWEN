@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  zen-garden:
+    build: .
+    container_name: digital-zen-garden
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+    volumes:
+      - ./server/data:/app/server/data
+    environment:
+      - NODE_ENV=production
