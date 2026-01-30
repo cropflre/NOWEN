@@ -48,6 +48,7 @@ cd /app/server && tsx src/index.ts &
 serve -s /app/dist -l 3000
 EOF
 
-RUN chmod +x /app/start.sh
+# 修改这里：先用 sed 删除回车符，再给执行权限
+RUN sed -i 's/\r$//' /app/start.sh && chmod +x /app/start.sh
 
 CMD ["/app/start.sh"]
