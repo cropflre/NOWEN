@@ -9,14 +9,63 @@
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178c6)
 ![Docker](https://img.shields.io/badge/Docker-Ready-2496ED)
 
-<p align="center">
-  <img src="https://github.com/cropflre/NOWEN/raw/main/public/preview.png" alt="预览图" width="800">
-</p>
+---
+
+## 📸 界面预览
+
+### ☀️ 日间模式
+
+<table>
+  <tr>
+    <td align="center"><b>桌面端首页</b></td>
+    <td align="center"><b>移动端首页</b></td>
+  </tr>
+  <tr>
+    <td><img src="https://github.com/cropflre/NOWEN/raw/main/public/screenshots/light-desktop.png" alt="日间模式-桌面端" width="500"></td>
+    <td><img src="https://github.com/cropflre/NOWEN/raw/main/public/screenshots/light-mobile.png" alt="日间模式-移动端" width="250"></td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <td align="center"><b>后台书签管理</b></td>
+    <td align="center"><b>后台侧边栏</b></td>
+  </tr>
+  <tr>
+    <td><img src="https://github.com/cropflre/NOWEN/raw/main/public/screenshots/light-admin-bookmarks.png" alt="日间模式-后台书签" width="300"></td>
+    <td><img src="https://github.com/cropflre/NOWEN/raw/main/public/screenshots/light-admin-sidebar.png" alt="日间模式-后台侧边栏" width="300"></td>
+  </tr>
+</table>
+
+### 🌙 夜间模式
+
+<table>
+  <tr>
+    <td align="center"><b>桌面端首页</b></td>
+    <td align="center"><b>移动端首页</b></td>
+  </tr>
+  <tr>
+    <td><img src="https://github.com/cropflre/NOWEN/raw/main/public/screenshots/dark-desktop.png" alt="夜间模式-桌面端" width="500"></td>
+    <td><img src="https://github.com/cropflre/NOWEN/raw/main/public/screenshots/dark-mobile.png" alt="夜间模式-移动端" width="250"></td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <td align="center"><b>后台书签管理</b></td>
+    <td align="center"><b>后台系统设置</b></td>
+  </tr>
+  <tr>
+    <td><img src="https://github.com/cropflre/NOWEN/raw/main/public/screenshots/dark-admin-bookmarks.png" alt="夜间模式-后台书签" width="300"></td>
+    <td><img src="https://github.com/cropflre/NOWEN/raw/main/public/screenshots/dark-admin-settings.png" alt="夜间模式-后台设置" width="300"></td>
+  </tr>
+</table>
 
 ---
 
 ## 📋 目录
 
+- [界面预览](#-界面预览)
 - [功能特性](#-功能特性)
 - [主题系统](#-主题系统)
 - [技术栈](#️-技术栈)
