@@ -6,11 +6,10 @@ import { z } from 'zod'
  */
 const clientEnvSchema = z.object({
   // API 基础地址
+  // 修改：移除默认值，允许为空，我们在后面动态生成
   VITE_API_BASE: z
     .string()
-    .url('VITE_API_BASE 必须是有效的 URL')
-    .optional()
-    .default('http://localhost:3001'),
+    .optional(),
   
   // 应用模式
   MODE: z.enum(['development', 'production', 'test']).default('development'),
@@ -82,10 +81,21 @@ function parseClientEnv(): ClientEnv {
 export const env = parseClientEnv()
 
 /**
- * 获取 API 基础地址
+ * 获取 API 基础地址 (核心修改部分)
  */
 export function getApiBase(): string {
-  return env.VITE_API_BASE
+  // 1. 如果环境变量里明确配置了（比如开发环境 .env），优先使用它
+  if (env.VITE_API_BASE) {
+    return env.VITE_API_BASE
+  }
+
+  // 2. 如果在浏览器环境运行，自动获取当前域名/IP，并拼接 3006 端口
+  if (typeof window !== 'undefined') {
+    return `${window.location.protocol}//${window.location.hostname}:3006`
+  }
+
+  // 3. 最后的保底（比如在服务端渲染或测试环境）
+  return 'http://localhost:3006'
 }
 
 /**
