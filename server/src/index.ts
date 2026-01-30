@@ -246,7 +246,7 @@ app.post('/api/categories', (req, res) => {
     run(`
       INSERT INTO categories (id, name, icon, color, orderIndex)
       VALUES (?, ?, ?, ?, ?)
-    `, [id, name, icon, color, newOrderIndex])
+    `, [id, name, icon ?? null, color ?? null, newOrderIndex])
     
     const category = queryOne('SELECT * FROM categories WHERE id = ?', [id])
     res.status(201).json(category)

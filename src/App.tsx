@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus,
@@ -6,11 +6,6 @@ import {
   Home,
   Bookmark as BookmarkIcon,
   Github,
-  Code2,
-  Zap,
-  BookOpen,
-  Palette,
-  Play,
   ExternalLink,
   Pin,
   BookMarked,
@@ -36,7 +31,7 @@ import { useBookmarkStore } from "./hooks/useBookmarkStore";
 import { useTheme } from "./hooks/useTheme";
 import { useTime } from "./hooks/useTime";
 import { Bookmark } from "./types/bookmark";
-import { cn } from "./lib/utils";
+import { cn, getIconComponent } from "./lib/utils";
 import {
   checkAuthStatus,
   clearAuthStatus,
@@ -58,15 +53,6 @@ const dockItems = [
     href: "https://github.com",
   },
 ];
-
-// 分类图标映射
-const categoryIcons: Record<string, React.ReactNode> = {
-  dev: <Code2 className="w-5 h-5" />,
-  productivity: <Zap className="w-5 h-5" />,
-  design: <Palette className="w-5 h-5" />,
-  reading: <BookOpen className="w-5 h-5" />,
-  media: <Play className="w-5 h-5" />,
-};
 
 // 名言库
 const wisdomQuotes = [
@@ -177,6 +163,11 @@ function setActiveQuotes(customQuotes: string[], useDefault: boolean) {
 // 获取随机名言（不限制，每次随机）
 function getRandomWisdom(): string {
   return activeQuotes[Math.floor(Math.random() * activeQuotes.length)];
+}
+
+// 处理名言更新的回调（供外部组件调用）
+function handleQuotesChange(customQuotes: string[], useDefault: boolean) {
+  setActiveQuotes(customQuotes, useDefault);
 }
 
 function App() {
@@ -421,6 +412,7 @@ function App() {
           onUpdateCategory={updateCategory}
           onDeleteCategory={deleteCategory}
           onRefreshData={refreshData}
+          onQuotesUpdate={handleQuotesChange}
         />
         <AddBookmarkModal
           isOpen={isAddModalOpen}
@@ -725,9 +717,10 @@ function App() {
                       color: category.color,
                     }}
                   >
-                    {categoryIcons[category.id] || (
-                      <BookmarkIcon className="w-4 h-4" />
-                    )}
+                    {(() => {
+                      const IconComp = getIconComponent(category.icon);
+                      return <IconComp className="w-4 h-4" />;
+                    })()}
                   </div>
                   <h2
                     className="text-xl font-medium tracking-wide"

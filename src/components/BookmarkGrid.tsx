@@ -21,8 +21,8 @@ import { useState } from 'react'
 import { SortableBookmarkCard } from './SortableBookmarkCard'
 import { BookmarkCard, BookmarkCardSkeleton } from './BookmarkCard'
 import { Bookmark, Category } from '../types/bookmark'
-import { Code, Zap, Palette, BookOpen, Play, Folder, Clock } from 'lucide-react'
-import { cn } from '../lib/utils'
+import { Folder, Clock } from 'lucide-react'
+import { cn, getIconComponent } from '../lib/utils'
 
 interface BookmarkGridProps {
   bookmarks: Bookmark[]
@@ -35,14 +35,6 @@ interface BookmarkGridProps {
   onToggleReadLater?: (id: string) => void
   onMarkAsRead?: (id: string) => void
   onReorder?: (bookmarks: Bookmark[]) => void
-}
-
-const categoryIcons: Record<string, React.ReactNode> = {
-  code: <Code className="w-4 h-4" />,
-  zap: <Zap className="w-4 h-4" />,
-  palette: <Palette className="w-4 h-4" />,
-  book: <BookOpen className="w-4 h-4" />,
-  play: <Play className="w-4 h-4" />,
 }
 
 export function BookmarkGrid({
@@ -224,7 +216,10 @@ export function BookmarkGrid({
                   )}
                   style={{ color: category.color }}
                 >
-                  {categoryIcons[category.icon || 'folder'] || <Folder className="w-4 h-4" />}
+                  {(() => {
+                    const IconComp = getIconComponent(category.icon)
+                    return <IconComp className="w-4 h-4" />
+                  })()}
                 </div>
                 <h2 
                   className="text-lg font-medium"

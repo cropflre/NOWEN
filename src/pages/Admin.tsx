@@ -14,6 +14,40 @@ import {
   ChevronDown,
   GripVertical,
   Sparkles,
+  Code2,
+  Zap,
+  BookOpen,
+  Play,
+  Briefcase,
+  Coffee,
+  Globe,
+  Heart,
+  Home,
+  Image,
+  Link,
+  Mail,
+  Map,
+  MessageCircle,
+  Music,
+  Settings,
+  ShoppingCart,
+  Star,
+  TrendingUp,
+  Users,
+  Video,
+  Wallet,
+  Gamepad2,
+  Camera,
+  Cpu,
+  Database,
+  FileText,
+  Folder,
+  Gift,
+  Headphones,
+  Key,
+  Layers,
+  X,
+  type LucideIcon,
 } from 'lucide-react'
 import { Bookmark, Category } from '../types/bookmark'
 import { cn } from '../lib/utils'
@@ -26,6 +60,49 @@ import { ThemeCard } from '../components/admin/ThemeCard'
 import { QuotesCard } from '../components/admin/QuotesCard'
 import { ToastProvider, useToast } from '../components/admin/Toast'
 import { useTheme, ThemeId } from '../hooks/useTheme.tsx'
+
+// 预设图标列表
+const presetIcons: { name: string; icon: LucideIcon }[] = [
+  { name: 'code', icon: Code2 },
+  { name: 'zap', icon: Zap },
+  { name: 'palette', icon: Palette },
+  { name: 'book', icon: BookOpen },
+  { name: 'play', icon: Play },
+  { name: 'briefcase', icon: Briefcase },
+  { name: 'coffee', icon: Coffee },
+  { name: 'globe', icon: Globe },
+  { name: 'heart', icon: Heart },
+  { name: 'home', icon: Home },
+  { name: 'image', icon: Image },
+  { name: 'link', icon: Link },
+  { name: 'mail', icon: Mail },
+  { name: 'map', icon: Map },
+  { name: 'message', icon: MessageCircle },
+  { name: 'music', icon: Music },
+  { name: 'settings', icon: Settings },
+  { name: 'cart', icon: ShoppingCart },
+  { name: 'star', icon: Star },
+  { name: 'trending', icon: TrendingUp },
+  { name: 'users', icon: Users },
+  { name: 'video', icon: Video },
+  { name: 'wallet', icon: Wallet },
+  { name: 'gamepad', icon: Gamepad2 },
+  { name: 'camera', icon: Camera },
+  { name: 'cpu', icon: Cpu },
+  { name: 'database', icon: Database },
+  { name: 'file', icon: FileText },
+  { name: 'folder', icon: Folder },
+  { name: 'gift', icon: Gift },
+  { name: 'headphones', icon: Headphones },
+  { name: 'key', icon: Key },
+  { name: 'layers', icon: Layers },
+]
+
+// 根据图标名称获取图标组件
+function getIconByName(name: string | undefined): LucideIcon {
+  const found = presetIcons.find(i => i.name === name)
+  return found?.icon || Folder
+}
 
 interface AdminProps {
   bookmarks: Bookmark[]
@@ -43,6 +120,7 @@ interface AdminProps {
   onUpdateCategory: (id: string, updates: Partial<Category>) => void
   onDeleteCategory: (id: string) => void
   onRefreshData?: () => void
+  onQuotesUpdate?: (quotes: string[], useDefault: boolean) => void
 }
 
 // 预设颜色
@@ -67,6 +145,7 @@ function AdminContent({
   onUpdateCategory,
   onDeleteCategory,
   onRefreshData,
+  onQuotesUpdate,
 }: AdminProps) {
   const { showToast } = useToast()
   const { themeId, isDark, setTheme, toggleDarkMode, autoMode, setAutoMode } = useTheme()
@@ -78,6 +157,8 @@ function AdminContent({
   const [editingCategory, setEditingCategory] = useState<Category | null>(null)
   const [newCategoryName, setNewCategoryName] = useState('')
   const [newCategoryColor, setNewCategoryColor] = useState('#3b82f6')
+  const [newCategoryIcon, setNewCategoryIcon] = useState('folder')
+  const [showIconPicker, setShowIconPicker] = useState(false)
   
   // 密码修改状态
   const [isChangingPassword, setIsChangingPassword] = useState(false)
@@ -115,6 +196,8 @@ function AdminContent({
       await updateQuotes(newQuotes, newUseDefault)
       setQuotes(newQuotes)
       setUseDefaultQuotes(newUseDefault)
+      // 通知父组件更新名言
+      onQuotesUpdate?.(newQuotes, newUseDefault)
     } catch (error) {
       console.error('更新名言失败:', error)
     }
@@ -169,13 +252,15 @@ function AdminContent({
     if (editingCategory) {
       onUpdateCategory(editingCategory.id, { 
         name: newCategoryName, 
-        color: newCategoryColor 
+        color: newCategoryColor,
+        icon: newCategoryIcon,
       })
       showToast('success', '分类已更新')
     } else {
       onAddCategory({ 
         name: newCategoryName, 
-        color: newCategoryColor 
+        color: newCategoryColor,
+        icon: newCategoryIcon,
       })
       showToast('success', '分类创建成功')
     }
@@ -188,12 +273,15 @@ function AdminContent({
     setEditingCategory(null)
     setNewCategoryName('')
     setNewCategoryColor('#3b82f6')
+    setNewCategoryIcon('folder')
+    setShowIconPicker(false)
   }
 
   const startEditCategory = (category: Category) => {
     setEditingCategory(category)
     setNewCategoryName(category.name)
-    setNewCategoryColor(category.color)
+    setNewCategoryColor(category.color || '#3b82f6')
+    setNewCategoryIcon(category.icon || 'folder')
     setShowCategoryForm(true)
   }
 
@@ -629,83 +717,189 @@ function AdminContent({
                   </motion.button>
                 </div>
 
-                {/* Category Form */}
+                {/* Category Modal */}
                 <AnimatePresence>
                   {showCategoryForm && (
                     <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="mb-6 overflow-hidden"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+                      style={{ background: 'rgba(0,0,0,0.5)' }}
+                      onClick={(e) => {
+                        if (e.target === e.currentTarget) resetCategoryForm()
+                      }}
                     >
-                      <div 
-                        className="p-5 rounded-2xl"
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                        className="w-full max-w-md rounded-2xl overflow-visible"
                         style={{
-                          background: 'var(--color-glass)',
+                          background: 'var(--color-bg-secondary)',
                           border: '1px solid var(--color-glass-border)',
+                          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
                         }}
+                        onClick={(e) => e.stopPropagation()}
                       >
-                        <div className="flex flex-col sm:flex-row gap-4">
-                          <input
-                            type="text"
-                            placeholder="分类名称"
-                            value={newCategoryName}
-                            onChange={e => setNewCategoryName(e.target.value)}
-                            className="flex-1 px-4 py-3 rounded-xl focus:outline-none transition-all"
-                            style={{
-                              background: 'var(--color-bg-tertiary)',
-                              border: '1px solid var(--color-glass-border)',
-                              color: 'var(--color-text-primary)',
-                            }}
-                            autoFocus
-                          />
-                          
-                          <div className="flex items-center gap-3">
-                            <Palette className="w-4 h-4" style={{ color: 'var(--color-text-muted)' }} />
-                            <div className="flex gap-1.5">
+                        {/* Modal Header */}
+                        <div 
+                          className="flex items-center justify-between px-6 py-4"
+                          style={{ borderBottom: '1px solid var(--color-glass-border)' }}
+                        >
+                          <h3 className="text-lg font-semibold" style={{ color: 'var(--color-text-primary)' }}>
+                            {editingCategory ? '编辑分类' : '新建分类'}
+                          </h3>
+                          <button
+                            onClick={resetCategoryForm}
+                            className="p-1.5 rounded-lg transition-colors hover:bg-[var(--color-glass-hover)]"
+                            style={{ color: 'var(--color-text-muted)' }}
+                          >
+                            <X className="w-5 h-5" />
+                          </button>
+                        </div>
+
+                        {/* Modal Body */}
+                        <div className="p-6 space-y-5">
+                          {/* 图标和名称 */}
+                          <div className="flex gap-4 items-start">
+                            {/* 图标选择按钮 */}
+                            <button
+                              onClick={() => setShowIconPicker(!showIconPicker)}
+                              className="flex items-center justify-center w-14 h-14 rounded-xl transition-all hover:scale-105 flex-shrink-0"
+                              style={{
+                                background: newCategoryColor + '20',
+                                border: '2px solid ' + newCategoryColor,
+                                color: newCategoryColor,
+                              }}
+                              title="选择图标"
+                            >
+                              {(() => {
+                                const IconComponent = getIconByName(newCategoryIcon)
+                                return <IconComponent className="w-6 h-6" />
+                              })()}
+                            </button>
+
+                            <div className="flex-1">
+                              <label className="block text-sm mb-1.5" style={{ color: 'var(--color-text-muted)' }}>
+                                分类名称
+                              </label>
+                              <input
+                                type="text"
+                                placeholder="输入分类名称"
+                                value={newCategoryName}
+                                onChange={e => setNewCategoryName(e.target.value)}
+                                className="w-full px-4 py-3 rounded-xl focus:outline-none transition-all"
+                                style={{
+                                  background: 'var(--color-bg-tertiary)',
+                                  border: '1px solid var(--color-glass-border)',
+                                  color: 'var(--color-text-primary)',
+                                }}
+                                autoFocus
+                              />
+                            </div>
+                          </div>
+
+                          {/* 图标选择 - 内嵌展开式 */}
+                          <AnimatePresence>
+                            {showIconPicker && (
+                              <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                exit={{ opacity: 0, height: 0 }}
+                                className="overflow-hidden"
+                              >
+                                <div 
+                                  className="p-4 rounded-xl"
+                                  style={{
+                                    background: 'var(--color-bg-tertiary)',
+                                    border: '1px solid var(--color-glass-border)',
+                                  }}
+                                >
+                                  <p className="text-xs mb-3" style={{ color: 'var(--color-text-muted)' }}>选择图标</p>
+                                  <div className="grid grid-cols-11 gap-1">
+                                    {presetIcons.map(({ name, icon: IconComp }) => (
+                                      <button
+                                        key={name}
+                                        onClick={() => {
+                                          setNewCategoryIcon(name)
+                                          setShowIconPicker(false)
+                                        }}
+                                        className={cn(
+                                          'p-2 rounded-lg transition-all hover:scale-110',
+                                          newCategoryIcon === name 
+                                            ? 'ring-2' 
+                                            : 'hover:bg-[var(--color-glass-hover)]'
+                                        )}
+                                        style={{
+                                          background: newCategoryIcon === name ? newCategoryColor + '20' : 'transparent',
+                                          color: newCategoryIcon === name ? newCategoryColor : 'var(--color-text-secondary)',
+                                          ringColor: newCategoryColor,
+                                        }}
+                                        title={name}
+                                      >
+                                        <IconComp className="w-4 h-4" />
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+
+                          {/* 颜色选择 */}
+                          <div>
+                            <label className="block text-sm mb-2" style={{ color: 'var(--color-text-muted)' }}>
+                              选择颜色
+                            </label>
+                            <div className="flex gap-2 flex-wrap">
                               {presetColors.map(color => (
                                 <button
                                   key={color}
                                   onClick={() => setNewCategoryColor(color)}
                                   className={cn(
-                                    'w-7 h-7 rounded-full transition-transform',
+                                    'w-8 h-8 rounded-full transition-transform',
                                     newCategoryColor === color && 'ring-2 ring-offset-2 scale-110'
                                   )}
                                   style={{ 
                                     backgroundColor: color,
                                     ringColor: 'var(--color-text-primary)',
-                                    ringOffsetColor: 'var(--color-bg-primary)',
+                                    ringOffsetColor: 'var(--color-bg-secondary)',
                                   }}
                                 />
                               ))}
                             </div>
                           </div>
-
-                          <div className="flex gap-2">
-                            <motion.button
-                              onClick={handleSaveCategory}
-                              whileHover={{ scale: 1.02 }}
-                              whileTap={{ scale: 0.98 }}
-                              className="px-5 py-2.5 rounded-xl text-white font-medium transition-colors"
-                              style={{ background: 'var(--color-primary)' }}
-                            >
-                              {editingCategory ? '保存' : '创建'}
-                            </motion.button>
-                            <motion.button
-                              onClick={resetCategoryForm}
-                              whileHover={{ scale: 1.02 }}
-                              whileTap={{ scale: 0.98 }}
-                              className="px-5 py-2.5 rounded-xl transition-colors"
-                              style={{
-                                background: 'var(--color-bg-tertiary)',
-                                color: 'var(--color-text-secondary)',
-                              }}
-                            >
-                              取消
-                            </motion.button>
-                          </div>
                         </div>
-                      </div>
+
+                        {/* Modal Footer */}
+                        <div 
+                          className="flex justify-end gap-3 px-6 py-4"
+                          style={{ borderTop: '1px solid var(--color-glass-border)' }}
+                        >
+                          <motion.button
+                            onClick={resetCategoryForm}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            className="px-5 py-2.5 rounded-xl transition-colors"
+                            style={{
+                              background: 'var(--color-bg-tertiary)',
+                              color: 'var(--color-text-secondary)',
+                            }}
+                          >
+                            取消
+                          </motion.button>
+                          <motion.button
+                            onClick={handleSaveCategory}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            className="px-5 py-2.5 rounded-xl text-white font-medium transition-colors"
+                            style={{ background: 'var(--color-primary)' }}
+                          >
+                            {editingCategory ? '保存更改' : '创建分类'}
+                          </motion.button>
+                        </div>
+                      </motion.div>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -726,6 +920,7 @@ function AdminContent({
                   ) : (
                     categories.map((category, index) => {
                       const count = bookmarks.filter(b => b.category === category.id).length
+                      const IconComponent = getIconByName(category.icon)
                       return (
                         <motion.div
                           key={category.id}
@@ -743,14 +938,16 @@ function AdminContent({
                             <GripVertical className="w-4 h-4" />
                           </div>
 
-                          {/* Color Indicator */}
+                          {/* Icon with Color */}
                           <div 
-                            className="w-4 h-4 rounded-full flex-shrink-0"
+                            className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
                             style={{ 
-                              backgroundColor: category.color,
-                              boxShadow: `0 0 0 2px var(--color-glass-border)`,
+                              backgroundColor: (category.color || '#3b82f6') + '20',
+                              color: category.color || '#3b82f6',
                             }}
-                          />
+                          >
+                            <IconComponent className="w-4 h-4" />
+                          </div>
 
                           {/* Name */}
                           <div className="flex-1">

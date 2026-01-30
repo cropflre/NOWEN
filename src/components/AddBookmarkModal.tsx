@@ -459,10 +459,12 @@ export function AddBookmarkModal({
               <button
                 onClick={onClose}
                 className={cn(
-                  'px-5 py-2.5 rounded-xl',
-                  'hover:bg-white/10 transition-colors'
+                  'px-5 py-2.5 rounded-xl transition-colors'
                 )}
-                style={{ color: 'var(--text-secondary)' }}
+                style={{ 
+                  color: 'var(--color-text-secondary)',
+                  background: 'var(--color-bg-tertiary)',
+                }}
               >
                 取消
               </button>
@@ -471,12 +473,14 @@ export function AddBookmarkModal({
                 disabled={!url || !title || isAnalyzing}
                 className={cn(
                   'px-5 py-2.5 rounded-xl',
-                  'bg-gradient-to-r from-[var(--gradient-1)] to-[var(--gradient-2)]',
                   'text-white font-medium',
                   'hover:opacity-90 transition-opacity',
                   'disabled:opacity-50 disabled:cursor-not-allowed',
                   'flex items-center gap-2'
                 )}
+                style={{
+                  background: 'var(--color-primary)',
+                }}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
