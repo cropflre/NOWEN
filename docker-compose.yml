@@ -1,9 +1,9 @@
 version: '3.8'
 
 services:
-  zen-garden:
+  nowen:
     build: .
-    container_name: digital-zen-garden
+    container_name: nowen
     restart: unless-stopped
     ports:
       - "3000:3000"
