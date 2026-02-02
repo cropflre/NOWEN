@@ -1,4 +1,8 @@
-# NOWEN - Build stage for frontend
+# NOWEN - 高颜值 Bento 风格个人导航页
+# 支持书签管理、分类管理、名言管理、自定义图标
+# GitHub: https://github.com/cropflre/NOWEN
+
+# Build stage for frontend
 FROM node:20-alpine AS frontend-builder
 WORKDIR /app
 COPY package*.json ./
