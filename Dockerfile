@@ -8,21 +8,12 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
-# 生产环境打包时 VITE_API_BASE 为空，使用相对路径 /api
 RUN npm run build
-
-# Build stage for backend
-FROM node:20-alpine AS backend-builder
-WORKDIR /app/server
-COPY server/package*.json ./
-RUN npm install
-COPY server/ ./
-RUN npm run build || true
 
 # Production stage
 FROM node:20-alpine AS production
 
-# OCI 标准标签 - 用于 Docker Hub 显示
+# OCI 标准标签
 LABEL org.opencontainers.image.title="NOWEN"
 LABEL org.opencontainers.image.description="高颜值 Bento 风格个人导航页，支持书签管理、分类管理、名言管理、自定义图标，一键 Docker 部署"
 LABEL org.opencontainers.image.url="https://github.com/cropflre/NOWEN"
@@ -32,17 +23,11 @@ LABEL org.opencontainers.image.licenses="MIT"
 
 WORKDIR /app
 
-# Install Nginx
-RUN apk add --no-cache nginx \
-    && mkdir -p /run/nginx \
-    && mkdir -p /var/log/nginx \
-    && rm -f /etc/nginx/http.d/default.conf
-
 # Install production dependencies for backend
 COPY server/package*.json ./server/
 RUN cd server && npm install --omit=dev
 
-# Install tsx globally for running TypeScript
+# Install tsx globally
 RUN npm install -g tsx
 
 # Copy backend source
@@ -52,30 +37,24 @@ COPY server/tsconfig.json ./server/
 # Copy built frontend
 COPY --from=frontend-builder /app/dist ./dist
 
-# Copy Nginx config
-COPY nginx.conf /etc/nginx/http.d/default.conf
+# Install http-server with proxy support
+RUN npm install -g http-server
 
 # Create data directory
 RUN mkdir -p /app/server/data
 
-# 只需要暴露一个端口，Nginx 统一代理
-EXPOSE 3000
+# 暴露端口
+EXPOSE 3000 3001
 
-# Start script - 启动 Nginx + Backend
+# Start script
 COPY <<EOF /app/start.sh
 #!/bin/sh
-echo "Starting Nginx..."
-nginx -g 'daemon on;'
-sleep 1
-# 检查 Nginx 是否启动成功
-if pgrep nginx > /dev/null; then
-    echo "Nginx started successfully on port 3000"
-else
-    echo "ERROR: Nginx failed to start!"
-    cat /var/log/nginx/error.log 2>/dev/null
-fi
-echo "Starting backend server..."
-cd /app/server && tsx src/index.ts
+echo "=== NOWEN Starting ==="
+echo "Starting backend on port 3001..."
+cd /app/server && tsx src/index.ts &
+sleep 2
+echo "Starting frontend on port 3000..."
+cd /app && http-server dist -p 3000 -a 0.0.0.0 --proxy http://127.0.0.1:3001
 EOF
 
 RUN sed -i 's/\r$//' /app/start.sh && chmod +x /app/start.sh
