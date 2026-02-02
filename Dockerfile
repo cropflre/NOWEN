@@ -33,7 +33,9 @@ LABEL org.opencontainers.image.licenses="MIT"
 WORKDIR /app
 
 # Install Nginx
-RUN apk add --no-cache nginx
+RUN apk add --no-cache nginx \
+    && mkdir -p /run/nginx \
+    && mkdir -p /var/log/nginx
 
 # Install production dependencies for backend
 COPY server/package*.json ./server/
@@ -61,9 +63,10 @@ EXPOSE 3000
 # Start script - 启动 Nginx + Backend
 COPY <<EOF /app/start.sh
 #!/bin/sh
-# 启动 Nginx (后台运行)
+echo "Starting Nginx..."
 nginx
-# 启动后端 (前台运行，保持容器存活)
+echo "Nginx started on port 3000"
+echo "Starting backend server..."
 cd /app/server && tsx src/index.ts
 EOF
 
