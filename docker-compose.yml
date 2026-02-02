@@ -6,8 +6,7 @@ services:
     container_name: nowen
     restart: unless-stopped
     ports:
-      - "3000:3000"
-      - "3001:3001"
+      - "3002:3000"
     volumes:
       - ./server/data:/app/server/data
     environment:

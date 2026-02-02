@@ -89,13 +89,14 @@ export function getApiBase(): string {
     return env.VITE_API_BASE;
   }
 
-  // 2. 如果在浏览器环境运行，自动获取当前域名/IP，并拼接 3001 端口
+  // 2. 开发环境: 使用 localhost:3001
+  //    生产环境: 使用相对路径 /api，让 http-server 代理转发
   if (typeof window !== "undefined") {
-    return `${window.location.protocol}//${window.location.hostname}:3001`;
+    return env.DEV ? "http://localhost:3001" : "/api";
   }
 
   // 3. 最后的保底（比如在服务端渲染或测试环境）
-  return "http://localhost:3001";
+  return env.DEV ? "http://localhost:3001" : "/api";
 }
 
 /**
