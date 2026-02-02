@@ -20,7 +20,8 @@ import { FloatingDock } from "./components/ui/floating-dock";
 import { SpotlightSearch } from "./components/ui/spotlight-search";
 import { Typewriter } from "./components/ui/typewriter";
 import { Meteors, Sparkles } from "./components/ui/effects";
-import { BorderBeam, BreathingDot } from "./components/ui/advanced-effects";
+import { BreathingDot } from "./components/ui/advanced-effects";
+import { Button as MovingBorderButton } from "./components/ui/moving-border";
 import { AddBookmarkModal } from "./components/AddBookmarkModal";
 import { BookmarkCardContent } from "./components/BookmarkCardContent";
 import { ContextMenu, useBookmarkContextMenu } from "./components/ContextMenu";
@@ -212,7 +213,10 @@ function App() {
   };
 
   // 后台登录成功
-  const handleAdminLogin = (username: string, requirePasswordChange?: boolean) => {
+  const handleAdminLogin = (
+    username: string,
+    requirePasswordChange?: boolean
+  ) => {
     setAdminUsername(username);
     setIsLoggedIn(true);
     // 如果需要强制修改密码，跳转到密码修改页面
@@ -425,7 +429,7 @@ function App() {
               </Sparkles>
             </motion.h1>
 
-            {/* Search Hint - 专业级搜索框 */}
+            {/* Search Hint - Moving Border 搜索框 */}
             <motion.div
               className="relative inline-block"
               initial={{ opacity: 0, y: 20 }}
@@ -433,34 +437,26 @@ function App() {
               transition={{ delay: 0.6 }}
               whileHover={{ y: -2 }}
             >
-              <button
+              <MovingBorderButton
+                borderRadius="1rem"
+                duration={3000}
+                containerClassName="cursor-pointer"
+                borderClassName="bg-[radial-gradient(var(--color-primary)_40%,transparent_60%)]"
+                className="bg-[var(--color-glass)] dark:bg-slate-900/[0.8] border-[var(--color-glass-border)] dark:border-slate-800 px-6 py-3.5 gap-3"
                 onClick={() => setIsSpotlightOpen(true)}
-                className="search-input relative inline-flex items-center gap-3 px-6 py-3.5 rounded-2xl backdrop-blur-xl transition-all duration-500 group overflow-hidden"
-                style={{
-                  background: "var(--color-glass)",
-                  border: "1px solid var(--color-glass-border)",
-                  boxShadow: "var(--color-shadow)",
-                }}
               >
-                {/* 夜间模式：Border Beam 流光 */}
-                <BorderBeam
-                  size={80}
-                  duration={10}
-                  colorFrom="var(--color-primary)"
-                  colorTo="var(--color-accent)"
-                />
                 <Search
                   className="w-4 h-4 transition-colors group-hover:text-[var(--color-primary)]"
                   style={{ color: "var(--color-text-muted)" }}
                 />
                 <span
-                  className="tracking-wide transition-colors group-hover:text-[var(--color-text-secondary)]"
+                  className="tracking-wide transition-colors"
                   style={{ color: "var(--color-text-muted)" }}
                 >
                   搜索或输入命令...
                 </span>
                 <kbd
-                  className="px-2 py-1 rounded text-xs flex items-center gap-1 ml-2 transition-all"
+                  className="px-2 py-1 rounded text-xs flex items-center gap-1 ml-2"
                   style={{
                     background: "var(--color-bg-tertiary)",
                     color: "var(--color-text-muted)",
@@ -469,7 +465,7 @@ function App() {
                 >
                   <Command className="w-3 h-3" /> K
                 </kbd>
-              </button>
+              </MovingBorderButton>
             </motion.div>
           </motion.section>
 
@@ -704,7 +700,9 @@ function App() {
                               />
                             ) : bookmark.icon ? (
                               (() => {
-                                const IconComp = getIconComponent(bookmark.icon);
+                                const IconComp = getIconComponent(
+                                  bookmark.icon
+                                );
                                 return (
                                   <IconComp
                                     className="w-5 h-5"

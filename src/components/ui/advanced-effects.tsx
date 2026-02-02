@@ -2,7 +2,7 @@ import { useRef, useEffect, useState } from 'react'
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion'
 import { cn } from '../../lib/utils'
 
-// Border Beam - 流动的边框光效
+// Border Beam - 跑马灯边框光效
 interface BorderBeamProps {
   className?: string
   size?: number
@@ -15,32 +15,84 @@ interface BorderBeamProps {
 
 export function BorderBeam({
   className,
-  size = 200,
-  duration = 12,
-  borderWidth = 1.5,
+  size = 100,
+  duration = 6,
+  borderWidth = 2,
   colorFrom = '#ffaa40',
   colorTo = '#9c40ff',
   delay = 0,
 }: BorderBeamProps) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0, rx: 16 })
+
+  useEffect(() => {
+    const updateDimensions = () => {
+      if (containerRef.current) {
+        const parent = containerRef.current.parentElement
+        if (parent) {
+          const style = getComputedStyle(parent)
+          const rx = parseFloat(style.borderRadius) || 16
+          setDimensions({
+            width: parent.offsetWidth,
+            height: parent.offsetHeight,
+            rx,
+          })
+        }
+      }
+    }
+    updateDimensions()
+    window.addEventListener('resize', updateDimensions)
+    return () => window.removeEventListener('resize', updateDimensions)
+  }, [])
+
+  const { width, height, rx } = dimensions
+  // 计算周长用于 dasharray
+  const perimeter = width && height ? 2 * (width + height - 4 * rx) + 2 * Math.PI * rx : 1000
+  const uniqueId = `beam-${delay}-${Math.random().toString(36).slice(2, 9)}`
+
   return (
     <div
-      style={{
-        '--size': size,
-        '--duration': duration,
-        '--border-width': borderWidth,
-        '--color-from': colorFrom,
-        '--color-to': colorTo,
-        '--delay': `-${delay}s`,
-      } as React.CSSProperties}
+      ref={containerRef}
       className={cn(
-        'pointer-events-none absolute inset-0 rounded-[inherit] [border:calc(var(--border-width)*1px)_solid_transparent]',
-        // Mask
-        '![mask-clip:padding-box,border-box] ![mask-composite:intersect] [mask:linear-gradient(transparent,transparent),linear-gradient(white,white)]',
-        // Beam
-        'after:absolute after:aspect-square after:w-[calc(var(--size)*1px)] after:animate-border-beam after:[animation-delay:var(--delay)] after:[background:linear-gradient(to_left,var(--color-from),var(--color-to),transparent)] after:[offset-anchor:calc(var(--size)*1px)_50%] after:[offset-path:rect(0_auto_auto_0_round_calc(var(--size)*1px))]',
+        'pointer-events-none absolute inset-0 rounded-[inherit]',
         className
       )}
-    />
+    >
+      {width > 0 && height > 0 && (
+        <svg
+          className="absolute inset-0 w-full h-full overflow-visible"
+          viewBox={`0 0 ${width} ${height}`}
+          preserveAspectRatio="none"
+        >
+          <defs>
+            <linearGradient id={uniqueId} x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="transparent" />
+              <stop offset="20%" stopColor={colorFrom} />
+              <stop offset="80%" stopColor={colorTo} />
+              <stop offset="100%" stopColor="transparent" />
+            </linearGradient>
+          </defs>
+          <rect
+            x={borderWidth / 2}
+            y={borderWidth / 2}
+            width={width - borderWidth}
+            height={height - borderWidth}
+            rx={rx}
+            ry={rx}
+            fill="none"
+            stroke={`url(#${uniqueId})`}
+            strokeWidth={borderWidth}
+            strokeDasharray={`${size} ${perimeter}`}
+            strokeLinecap="round"
+            style={{
+              animation: `border-beam-dash ${duration}s linear infinite`,
+              animationDelay: `-${delay}s`,
+              ['--perimeter' as string]: perimeter,
+            }}
+          />
+        </svg>
+      )}
+    </div>
   )
 }
 

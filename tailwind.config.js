@@ -129,6 +129,10 @@ export default {
         'border-beam': {
           '100%': { offsetDistance: '100%' },
         },
+        'border-beam-spin': {
+          '0%': { transform: 'rotate(0deg)' },
+          '100%': { transform: 'rotate(360deg)' },
+        },
         'pulse-glow': {
           '0%, 100%': { boxShadow: '0 0 20px var(--color-glow)' },
           '50%': { boxShadow: '0 0 40px var(--color-glow)' },

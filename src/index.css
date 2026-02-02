@@ -423,6 +423,18 @@ body::before {
   animation: border-beam var(--duration, 12s) infinite linear;
 }
 
+/* Border Beam Dash - SVG跑马灯效果 */
+@keyframes border-beam-dash {
+  0% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: calc(-1 * var(--perimeter, 1000)); }
+}
+
+/* Border Beam Spin - 旋转流光效果（备用） */
+@keyframes border-beam-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 @keyframes spotlight-rotate {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
