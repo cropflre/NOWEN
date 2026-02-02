@@ -6,8 +6,7 @@ services:
     container_name: nowen
     restart: unless-stopped
     ports:
-      - "3000:3000"
-      - "3001:3001"
+      - "3000:3000"  # 只需映射一个端口，Nginx 统一代理前后端
     volumes:
       - ./server/data:/app/server/data
     environment:

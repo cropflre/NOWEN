@@ -8,6 +8,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . .
+# 生产环境打包时 VITE_API_BASE 为空，使用相对路径 /api
 RUN npm run build
 
 # Build stage for backend
@@ -31,37 +32,41 @@ LABEL org.opencontainers.image.licenses="MIT"
 
 WORKDIR /app
 
+# Install Nginx
+RUN apk add --no-cache nginx
+
 # Install production dependencies for backend
 COPY server/package*.json ./server/
 RUN cd server && npm install --omit=dev
 
-# Copy backend source (for tsx to run)
-COPY server/src ./server/src
-COPY server/tsconfig.json ./server/
-
 # Install tsx globally for running TypeScript
 RUN npm install -g tsx
+
+# Copy backend source
+COPY server/src ./server/src
+COPY server/tsconfig.json ./server/
 
 # Copy built frontend
 COPY --from=frontend-builder /app/dist ./dist
 
-# Install a simple static file server
-RUN npm install -g serve
+# Copy Nginx config
+COPY nginx.conf /etc/nginx/http.d/default.conf
 
 # Create data directory
 RUN mkdir -p /app/server/data
 
-# Expose ports
-EXPOSE 3000 3001
+# 只需要暴露一个端口，Nginx 统一代理
+EXPOSE 3000
 
-# Start script
+# Start script - 启动 Nginx + Backend
 COPY <<EOF /app/start.sh
 #!/bin/sh
-cd /app/server && tsx src/index.ts &
-serve -s /app/dist -l 3000
+# 启动 Nginx (后台运行)
+nginx
+# 启动后端 (前台运行，保持容器存活)
+cd /app/server && tsx src/index.ts
 EOF
 
-# 修改这里：先用 sed 删除回车符，再给执行权限
 RUN sed -i 's/\r$//' /app/start.sh && chmod +x /app/start.sh
 
 CMD ["/app/start.sh"]
