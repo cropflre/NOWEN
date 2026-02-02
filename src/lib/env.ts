@@ -90,13 +90,13 @@ export function getApiBase(): string {
   }
 
   // 2. 开发环境: 使用 localhost:3001
-  //    生产环境: 使用相对路径 /api，让 http-server 代理转发
+  //    生产环境: 使用空字符串 ""，避免路径重复
   if (typeof window !== "undefined") {
-    return env.DEV ? "http://localhost:3001" : "/api";
+    return env.DEV ? "http://localhost:3001" : "";
   }
 
   // 3. 最后的保底（比如在服务端渲染或测试环境）
-  return env.DEV ? "http://localhost:3001" : "/api";
+  return env.DEV ? "http://localhost:3001" : "";
 }
 
 /**
