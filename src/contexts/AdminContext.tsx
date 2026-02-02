@@ -1,5 +1,6 @@
 import { createContext, useContext, ReactNode, useCallback, useState } from 'react'
 import { Bookmark, Category, CustomIcon } from '../types/bookmark'
+import { SiteSettings } from '../lib/api'
 
 // ========== Context 类型定义 ==========
 
@@ -34,6 +35,7 @@ export interface AdminContextValue {
   // 其他操作
   refreshData: () => void
   updateQuotes: (quotes: string[], useDefault: boolean) => void
+  updateSettings: (settings: SiteSettings) => void
   
   // 模态框状态
   isAddModalOpen: boolean
@@ -75,6 +77,7 @@ export interface AdminProviderProps {
   // 其他回调
   onRefreshData?: () => void
   onQuotesUpdate?: (quotes: string[], useDefault: boolean) => void
+  onSettingsChange?: (settings: SiteSettings) => void
 }
 
 // ========== Provider 组件 ==========
@@ -100,6 +103,7 @@ export function AdminProvider({
   onDeleteCustomIcon,
   onRefreshData,
   onQuotesUpdate,
+  onSettingsChange,
 }: AdminProviderProps) {
   // 模态框状态
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
@@ -125,6 +129,10 @@ export function AdminProvider({
   const handleUpdateQuotes = useCallback((quotes: string[], useDefault: boolean) => {
     onQuotesUpdate?.(quotes, useDefault)
   }, [onQuotesUpdate])
+
+  const handleUpdateSettings = useCallback((settings: SiteSettings) => {
+    onSettingsChange?.(settings)
+  }, [onSettingsChange])
 
   const value: AdminContextValue = {
     // 数据
@@ -157,6 +165,7 @@ export function AdminProvider({
     // 其他操作
     refreshData: handleRefreshData,
     updateQuotes: handleUpdateQuotes,
+    updateSettings: handleUpdateSettings,
     
     // 模态框状态
     isAddModalOpen,

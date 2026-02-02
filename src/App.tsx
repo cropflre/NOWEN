@@ -344,6 +344,7 @@ function App() {
           onDeleteCustomIcon={deleteCustomIcon}
           onRefreshData={refreshData}
           onQuotesUpdate={handleQuotesChange}
+          onSettingsChange={setSiteSettings}
         />
         <AddBookmarkModal
           isOpen={isAddModalOpen}

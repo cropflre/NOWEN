@@ -406,16 +406,33 @@ export interface SiteSettings {
   enableBeamAnimation?: boolean
 }
 
+// 转换设置值类型（后端存储为字符串）
+function parseSettings(raw: Record<string, string>): SiteSettings {
+  return {
+    siteTitle: raw.siteTitle,
+    siteFavicon: raw.siteFavicon,
+    enableBeamAnimation: raw.enableBeamAnimation === undefined ? true : raw.enableBeamAnimation === 'true' || raw.enableBeamAnimation === '1',
+  }
+}
+
 export async function fetchSettings(): Promise<SiteSettings> {
-  return request<SiteSettings>('/api/settings')
+  const raw = await request<Record<string, string>>('/api/settings')
+  return parseSettings(raw)
 }
 
 export async function updateSettings(settings: SiteSettings): Promise<SiteSettings> {
-  return request<SiteSettings>('/api/settings', {
+  // 转换布尔值为字符串发送
+  const payload: Record<string, string | undefined> = {
+    siteTitle: settings.siteTitle,
+    siteFavicon: settings.siteFavicon,
+    enableBeamAnimation: settings.enableBeamAnimation ? 'true' : 'false',
+  }
+  const raw = await request<Record<string, string>>('/api/settings', {
     method: 'PATCH',
-    body: JSON.stringify(settings),
+    body: JSON.stringify(payload),
     requireAuth: true,
   })
+  return parseSettings(raw)
 }
 
 // ========== API 导出对象 (便于统一使用) ==========

@@ -55,6 +55,7 @@ export interface AdminProps {
   onDeleteCustomIcon: (id: string) => void
   onRefreshData?: () => void
   onQuotesUpdate?: (quotes: string[], useDefault: boolean) => void
+  onSettingsChange?: (settings: SiteSettings) => void
 }
 
 // 预设颜色
@@ -74,6 +75,7 @@ function AdminContent() {
     onLogout,
     refreshData,
     updateQuotes: onQuotesUpdate,
+    updateSettings: onSettingsChange,
   } = useAdmin()
   
   const { 
@@ -263,6 +265,9 @@ function AdminContent() {
       setSiteSettings(updated)
       setSettingsSuccess(true)
       showToast('success', '站点设置已保存')
+      
+      // 通知父组件更新设置（实时生效）
+      onSettingsChange(updated)
       
       // 更新页面标题
       if (updated.siteTitle) {
@@ -1305,6 +1310,7 @@ export function Admin(props: AdminProps) {
       onDeleteCustomIcon={props.onDeleteCustomIcon}
       onRefreshData={props.onRefreshData}
       onQuotesUpdate={props.onQuotesUpdate}
+      onSettingsChange={props.onSettingsChange}
     >
       <ToastProvider>
         <AdminContent />
