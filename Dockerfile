@@ -35,7 +35,8 @@ WORKDIR /app
 # Install Nginx
 RUN apk add --no-cache nginx \
     && mkdir -p /run/nginx \
-    && mkdir -p /var/log/nginx
+    && mkdir -p /var/log/nginx \
+    && rm -f /etc/nginx/http.d/default.conf
 
 # Install production dependencies for backend
 COPY server/package*.json ./server/
@@ -64,8 +65,15 @@ EXPOSE 3000
 COPY <<EOF /app/start.sh
 #!/bin/sh
 echo "Starting Nginx..."
-nginx
-echo "Nginx started on port 3000"
+nginx -g 'daemon on;'
+sleep 1
+# 检查 Nginx 是否启动成功
+if pgrep nginx > /dev/null; then
+    echo "Nginx started successfully on port 3000"
+else
+    echo "ERROR: Nginx failed to start!"
+    cat /var/log/nginx/error.log 2>/dev/null
+fi
 echo "Starting backend server..."
 cd /app/server && tsx src/index.ts
 EOF
