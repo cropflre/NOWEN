@@ -17,6 +17,7 @@ import { Card3D, CardItem } from "./components/ui/3d-card";
 import { BentoGrid, BentoGridItem } from "./components/ui/bento-grid";
 import { SpotlightCard } from "./components/ui/spotlight-card";
 import { FloatingDock } from "./components/ui/floating-dock";
+import { MobileFloatingDock } from "./components/ui/mobile-floating-dock";
 import { SpotlightSearch } from "./components/ui/spotlight-search";
 import { Typewriter } from "./components/ui/typewriter";
 import { Meteors, Sparkles } from "./components/ui/effects";
@@ -49,14 +50,15 @@ import {
 
 // Dock 导航项
 const dockItems = [
-  { id: "home", title: "首页", icon: <Home className="w-5 h-5" /> },
-  { id: "search", title: "搜索", icon: <Search className="w-5 h-5" /> },
-  { id: "add", title: "添加", icon: <Plus className="w-5 h-5" /> },
-  { id: "admin", title: "管理", icon: <LayoutDashboard className="w-5 h-5" /> },
+  { id: "home", title: "首页", icon: <Home className="w-5 h-5" />, IconComponent: Home },
+  { id: "search", title: "搜索", icon: <Search className="w-5 h-5" />, IconComponent: Search },
+  { id: "add", title: "添加", icon: <Plus className="w-5 h-5" />, IconComponent: Plus },
+  { id: "admin", title: "管理", icon: <LayoutDashboard className="w-5 h-5" />, IconComponent: LayoutDashboard },
   {
     id: "github",
     title: "GitHub",
     icon: <Github className="w-5 h-5" />,
+    IconComponent: Github,
     href: "https://github.com/cropflre/NOWEN",
   },
 ];
@@ -794,12 +796,27 @@ function App() {
         </div>
       </div>
 
-      {/* Floating Dock */}
+      {/* Floating Dock - 桌面端 */}
       <FloatingDock
+        className="hidden md:flex"
         items={dockItems.map((item) => ({
           ...item,
           onClick: item.href ? undefined : () => handleDockClick(item.id),
         }))}
+      />
+
+      {/* Mobile Floating Dock - 移动端可展开悬浮坞 */}
+      <MobileFloatingDock
+        className="md:hidden"
+        items={dockItems
+          .filter((item) => !item.href) // 过滤掉外链项（移动端不需要 GitHub 链接）
+          .map((item) => ({
+            id: item.id,
+            label: item.title,
+            icon: item.IconComponent,
+            onClick: () => handleDockClick(item.id),
+            isActive: item.id === "home", // 首页默认激活
+          }))}
       />
 
       {/* Spotlight Search */}

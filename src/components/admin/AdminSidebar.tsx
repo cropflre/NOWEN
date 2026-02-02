@@ -12,7 +12,7 @@ import {
   X,
   ImageIcon
 } from 'lucide-react'
-import { cn } from '../../lib/utils'
+import { MobileFloatingDock } from '../ui/mobile-floating-dock'
 
 type TabType = 'bookmarks' | 'categories' | 'quotes' | 'icons' | 'settings'
 
@@ -535,59 +535,21 @@ export function AdminSidebar({
         )}
       </AnimatePresence>
 
-      {/* Mobile Bottom Navigation - 底部导航 */}
-      <nav 
-        className="md:hidden fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around px-2 py-2 bg-black/50 backdrop-blur-xl border-t border-white/[0.04] safe-area-inset-bottom"
-        aria-label="主导航"
-      >
-        {navItems.map((item) => {
-          const isActive = activeTab === item.id
-          
-          return (
-            <motion.button
-              key={item.id}
-              onClick={() => onTabChange(item.id)}
-              whileTap={{ scale: 0.95 }}
-              className="relative flex flex-col items-center gap-1 px-4 py-2 rounded-xl min-w-[60px]"
-              aria-current={isActive ? 'page' : undefined}
-              aria-label={item.fullLabel}
-            >
-              {/* 选中态发光背景 */}
-              {isActive && (
-                <motion.div
-                  layoutId="mobileBottomCapsule"
-                  initial={false}
-                  className="absolute inset-0 rounded-xl"
-                  style={{
-                    background: 'linear-gradient(to bottom, rgba(0,242,254,0.1), transparent)',
-                  }}
-                  transition={LIQUID_SPRING.capsule}
-                />
-              )}
-              <motion.div
-                animate={{
-                  color: isActive ? 'rgba(0,242,254,0.9)' : 'rgba(255,255,255,0.6)',
-                  scale: isActive ? 1.1 : 1,
-                }}
-                transition={LIQUID_SPRING.magneticRelease}
-                style={a11yTextShadow.icon}
-              >
-                <item.icon className="w-5 h-5" />
-              </motion.div>
-              <motion.span 
-                className="text-xs font-medium"
-                animate={{
-                  color: isActive ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.6)',
-                }}
-                transition={LIQUID_SPRING.magneticRelease}
-                style={a11yTextShadow.secondary}
-              >
-                {item.label}
-              </motion.span>
-            </motion.button>
-          )
-        })}
-      </nav>
+      {/* ========================================
+         VIBE CODING: Mobile Floating Dock
+         替换原本死板的底部栏，改为可展开悬浮坞
+         放置在右下角拇指热区，节省屏幕空间
+         ======================================== */}
+      <MobileFloatingDock
+        className="md:hidden"
+        items={navItems.map(item => ({
+          id: item.id,
+          label: item.fullLabel,
+          icon: item.icon,
+          onClick: () => onTabChange(item.id),
+          isActive: activeTab === item.id,
+        }))}
+      />
     </>
   )
 }
