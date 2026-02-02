@@ -2,7 +2,7 @@
 FROM node:20-alpine AS frontend-builder
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci
+RUN npm install
 COPY . .
 RUN npm run build
 
@@ -10,7 +10,7 @@ RUN npm run build
 FROM node:20-alpine AS backend-builder
 WORKDIR /app/server
 COPY server/package*.json ./
-RUN npm ci
+RUN npm install
 COPY server/ ./
 RUN npm run build || true
 
@@ -20,7 +20,7 @@ WORKDIR /app
 
 # Install production dependencies for backend
 COPY server/package*.json ./server/
-RUN cd server && npm ci --omit=dev
+RUN cd server && npm install --omit=dev
 
 # Copy backend source (for tsx to run)
 COPY server/src ./server/src
