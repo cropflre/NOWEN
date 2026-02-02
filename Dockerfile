@@ -20,6 +20,15 @@ RUN npm run build || true
 
 # Production stage
 FROM node:20-alpine AS production
+
+# OCI 标准标签 - 用于 Docker Hub 显示
+LABEL org.opencontainers.image.title="NOWEN"
+LABEL org.opencontainers.image.description="高颜值 Bento 风格个人导航页，支持书签管理、分类管理、名言管理、自定义图标，一键 Docker 部署"
+LABEL org.opencontainers.image.url="https://github.com/cropflre/NOWEN"
+LABEL org.opencontainers.image.source="https://github.com/cropflre/NOWEN"
+LABEL org.opencontainers.image.vendor="cropflre"
+LABEL org.opencontainers.image.licenses="MIT"
+
 WORKDIR /app
 
 # Install production dependencies for backend
