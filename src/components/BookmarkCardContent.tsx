@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ExternalLink, Pin, BookMarked, Edit2, Trash2 } from "lucide-react";
 import { Bookmark } from "../types/bookmark";
-import { cn } from "../lib/utils";
+import { cn, getIconComponent } from "../lib/utils";
 
 export interface BookmarkCardContentProps {
   bookmark: Bookmark;
@@ -42,7 +42,23 @@ export function BookmarkCardContent({
           )}
           style={{ background: "var(--color-bg-tertiary)" }}
         >
-          {bookmark.favicon ? (
+          {bookmark.iconUrl ? (
+            <img
+              src={bookmark.iconUrl}
+              alt=""
+              className={cn(isLarge ? "w-7 h-7" : "w-6 h-6", "object-contain")}
+            />
+          ) : bookmark.icon ? (
+            (() => {
+              const IconComp = getIconComponent(bookmark.icon);
+              return (
+                <IconComp
+                  className={isLarge ? "w-7 h-7" : "w-6 h-6"}
+                  style={{ color: "var(--color-primary)" }}
+                />
+              );
+            })()
+          ) : bookmark.favicon ? (
             <img
               src={bookmark.favicon}
               alt=""

@@ -1,13 +1,16 @@
 {
-  "name": "zen-garden-server",
+  "name": "nebula-portal-server",
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "NODE_ENV=development tsx watch src/index.ts",
+    "dev:win": "set NODE_ENV=development && tsx watch src/index.ts",
     "build": "tsc",
-    "start": "node dist/index.js"
+    "start": "NODE_ENV=production node dist/index.js",
+    "start:win": "set NODE_ENV=production && node dist/index.js"
   },
   "dependencies": {
+    "@types/bcryptjs": "^2.4.6",
     "bcryptjs": "^3.0.3",
     "cheerio": "^1.0.0",
     "cors": "^2.8.6",

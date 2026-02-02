@@ -118,6 +118,7 @@ function AdminContent() {
   const [siteSettings, setSiteSettings] = useState<SiteSettings>({
     siteTitle: 'Nebula Portal',
     siteFavicon: '',
+    enableBeamAnimation: true,
   })
   const [isSavingSettings, setIsSavingSettings] = useState(false)
   const [settingsSuccess, setSettingsSuccess] = useState(false)
@@ -595,7 +596,14 @@ function AdminContent() {
                                     border: '1px solid var(--color-glass-border)',
                                   }}
                                 >
-                                  {bookmark.favicon ? (
+                                  {bookmark.iconUrl ? (
+                                    <img src={bookmark.iconUrl} alt="" className="w-5 h-5 rounded object-contain" />
+                                  ) : bookmark.icon ? (
+                                    (() => {
+                                      const IconComp = getIconComponent(bookmark.icon)
+                                      return <IconComp className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />
+                                    })()
+                                  ) : bookmark.favicon ? (
                                     <img src={bookmark.favicon} alt="" className="w-5 h-5 rounded" />
                                   ) : (
                                     <ExternalLink className="w-4 h-4" style={{ color: 'var(--color-text-muted)' }} />
@@ -730,7 +738,14 @@ function AdminContent() {
                                         border: '1px solid var(--color-glass-border)',
                                       }}
                                     >
-                                      {bookmark.favicon ? (
+                                      {bookmark.iconUrl ? (
+                                        <img src={bookmark.iconUrl} alt="" className="w-4 h-4 rounded object-contain" />
+                                      ) : bookmark.icon ? (
+                                        (() => {
+                                          const IconComp = getIconComponent(bookmark.icon)
+                                          return <IconComp className="w-4 h-4" style={{ color: 'var(--color-primary)' }} />
+                                        })()
+                                      ) : bookmark.favicon ? (
                                         <img src={bookmark.favicon} alt="" className="w-4 h-4 rounded" />
                                       ) : (
                                         <ExternalLink className="w-3.5 h-3.5" style={{ color: 'var(--color-text-muted)' }} />

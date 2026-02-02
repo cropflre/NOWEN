@@ -1,0 +1,7 @@
+export { default as bookmarksRouter } from './bookmarks.js'
+export { default as categoriesRouter } from './categories.js'
+export { default as adminRouter } from './admin.js'
+export { default as settingsRouter } from './settings.js'
+export { default as metadataRouter } from './metadata.js'
+export { default as quotesRouter } from './quotes.js'
+export { default as dataRouter } from './data.js'

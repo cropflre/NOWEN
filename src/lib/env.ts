@@ -1,4 +1,4 @@
-import { z } from 'zod'
+import { z } from "zod";
 
 /**
  * 客户端环境变量验证 Schema
@@ -7,22 +7,20 @@ import { z } from 'zod'
 const clientEnvSchema = z.object({
   // API 基础地址
   // 修改：移除默认值，允许为空，我们在后面动态生成
-  VITE_API_BASE: z
-    .string()
-    .optional(),
-  
+  VITE_API_BASE: z.string().optional(),
+
   // 应用模式
-  MODE: z.enum(['development', 'production', 'test']).default('development'),
-  
+  MODE: z.enum(["development", "production", "test"]).default("development"),
+
   // 是否开发环境
   DEV: z.boolean().default(true),
-  
+
   // 是否生产环境
   PROD: z.boolean().default(false),
-  
+
   // 服务端渲染
   SSR: z.boolean().default(false),
-})
+});
 
 /**
  * 服务端环境变量验证 Schema
@@ -34,18 +32,20 @@ const serverEnvSchema = z.object({
     .transform((val) => parseInt(val, 10))
     .pipe(z.number().min(1).max(65535))
     .optional()
-    .default('3001'),
-  
+    .default("3001"),
+
   // 前端 URL（用于 CORS 白名单）
   FRONTEND_URL: z.string().url().optional(),
-  
+
   // Node 环境
-  NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-})
+  NODE_ENV: z
+    .enum(["development", "production", "test"])
+    .default("development"),
+});
 
 // 类型导出
-export type ClientEnv = z.infer<typeof clientEnvSchema>
-export type ServerEnv = z.infer<typeof serverEnvSchema>
+export type ClientEnv = z.infer<typeof clientEnvSchema>;
+export type ServerEnv = z.infer<typeof serverEnvSchema>;
 
 /**
  * 解析并验证客户端环境变量
@@ -57,28 +57,28 @@ function parseClientEnv(): ClientEnv {
     DEV: import.meta.env.DEV,
     PROD: import.meta.env.PROD,
     SSR: import.meta.env.SSR,
-  }
+  };
 
-  const result = clientEnvSchema.safeParse(rawEnv)
+  const result = clientEnvSchema.safeParse(rawEnv);
 
   if (!result.success) {
-    console.error('❌ 环境变量验证失败:')
-    console.error(result.error.format())
-    
+    console.error("❌ 环境变量验证失败:");
+    console.error(result.error.format());
+
     // 在开发环境下抛出错误，生产环境使用默认值
     if (import.meta.env.DEV) {
-      throw new Error('环境变量配置错误，请检查 .env 文件')
+      throw new Error("环境变量配置错误，请检查 .env 文件");
     }
   }
 
-  return result.success ? result.data : clientEnvSchema.parse({})
+  return result.success ? result.data : clientEnvSchema.parse({});
 }
 
 /**
  * 已验证的客户端环境变量
  * 可以安全地在应用中使用
  */
-export const env = parseClientEnv()
+export const env = parseClientEnv();
 
 /**
  * 获取 API 基础地址 (核心修改部分)
@@ -86,31 +86,31 @@ export const env = parseClientEnv()
 export function getApiBase(): string {
   // 1. 如果环境变量里明确配置了（比如开发环境 .env），优先使用它
   if (env.VITE_API_BASE) {
-    return env.VITE_API_BASE
+    return env.VITE_API_BASE;
   }
 
-  // 2. 如果在浏览器环境运行，自动获取当前域名/IP，并拼接 3006 端口
-  if (typeof window !== 'undefined') {
-    return `${window.location.protocol}//${window.location.hostname}:3006`
+  // 2. 如果在浏览器环境运行，自动获取当前域名/IP，并拼接 3001 端口
+  if (typeof window !== "undefined") {
+    return `${window.location.protocol}//${window.location.hostname}:3001`;
   }
 
   // 3. 最后的保底（比如在服务端渲染或测试环境）
-  return 'http://localhost:3006'
+  return "http://localhost:3001";
 }
 
 /**
  * 检查是否为开发环境
  */
 export function isDev(): boolean {
-  return env.DEV
+  return env.DEV;
 }
 
 /**
  * 检查是否为生产环境
  */
 export function isProd(): boolean {
-  return env.PROD
+  return env.PROD;
 }
 
 // 导出 schema 供其他模块使用
-export { clientEnvSchema, serverEnvSchema }
+export { clientEnvSchema, serverEnvSchema };

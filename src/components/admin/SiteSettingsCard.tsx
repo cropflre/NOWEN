@@ -8,7 +8,8 @@ import {
   CheckCircle, 
   AlertCircle,
   ExternalLink,
-  Sparkles
+  Sparkles,
+  Zap
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { SiteSettings } from '../../lib/api'
@@ -192,6 +193,47 @@ export function SiteSettingsCard({
                     color: 'var(--color-text-primary)',
                   }}
                 />
+              </div>
+            </div>
+
+            {/* Beam Animation Toggle */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--color-text-muted)' }}>
+                <Zap className="w-4 h-4" />
+                光束动画
+              </label>
+              <div 
+                className="flex items-center justify-between px-4 py-3 rounded-xl"
+                style={{
+                  background: 'var(--color-bg-tertiary)',
+                  border: '1px solid var(--color-glass-border)',
+                }}
+              >
+                <div>
+                  <p className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>
+                    背景光束效果
+                  </p>
+                  <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                    开启后显示动态光束碰撞动画
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => onChange({ ...settings, enableBeamAnimation: !settings.enableBeamAnimation })}
+                  className={cn(
+                    'relative w-12 h-6 rounded-full transition-all duration-300',
+                    settings.enableBeamAnimation !== false
+                      ? 'bg-gradient-to-r from-cyan-500 to-blue-500'
+                      : 'bg-gray-600/50'
+                  )}
+                >
+                  <div
+                    className={cn(
+                      'absolute top-1 w-4 h-4 rounded-full bg-white shadow-md transition-all duration-300',
+                      settings.enableBeamAnimation !== false ? 'left-7' : 'left-1'
+                    )}
+                  />
+                </button>
               </div>
             </div>
           </div>

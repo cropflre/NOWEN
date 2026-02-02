@@ -10,7 +10,7 @@ import {
   Sparkles,
 } from 'lucide-react'
 import { Bookmark, Category } from '../types/bookmark'
-import { cn } from '../lib/utils'
+import { cn, getIconComponent } from '../lib/utils'
 
 interface VirtualBookmarkListProps {
   bookmarks: Bookmark[]
@@ -85,7 +85,14 @@ export function VirtualBookmarkList({
               border: '1px solid var(--color-glass-border)',
             }}
           >
-            {bookmark.favicon ? (
+            {bookmark.iconUrl ? (
+              <img src={bookmark.iconUrl} alt="" className="w-5 h-5 rounded object-contain" loading="lazy" />
+            ) : bookmark.icon ? (
+              (() => {
+                const IconComp = getIconComponent(bookmark.icon)
+                return <IconComp className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />
+              })()
+            ) : bookmark.favicon ? (
               <img src={bookmark.favicon} alt="" className="w-5 h-5 rounded" loading="lazy" />
             ) : (
               <ExternalLink className="w-4 h-4" style={{ color: 'var(--color-text-muted)' }} />

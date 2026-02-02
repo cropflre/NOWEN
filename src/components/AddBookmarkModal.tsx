@@ -349,7 +349,7 @@ export function AddBookmarkModal({
               </div>
 
               {/* 图标选择 */}
-              <div ref={iconPickerRef} className="relative">
+              <div ref={iconPickerRef} className="relative z-20">
                 <div className="flex items-center justify-between mb-2">
                   <label 
                     className="text-sm"
@@ -410,31 +410,40 @@ export function AddBookmarkModal({
                   />
                 </button>
 
-                {/* 图标选择器弹出层 */}
+                {/* 图标选择器弹出层 - 向上弹出 */}
                 <AnimatePresence>
                   {showIconPicker && (
                     <motion.div
-                      initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
                       transition={{ duration: 0.15 }}
                       className={cn(
-                        'absolute z-50 left-0 right-0 mt-2',
-                        'p-3 rounded-xl glass shadow-xl',
-                        'border border-white/10',
-                        'max-h-[280px] overflow-y-auto'
+                        'absolute z-50 left-0 right-0 bottom-full mb-2',
+                        'p-3 rounded-xl shadow-xl',
+                        'border',
+                        'max-h-[260px] overflow-y-auto'
                       )}
+                      style={{
+                        background: 'var(--color-bg-secondary)',
+                        borderColor: 'var(--color-glass-border)',
+                      }}
                     >
                       {/* Tab 切换 */}
-                      <div className="flex gap-1 mb-3 p-1 rounded-lg bg-white/5">
+                      <div 
+                        className="flex gap-1 mb-3 p-1 rounded-lg"
+                        style={{ background: 'var(--color-bg-tertiary)' }}
+                      >
                         <button
                           type="button"
                           onClick={() => setIconTab('preset')}
                           className={cn(
-                            'flex-1 px-3 py-1.5 rounded-md text-xs transition-colors',
-                            iconTab === 'preset' ? 'bg-white/15' : 'hover:bg-white/10'
+                            'flex-1 px-3 py-1.5 rounded-md text-xs transition-colors'
                           )}
-                          style={{ color: iconTab === 'preset' ? 'var(--text-primary)' : 'var(--text-muted)' }}
+                          style={{ 
+                            background: iconTab === 'preset' ? 'var(--color-bg-secondary)' : 'transparent',
+                            color: iconTab === 'preset' ? 'var(--color-text-primary)' : 'var(--color-text-muted)'
+                          }}
                         >
                           预设图标
                         </button>
@@ -442,10 +451,12 @@ export function AddBookmarkModal({
                           type="button"
                           onClick={() => setIconTab('custom')}
                           className={cn(
-                            'flex-1 px-3 py-1.5 rounded-md text-xs transition-colors flex items-center justify-center gap-1',
-                            iconTab === 'custom' ? 'bg-white/15' : 'hover:bg-white/10'
+                            'flex-1 px-3 py-1.5 rounded-md text-xs transition-colors flex items-center justify-center gap-1'
                           )}
-                          style={{ color: iconTab === 'custom' ? 'var(--text-primary)' : 'var(--text-muted)' }}
+                          style={{ 
+                            background: iconTab === 'custom' ? 'var(--color-bg-secondary)' : 'transparent',
+                            color: iconTab === 'custom' ? 'var(--color-text-primary)' : 'var(--color-text-muted)'
+                          }}
                         >
                           <Image className="w-3 h-3" />
                           我的图标
@@ -454,10 +465,12 @@ export function AddBookmarkModal({
                           type="button"
                           onClick={() => setIconTab('url')}
                           className={cn(
-                            'flex-1 px-3 py-1.5 rounded-md text-xs transition-colors flex items-center justify-center gap-1',
-                            iconTab === 'url' ? 'bg-white/15' : 'hover:bg-white/10'
+                            'flex-1 px-3 py-1.5 rounded-md text-xs transition-colors flex items-center justify-center gap-1'
                           )}
-                          style={{ color: iconTab === 'url' ? 'var(--text-primary)' : 'var(--text-muted)' }}
+                          style={{ 
+                            background: iconTab === 'url' ? 'var(--color-bg-secondary)' : 'transparent',
+                            color: iconTab === 'url' ? 'var(--color-text-primary)' : 'var(--color-text-muted)'
+                          }}
                         >
                           <Link2 className="w-3 h-3" />
                           URL
@@ -475,15 +488,20 @@ export function AddBookmarkModal({
                         }}
                         className={cn(
                           'w-full px-3 py-2 mb-2 rounded-lg',
-                          'text-sm text-left hover:bg-white/10 transition-colors',
-                          !icon && !iconUrl && 'bg-white/10'
+                          'text-sm text-left transition-colors'
                         )}
-                        style={{ color: 'var(--text-secondary)' }}
+                        style={{ 
+                          color: 'var(--color-text-secondary)',
+                          background: !icon && !iconUrl ? 'var(--color-bg-tertiary)' : 'transparent'
+                        }}
                       >
                         使用网站图标
                       </button>
                       
-                      <div className="border-t border-white/10 my-2" />
+                      <div 
+                        className="my-2" 
+                        style={{ borderTop: '1px solid var(--color-glass-border)' }}
+                      />
                       
                       {/* 预设图标网格 */}
                       {iconTab === 'preset' && (
@@ -498,17 +516,19 @@ export function AddBookmarkModal({
                                 setShowIconPicker(false)
                               }}
                               className={cn(
-                                'p-2.5 rounded-lg transition-colors',
-                                'hover:bg-white/10',
-                                icon === name && !iconUrl && 'bg-white/20 ring-1 ring-[var(--gradient-1)]'
+                                'p-2.5 rounded-lg transition-colors'
                               )}
+                              style={{
+                                background: icon === name && !iconUrl ? 'var(--color-bg-tertiary)' : 'transparent',
+                                boxShadow: icon === name && !iconUrl ? 'inset 0 0 0 1px var(--color-primary)' : 'none'
+                              }}
                               whileHover={{ scale: 1.1 }}
                               whileTap={{ scale: 0.95 }}
                               title={name}
                             >
                               <IconComp 
                                 className="w-5 h-5 mx-auto" 
-                                style={{ color: icon === name && !iconUrl ? 'var(--gradient-1)' : 'var(--text-secondary)' }} 
+                                style={{ color: icon === name && !iconUrl ? 'var(--color-primary)' : 'var(--color-text-secondary)' }} 
                               />
                             </motion.button>
                           ))}
@@ -521,7 +541,7 @@ export function AddBookmarkModal({
                           {customIcons.length === 0 ? (
                             <div 
                               className="text-center py-6"
-                              style={{ color: 'var(--text-muted)' }}
+                              style={{ color: 'var(--color-text-muted)' }}
                             >
                               <Image className="w-8 h-8 mx-auto mb-2 opacity-50" />
                               <p className="text-sm">还没有自定义图标</p>
@@ -533,7 +553,7 @@ export function AddBookmarkModal({
                                     onOpenIconManager()
                                   }}
                                   className="text-xs mt-2 hover:opacity-80"
-                                  style={{ color: 'var(--gradient-1)' }}
+                                  style={{ color: 'var(--color-primary)' }}
                                 >
                                   去添加
                                 </button>
@@ -551,10 +571,12 @@ export function AddBookmarkModal({
                                     setShowIconPicker(false)
                                   }}
                                   className={cn(
-                                    'p-2 rounded-lg transition-colors',
-                                    'hover:bg-white/10',
-                                    iconUrl === customIcon.url && 'bg-white/20 ring-1 ring-[var(--gradient-1)]'
+                                    'p-2 rounded-lg transition-colors'
                                   )}
+                                  style={{
+                                    background: iconUrl === customIcon.url ? 'var(--color-bg-tertiary)' : 'transparent',
+                                    boxShadow: iconUrl === customIcon.url ? 'inset 0 0 0 1px var(--color-primary)' : 'none'
+                                  }}
                                   whileHover={{ scale: 1.05 }}
                                   whileTap={{ scale: 0.95 }}
                                   title={customIcon.name}
@@ -566,7 +588,7 @@ export function AddBookmarkModal({
                                   />
                                   <p 
                                     className="text-xs mt-1 truncate text-center"
-                                    style={{ color: 'var(--text-muted)' }}
+                                    style={{ color: 'var(--color-text-muted)' }}
                                   >
                                     {customIcon.name}
                                   </p>
@@ -587,18 +609,20 @@ export function AddBookmarkModal({
                             placeholder="https://example.com/icon.png"
                             className={cn(
                               'w-full px-3 py-2 rounded-lg',
-                              'border border-white/10 focus:border-white/30',
-                              'outline-none transition-colors text-sm',
-                              'placeholder:text-white/30'
+                              'border outline-none transition-colors text-sm'
                             )}
                             style={{ 
-                              color: 'var(--text-primary)',
-                              background: 'var(--color-bg-secondary)',
+                              color: 'var(--color-text-primary)',
+                              background: 'var(--color-bg-tertiary)',
+                              borderColor: 'var(--color-glass-border)',
                             }}
                           />
                           <div className="flex gap-2">
                             {iconUrlInput && (
-                              <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
+                              <div 
+                                className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                                style={{ background: 'var(--color-bg-tertiary)' }}
+                              >
                                 <img 
                                   src={iconUrlInput} 
                                   alt="Preview"

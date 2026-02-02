@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Search, Globe, Github, Plus, ArrowRight, Command } from 'lucide-react'
 import { Bookmark } from '../types/bookmark'
-import { cn } from '../lib/utils'
+import { cn, getIconComponent } from '../lib/utils'
 
 interface CommandPaletteProps {
   isOpen: boolean
@@ -89,16 +89,25 @@ export function CommandPalette({
       )
 
       filtered.slice(0, 8).forEach(bookmark => {
+        const iconElement = bookmark.iconUrl ? (
+          <img src={bookmark.iconUrl} alt="" className="w-5 h-5 rounded object-contain" />
+        ) : bookmark.icon ? (
+          (() => {
+            const IconComp = getIconComponent(bookmark.icon)
+            return <IconComp className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />
+          })()
+        ) : bookmark.favicon ? (
+          <img src={bookmark.favicon} alt="" className="w-5 h-5 rounded" />
+        ) : (
+          <Globe className="w-5 h-5" />
+        )
+        
         items.push({
           id: bookmark.id,
           type: 'bookmark',
           title: bookmark.title,
           description: new URL(bookmark.url).hostname,
-          icon: bookmark.favicon ? (
-            <img src={bookmark.favicon} alt="" className="w-5 h-5 rounded" />
-          ) : (
-            <Globe className="w-5 h-5" />
-          ),
+          icon: iconElement,
           action: () => {
             window.open(bookmark.url, '_blank')
             onClose()

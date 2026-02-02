@@ -14,6 +14,8 @@ export interface CreateBookmarkParams {
   description?: string
   favicon?: string
   ogImage?: string
+  icon?: string
+  iconUrl?: string
   category?: string
   tags?: string
   isReadLater?: boolean
@@ -26,6 +28,8 @@ export interface UpdateBookmarkParams {
   description?: string
   favicon?: string
   ogImage?: string
+  icon?: string
+  iconUrl?: string
   category?: string
   tags?: string[]
   isPinned?: boolean
@@ -399,6 +403,7 @@ export function clearPasswordChangeFlag(): void {
 export interface SiteSettings {
   siteTitle?: string
   siteFavicon?: string
+  enableBeamAnimation?: boolean
 }
 
 export async function fetchSettings(): Promise<SiteSettings> {

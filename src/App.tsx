@@ -74,6 +74,7 @@ function App() {
   const [siteSettings, setSiteSettings] = useState<SiteSettings>({
     siteTitle: "Nebula Portal",
     siteFavicon: "",
+    enableBeamAnimation: true,
   });
 
   // 右键菜单状态
@@ -370,7 +371,7 @@ function App() {
   }
 
   return (
-    <AuroraBackground showBeams>
+    <AuroraBackground showBeams={siteSettings.enableBeamAnimation !== false}>
       {/* Meteors Effect */}
       <Meteors number={15} />
 
@@ -694,7 +695,23 @@ function App() {
                             className="w-10 h-10 rounded-xl flex items-center justify-center mb-4"
                             style={{ background: "var(--color-bg-tertiary)" }}
                           >
-                            {bookmark.favicon ? (
+                            {bookmark.iconUrl ? (
+                              <img
+                                src={bookmark.iconUrl}
+                                alt=""
+                                className="w-5 h-5 object-contain"
+                              />
+                            ) : bookmark.icon ? (
+                              (() => {
+                                const IconComp = getIconComponent(bookmark.icon);
+                                return (
+                                  <IconComp
+                                    className="w-5 h-5"
+                                    style={{ color: "var(--color-primary)" }}
+                                  />
+                                );
+                              })()
+                            ) : bookmark.favicon ? (
                               <img
                                 src={bookmark.favicon}
                                 alt=""

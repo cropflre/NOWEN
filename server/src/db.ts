@@ -39,6 +39,7 @@ export async function initDatabase() {
       description TEXT,
       favicon TEXT,
       ogImage TEXT,
+      icon TEXT,
       category TEXT,
       tags TEXT,
       orderIndex INTEGER DEFAULT 0,
@@ -49,6 +50,20 @@ export async function initDatabase() {
       updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
     )
   `)
+  
+  // 数据库迁移：添加 icon 字段（如果不存在）
+  try {
+    db.run('ALTER TABLE bookmarks ADD COLUMN icon TEXT')
+  } catch (e) {
+    // 字段已存在，忽略错误
+  }
+  
+  // 数据库迁移：添加 iconUrl 字段（如果不存在）
+  try {
+    db.run('ALTER TABLE bookmarks ADD COLUMN iconUrl TEXT')
+  } catch (e) {
+    // 字段已存在，忽略错误
+  }
   
   db.run(`
     CREATE TABLE IF NOT EXISTS categories (
