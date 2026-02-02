@@ -4,6 +4,7 @@ import { useVirtualizer } from '@tanstack/react-virtual'
 import { Search, Globe, Github, Plus, ArrowRight, Command } from 'lucide-react'
 import { Bookmark } from '../types/bookmark'
 import { cn, getIconComponent } from '../lib/utils'
+import { popUpVariant } from '../lib/animation'
 
 interface CommandPaletteProps {
   isOpen: boolean
@@ -300,12 +301,12 @@ export function CommandPalette({
             onClick={onClose}
           />
 
-          {/* HUD 命令面板 - 移动端适配 */}
+          {/* HUD 命令面板 - 移动端适配 + 浮出协议 */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: -30 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: -30 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+            variants={popUpVariant}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
             className={cn(
               // 桌面端: 固定在顶部 20%
               // 移动端: 使用 dvh 适配键盘弹出，距顶部 10dvh 确保不被遮挡

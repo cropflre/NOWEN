@@ -36,35 +36,43 @@ export function BookmarkCard({
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, scale: 0.8, y: 20 }}
+      initial={{ opacity: 0, scale: 0.95, y: 20, filter: 'blur(8px)' }}
       animate={{ 
         opacity: isDragging ? 0.5 : 1, 
-        scale: isDragging ? 1.08 : 1,
+        scale: isDragging ? 1.05 : 1,
         y: 0,
+        filter: 'blur(0px)',
       }}
-      exit={{ opacity: 0, scale: 0.8, y: -20 }}
+      exit={{ opacity: 0, scale: 0.95, y: -15, filter: 'blur(8px)' }}
+      // 1. 物理层：克制的浮起，保持重量感
       whileHover={{ 
-        y: -8, 
-        scale: 1.03,
-        boxShadow: '0 20px 40px -12px rgba(0, 0, 0, 0.25), 0 0 30px -5px var(--color-glow)',
+        y: -4,         // 轻微浮起，不是跳跃
+        scale: 1.01,   // 几乎不缩放，克制
       }}
       whileTap={{ scale: 0.98 }}
       transition={{ 
         type: 'spring', 
-        stiffness: 400, 
+        stiffness: 300, 
         damping: 25,
         layout: { duration: 0.3 }
       }}
+      // 2. 视觉层：使用 vibe-card 全局能量类
       className={cn(
-        'group relative rounded-2xl overflow-hidden cursor-pointer',
-        'glass card-glow',
-        'transition-all duration-300',
+        'vibe-card vibe-card--glow group cursor-pointer',
         isDragging && 'shadow-2xl ring-2 ring-[var(--color-glow)]/30'
       )}
       onClick={handleClick}
       onMouseEnter={() => setShowMenu(true)}
       onMouseLeave={() => setShowMenu(false)}
     >
+      {/* 3. 唤醒层：扫描光效 (Shimmer) - 像扫描指纹 */}
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-0 overflow-hidden rounded-[inherit]">
+        <div 
+          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.15] to-transparent -translate-x-full group-hover:translate-x-full transition-transform ease-out"
+          style={{ transitionDuration: '1.2s' }}
+        />
+      </div>
+
       {/* 新卡片高亮光环 */}
       {isNew && (
         <motion.div
@@ -207,15 +215,21 @@ export function BookmarkCard({
         </div>
       </motion.div>
 
-      {/* 卡片内容 */}
-      <div className="p-5">
+      {/* 4. 内容层：z-10 保证在光效之上 */}
+      <div className="relative z-10 p-5">
         <div className="flex items-start gap-4">
-          {/* Favicon/Icon - 统一容器 */}
-          <div className={cn(
-            'flex-shrink-0 w-12 h-12 rounded-xl',
-            'flex items-center justify-center',
-            'bg-white/10 p-1.5'
-          )}>
+          {/* Favicon/Icon - 图标微动：Hover 时轻轻摇晃，像是在对焦 */}
+          <motion.div 
+            className={cn(
+              'flex-shrink-0 w-12 h-12 rounded-xl',
+              'flex items-center justify-center',
+              'bg-white/10 p-1.5'
+            )}
+            whileHover={{ 
+              rotate: [0, -5, 5, -3, 0], 
+              transition: { duration: 0.5, ease: 'easeInOut' } 
+            }}
+          >
             {bookmark.iconUrl ? (
               <img
                 src={bookmark.iconUrl}
@@ -243,7 +257,7 @@ export function BookmarkCard({
                 {bookmark.title.charAt(0).toUpperCase()}
               </span>
             )}
-          </div>
+          </motion.div>
 
           {/* 文本内容 */}
           <div className="flex-1 min-w-0">
@@ -274,24 +288,12 @@ export function BookmarkCard({
         </div>
       </div>
 
-      {/* Hover 光效 */}
-      <motion.div 
-        className="absolute inset-0 pointer-events-none"
-        initial={{ opacity: 0 }}
-        whileHover={{ opacity: 1 }}
-        transition={{ duration: 0.3 }}
-      >
-        {/* 顶部高光 */}
+      {/* 悬停时的边框增强光效 */}
+      <div className="absolute inset-0 rounded-[inherit] opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
+        {/* 顶部高光线 */}
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" />
-        {/* 渐变光晕 */}
-        <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-[var(--color-glow)]/5" />
-        {/* 底部反光 */}
-        <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-[var(--color-glow)]/10 to-transparent" />
-      </motion.div>
-
-      {/* 悬停时的边框光效 */}
-      <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none">
-        <div className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/20" />
+        {/* 底部能量反光 */}
+        <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[var(--color-glow)]/10 to-transparent rounded-b-[inherit]" />
       </div>
     </motion.div>
   )

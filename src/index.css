@@ -36,8 +36,8 @@
   --color-glass-hover: rgba(255, 255, 255, 0.05);
   --color-shadow: none;
   --color-shadow-hover: none;
-  --color-glow: rgba(102, 126, 234, 0.5);
-  --color-glow-secondary: rgba(6, 182, 212, 0.4);
+  --color-glow: rgba(102, 126, 234, 0.6);
+  --color-glow-secondary: rgba(6, 182, 212, 0.5);
 }
 
 * {
@@ -295,6 +295,98 @@ body::before {
 .dark .theme-card:hover::before {
   opacity: 1;
   background-position: 100% 100%;
+}
+
+/* ============================================
+   全局光照系统 - The Global Illumination
+   让应用看起来"通电"，卡片具有"能量场"
+   ============================================ */
+
+/* 核心能量卡片 - 带电设备 */
+.vibe-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  transition: all 500ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 悬停状态：通电唤醒 */
+.vibe-card:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 30px var(--color-glow);
+  /* 内部灯管亮起 */
+  background: linear-gradient(
+    145deg, 
+    rgba(255, 255, 255, 0.1) 0%, 
+    rgba(255, 255, 255, 0.05) 100%
+  );
+  /* 轻微悬浮，保持重量感 */
+  transform: translateY(-2px);
+}
+
+/* 能量呼吸动画 - 可选增强 */
+.vibe-card--breathing {
+  animation: vibe-breathe 4s ease-in-out infinite;
+}
+
+@keyframes vibe-breathe {
+  0%, 100% {
+    box-shadow: 0 0 15px rgba(102, 126, 234, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 25px rgba(102, 126, 234, 0.35);
+  }
+}
+
+/* 能量边框流光 - 高亮态 */
+.vibe-card--glow::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    transparent 30%,
+    var(--color-primary) 50%,
+    var(--color-accent) 70%,
+    transparent 90%
+  );
+  background-size: 400% 400%;
+  background-position: 0% 0%;
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.5s, background-position 0.8s;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.vibe-card--glow:hover::before {
+  opacity: 1;
+  background-position: 100% 100%;
+}
+
+/* 日间模式适配 - 用弥散阴影替代发光 */
+.light .vibe-card {
+  background: rgba(255, 255, 255, 0.8);
+  border-color: rgba(0, 0, 0, 0.05);
+}
+
+.light .vibe-card:hover {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+.light .vibe-card--glow::before {
+  display: none; /* 日间不需要流光 */
 }
 
 /* ============================================

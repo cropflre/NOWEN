@@ -239,3 +239,160 @@ export function convertFramerConfig(framerConfig: {
 
 // 类型定义
 export type AnimatedStyle = ReturnType<typeof useSpring>
+
+/* ============================================
+   The Surface Protocol - 浮出水面协议
+   统一的进场动画物理系统
+   ============================================ */
+
+/**
+ * "浮出水面"的物理质感
+ * 模拟物体从水下缓慢浮出的感觉
+ */
+export const surfacePhysics = {
+  type: "spring" as const,
+  stiffness: 100, // 刚度低一点，水有阻力
+  damping: 20,    // 阻尼适中，不要回弹太多，要稳
+  mass: 1.2       // 稍微重一点，有质感
+}
+
+/**
+ * 统一的进场变体 - 物体浮出水面
+ * 用于 framer-motion 的 variants
+ */
+export const surfaceUpVariant = {
+  hidden: { 
+    opacity: 0, 
+    y: 40,           // 从较深的水下浮上来
+    scale: 0.95,     // 水下折射，看起来小一点
+    filter: "blur(10px)" // 水下模糊
+  },
+  visible: { 
+    opacity: 1, 
+    y: 0, 
+    scale: 1,
+    filter: "blur(0px)",
+    transition: {
+      ...surfacePhysics,
+      delay: 0.1      // 稍微滞后一点
+    }
+  },
+  exit: {
+    opacity: 0,
+    y: -20,          // 离开时继续向上蒸发，而不是沉下去
+    filter: "blur(10px)",
+    transition: { duration: 0.3 }
+  }
+}
+
+/**
+ * 浅浮出 - 用于较小的元素
+ */
+export const surfaceUpShallowVariant = {
+  hidden: { 
+    opacity: 0, 
+    y: 20,
+    scale: 0.98,
+    filter: "blur(5px)"
+  },
+  visible: { 
+    opacity: 1, 
+    y: 0, 
+    scale: 1,
+    filter: "blur(0px)",
+    transition: {
+      type: "spring",
+      stiffness: 150,
+      damping: 22,
+      mass: 1
+    }
+  },
+  exit: {
+    opacity: 0,
+    y: -10,
+    filter: "blur(5px)",
+    transition: { duration: 0.2 }
+  }
+}
+
+/**
+ * 交错进场 - 用于列表项
+ * @param index 列表索引
+ * @param staggerDelay 每项间隔时间(秒)
+ */
+export const staggeredSurfaceVariant = (index: number, staggerDelay = 0.05) => ({
+  hidden: { 
+    opacity: 0, 
+    y: 30,
+    scale: 0.96,
+    filter: "blur(8px)"
+  },
+  visible: { 
+    opacity: 1, 
+    y: 0, 
+    scale: 1,
+    filter: "blur(0px)",
+    transition: {
+      ...surfacePhysics,
+      delay: index * staggerDelay
+    }
+  },
+  exit: {
+    opacity: 0,
+    y: -15,
+    filter: "blur(8px)",
+    transition: { duration: 0.2 }
+  }
+})
+
+/**
+ * 容器变体 - 用于协调子元素动画
+ */
+export const containerVariant = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.06,
+      delayChildren: 0.1
+    }
+  },
+  exit: {
+    opacity: 0,
+    transition: {
+      staggerChildren: 0.03,
+      staggerDirection: -1
+    }
+  }
+}
+
+/**
+ * 弹出变体 - 用于模态框/弹窗
+ */
+export const popUpVariant = {
+  hidden: { 
+    opacity: 0, 
+    scale: 0.9,
+    y: 20,
+    filter: "blur(10px)"
+  },
+  visible: { 
+    opacity: 1, 
+    scale: 1,
+    y: 0,
+    filter: "blur(0px)",
+    transition: {
+      type: "spring",
+      stiffness: 200,
+      damping: 25,
+      mass: 1
+    }
+  },
+  exit: {
+    opacity: 0,
+    scale: 0.95,
+    y: 10,
+    filter: "blur(10px)",
+    transition: { duration: 0.2 }
+  }
+}
