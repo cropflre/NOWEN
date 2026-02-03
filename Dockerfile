@@ -3,6 +3,9 @@
 # GitHub: https://github.com/cropflre/NOWEN
 
 # Build stage for frontend
+# 国内用户如遇网络问题，可将 node:20-alpine 替换为:
+# - docker.1ms.run/library/node:20-alpine
+# - dockerpull.org/library/node:20-alpine
 FROM node:20-alpine AS frontend-builder
 WORKDIR /app
 COPY package*.json ./
