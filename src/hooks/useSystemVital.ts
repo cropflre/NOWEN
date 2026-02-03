@@ -9,6 +9,13 @@ import useSWR from 'swr'
 // 类型定义
 // ============================================
 
+export interface DiskInfo {
+  mount: string       // 挂载点
+  used: number        // 已用百分比
+  total: string       // 总容量
+  free: string        // 可用空间
+}
+
 export interface SystemVitalData {
   // 核心指标
   cpu: number           // CPU 使用率 %
@@ -23,12 +30,15 @@ export interface SystemVitalData {
     downRaw: number     // 下行原始值 bytes/s
   }
   
-  // 存储
+  // 存储（主磁盘，向后兼容）
   disk: {
     used: number        // 已用百分比
     total: string       // 总容量
     free: string        // 可用空间
   }
+  
+  // 多硬盘数据
+  disks: DiskInfo[]
   
   // 容器状态
   containers: {
@@ -72,6 +82,13 @@ interface PulseApiResponse {
       used: string
       free: string
     }
+    disks?: Array<{
+      mount: string
+      usedPercent: number
+      total: string
+      used: string
+      free: string
+    }>
     containers?: {
       running: number
       total: number
@@ -143,6 +160,7 @@ export function useSystemVital(refreshInterval = 3000): SystemVitalData {
       total: '0 GB',
       free: '0 GB',
     },
+    disks: [],
     containers: {
       running: 0,
       total: 0,
@@ -175,6 +193,12 @@ export function useSystemVital(refreshInterval = 3000): SystemVitalData {
       total: data.disk?.total || '0 GB',
       free: data.disk?.free || '0 GB',
     },
+    disks: (data.disks || []).map(d => ({
+      mount: d.mount,
+      used: Math.round(d.usedPercent || 0),
+      total: d.total || '0 GB',
+      free: d.free || '0 GB',
+    })),
     containers: {
       running: data.containers?.running || 0,
       total: data.containers?.total || 0,

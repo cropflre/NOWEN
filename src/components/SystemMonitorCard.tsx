@@ -1,24 +1,54 @@
 import { useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence, useSpring, useTransform } from 'framer-motion'
 import useSWR from 'swr'
-import { Activity, HardDrive, Cpu, Database } from 'lucide-react'
+import { Activity, HardDrive, Cpu, Database, ChevronLeft, ChevronRight } from 'lucide-react'
 import { cn } from '../lib/utils'
 import { useTheme } from '../hooks/useTheme'
 
 // 类型定义
-interface SystemStats {
-  cpuLoad: number
-  memUsage: number
-  diskUsage: number
-  diskTotal: number    // 磁盘总容量 (GB)
-  diskFree: number     // 磁盘剩余空间 (GB)
+interface DiskInfo {
+  mount: string
+  usedPercent: number
+  total: string
+  used: string
+  free: string
+}
+
+interface PulseData {
+  cpu: {
+    usage: number
+    temperature: number | null
+  }
+  memory: {
+    usedPercent: number
+    total: string
+    used: string
+    free: string
+  }
+  network: {
+    rx_sec: number
+    tx_sec: number
+    rx_formatted: string
+    tx_formatted: string
+  }
+  disk: {
+    usedPercent: number
+    total: string
+    used: string
+    free: string
+  }
+  disks: DiskInfo[]
+  containers: {
+    running: number
+    total: number
+  } | null
   uptime: string
   timestamp: number
 }
 
 interface ApiResponse {
   success: boolean
-  data: SystemStats
+  data: PulseData
   cached?: boolean
 }
 
@@ -30,8 +60,8 @@ function safeNumber(value: number | undefined | null, defaultValue: number = 0):
   return value
 }
 
-// API Fetcher
-const fetcher = async (url: string): Promise<SystemStats> => {
+// API Fetcher - 使用 pulse 接口
+const fetcher = async (url: string): Promise<PulseData> => {
   const res = await fetch(url)
   const json: ApiResponse = await res.json()
   if (!json.success) {
@@ -392,10 +422,19 @@ function LiquidOrb({ memUsage: rawMemUsage, isDark = true }: { memUsage: number;
 // 硬盘圆环 (Disk Ring) 组件
 // 使用 CSS transition 代替 motion.circle 动画
 // ============================================
-function DiskRing({ diskUsage: rawDiskUsage, diskFree: rawDiskFree, isDark = true }: { diskUsage: number; diskFree: number; isDark?: boolean }) {
+function DiskRing({ 
+  diskUsage: rawDiskUsage, 
+  diskFree, 
+  diskLabel,
+  isDark = true 
+}: { 
+  diskUsage: number
+  diskFree: string
+  diskLabel?: string
+  isDark?: boolean 
+}) {
   const [isHovered, setIsHovered] = useState(false)
   const diskUsage = safeNumber(rawDiskUsage, 0)
-  const diskFree = safeNumber(rawDiskFree, 0)
   const clampedDiskUsage = Math.max(0, Math.min(100, diskUsage))
   
   const radius = 32
@@ -408,6 +447,20 @@ function DiskRing({ diskUsage: rawDiskUsage, diskFree: rawDiskFree, isDark = tru
     if (clampedDiskUsage >= 70) return isDark ? '#f59e0b' : '#ea580c'
     return isDark ? '#667eea' : '#3b82f6'
   }, [clampedDiskUsage, isDark])
+
+  // 简化挂载点显示名称
+  const displayLabel = useMemo(() => {
+    if (!diskLabel) return null
+    // 处理 Windows 盘符 (如 C:\, D:\)
+    if (diskLabel.match(/^[A-Za-z]:[\\\/]?$/)) {
+      return diskLabel.replace(/[:\\\/]+$/, '')
+    }
+    // 处理 Linux 挂载点
+    if (diskLabel === '/') return '/'
+    // 取最后一个路径片段
+    const parts = diskLabel.split('/').filter(Boolean)
+    return parts.length > 0 ? parts[parts.length - 1] : diskLabel
+  }, [diskLabel])
 
   return (
     <motion.div 
@@ -436,7 +489,7 @@ function DiskRing({ diskUsage: rawDiskUsage, diskFree: rawDiskFree, isDark = tru
       
       <svg className="w-full h-full -rotate-90" viewBox="0 0 80 80">
         <defs>
-          <linearGradient id="disk-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+          <linearGradient id={`disk-gradient-${diskLabel || 'default'}`} x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor={color} />
             <stop offset="100%" stopColor={`${color}80`} />
           </linearGradient>
@@ -459,7 +512,7 @@ function DiskRing({ diskUsage: rawDiskUsage, diskFree: rawDiskFree, isDark = tru
           cy="40"
           r={radius}
           fill="none"
-          stroke="url(#disk-gradient)"
+          stroke={`url(#disk-gradient-${diskLabel || 'default'})`}
           strokeWidth="6"
           strokeLinecap="round"
           strokeDasharray={circumference}
@@ -487,7 +540,7 @@ function DiskRing({ diskUsage: rawDiskUsage, diskFree: rawDiskFree, isDark = tru
                 isDark ? "text-white/60" : "text-slate-500"
               )}>剩余</div>
               <div className="text-xs font-mono font-bold" style={{ color }}>
-                {Math.round(diskFree)}GB
+                {diskFree}
               </div>
             </motion.div>
           ) : (
@@ -496,16 +549,343 @@ function DiskRing({ diskUsage: rawDiskUsage, diskFree: rawDiskFree, isDark = tru
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.8 }}
+              className="flex flex-col items-center"
             >
-              <HardDrive className={cn(
-                "w-5 h-5",
-                isDark ? "text-white/60" : "text-slate-500"
-              )} />
+              {displayLabel ? (
+                <>
+                  <span className={cn(
+                    "text-xs font-mono font-bold",
+                    isDark ? "text-white/80" : "text-slate-700"
+                  )} style={{ color }}>
+                    {clampedDiskUsage.toFixed(0)}%
+                  </span>
+                </>
+              ) : (
+                <HardDrive className={cn(
+                  "w-5 h-5",
+                  isDark ? "text-white/60" : "text-slate-500"
+                )} />
+              )}
             </motion.div>
           )}
         </AnimatePresence>
       </div>
+
+      {/* 磁盘标签 */}
+      {displayLabel && (
+        <div className={cn(
+          "absolute -bottom-5 left-0 right-0 text-center text-[10px] font-mono truncate px-1",
+          isDark ? "text-white/50" : "text-slate-500"
+        )}>
+          {displayLabel}
+        </div>
+      )}
     </motion.div>
+  )
+}
+
+// ============================================
+// 小型硬盘圆环（用于多硬盘紧凑显示）
+// ============================================
+function MiniDiskRing({ 
+  diskUsage, 
+  diskFree, 
+  diskLabel,
+  isDark = true 
+}: { 
+  diskUsage: number
+  diskFree: string
+  diskLabel: string
+  isDark?: boolean 
+}) {
+  const [isHovered, setIsHovered] = useState(false)
+  const clampedDiskUsage = Math.max(0, Math.min(100, safeNumber(diskUsage, 0)))
+  
+  const radius = 20
+  const circumference = 2 * Math.PI * radius
+  const strokeDashoffset = circumference * (1 - clampedDiskUsage / 100)
+  
+  // 根据使用量决定颜色
+  const color = useMemo(() => {
+    if (clampedDiskUsage >= 90) return '#ef4444'
+    if (clampedDiskUsage >= 70) return isDark ? '#f59e0b' : '#ea580c'
+    return isDark ? '#667eea' : '#3b82f6'
+  }, [clampedDiskUsage, isDark])
+
+  // 简化挂载点显示名称
+  const displayLabel = useMemo(() => {
+    if (!diskLabel) return '?'
+    // 处理 Windows 盘符
+    if (diskLabel.match(/^[A-Za-z]:[\\\/]?$/)) {
+      return diskLabel.replace(/[:\\\/]+$/, '')
+    }
+    // 根目录
+    if (diskLabel === '/' || diskLabel === '/host' || diskLabel === '/host/') return '/'
+    // 提取卷名（如 volume1 -> V1）
+    const volMatch = diskLabel.match(/volume(\d+)/i)
+    if (volMatch) return `V${volMatch[1]}`
+    // 取最后一个路径片段的首字母
+    const parts = diskLabel.split('/').filter(Boolean)
+    const lastPart = parts[parts.length - 1] || ''
+    return lastPart.substring(0, 2).toUpperCase() || '?'
+  }, [diskLabel])
+
+  return (
+    <div 
+      className="relative flex flex-col items-center cursor-pointer group"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {/* 圆环 */}
+      <div className="relative w-12 h-12">
+        <svg className="w-full h-full -rotate-90" viewBox="0 0 50 50">
+          <circle
+            cx="25"
+            cy="25"
+            r={radius}
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="4"
+            className={isDark ? "text-white/10" : "text-slate-200"}
+          />
+          <circle
+            cx="25"
+            cy="25"
+            r={radius}
+            fill="none"
+            stroke={color}
+            strokeWidth="4"
+            strokeLinecap="round"
+            strokeDasharray={circumference}
+            strokeDashoffset={strokeDashoffset}
+            style={{ transition: 'stroke-dashoffset 0.8s ease-out' }}
+          />
+        </svg>
+        {/* 中心百分比 */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className={cn(
+            "text-[10px] font-mono font-bold",
+            isDark ? "text-white/80" : "text-slate-700"
+          )} style={{ color }}>
+            {clampedDiskUsage.toFixed(0)}%
+          </span>
+        </div>
+      </div>
+      
+      {/* 标签 */}
+      <span className={cn(
+        "text-[10px] font-mono mt-0.5 transition-colors",
+        isDark ? "text-white/50 group-hover:text-white/80" : "text-slate-400 group-hover:text-slate-600"
+      )}>
+        {displayLabel}
+      </span>
+      
+      {/* Hover 提示 */}
+      <AnimatePresence>
+        {isHovered && (
+          <motion.div
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 5 }}
+            className={cn(
+              "absolute -top-12 left-1/2 -translate-x-1/2 px-2 py-1 rounded text-[10px] whitespace-nowrap z-20",
+              isDark ? "bg-slate-800 text-white" : "bg-white text-slate-700 shadow-lg border"
+            )}
+          >
+            <div className="font-mono">{diskLabel}</div>
+            <div className="text-center">剩余: {diskFree}</div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+// ============================================
+// 多硬盘轮播组件
+// ============================================
+function MultiDiskDisplay({ disks, isDark = true }: { disks: DiskInfo[]; isDark?: boolean }) {
+  const [currentPage, setCurrentPage] = useState(0)
+  
+  // 根据硬盘数量决定显示模式
+  const displayMode = useMemo(() => {
+    if (disks.length <= 1) return 'single'      // 1个：大圆环
+    if (disks.length <= 2) return 'dual'        // 2个：两个中等圆环
+    if (disks.length <= 4) return 'compact'     // 3-4个：紧凑小圆环
+    return 'paged'                              // 5个以上：分页显示
+  }, [disks.length])
+  
+  const disksPerPage = displayMode === 'paged' ? 4 : disks.length
+  const totalPages = Math.ceil(disks.length / disksPerPage)
+  
+  // 自动轮播（如果有多页）
+  useEffect(() => {
+    if (totalPages <= 1) return
+    const timer = setInterval(() => {
+      setCurrentPage(prev => (prev + 1) % totalPages)
+    }, 5000)
+    return () => clearInterval(timer)
+  }, [totalPages])
+  
+  // 当前页的磁盘
+  const currentDisks = displayMode === 'paged' 
+    ? disks.slice(currentPage * disksPerPage, (currentPage + 1) * disksPerPage)
+    : disks
+  
+  const goToPrev = () => setCurrentPage(prev => (prev - 1 + totalPages) % totalPages)
+  const goToNext = () => setCurrentPage(prev => (prev + 1) % totalPages)
+  
+  if (disks.length === 0) {
+    return (
+      <div className="space-y-2">
+        <div className={cn(
+          "flex items-center justify-center text-xs gap-1",
+          isDark ? "text-white/60" : "text-slate-500"
+        )}>
+          <HardDrive className="w-3 h-3" />
+          硬盘
+        </div>
+        <div className={cn(
+          "text-center text-xs py-4",
+          isDark ? "text-white/40" : "text-slate-400"
+        )}>
+          未检测到磁盘
+        </div>
+      </div>
+    )
+  }
+  
+  return (
+    <div className="space-y-2 relative">
+      {/* 标题 */}
+      <div className={cn(
+        "flex items-center justify-center text-xs gap-1",
+        isDark ? "text-white/60" : "text-slate-500"
+      )}>
+        <HardDrive className="w-3 h-3" />
+        硬盘
+        {disks.length > 1 && (
+          <span className={cn(
+            "ml-1 px-1.5 py-0.5 rounded text-[10px]",
+            isDark ? "bg-white/10" : "bg-slate-100"
+          )}>
+            {disks.length}
+          </span>
+        )}
+      </div>
+      
+      {/* 磁盘显示区 */}
+      <div className="relative">
+        {/* 导航按钮 - 只在分页模式时显示 */}
+        {displayMode === 'paged' && totalPages > 1 && (
+          <>
+            <button
+              onClick={goToPrev}
+              className={cn(
+                "absolute left-0 top-1/2 -translate-y-1/2 z-10 p-0.5 rounded-full transition-colors",
+                isDark 
+                  ? "text-white/40 hover:text-white/80 hover:bg-white/10" 
+                  : "text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+              )}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button
+              onClick={goToNext}
+              className={cn(
+                "absolute right-0 top-1/2 -translate-y-1/2 z-10 p-0.5 rounded-full transition-colors",
+                isDark 
+                  ? "text-white/40 hover:text-white/80 hover:bg-white/10" 
+                  : "text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+              )}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </>
+        )}
+        
+        {/* 磁盘圆环 */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={displayMode === 'paged' ? currentPage : 'static'}
+            initial={{ opacity: 0, x: displayMode === 'paged' ? 20 : 0 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: displayMode === 'paged' ? -20 : 0 }}
+            transition={{ duration: 0.2 }}
+            className={cn(
+              "flex justify-center",
+              displayMode === 'paged' && totalPages > 1 && "px-5"
+            )}
+          >
+            {displayMode === 'single' && (
+              // 单个大圆环
+              <DiskRing
+                diskUsage={currentDisks[0].usedPercent}
+                diskFree={currentDisks[0].free}
+                diskLabel={currentDisks[0].mount}
+                isDark={isDark}
+              />
+            )}
+            
+            {displayMode === 'dual' && (
+              // 两个中等圆环
+              <div className="grid grid-cols-2 gap-2 pb-4">
+                {currentDisks.map((disk, idx) => (
+                  <DiskRing
+                    key={`${disk.mount}-${idx}`}
+                    diskUsage={disk.usedPercent}
+                    diskFree={disk.free}
+                    diskLabel={disk.mount}
+                    isDark={isDark}
+                  />
+                ))}
+              </div>
+            )}
+            
+            {(displayMode === 'compact' || displayMode === 'paged') && (
+              // 紧凑小圆环网格
+              <div className={cn(
+                "grid gap-2 pb-2",
+                currentDisks.length <= 2 ? "grid-cols-2" : 
+                currentDisks.length === 3 ? "grid-cols-3" : "grid-cols-4"
+              )}>
+                {currentDisks.map((disk, idx) => (
+                  <MiniDiskRing
+                    key={`${disk.mount}-${idx}`}
+                    diskUsage={disk.usedPercent}
+                    diskFree={disk.free}
+                    diskLabel={disk.mount}
+                    isDark={isDark}
+                  />
+                ))}
+              </div>
+            )}
+          </motion.div>
+        </AnimatePresence>
+        
+        {/* 页面指示器 - 只在分页模式时显示 */}
+        {displayMode === 'paged' && totalPages > 1 && (
+          <div className="flex justify-center gap-1 mt-1">
+            {Array.from({ length: totalPages }).map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => setCurrentPage(idx)}
+                className={cn(
+                  "w-1.5 h-1.5 rounded-full transition-all",
+                  idx === currentPage
+                    ? isDark 
+                      ? "bg-cyan-400 w-3" 
+                      : "bg-blue-500 w-3"
+                    : isDark 
+                      ? "bg-white/20 hover:bg-white/40" 
+                      : "bg-slate-300 hover:bg-slate-400"
+                )}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
   )
 }
 
@@ -515,8 +895,8 @@ function DiskRing({ diskUsage: rawDiskUsage, diskFree: rawDiskFree, isDark = tru
 export function SystemMonitorCard({ className }: { className?: string }) {
   const { isDark } = useTheme()
   
-  const { data, error, isLoading } = useSWR<SystemStats>(
-    '/api/system/stats',
+  const { data, error, isLoading } = useSWR<PulseData>(
+    '/api/system/pulse',
     fetcher,
     {
       refreshInterval: 3000, // 每 3 秒轮询
@@ -526,15 +906,12 @@ export function SystemMonitorCard({ className }: { className?: string }) {
   )
 
   // 默认值
-  const stats: SystemStats = data || {
-    cpuLoad: 0,
-    memUsage: 0,
-    diskUsage: 0,
-    diskTotal: 0,
-    diskFree: 0,
-    uptime: '0天0小时',
-    timestamp: Date.now()
-  }
+  const stats = useMemo(() => ({
+    cpuLoad: data?.cpu?.usage ?? 0,
+    memUsage: data?.memory?.usedPercent ?? 0,
+    disks: data?.disks ?? [],
+    uptime: data?.uptime ?? '0天0小时',
+  }), [data])
 
   return (
     <div className={cn(
@@ -642,17 +1019,8 @@ export function SystemMonitorCard({ className }: { className?: string }) {
             <LiquidOrb memUsage={stats.memUsage} isDark={isDark} />
           </div>
 
-          {/* 硬盘 - 圆环 */}
-          <div className="space-y-2">
-            <div className={cn(
-              "flex items-center justify-center text-xs gap-1",
-              isDark ? "text-white/60" : "text-slate-500"
-            )}>
-              <HardDrive className="w-3 h-3" />
-              硬盘
-            </div>
-            <DiskRing diskUsage={stats.diskUsage} diskFree={stats.diskFree} isDark={isDark} />
-          </div>
+          {/* 硬盘 - 多磁盘圆环 */}
+          <MultiDiskDisplay disks={stats.disks} isDark={isDark} />
         </div>
 
         {/* 运行时间 */}

@@ -598,6 +598,14 @@ router.get('/dynamic', async (_req, res) => {
 // 专为 SystemMonitor 组件优化的轻量级实时数据
 // ============================================
 
+interface DiskInfo {
+  mount: string
+  usedPercent: number
+  total: string
+  used: string
+  free: string
+}
+
 interface PulseData {
   cpu: {
     usage: number
@@ -621,6 +629,7 @@ interface PulseData {
     used: string
     free: string
   }
+  disks: DiskInfo[]  // 多硬盘数据
   containers: {
     running: number
     total: number
@@ -663,6 +672,92 @@ router.get('/pulse', async (_req, res) => {
       || fs.find((d) => d.mount === '/') 
       || fs.reduce((max, d) => d.size > max.size ? d : max, fs[0])
 
+    // 过滤出物理磁盘（适配 NAS 多硬盘环境）
+    // 在 Docker 环境下，宿主机挂载点会带有 /host 前缀
+    const physicalDisks = fs.filter(f => {
+      const mount = f.mount
+      const fsType = f.fs.toLowerCase()
+      
+      // 排除虚拟文件系统
+      if (fsType.startsWith('tmpfs') ||
+          fsType.startsWith('overlay') ||
+          fsType.startsWith('shm') ||
+          fsType.startsWith('devtmpfs') ||
+          fsType.startsWith('udev') ||
+          fsType.startsWith('squashfs') ||
+          fsType.startsWith('nsfs') ||
+          fsType.startsWith('cgroup') ||
+          fsType.startsWith('proc') ||
+          fsType.startsWith('sysfs')) {
+        return false
+      }
+      
+      // 排除系统目录
+      const excludeMounts = [
+        '/snap', '/boot', '/sys', '/run', '/dev', '/proc',
+        '/host/snap', '/host/boot', '/host/sys', '/host/run', '/host/dev', '/host/proc'
+      ]
+      if (excludeMounts.some(ex => mount.startsWith(ex))) {
+        return false
+      }
+      
+      // 排除太小的分区（< 1GB）
+      if (f.size < 1024 * 1024 * 1024) {
+        return false
+      }
+      
+      // 保留以下类型的挂载点：
+      // 1. 根目录 / 或 /host
+      // 2. NAS 卷挂载点：/volume1, /volume2, /mnt/xxx, /media/xxx
+      // 3. Docker 环境下的宿主机挂载：/host/volume1, /host/mnt/xxx
+      const validMountPatterns = [
+        /^\/$/,                          // 根目录
+        /^\/host$/,                      // Docker 宿主机根目录
+        /^\/host\/$/,                    // Docker 宿主机根目录（带斜杠）
+        /^\/volume\d+/i,                 // Synology NAS 卷
+        /^\/host\/volume\d+/i,           // Docker 下的 Synology 卷
+        /^\/mnt\//,                      // 通用挂载点
+        /^\/host\/mnt\//,                // Docker 下的挂载点
+        /^\/media\//,                    // 媒体挂载
+        /^\/host\/media\//,              // Docker 下的媒体挂载
+        /^\/data/i,                      // 数据目录
+        /^\/host\/data/i,                // Docker 下的数据目录
+        /^\/storage/i,                   // 存储目录
+        /^\/host\/storage/i,             // Docker 下的存储目录
+        /^\/share/i,                     // 共享目录（QNAP等）
+        /^\/host\/share/i,               // Docker 下的共享目录
+        /^[A-Za-z]:[\\\/]/,              // Windows 盘符
+      ]
+      
+      return validMountPatterns.some(pattern => pattern.test(mount))
+    })
+    
+    // 去重：如果同时存在 / 和 /host，优先保留 /host（Docker 宿主机）
+    const deduplicatedDisks = physicalDisks.reduce((acc, disk) => {
+      // 检查是否已存在相同大小的磁盘（可能是同一物理盘的不同挂载）
+      const exists = acc.find(d => 
+        Math.abs(d.size - disk.size) < 1024 * 1024 * 100 && // 容量差异 < 100MB
+        Math.abs(d.used - disk.used) < 1024 * 1024 * 100    // 使用量差异 < 100MB
+      )
+      if (!exists) {
+        acc.push(disk)
+      } else if (disk.mount.startsWith('/host') && !exists.mount.startsWith('/host')) {
+        // 优先使用 /host 前缀的挂载点
+        const idx = acc.indexOf(exists)
+        acc[idx] = disk
+      }
+      return acc
+    }, [] as typeof physicalDisks)
+    
+    // 按挂载点排序：根目录优先，然后按名称排序
+    deduplicatedDisks.sort((a, b) => {
+      const aIsRoot = a.mount === '/' || a.mount === '/host' || a.mount === '/host/'
+      const bIsRoot = b.mount === '/' || b.mount === '/host' || b.mount === '/host/'
+      if (aIsRoot && !bIsRoot) return -1
+      if (!aIsRoot && bIsRoot) return 1
+      return a.mount.localeCompare(b.mount)
+    })
+
     // 获取主网络接口（过滤虚拟接口）
     const physicalNetwork = network.find(n => 
       !n.iface.startsWith('lo') && 
@@ -703,6 +798,13 @@ router.get('/pulse', async (_req, res) => {
         used: targetDisk ? formatBytes(targetDisk.used) : '0 B',
         free: targetDisk ? formatBytes(targetDisk.available) : '0 B',
       },
+      disks: deduplicatedDisks.map(d => ({
+        mount: d.mount,
+        usedPercent: Math.round(d.use * 10) / 10,
+        total: formatBytes(d.size),
+        used: formatBytes(d.used),
+        free: formatBytes(d.available),
+      })),
       containers: docker ? {
         running: docker.containersRunning || 0,
         total: docker.containers || 0,
