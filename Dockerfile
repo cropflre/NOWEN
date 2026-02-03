@@ -4,7 +4,7 @@
 
 # Build stage for frontend
 # 使用国内镜像源解决网络问题
-FROM dockerpull.org/library/node:20-alpine AS frontend-builder
+FROM registry.cn-hangzhou.aliyuncs.com/library/node:20-alpine AS frontend-builder
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
@@ -12,7 +12,7 @@ COPY . .
 RUN npm run build
 
 # Production stage
-FROM dockerpull.org/library/node:20-alpine AS production
+FROM registry.cn-hangzhou.aliyuncs.com/library/node:20-alpine AS production
 
 # OCI 标准标签
 LABEL org.opencontainers.image.title="NOWEN"
