@@ -35,6 +35,7 @@ import { HardwareIdentityCard } from "./components/HardwareIdentityCard";
 import { VitalSignsCard } from "./components/VitalSignsCard";
 import { NetworkTelemetryCard } from "./components/NetworkTelemetryCard";
 import { ProcessMatrixCard } from "./components/ProcessMatrixCard";
+import { SystemMonitor } from "./components/monitor";
 import { useBookmarkStore } from "./hooks/useBookmarkStore";
 import { useTheme } from "./hooks/useTheme";
 import { useTime } from "./hooks/useTime";
@@ -83,7 +84,38 @@ function App() {
     siteTitle: "Nebula Portal",
     siteFavicon: "",
     enableBeamAnimation: true,
+    widgetVisibility: {
+      systemMonitor: true,
+      hardwareIdentity: true,
+      vitalSigns: true,
+      networkTelemetry: true,
+      processMatrix: true,
+      dockMiniMonitor: true,
+      mobileTicker: true,
+    },
   });
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
+
+  // 仪表可见性快捷访问 - 设置未加载完成时默认隐藏所有小部件避免闪烁
+  const widgetVisibility = settingsLoaded
+    ? siteSettings.widgetVisibility || {
+        systemMonitor: true,
+        hardwareIdentity: true,
+        vitalSigns: true,
+        networkTelemetry: true,
+        processMatrix: true,
+        dockMiniMonitor: true,
+        mobileTicker: true,
+      }
+    : {
+        systemMonitor: false,
+        hardwareIdentity: false,
+        vitalSigns: false,
+        networkTelemetry: false,
+        processMatrix: false,
+        dockMiniMonitor: false,
+        mobileTicker: false,
+      };
 
   // 右键菜单状态
   const [contextMenu, setContextMenu] = useState<{
@@ -133,6 +165,7 @@ function App() {
     fetchSettings()
       .then((settings) => {
         setSiteSettings(settings);
+        setSettingsLoaded(true);
         // 应用站点标题
         if (settings.siteTitle) {
           document.title = settings.siteTitle;
@@ -152,7 +185,10 @@ function App() {
           }
         }
       })
-      .catch(console.error);
+      .catch((err) => {
+        console.error(err);
+        setSettingsLoaded(true); // 即使出错也标记为已加载，使用默认设置
+      });
 
     // 加载名言
     fetchQuotes()
@@ -594,59 +630,69 @@ function App() {
 
               <BentoGrid>
                 {/* System Monitor Card - 引擎室 */}
-                <BentoGridItem
-                  key="system-monitor"
-                  colSpan={2}
-                  rowSpan={2}
-                  spotlightColor="rgba(6, 182, 212, 0.15)"
-                  delay={0}
-                >
-                  <SystemMonitorCard />
-                </BentoGridItem>
+                {widgetVisibility.systemMonitor !== false && (
+                  <BentoGridItem
+                    key="system-monitor"
+                    colSpan={2}
+                    rowSpan={2}
+                    spotlightColor="rgba(6, 182, 212, 0.15)"
+                    delay={0}
+                  >
+                    <SystemMonitorCard />
+                  </BentoGridItem>
+                )}
 
                 {/* Hardware Specs Card - JARVIS 蓝图 */}
-                <BentoGridItem
-                  key="hardware-specs"
-                  colSpan={2}
-                  rowSpan={2}
-                  spotlightColor="rgba(6, 182, 212, 0.1)"
-                  delay={0.1}
-                >
-                  <HardwareIdentityCard />
-                </BentoGridItem>
+                {widgetVisibility.hardwareIdentity !== false && (
+                  <BentoGridItem
+                    key="hardware-specs"
+                    colSpan={2}
+                    rowSpan={2}
+                    spotlightColor="rgba(6, 182, 212, 0.1)"
+                    delay={0.1}
+                  >
+                    <HardwareIdentityCard />
+                  </BentoGridItem>
+                )}
 
                 {/* Vital Signs Card - 生命体征 */}
-                <BentoGridItem
-                  key="vital-signs"
-                  colSpan={2}
-                  rowSpan={2}
-                  spotlightColor="rgba(6, 182, 212, 0.12)"
-                  delay={0.15}
-                >
-                  <VitalSignsCard />
-                </BentoGridItem>
+                {widgetVisibility.vitalSigns !== false && (
+                  <BentoGridItem
+                    key="vital-signs"
+                    colSpan={2}
+                    rowSpan={2}
+                    spotlightColor="rgba(6, 182, 212, 0.12)"
+                    delay={0.15}
+                  >
+                    <VitalSignsCard />
+                  </BentoGridItem>
+                )}
 
                 {/* Network Telemetry Card - 网络遥测 */}
-                <BentoGridItem
-                  key="network-telemetry"
-                  colSpan={2}
-                  rowSpan={2}
-                  spotlightColor="rgba(168, 85, 247, 0.12)"
-                  delay={0.2}
-                >
-                  <NetworkTelemetryCard />
-                </BentoGridItem>
+                {widgetVisibility.networkTelemetry !== false && (
+                  <BentoGridItem
+                    key="network-telemetry"
+                    colSpan={2}
+                    rowSpan={2}
+                    spotlightColor="rgba(168, 85, 247, 0.12)"
+                    delay={0.2}
+                  >
+                    <NetworkTelemetryCard />
+                  </BentoGridItem>
+                )}
 
                 {/* Process Matrix Card - 进程矩阵 */}
-                <BentoGridItem
-                  key="process-matrix"
-                  colSpan={2}
-                  rowSpan={2}
-                  spotlightColor="rgba(34, 197, 94, 0.12)"
-                  delay={0.25}
-                >
-                  <ProcessMatrixCard />
-                </BentoGridItem>
+                {widgetVisibility.processMatrix !== false && (
+                  <BentoGridItem
+                    key="process-matrix"
+                    colSpan={2}
+                    rowSpan={2}
+                    spotlightColor="rgba(34, 197, 94, 0.12)"
+                    delay={0.25}
+                  >
+                    <ProcessMatrixCard />
+                  </BentoGridItem>
+                )}
 
                 {pinnedBookmarks.slice(0, 4).map((bookmark, index) => {
                   // 非对称布局：其余卡片 1 列
@@ -690,51 +736,61 @@ function App() {
               transition={{ delay: 1 }}
             >
               <BentoGrid>
-                <BentoGridItem
-                  key="system-monitor-standalone"
-                  colSpan={2}
-                  rowSpan={2}
-                  spotlightColor="rgba(6, 182, 212, 0.15)"
-                  delay={0}
-                >
-                  <SystemMonitorCard />
-                </BentoGridItem>
-                <BentoGridItem
-                  key="hardware-specs-standalone"
-                  colSpan={2}
-                  rowSpan={2}
-                  spotlightColor="rgba(6, 182, 212, 0.1)"
-                  delay={0.1}
-                >
-                  <HardwareIdentityCard />
-                </BentoGridItem>
-                <BentoGridItem
-                  key="vital-signs-standalone"
-                  colSpan={2}
-                  rowSpan={2}
-                  spotlightColor="rgba(6, 182, 212, 0.12)"
-                  delay={0.15}
-                >
-                  <VitalSignsCard />
-                </BentoGridItem>
-                <BentoGridItem
-                  key="network-telemetry-standalone"
-                  colSpan={2}
-                  rowSpan={2}
-                  spotlightColor="rgba(168, 85, 247, 0.12)"
-                  delay={0.2}
-                >
-                  <NetworkTelemetryCard />
-                </BentoGridItem>
-                <BentoGridItem
-                  key="process-matrix-standalone"
-                  colSpan={2}
-                  rowSpan={2}
-                  spotlightColor="rgba(34, 197, 94, 0.12)"
-                  delay={0.25}
-                >
-                  <ProcessMatrixCard />
-                </BentoGridItem>
+                {widgetVisibility.systemMonitor !== false && (
+                  <BentoGridItem
+                    key="system-monitor-standalone"
+                    colSpan={2}
+                    rowSpan={2}
+                    spotlightColor="rgba(6, 182, 212, 0.15)"
+                    delay={0}
+                  >
+                    <SystemMonitorCard />
+                  </BentoGridItem>
+                )}
+                {widgetVisibility.hardwareIdentity !== false && (
+                  <BentoGridItem
+                    key="hardware-specs-standalone"
+                    colSpan={2}
+                    rowSpan={2}
+                    spotlightColor="rgba(6, 182, 212, 0.1)"
+                    delay={0.1}
+                  >
+                    <HardwareIdentityCard />
+                  </BentoGridItem>
+                )}
+                {widgetVisibility.vitalSigns !== false && (
+                  <BentoGridItem
+                    key="vital-signs-standalone"
+                    colSpan={2}
+                    rowSpan={2}
+                    spotlightColor="rgba(6, 182, 212, 0.12)"
+                    delay={0.15}
+                  >
+                    <VitalSignsCard />
+                  </BentoGridItem>
+                )}
+                {widgetVisibility.networkTelemetry !== false && (
+                  <BentoGridItem
+                    key="network-telemetry-standalone"
+                    colSpan={2}
+                    rowSpan={2}
+                    spotlightColor="rgba(168, 85, 247, 0.12)"
+                    delay={0.2}
+                  >
+                    <NetworkTelemetryCard />
+                  </BentoGridItem>
+                )}
+                {widgetVisibility.processMatrix !== false && (
+                  <BentoGridItem
+                    key="process-matrix-standalone"
+                    colSpan={2}
+                    rowSpan={2}
+                    spotlightColor="rgba(34, 197, 94, 0.12)"
+                    delay={0.25}
+                  >
+                    <ProcessMatrixCard />
+                  </BentoGridItem>
+                )}
               </BentoGrid>
             </motion.section>
           )}
@@ -913,27 +969,39 @@ function App() {
       </div>
 
       {/* Floating Dock - 桌面端 */}
-      <FloatingDock
-        className="hidden md:flex"
-        items={dockItems.map((item) => ({
-          ...item,
-          onClick: item.href ? undefined : () => handleDockClick(item.id),
-        }))}
-      />
+      <div className="hidden md:flex fixed bottom-6 left-1/2 -translate-x-1/2 items-end gap-4 z-50">
+        {/* 迷你监控 Widget - 桌面端 Dock 左侧 */}
+        {widgetVisibility.dockMiniMonitor !== false && (
+          <SystemMonitor variant="mini" size="sm" showLoading={false} />
+        )}
+        
+        <FloatingDock
+          items={dockItems.map((item) => ({
+            ...item,
+            onClick: item.href ? undefined : () => handleDockClick(item.id),
+          }))}
+        />
+      </div>
 
       {/* Mobile Floating Dock - 移动端可展开悬浮坞 */}
-      <MobileFloatingDock
-        className="md:hidden"
-        items={dockItems
-          .filter((item) => !item.href) // 过滤掉外链项（移动端不需要 GitHub 链接）
-          .map((item) => ({
-            id: item.id,
-            label: item.title,
-            icon: item.IconComponent,
-            onClick: () => handleDockClick(item.id),
-            isActive: item.id === "home", // 首页默认激活
-          }))}
-      />
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex flex-col">
+        {/* Ticker 状态栏 - 移动端 Dock 上方 */}
+        {widgetVisibility.mobileTicker !== false && (
+          <SystemMonitor variant="ticker" compact showLoading={false} />
+        )}
+        
+        <MobileFloatingDock
+          items={dockItems
+            .filter((item) => !item.href) // 过滤掉外链项（移动端不需要 GitHub 链接）
+            .map((item) => ({
+              id: item.id,
+              label: item.title,
+              icon: item.IconComponent,
+              onClick: () => handleDockClick(item.id),
+              isActive: item.id === "home", // 首页默认激活
+            }))}
+        />
+      </div>
 
       {/* Spotlight Search */}
       <SpotlightSearch
