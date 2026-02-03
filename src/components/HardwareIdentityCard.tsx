@@ -17,6 +17,7 @@ import {
   Scan
 } from 'lucide-react'
 import { cn } from '../lib/utils'
+import { useTheme } from '../hooks/useTheme'
 
 // ============================================
 // 类型定义
@@ -113,6 +114,7 @@ interface TerminalLineProps {
   icon?: React.ElementType
   color?: string
   isMobile?: boolean
+  isDark?: boolean
 }
 
 function TerminalLine({ 
@@ -123,7 +125,8 @@ function TerminalLine({
   delay = 0,
   icon: Icon,
   color = 'cyan',
-  isMobile = false
+  isMobile = false,
+  isDark = true
 }: TerminalLineProps) {
   const [isVisible, setIsVisible] = useState(false)
   const [displayValue, setDisplayValue] = useState('')
@@ -155,10 +158,14 @@ function TerminalLine({
     return () => clearInterval(typeTimer)
   }, [isVisible, value, isMobile])
 
-  const statusColors = {
+  const statusColors = isDark ? {
     ok: 'text-green-400',
     warn: 'text-amber-400',
     info: 'text-cyan-400'
+  } : {
+    ok: 'text-green-600',
+    warn: 'text-amber-600',
+    info: 'text-blue-600'
   }
 
   const statusText = {
@@ -167,12 +174,18 @@ function TerminalLine({
     info: 'ℹ'
   }
 
-  const colorClasses: Record<string, string> = {
+  const colorClasses: Record<string, string> = isDark ? {
     cyan: 'text-cyan-400',
     purple: 'text-purple-400',
     green: 'text-green-400',
     orange: 'text-orange-400',
     rose: 'text-rose-400'
+  } : {
+    cyan: 'text-blue-600',
+    purple: 'text-indigo-600',
+    green: 'text-emerald-600',
+    orange: 'text-orange-600',
+    rose: 'text-rose-600'
   }
 
   if (!isVisible) return null
@@ -188,17 +201,27 @@ function TerminalLine({
       transition={{ duration: 0.2 }}
     >
       {/* 前缀 + Icon */}
-      <span className={cn("text-white/30 flex-shrink-0", isMobile ? "w-3" : "w-4")}>{prefix}</span>
+      <span className={cn(
+        "flex-shrink-0",
+        isMobile ? "w-3" : "w-4",
+        isDark ? "text-white/30" : "text-slate-400"
+      )}>{prefix}</span>
       {Icon && <Icon className={cn("flex-shrink-0", colorClasses[color], isMobile ? "w-2.5 h-2.5" : "w-3 h-3")} />}
       
       {/* 标签 */}
-      <span className="text-white/50 flex-shrink-0">{label}</span>
+      <span className={cn(
+        "flex-shrink-0",
+        isDark ? "text-white/50" : "text-slate-500"
+      )}>{label}</span>
       
       {/* 值 */}
-      <span className={cn("flex-1 truncate", colorClasses[color])}>
+      <span className={cn("flex-1 truncate", colorClasses[color], !isDark && "font-medium")}>
         {displayValue}
         {displayValue.length < value.length && (
-          <span className="inline-block w-[5px] h-[10px] bg-current animate-pulse ml-0.5" />
+          <span className={cn(
+            "inline-block w-[5px] h-[10px] bg-current animate-pulse ml-0.5",
+            isDark ? "opacity-100" : "opacity-70"
+          )} />
         )}
       </span>
       
@@ -221,7 +244,7 @@ function TerminalLine({
 // ============================================
 // POST 启动序列头部（中文版）
 // ============================================
-function PostHeader({ onComplete, isMobile }: { onComplete: () => void; isMobile: boolean }) {
+function PostHeader({ onComplete, isMobile, isDark = true }: { onComplete: () => void; isMobile: boolean; isDark?: boolean }) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const onCompleteRef = useRef(onComplete)
   
@@ -257,15 +280,16 @@ function PostHeader({ onComplete, isMobile }: { onComplete: () => void; isMobile
 
   return (
     <div className={cn(
-      "font-mono text-green-400/70 mb-2 space-y-0.5",
-      isMobile ? "text-[9px]" : "text-[10px]"
+      "font-mono mb-2 space-y-0.5",
+      isMobile ? "text-[9px]" : "text-[10px]",
+      isDark ? "text-green-400/70" : "text-emerald-600/80"
     )}>
       {visibleLines.map((line, i) => (
         <motion.div
           key={i}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className={line.includes('═') ? 'text-white/20' : ''}
+          className={line.includes('═') ? (isDark ? 'text-white/20' : 'text-slate-300') : ''}
         >
           {line}
         </motion.div>
@@ -278,6 +302,8 @@ function PostHeader({ onComplete, isMobile }: { onComplete: () => void; isMobile
 // 主组件：HardwareIdentityCard
 // ============================================
 export function HardwareIdentityCard({ className }: { className?: string }) {
+  const { isDark } = useTheme()
+  
   const { data, error, isLoading } = useSWR<StaticSystemInfo>(
     '/api/system/static',
     fetcher,
@@ -373,47 +399,69 @@ export function HardwareIdentityCard({ className }: { className?: string }) {
   return (
     <div className={cn(
       "relative overflow-hidden rounded-2xl",
-      "bg-gradient-to-br from-slate-950/95 via-slate-900/90 to-slate-950/95",
-      "border border-cyan-500/10",
       "backdrop-blur-xl",
       "h-full",
       isMobile ? "p-3" : "p-4",
+      // 日间模式：蓝图风格明亮版
+      isDark 
+        ? "bg-gradient-to-br from-slate-950/95 via-slate-900/90 to-slate-950/95 border border-cyan-500/10"
+        : "bg-gradient-to-br from-slate-50/95 via-white/90 to-slate-50/95 border border-blue-200/50 shadow-xl shadow-blue-500/5",
       className
     )}>
       {/* 背景网格 */}
       <div 
-        className="absolute inset-0 opacity-[0.015]"
+        className={cn(
+          "absolute inset-0",
+          isDark ? "opacity-[0.015]" : "opacity-[0.04]"
+        )}
         style={{
-          backgroundImage: `
-            linear-gradient(rgba(6, 182, 212, 0.3) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(6, 182, 212, 0.3) 1px, transparent 1px)
-          `,
+          backgroundImage: isDark 
+            ? `linear-gradient(rgba(6, 182, 212, 0.3) 1px, transparent 1px),
+               linear-gradient(90deg, rgba(6, 182, 212, 0.3) 1px, transparent 1px)`
+            : `linear-gradient(rgba(59, 130, 246, 0.4) 1px, transparent 1px),
+               linear-gradient(90deg, rgba(59, 130, 246, 0.4) 1px, transparent 1px)`,
           backgroundSize: isMobile ? '8px 8px' : '12px 12px'
         }}
       />
 
       {/* 扫描线效果 */}
       <div 
-        className="absolute inset-0 pointer-events-none opacity-30"
+        className={cn(
+          "absolute inset-0 pointer-events-none",
+          isDark ? "opacity-30" : "opacity-10"
+        )}
         style={{
           background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.1) 2px, rgba(0,0,0,0.1) 4px)'
         }}
       />
 
       {/* 顶部 HUD 装饰 */}
-      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-400/40 to-transparent" />
+      <div className={cn(
+        "absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent to-transparent",
+        isDark ? "via-cyan-400/40" : "via-blue-400/50"
+      )} />
       
       {/* 标题栏 */}
       <div className={cn(
         "relative z-10 flex items-center gap-1.5 mb-2",
         isMobile ? "mb-1.5" : "mb-2"
       )}>
-        <div className="w-2 h-2 rounded-full bg-red-500/80" />
-        <div className="w-2 h-2 rounded-full bg-yellow-500/80" />
-        <div className="w-2 h-2 rounded-full bg-green-500/80" />
+        <div className={cn(
+          "w-2 h-2 rounded-full",
+          isDark ? "bg-red-500/80" : "bg-red-400"
+        )} />
+        <div className={cn(
+          "w-2 h-2 rounded-full",
+          isDark ? "bg-yellow-500/80" : "bg-yellow-400"
+        )} />
+        <div className={cn(
+          "w-2 h-2 rounded-full",
+          isDark ? "bg-green-500/80" : "bg-green-400"
+        )} />
         <span className={cn(
-          "ml-2 text-white/30 font-mono tracking-wider",
-          isMobile ? "text-[8px]" : "text-[10px]"
+          "ml-2 font-mono tracking-wider",
+          isMobile ? "text-[8px]" : "text-[10px]",
+          isDark ? "text-white/30" : "text-slate-400"
         )}>
           {isMobile ? '/硬件档案' : '/sys/hardware/identity'}
         </span>
@@ -427,10 +475,14 @@ export function HardwareIdentityCard({ className }: { className?: string }) {
             "flex flex-col items-center justify-center",
             isMobile ? "py-4" : "py-8"
           )}>
-            <Scan className="w-6 h-6 text-cyan-400/60 animate-spin mb-2" />
+            <Scan className={cn(
+              "w-6 h-6 animate-spin mb-2",
+              isDark ? "text-cyan-400/60" : "text-blue-500/70"
+            )} />
             <div className={cn(
-              "font-mono text-cyan-400/60 animate-pulse",
-              isMobile ? "text-[10px]" : "text-xs"
+              "font-mono animate-pulse",
+              isMobile ? "text-[10px]" : "text-xs",
+              isDark ? "text-cyan-400/60" : "text-blue-600/70"
             )}>
               正在扫描硬件...
             </div>
@@ -444,8 +496,9 @@ export function HardwareIdentityCard({ className }: { className?: string }) {
             isMobile ? "py-4" : "py-8"
           )}>
             <span className={cn(
-              "font-mono text-red-400",
-              isMobile ? "text-[10px]" : "text-xs"
+              "font-mono",
+              isMobile ? "text-[10px]" : "text-xs",
+              isDark ? "text-red-400" : "text-red-600"
             )}>
               [错误] 硬件检测失败
             </span>
@@ -454,7 +507,7 @@ export function HardwareIdentityCard({ className }: { className?: string }) {
 
         {/* 数据加载完成 - POST序列 */}
         {data && !bootComplete && (
-          <PostHeader onComplete={handleBootComplete} isMobile={isMobile} />
+          <PostHeader onComplete={handleBootComplete} isMobile={isMobile} isDark={isDark} />
         )}
 
         {/* 硬件信息列表 */}
@@ -470,6 +523,7 @@ export function HardwareIdentityCard({ className }: { className?: string }) {
                 status={entry.status}
                 delay={index * (isMobile ? 80 : 120)}
                 isMobile={isMobile}
+                isDark={isDark}
               />
             ))}
           </div>
@@ -482,8 +536,9 @@ export function HardwareIdentityCard({ className }: { className?: string }) {
         isMobile ? "bottom-1.5" : "bottom-2 left-4 right-4"
       )}>
         <span className={cn(
-          "text-white/20 font-mono",
-          isMobile ? "text-[8px]" : "text-[9px]"
+          "font-mono",
+          isMobile ? "text-[8px]" : "text-[9px]",
+          isDark ? "text-white/20" : "text-slate-400"
         )}>
           {bootComplete ? '扫描完成' : '初始化中...'}
         </span>
@@ -491,11 +546,14 @@ export function HardwareIdentityCard({ className }: { className?: string }) {
           <div className={cn(
             "rounded-full",
             isMobile ? "w-1 h-1" : "w-1.5 h-1.5",
-            bootComplete ? "bg-green-400" : "bg-cyan-400 animate-pulse"
+            bootComplete 
+              ? (isDark ? "bg-green-400" : "bg-green-500") 
+              : (isDark ? "bg-cyan-400 animate-pulse" : "bg-blue-500 animate-pulse")
           )} />
           <span className={cn(
-            "text-white/20 font-mono",
-            isMobile ? "text-[8px]" : "text-[9px]"
+            "font-mono",
+            isMobile ? "text-[8px]" : "text-[9px]",
+            isDark ? "text-white/20" : "text-slate-400"
           )}>
             {bootComplete ? '就绪' : '忙碌'}
           </span>

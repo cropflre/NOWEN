@@ -9,6 +9,7 @@ import { motion, useSpring, useTransform } from 'framer-motion'
 import useSWR from 'swr'
 import { Activity, Thermometer } from 'lucide-react'
 import { cn } from '../lib/utils'
+import { useTheme } from '../hooks/useTheme'
 
 // ============================================
 // 类型定义 - 与 /api/system/dynamic 返回结构匹配
@@ -132,7 +133,7 @@ function AnimatedValue({
 // ArcReactor 组件 - CPU 负载环形反应堆
 // 完全使用 CSS 动画，避免 framer-motion SVG 属性问题
 // ============================================
-function ArcReactor({ load: rawLoad, isMobile = false }: { load: number; isMobile?: boolean }) {
+function ArcReactor({ load: rawLoad, isMobile = false, isDark = true }: { load: number; isMobile?: boolean; isDark?: boolean }) {
   // 安全处理 load 值
   const load = safeNumber(rawLoad, 0)
   const clampedLoad = Math.max(0, Math.min(100, load))
@@ -142,20 +143,20 @@ function ArcReactor({ load: rawLoad, isMobile = false }: { load: number; isMobil
   const isCool = clampedLoad < 30
   
   const primaryColor = isCool 
-    ? '#06b6d4' // cyan-500
+    ? (isDark ? '#06b6d4' : '#0891b2') // cyan-500/600
     : isOverheating 
       ? '#f43f5e' // rose-500
       : clampedLoad < 50 
-        ? '#22d3ee' // cyan-400
+        ? (isDark ? '#22d3ee' : '#06b6d4') // cyan-400/500
         : clampedLoad < 65 
-          ? '#fbbf24' // amber-400
+          ? (isDark ? '#fbbf24' : '#f59e0b') // amber-400/500
           : '#fb7185' // rose-400
 
   const glowColor = isCool 
-    ? 'rgba(6, 182, 212, 0.6)'
+    ? (isDark ? 'rgba(6, 182, 212, 0.6)' : 'rgba(8, 145, 178, 0.4)')
     : isOverheating 
-      ? 'rgba(244, 63, 94, 0.8)'
-      : 'rgba(251, 191, 36, 0.5)'
+      ? (isDark ? 'rgba(244, 63, 94, 0.8)' : 'rgba(244, 63, 94, 0.5)')
+      : (isDark ? 'rgba(251, 191, 36, 0.5)' : 'rgba(245, 158, 11, 0.3)')
 
   // 圆环参数 - 移动端更小尺寸
   const size = isMobile ? 80 : 110
@@ -200,7 +201,7 @@ function ArcReactor({ load: rawLoad, isMobile = false }: { load: number; isMobil
         <defs>
           {/* 发光滤镜 */}
           <filter id="arcGlow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+            <feGaussianBlur stdDeviation={isDark ? "2" : "1.5"} result="coloredBlur" />
             <feMerge>
               <feMergeNode in="coloredBlur" />
               <feMergeNode in="SourceGraphic" />
@@ -210,7 +211,7 @@ function ArcReactor({ load: rawLoad, isMobile = false }: { load: number; isMobil
           {/* 渐变 */}
           <linearGradient id="arcGradient" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor={primaryColor} stopOpacity="1" />
-            <stop offset="100%" stopColor={primaryColor} stopOpacity="0.6" />
+            <stop offset="100%" stopColor={primaryColor} stopOpacity={isDark ? "0.6" : "0.7"} />
           </linearGradient>
         </defs>
 
@@ -220,7 +221,7 @@ function ArcReactor({ load: rawLoad, isMobile = false }: { load: number; isMobil
           cy={center}
           r={radius}
           fill="none"
-          stroke="rgba(255,255,255,0.05)"
+          stroke={isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.08)"}
           strokeWidth={strokeWidth}
         />
 
@@ -248,7 +249,7 @@ function ArcReactor({ load: rawLoad, isMobile = false }: { load: number; isMobil
           cy={center}
           r={innerRadius1}
           fill="none"
-          stroke="rgba(255,255,255,0.03)"
+          stroke={isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.05)"}
           strokeWidth={3}
         />
 
@@ -279,7 +280,7 @@ function ArcReactor({ load: rawLoad, isMobile = false }: { load: number; isMobil
           stroke={primaryColor}
           strokeWidth={1.5}
           strokeDasharray="6 8"
-          opacity={0.4}
+          opacity={isDark ? 0.4 : 0.5}
           className="animate-spin-slow"
           style={{ transformOrigin: 'center' }}
         />
@@ -289,7 +290,7 @@ function ArcReactor({ load: rawLoad, isMobile = false }: { load: number; isMobil
           cx={center}
           cy={center}
           r={isMobile ? 10 : 14}
-          fill="rgba(0,0,0,0.5)"
+          fill={isDark ? "rgba(0,0,0,0.5)" : "rgba(255,255,255,0.8)"}
           stroke={primaryColor}
           strokeWidth={1.5}
           className="animate-pulse-subtle"
@@ -311,16 +312,17 @@ function ArcReactor({ load: rawLoad, isMobile = false }: { load: number; isMobil
             className={cn(
               "font-bold font-mono transition-colors duration-300",
               isMobile ? "text-base" : "text-lg",
-              isCool && "text-cyan-400",
-              !isCool && !isOverheating && "text-amber-400",
-              isOverheating && "text-rose-400"
+              isCool && (isDark ? "text-cyan-400" : "text-cyan-600"),
+              !isCool && !isOverheating && (isDark ? "text-amber-400" : "text-amber-600"),
+              isOverheating && (isDark ? "text-rose-400" : "text-rose-600")
             )}
           >
             <AnimatedValue value={clampedLoad} />
           </span>
           <p className={cn(
-            "text-white/40 uppercase tracking-wider mt-0.5",
-            isMobile ? "text-[7px]" : "text-[8px]"
+            "uppercase tracking-wider mt-0.5",
+            isMobile ? "text-[7px]" : "text-[8px]",
+            isDark ? "text-white/40" : "text-slate-500"
           )}>CPU负载</p>
         </div>
       </div>
@@ -376,13 +378,15 @@ function LiquidOrb({
   swapPercent: rawSwapPercent = 0,
   memoryUsed,
   memoryTotal,
-  isMobile = false
+  isMobile = false,
+  isDark = true
 }: { 
   memoryPercent: number
   swapPercent?: number
   memoryUsed: string
   memoryTotal: string
   isMobile?: boolean
+  isDark?: boolean
 }) {
   // 安全处理数值
   const memoryPercent = safeNumber(rawMemoryPercent, 0)
@@ -395,6 +399,10 @@ function LiquidOrb({
   const waterY = size - (safeMemoryPercent / 100) * size
   const center = size / 2
 
+  // 日间模式水波颜色
+  const waterColor = isDark ? '#22d3ee' : '#0891b2'
+  const waterColorDark = isDark ? '#0891b2' : '#0e7490'
+
   return (
     <div className="relative flex items-center justify-center">
       {/* Swap 警告光晕 */}
@@ -404,7 +412,9 @@ function LiquidOrb({
           style={{
             width: size + 20,
             height: size + 20,
-            background: 'radial-gradient(circle, rgba(251, 191, 36, 0.4) 0%, transparent 70%)',
+            background: isDark 
+              ? 'radial-gradient(circle, rgba(251, 191, 36, 0.4) 0%, transparent 70%)'
+              : 'radial-gradient(circle, rgba(245, 158, 11, 0.3) 0%, transparent 70%)',
           }}
         />
       )}
@@ -413,7 +423,7 @@ function LiquidOrb({
         width={size}
         height={size}
         className="relative z-10"
-        style={{ filter: 'drop-shadow(0 0 8px rgba(6, 182, 212, 0.3))' }}
+        style={{ filter: isDark ? 'drop-shadow(0 0 8px rgba(6, 182, 212, 0.3))' : 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))' }}
       >
         <defs>
           {/* 球体裁剪 */}
@@ -423,8 +433,8 @@ function LiquidOrb({
 
           {/* 水波渐变 */}
           <linearGradient id="liquidWaterGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.9" />
-            <stop offset="100%" stopColor="#0891b2" stopOpacity="0.7" />
+            <stop offset="0%" stopColor={waterColor} stopOpacity={isDark ? "0.9" : "0.85"} />
+            <stop offset="100%" stopColor={waterColorDark} stopOpacity={isDark ? "0.7" : "0.75"} />
           </linearGradient>
 
           {/* 高亮渐变 */}
@@ -439,8 +449,8 @@ function LiquidOrb({
           cx={center}
           cy={center}
           r={center - 3}
-          fill="rgba(0, 30, 50, 0.8)"
-          stroke={hasSwapWarning ? '#fbbf24' : '#0891b2'}
+          fill={isDark ? "rgba(0, 30, 50, 0.8)" : "rgba(240, 249, 255, 0.9)"}
+          stroke={hasSwapWarning ? '#fbbf24' : (isDark ? '#0891b2' : '#0e7490')}
           strokeWidth={hasSwapWarning ? 2 : 1.5}
         />
 
@@ -480,7 +490,7 @@ function LiquidOrb({
             cy={0}
             rx={center + 8}
             ry={4}
-            fill="#22d3ee"
+            fill={waterColor}
             opacity={0.5}
             style={{
               transform: `translateY(${waterY}px)`,
@@ -520,7 +530,7 @@ function LiquidOrb({
           cy={center}
           r={center - 3}
           fill="none"
-          stroke="rgba(255,255,255,0.1)"
+          stroke={isDark ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.5)"}
           strokeWidth={1}
         />
       </svg>
@@ -531,25 +541,30 @@ function LiquidOrb({
           className={cn(
             "font-bold font-mono transition-colors duration-300",
             isMobile ? "text-base" : "text-lg",
-            hasSwapWarning ? "text-amber-400" : "text-cyan-400"
+            hasSwapWarning 
+              ? (isDark ? "text-amber-400" : "text-amber-600")
+              : (isDark ? "text-cyan-400" : "text-cyan-700")
           )}
         >
           <AnimatedValue value={safeMemoryPercent} />
         </span>
         <p className={cn(
-          "text-white/40 uppercase tracking-wider mt-0.5",
-          isMobile ? "text-[6px]" : "text-[8px]"
+          "uppercase tracking-wider mt-0.5",
+          isMobile ? "text-[6px]" : "text-[8px]",
+          isDark ? "text-white/40" : "text-slate-500"
         )}>内存使用</p>
         <p className={cn(
-          "text-white/30 font-mono",
-          isMobile ? "text-[6px]" : "text-[7px]"
+          "font-mono",
+          isMobile ? "text-[6px]" : "text-[7px]",
+          isDark ? "text-white/30" : "text-slate-400"
         )}>
           {memoryUsed} / {memoryTotal}
         </p>
         {hasSwapWarning && (
           <p className={cn(
-            "text-amber-400/80 font-mono mt-0.5 animate-pulse",
-            isMobile ? "text-[6px]" : "text-[7px]"
+            "font-mono mt-0.5 animate-pulse",
+            isMobile ? "text-[6px]" : "text-[7px]",
+            isDark ? "text-amber-400/80" : "text-amber-600"
           )}>
             ⚠ Swap
           </p>
@@ -605,6 +620,8 @@ function LiquidOrb({
 // 主组件：VitalSignsCard
 // ============================================
 export function VitalSignsCard({ className }: { className?: string }) {
+  const { isDark } = useTheme()
+  
   const { data, error, isLoading } = useSWR<DynamicSystemInfo>(
     '/api/system/dynamic',
     fetcher,
@@ -629,20 +646,26 @@ export function VitalSignsCard({ className }: { className?: string }) {
   return (
     <div className={cn(
       "relative rounded-2xl",
-      "bg-gradient-to-br from-slate-900/95 via-slate-800/80 to-slate-900/95",
-      "border border-cyan-500/20",
       "backdrop-blur-xl",
       "p-3 sm:p-4 h-full min-w-0",
+      // 日间模式：星际指挥中心明亮风格
+      isDark 
+        ? "bg-gradient-to-br from-slate-900/95 via-slate-800/80 to-slate-900/95 border border-cyan-500/20"
+        : "bg-gradient-to-br from-white/95 via-slate-50/90 to-white/95 border border-cyan-200/50 shadow-xl shadow-cyan-500/5",
       className
     )}>
       {/* 背景网格 */}
       <div 
-        className="absolute inset-0 opacity-[0.02] rounded-2xl overflow-hidden"
+        className={cn(
+          "absolute inset-0 rounded-2xl overflow-hidden",
+          isDark ? "opacity-[0.02]" : "opacity-[0.04]"
+        )}
         style={{
-          backgroundImage: `
-            linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)
-          `,
+          backgroundImage: isDark 
+            ? `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
+               linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`
+            : `linear-gradient(rgba(6, 182, 212, 0.3) 1px, transparent 1px),
+               linear-gradient(90deg, rgba(6, 182, 212, 0.3) 1px, transparent 1px)`,
           backgroundSize: '20px 20px'
         }}
       />
@@ -656,9 +679,15 @@ export function VitalSignsCard({ className }: { className?: string }) {
           }}
           transition={{ duration: 2, repeat: Infinity }}
         >
-          <Activity className="w-3.5 h-3.5 text-cyan-400" />
+          <Activity className={cn(
+            "w-3.5 h-3.5",
+            isDark ? "text-cyan-400" : "text-cyan-600"
+          )} />
         </motion.div>
-        <span className="text-xs sm:text-sm font-medium text-white/80 tracking-wider">
+        <span className={cn(
+          "text-xs sm:text-sm font-medium tracking-wider",
+          isDark ? "text-white/80" : "text-slate-700"
+        )}>
           核心脉搏
         </span>
         
@@ -667,10 +696,10 @@ export function VitalSignsCard({ className }: { className?: string }) {
           <div className={cn(
             "ml-2 flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono",
             data.cpu.temperature > 80 
-              ? "bg-rose-500/20 text-rose-400" 
+              ? (isDark ? "bg-rose-500/20 text-rose-400" : "bg-rose-100 text-rose-600")
               : data.cpu.temperature > 60 
-                ? "bg-amber-500/20 text-amber-400"
-                : "bg-cyan-500/10 text-cyan-400/70"
+                ? (isDark ? "bg-amber-500/20 text-amber-400" : "bg-amber-100 text-amber-600")
+                : (isDark ? "bg-cyan-500/10 text-cyan-400/70" : "bg-cyan-100 text-cyan-600")
           )}>
             <Thermometer className="w-2.5 h-2.5" />
             <span>{Math.round(data.cpu.temperature)}°C</span>
@@ -680,14 +709,20 @@ export function VitalSignsCard({ className }: { className?: string }) {
         {/* 在线状态 */}
         <div className="ml-auto flex items-center gap-1.5">
           <motion.div 
-            className="w-1.5 h-1.5 rounded-full bg-green-400"
+            className={cn(
+              "w-1.5 h-1.5 rounded-full",
+              isDark ? "bg-green-400" : "bg-green-500"
+            )}
             animate={{ 
               scale: [1, 1.3, 1],
               opacity: [0.7, 1, 0.7]
             }}
             transition={{ duration: 1.5, repeat: Infinity }}
           />
-          <span className="text-[10px] text-white/40 font-mono">LIVE</span>
+          <span className={cn(
+            "text-[10px] font-mono",
+            isDark ? "text-white/40" : "text-slate-400"
+          )}>LIVE</span>
         </div>
       </div>
 
@@ -696,13 +731,21 @@ export function VitalSignsCard({ className }: { className?: string }) {
         {/* 加载状态 */}
         {isLoading && !data && (
           <div className="flex items-center justify-center py-12">
-            <div className="w-8 h-8 border-2 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin" />
+            <div className={cn(
+              "w-8 h-8 border-2 rounded-full animate-spin",
+              isDark 
+                ? "border-cyan-400/30 border-t-cyan-400" 
+                : "border-cyan-300 border-t-cyan-600"
+            )} />
           </div>
         )}
 
         {/* 错误状态 */}
         {error && (
-          <div className="flex items-center justify-center py-12 text-red-400 text-xs">
+          <div className={cn(
+            "flex items-center justify-center py-12 text-xs",
+            isDark ? "text-red-400" : "text-red-600"
+          )}>
             数据获取失败
           </div>
         )}
@@ -715,13 +758,14 @@ export function VitalSignsCard({ className }: { className?: string }) {
           )}>
             {/* CPU 反应堆 */}
             <div className="flex-shrink-0 flex flex-col items-center">
-              <ArcReactor load={data.cpu?.load ?? 0} isMobile={isMobile} />
+              <ArcReactor load={data.cpu?.load ?? 0} isMobile={isMobile} isDark={isDark} />
             </div>
 
             {/* 分隔线 */}
             <div className={cn(
-              "flex-shrink-0 w-px bg-gradient-to-b from-transparent via-cyan-500/30 to-transparent",
-              isMobile ? "h-16" : "h-20 sm:h-24"
+              "flex-shrink-0 w-px bg-gradient-to-b from-transparent to-transparent",
+              isMobile ? "h-16" : "h-20 sm:h-24",
+              isDark ? "via-cyan-500/30" : "via-cyan-400/40"
             )} />
 
             {/* 内存液态球 */}
@@ -732,6 +776,7 @@ export function VitalSignsCard({ className }: { className?: string }) {
                 memoryUsed={formatBytes(data.memory?.used ?? 0)}
                 memoryTotal={formatBytes(data.memory?.total ?? 0)}
                 isMobile={isMobile}
+                isDark={isDark}
               />
             </div>
           </div>
@@ -740,7 +785,10 @@ export function VitalSignsCard({ className }: { className?: string }) {
 
       {/* 底部装饰 */}
       <div
-        className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyan-400/30 to-transparent animate-pulse"
+        className={cn(
+          "absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent to-transparent animate-pulse",
+          isDark ? "via-cyan-400/30" : "via-cyan-400/40"
+        )}
       />
     </div>
   )
