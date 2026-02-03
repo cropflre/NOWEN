@@ -3,10 +3,8 @@
 # GitHub: https://github.com/cropflre/NOWEN
 
 # Build stage for frontend
-# 国内用户如遇网络问题，可将 node:20-alpine 替换为:
-# - docker.1ms.run/library/node:20-alpine
-# - dockerpull.org/library/node:20-alpine
-FROM node:20-alpine AS frontend-builder
+# 使用国内镜像源解决网络问题
+FROM dockerpull.org/library/node:20-alpine AS frontend-builder
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
@@ -14,7 +12,7 @@ COPY . .
 RUN npm run build
 
 # Production stage
-FROM node:20-alpine AS production
+FROM dockerpull.org/library/node:20-alpine AS production
 
 # OCI 标准标签
 LABEL org.opencontainers.image.title="NOWEN"
