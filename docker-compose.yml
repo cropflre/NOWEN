@@ -9,5 +9,25 @@ services:
       - "3002:3000"
     volumes:
       - ./server/data:/app/server/data
+      # 挂载宿主机根目录（只读），让 systeminformation 读取真实系统状态
+      - /:/host:ro
+      # 挂载 proc 文件系统，用于读取 CPU、内存等信息
+      - /proc:/host/proc:ro
+      # 挂载 sys 文件系统，用于读取温度、硬件信息
+      - /sys:/host/sys:ro
+      # 🔑 关键：挂载 Docker socket，允许读取宿主机 Docker 容器状态
+      - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - NODE_ENV=production
+      # 告诉 systeminformation 从 /host 路径读取文件系统信息
+      - SI_FILESYSTEM_DISK_PREFIX=/host
+      # 设置 proc 路径
+      - PROC_PATH=/host/proc
+      # 设置 sys 路径  
+      - SYS_PATH=/host/sys
+      # 文件系统根路径
+      - FS_PATH=/host
+    # 🔑 特权模式：允许读取 CPU 温度、SMART 磁盘信息、完整硬件信息
+    privileged: true
+
+

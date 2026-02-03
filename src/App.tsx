@@ -30,6 +30,11 @@ import { IconManager } from "./components/IconManager";
 import { Admin } from "./pages/Admin";
 import { AdminLogin } from "./components/AdminLogin";
 import { ForcePasswordChange } from "./components/ForcePasswordChange";
+import { SystemMonitorCard } from "./components/SystemMonitorCard";
+import { HardwareIdentityCard } from "./components/HardwareIdentityCard";
+import { VitalSignsCard } from "./components/VitalSignsCard";
+import { NetworkTelemetryCard } from "./components/NetworkTelemetryCard";
+import { ProcessMatrixCard } from "./components/ProcessMatrixCard";
 import { useBookmarkStore } from "./hooks/useBookmarkStore";
 import { useTheme } from "./hooks/useTheme";
 import { useTime } from "./hooks/useTime";
@@ -557,7 +562,7 @@ function App() {
           )}
 
           {/* Pinned Bookmarks - Bento Grid 非对称布局 */}
-          {pinnedBookmarks.length > 0 && (
+          {pinnedBookmarks.length > 0 ? (
             <motion.section
               className="mb-12"
               initial={{ opacity: 0 }}
@@ -588,10 +593,65 @@ function App() {
               </div>
 
               <BentoGrid>
-                {pinnedBookmarks.slice(0, 6).map((bookmark, index) => {
-                  // 非对称布局：第一个占 2 列 2 行，其他 1 列
-                  const colSpan = index === 0 ? 2 : 1;
-                  const rowSpan = index === 0 ? 2 : 1;
+                {/* System Monitor Card - 引擎室 */}
+                <BentoGridItem
+                  key="system-monitor"
+                  colSpan={2}
+                  rowSpan={2}
+                  spotlightColor="rgba(6, 182, 212, 0.15)"
+                  delay={0}
+                >
+                  <SystemMonitorCard />
+                </BentoGridItem>
+
+                {/* Hardware Specs Card - JARVIS 蓝图 */}
+                <BentoGridItem
+                  key="hardware-specs"
+                  colSpan={2}
+                  rowSpan={2}
+                  spotlightColor="rgba(6, 182, 212, 0.1)"
+                  delay={0.1}
+                >
+                  <HardwareIdentityCard />
+                </BentoGridItem>
+
+                {/* Vital Signs Card - 生命体征 */}
+                <BentoGridItem
+                  key="vital-signs"
+                  colSpan={2}
+                  rowSpan={2}
+                  spotlightColor="rgba(6, 182, 212, 0.12)"
+                  delay={0.15}
+                >
+                  <VitalSignsCard />
+                </BentoGridItem>
+
+                {/* Network Telemetry Card - 网络遥测 */}
+                <BentoGridItem
+                  key="network-telemetry"
+                  colSpan={2}
+                  rowSpan={2}
+                  spotlightColor="rgba(168, 85, 247, 0.12)"
+                  delay={0.2}
+                >
+                  <NetworkTelemetryCard />
+                </BentoGridItem>
+
+                {/* Process Matrix Card - 进程矩阵 */}
+                <BentoGridItem
+                  key="process-matrix"
+                  colSpan={2}
+                  rowSpan={2}
+                  spotlightColor="rgba(34, 197, 94, 0.12)"
+                  delay={0.25}
+                >
+                  <ProcessMatrixCard />
+                </BentoGridItem>
+
+                {pinnedBookmarks.slice(0, 4).map((bookmark, index) => {
+                  // 非对称布局：其余卡片 1 列
+                  const colSpan = 1;
+                  const rowSpan = 1;
 
                   return (
                     <BentoGridItem
@@ -601,11 +661,11 @@ function App() {
                       spotlightColor="rgba(234, 179, 8, 0.15)"
                       onClick={() => window.open(bookmark.url, "_blank")}
                       onContextMenu={(e) => handleContextMenu(e, bookmark)}
-                      delay={index * 0.05}
+                      delay={(index + 2) * 0.05}
                     >
                       <BookmarkCardContent
                         bookmark={bookmark}
-                        isLarge={index === 0}
+                        isLarge={false}
                         isNew={bookmark.id === newlyAddedId}
                         isLoggedIn={isLoggedIn}
                         onTogglePin={() => togglePin(bookmark.id)}
@@ -619,6 +679,62 @@ function App() {
                     </BentoGridItem>
                   );
                 })}
+              </BentoGrid>
+            </motion.section>
+          ) : (
+            /* 独立显示系统监控卡片（当没有 pinned bookmarks 时） */
+            <motion.section
+              className="mb-12"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1 }}
+            >
+              <BentoGrid>
+                <BentoGridItem
+                  key="system-monitor-standalone"
+                  colSpan={2}
+                  rowSpan={2}
+                  spotlightColor="rgba(6, 182, 212, 0.15)"
+                  delay={0}
+                >
+                  <SystemMonitorCard />
+                </BentoGridItem>
+                <BentoGridItem
+                  key="hardware-specs-standalone"
+                  colSpan={2}
+                  rowSpan={2}
+                  spotlightColor="rgba(6, 182, 212, 0.1)"
+                  delay={0.1}
+                >
+                  <HardwareIdentityCard />
+                </BentoGridItem>
+                <BentoGridItem
+                  key="vital-signs-standalone"
+                  colSpan={2}
+                  rowSpan={2}
+                  spotlightColor="rgba(6, 182, 212, 0.12)"
+                  delay={0.15}
+                >
+                  <VitalSignsCard />
+                </BentoGridItem>
+                <BentoGridItem
+                  key="network-telemetry-standalone"
+                  colSpan={2}
+                  rowSpan={2}
+                  spotlightColor="rgba(168, 85, 247, 0.12)"
+                  delay={0.2}
+                >
+                  <NetworkTelemetryCard />
+                </BentoGridItem>
+                <BentoGridItem
+                  key="process-matrix-standalone"
+                  colSpan={2}
+                  rowSpan={2}
+                  spotlightColor="rgba(34, 197, 94, 0.12)"
+                  delay={0.25}
+                >
+                  <ProcessMatrixCard />
+                </BentoGridItem>
               </BentoGrid>
             </motion.section>
           )}

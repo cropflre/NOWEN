@@ -8,7 +8,7 @@ import './index.css'
 // 设置全局错误监听
 setupGlobalErrorHandlers()
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
+ReactDOM.createRoot(document.getElementById('root')!)?.render(
   <React.StrictMode>
     <ErrorBoundary>
       <App />
