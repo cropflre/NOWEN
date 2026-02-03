@@ -400,18 +400,51 @@ export function clearPasswordChangeFlag(): void {
 
 // ========== 站点设置 API ==========
 
+// 仪表显示配置
+export interface WidgetVisibility {
+  systemMonitor?: boolean      // 系统监控仪表
+  hardwareIdentity?: boolean   // 硬件信息卡片
+  vitalSigns?: boolean         // 生命体征卡片
+  networkTelemetry?: boolean   // 网络遥测卡片
+  processMatrix?: boolean      // 进程矩阵卡片
+  dockMiniMonitor?: boolean    // Dock 迷你监控
+  mobileTicker?: boolean       // 移动端状态栏
+}
+
 export interface SiteSettings {
   siteTitle?: string
   siteFavicon?: string
   enableBeamAnimation?: boolean
+  widgetVisibility?: WidgetVisibility
 }
 
 // 转换设置值类型（后端存储为字符串）
 function parseSettings(raw: Record<string, string>): SiteSettings {
+  // 解析 widgetVisibility JSON
+  let widgetVisibility: WidgetVisibility = {
+    systemMonitor: true,
+    hardwareIdentity: true,
+    vitalSigns: true,
+    networkTelemetry: true,
+    processMatrix: true,
+    dockMiniMonitor: true,
+    mobileTicker: true,
+  }
+  
+  if (raw.widgetVisibility) {
+    try {
+      const parsed = JSON.parse(raw.widgetVisibility)
+      widgetVisibility = { ...widgetVisibility, ...parsed }
+    } catch (e) {
+      // 忽略解析错误，使用默认值
+    }
+  }
+
   return {
     siteTitle: raw.siteTitle,
     siteFavicon: raw.siteFavicon,
     enableBeamAnimation: raw.enableBeamAnimation === undefined ? true : raw.enableBeamAnimation === 'true' || raw.enableBeamAnimation === '1',
+    widgetVisibility,
   }
 }
 
@@ -426,6 +459,7 @@ export async function updateSettings(settings: SiteSettings): Promise<SiteSettin
     siteTitle: settings.siteTitle,
     siteFavicon: settings.siteFavicon,
     enableBeamAnimation: settings.enableBeamAnimation ? 'true' : 'false',
+    widgetVisibility: settings.widgetVisibility ? JSON.stringify(settings.widgetVisibility) : undefined,
   }
   const raw = await request<Record<string, string>>('/api/settings', {
     method: 'PATCH',

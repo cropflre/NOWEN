@@ -594,6 +594,141 @@ router.get('/dynamic', async (_req, res) => {
 })
 
 // ============================================
+// GET /api/system/pulse - 心跳脉搏接口（精简版）
+// 专为 SystemMonitor 组件优化的轻量级实时数据
+// ============================================
+
+interface PulseData {
+  cpu: {
+    usage: number
+    temperature: number | null
+  }
+  memory: {
+    usedPercent: number
+    total: string
+    used: string
+    free: string
+  }
+  network: {
+    rx_sec: number
+    tx_sec: number
+    rx_formatted: string
+    tx_formatted: string
+  }
+  disk: {
+    usedPercent: number
+    total: string
+    used: string
+    free: string
+  }
+  containers: {
+    running: number
+    total: number
+  } | null
+  uptime: string
+  timestamp: number
+}
+
+// Pulse 缓存 - 2秒有效
+let pulseCache: CacheEntry<PulseData> = { data: null, timestamp: 0 }
+const PULSE_CACHE_TTL = 2000
+
+router.get('/pulse', async (_req, res) => {
+  try {
+    const now = Date.now()
+
+    // 检查缓存
+    if (pulseCache.data && now - pulseCache.timestamp < PULSE_CACHE_TTL) {
+      return res.json({
+        success: true,
+        data: pulseCache.data,
+        cached: true,
+      })
+    }
+
+    // 并发获取核心数据
+    const [load, temp, mem, network, fs, docker, time] = await Promise.all([
+      si.currentLoad(),
+      si.cpuTemperature().catch(() => ({ main: null })),
+      si.mem(),
+      si.networkStats(),
+      si.fsSize(),
+      si.dockerInfo().catch(() => null),
+      si.time(),
+    ])
+
+    // 获取主磁盘
+    const diskPrefix = process.env.SI_FILESYSTEM_DISK_PREFIX || ''
+    const targetDisk = fs.find((d) => d.mount === `${diskPrefix}/`) 
+      || fs.find((d) => d.mount === '/') 
+      || fs.reduce((max, d) => d.size > max.size ? d : max, fs[0])
+
+    // 获取主网络接口（过滤虚拟接口）
+    const physicalNetwork = network.find(n => 
+      !n.iface.startsWith('lo') && 
+      !n.iface.startsWith('docker') &&
+      !n.iface.startsWith('br-') &&
+      !n.iface.startsWith('veth') &&
+      n.operstate === 'up'
+    ) || network[0]
+
+    // 计算网络聚合速度
+    const totalRxSec = network
+      .filter(n => !n.iface.startsWith('lo') && !n.iface.startsWith('docker'))
+      .reduce((sum, n) => sum + (n.rx_sec || 0), 0)
+    const totalTxSec = network
+      .filter(n => !n.iface.startsWith('lo') && !n.iface.startsWith('docker'))
+      .reduce((sum, n) => sum + (n.tx_sec || 0), 0)
+
+    const pulseData: PulseData = {
+      cpu: {
+        usage: Math.round(load.currentLoad * 10) / 10,
+        temperature: temp.main !== null ? Math.round(temp.main) : null,
+      },
+      memory: {
+        usedPercent: Math.round((mem.used / mem.total) * 1000) / 10,
+        total: formatBytes(mem.total),
+        used: formatBytes(mem.used),
+        free: formatBytes(mem.available),
+      },
+      network: {
+        rx_sec: Math.round(totalRxSec),
+        tx_sec: Math.round(totalTxSec),
+        rx_formatted: `${formatBytes(totalRxSec)}/s`,
+        tx_formatted: `${formatBytes(totalTxSec)}/s`,
+      },
+      disk: {
+        usedPercent: targetDisk ? Math.round(targetDisk.use * 10) / 10 : 0,
+        total: targetDisk ? formatBytes(targetDisk.size) : '0 B',
+        used: targetDisk ? formatBytes(targetDisk.used) : '0 B',
+        free: targetDisk ? formatBytes(targetDisk.available) : '0 B',
+      },
+      containers: docker ? {
+        running: docker.containersRunning || 0,
+        total: docker.containers || 0,
+      } : null,
+      uptime: formatUptime(time.uptime),
+      timestamp: now,
+    }
+
+    // 更新缓存
+    pulseCache = { data: pulseData, timestamp: now }
+
+    res.json({
+      success: true,
+      data: pulseData,
+      cached: false,
+    })
+  } catch (error) {
+    console.error('Failed to get pulse data:', error)
+    res.status(500).json({
+      success: false,
+      error: 'Failed to retrieve pulse data',
+    })
+  }
+})
+
+// ============================================
 // GET /api/system/docker - Docker 容器列表
 // 返回所有容器的详细信息
 // ============================================

@@ -18,13 +18,10 @@ import {
 } from 'lucide-react'
 import { Bookmark, Category, CustomIcon } from '../types/bookmark'
 import { cn, presetIcons, getIconComponent } from '../lib/utils'
-import { adminChangePassword, fetchSettings, updateSettings, SiteSettings, importData, fetchQuotes, updateQuotes } from '../lib/api'
+import { adminChangePassword, fetchSettings, updateSettings, SiteSettings, WidgetVisibility, importData, fetchQuotes, updateQuotes } from '../lib/api'
 import { AdminSidebar } from '../components/admin/AdminSidebar'
-import { SiteSettingsCard } from '../components/admin/SiteSettingsCard'
-import { SecurityCard } from '../components/admin/SecurityCard'
-import { DataManagementCard } from '../components/admin/DataManagementCard'
-import { ThemeCard } from '../components/admin/ThemeCard'
 import { QuotesCard } from '../components/admin/QuotesCard'
+import { SettingsPanel } from '../components/admin/SettingsPanel'
 import { ToastProvider, useToast } from '../components/admin/Toast'
 import { useTheme, ThemeId } from '../hooks/useTheme.tsx'
 import { AdminProvider, useAdmin, useBookmarkActions, useCategoryActions, useIconActions } from '../contexts/AdminContext'
@@ -121,10 +118,33 @@ function AdminContent() {
     siteTitle: 'Nebula Portal',
     siteFavicon: '',
     enableBeamAnimation: true,
+    widgetVisibility: {
+      systemMonitor: true,
+      hardwareIdentity: true,
+      vitalSigns: true,
+      networkTelemetry: true,
+      processMatrix: true,
+      dockMiniMonitor: true,
+      mobileTicker: true,
+    },
   })
   const [isSavingSettings, setIsSavingSettings] = useState(false)
   const [settingsSuccess, setSettingsSuccess] = useState(false)
   const [settingsError, setSettingsError] = useState('')
+
+  // 仪表设置状态
+  const [widgetVisibility, setWidgetVisibility] = useState<WidgetVisibility>({
+    systemMonitor: true,
+    hardwareIdentity: true,
+    vitalSigns: true,
+    networkTelemetry: true,
+    processMatrix: true,
+    dockMiniMonitor: true,
+    mobileTicker: true,
+  })
+  const [isSavingWidgetSettings, setIsSavingWidgetSettings] = useState(false)
+  const [widgetSettingsSuccess, setWidgetSettingsSuccess] = useState(false)
+  const [widgetSettingsError, setWidgetSettingsError] = useState('')
 
   // 名言状态
   const [quotes, setQuotes] = useState<string[]>([])
@@ -134,6 +154,10 @@ function AdminContent() {
   useEffect(() => {
     fetchSettings().then(settings => {
       setSiteSettings(settings)
+      // 同步仪表显示设置
+      if (settings.widgetVisibility) {
+        setWidgetVisibility(settings.widgetVisibility)
+      }
     }).catch(console.error)
 
     fetchQuotes().then(data => {
@@ -293,6 +317,37 @@ function AdminContent() {
       showToast('error', '保存设置失败')
     } finally {
       setIsSavingSettings(false)
+    }
+  }
+
+  // 保存仪表设置
+  const handleSaveWidgetSettings = async () => {
+    setWidgetSettingsError('')
+    setWidgetSettingsSuccess(false)
+    setIsSavingWidgetSettings(true)
+    
+    try {
+      const updatedSettings = {
+        ...siteSettings,
+        widgetVisibility,
+      }
+      const updated = await updateSettings(updatedSettings)
+      setSiteSettings(updated)
+      if (updated.widgetVisibility) {
+        setWidgetVisibility(updated.widgetVisibility)
+      }
+      setWidgetSettingsSuccess(true)
+      showToast('success', '仪表设置已保存')
+      
+      // 通知父组件更新设置（实时生效）
+      onSettingsChange(updated)
+      
+      setTimeout(() => setWidgetSettingsSuccess(false), 3000)
+    } catch (err: any) {
+      setWidgetSettingsError(err.message || '保存仪表设置失败')
+      showToast('error', '保存仪表设置失败')
+    } finally {
+      setIsSavingWidgetSettings(false)
     }
   }
 
@@ -1224,60 +1279,53 @@ function AdminContent() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="space-y-4 md:space-y-6 max-w-5xl"
+                className="max-w-5xl"
               >
-                {/* First Row: Site Settings + Theme */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-                  <SiteSettingsCard
-                    settings={siteSettings}
-                    onChange={setSiteSettings}
-                    onSave={handleSaveSettings}
-                    isSaving={isSavingSettings}
-                    success={settingsSuccess}
-                    error={settingsError}
-                  />
-                  
-                  <ThemeCard
-                    currentThemeId={themeId}
-                    isDark={isDark}
-                    autoMode={autoMode}
-                    onThemeChange={(id: ThemeId, origin) => {
-                      setTheme(id, origin)
-                      showToast('success', '主题已切换')
-                    }}
-                    onAutoModeChange={setAutoMode}
-                    onToggleDarkMode={toggleDarkMode}
-                  />
-                </div>
-
-                {/* Second Row: Security + Data Management */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-                  <SecurityCard
-                    onChangePassword={handleChangePassword}
-                    isChanging={isChangingPassword}
-                    success={passwordSuccess}
-                    error={passwordError}
-                    onClearError={() => setPasswordError('')}
-                    onClearSuccess={() => setPasswordSuccess(false)}
-                  />
-
-                  <DataManagementCard
-                    bookmarks={bookmarks}
-                    categories={categories}
-                    settings={siteSettings}
-                    onImport={async (data) => {
-                      await importData(data)
-                      showToast('success', '数据导入成功，正在刷新...')
-                      // 刷新数据
-                      refreshData()
-                    }}
-                    onFactoryReset={() => {
-                      showToast('success', '已恢复出厂设置，正在刷新...')
-                      // 刷新数据
-                      refreshData()
-                    }}
-                  />
-                </div>
+                <SettingsPanel
+                  // 站点设置
+                  siteSettings={siteSettings}
+                  onSiteSettingsChange={setSiteSettings}
+                  onSaveSiteSettings={handleSaveSettings}
+                  isSavingSiteSettings={isSavingSettings}
+                  siteSettingsSuccess={settingsSuccess}
+                  siteSettingsError={settingsError}
+                  // 主题设置
+                  themeId={themeId}
+                  isDark={isDark}
+                  autoMode={autoMode}
+                  onThemeChange={(id: ThemeId, origin) => {
+                    setTheme(id, origin)
+                    showToast('success', '主题已切换')
+                  }}
+                  onAutoModeChange={setAutoMode}
+                  onToggleDarkMode={toggleDarkMode}
+                  // 仪表设置
+                  widgetVisibility={widgetVisibility}
+                  onWidgetVisibilityChange={setWidgetVisibility}
+                  onSaveWidgetSettings={handleSaveWidgetSettings}
+                  isSavingWidgetSettings={isSavingWidgetSettings}
+                  widgetSettingsSuccess={widgetSettingsSuccess}
+                  widgetSettingsError={widgetSettingsError}
+                  // 安全设置
+                  onChangePassword={handleChangePassword}
+                  isChangingPassword={isChangingPassword}
+                  passwordSuccess={passwordSuccess}
+                  passwordError={passwordError}
+                  onClearPasswordError={() => setPasswordError('')}
+                  onClearPasswordSuccess={() => setPasswordSuccess(false)}
+                  // 数据管理
+                  bookmarks={bookmarks}
+                  categories={categories}
+                  onImport={async (data) => {
+                    await importData(data)
+                    showToast('success', '数据导入成功，正在刷新...')
+                    refreshData()
+                  }}
+                  onFactoryReset={() => {
+                    showToast('success', '已恢复出厂设置，正在刷新...')
+                    refreshData()
+                  }}
+                />
               </motion.div>
             )}
           </AnimatePresence>
