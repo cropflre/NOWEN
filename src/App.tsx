@@ -23,6 +23,7 @@ import { Typewriter } from "./components/ui/typewriter";
 import { Meteors, Sparkles } from "./components/ui/effects";
 import { BreathingDot } from "./components/ui/advanced-effects";
 import { Button as MovingBorderButton } from "./components/ui/moving-border";
+import { ScrollToTop } from "./components/ui/scroll-to-top";
 import { AddBookmarkModal } from "./components/AddBookmarkModal";
 import { BookmarkCardContent } from "./components/BookmarkCardContent";
 import { ContextMenu, useBookmarkContextMenu } from "./components/ContextMenu";
@@ -456,11 +457,12 @@ function App() {
 
             {/* Greeting with Typewriter */}
             <motion.h1
-              className="text-xl sm:text-2xl lg:text-3xl font-serif font-medium mb-8 tracking-wide"
+              className="text-xl sm:text-2xl lg:text-3xl font-serif font-medium mb-8 tracking-wide min-h-[3.5em] flex items-center justify-center"
               style={{ color: "var(--color-text-secondary)" }}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4 }}
+              layout
             >
               <Sparkles>
                 <Typewriter
@@ -1053,6 +1055,9 @@ function App() {
           })}
         />
       )}
+
+      {/* 回到顶部按钮 */}
+      <ScrollToTop threshold={400} />
     </AuroraBackground>
   );
 }

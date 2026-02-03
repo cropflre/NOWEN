@@ -95,23 +95,24 @@ export function Typewriter({
   if (fullSentence) {
     return (
       <span className={cn('inline-flex items-center justify-center', className)}>
-        <span className="relative">
-          {/* 隐藏的占位符，保持最小宽度 */}
-          <span className="invisible">{longestWord}</span>
-          {/* 实际显示的文字，绝对定位居中，淡入淡出 */}
-          <AnimatePresence mode="wait">
-            <motion.span
-              key={displayWord}
-              className="absolute inset-0 flex items-center justify-center"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.5 }}
-            >
-              {displayWord}
-            </motion.span>
-          </AnimatePresence>
-        </span>
+        {/* 使用 AnimatePresence 包裹，layout 动画实现平滑高度过渡 */}
+        <AnimatePresence mode="wait">
+          <motion.span
+            key={displayWord}
+            className="text-center"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ 
+              duration: 0.5,
+              // 高度变化使用更平滑的过渡
+              layout: { duration: 0.3, ease: 'easeInOut' }
+            }}
+            layout
+          >
+            {displayWord}
+          </motion.span>
+        </AnimatePresence>
       </span>
     )
   }

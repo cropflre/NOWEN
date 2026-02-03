@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from 'react'
-import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion'
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform, useDragControls, PanInfo } from 'framer-motion'
 import { cn } from '../../lib/utils'
 
 interface DockItemType {
@@ -16,9 +16,16 @@ interface FloatingDockProps {
   className?: string
 }
 
+// 存储位置的 key
+const DESKTOP_DOCK_POSITION_KEY = 'desktop-dock-position'
+
 export function FloatingDock({ items, leftItems, className }: FloatingDockProps) {
   const mouseX = useMotionValue(Infinity)
   const [isDark, setIsDark] = useState(true)
+  const [isDragging, setIsDragging] = useState(false)
+  const [position, setPosition] = useState({ x: 0, y: 0 })
+  const dragControls = useDragControls()
+  const containerRef = useRef<HTMLDivElement>(null)
 
   // 监听主题变化
   useEffect(() => {
@@ -36,28 +43,94 @@ export function FloatingDock({ items, leftItems, className }: FloatingDockProps)
     return () => observer.disconnect()
   }, [])
 
+  // 从 localStorage 恢复位置
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(DESKTOP_DOCK_POSITION_KEY)
+      if (saved) {
+        const { x, y } = JSON.parse(saved)
+        setPosition({ x, y })
+      }
+    } catch (e) {
+      // 忽略解析错误
+    }
+  }, [])
+
+  // 保存位置到 localStorage
+  const savePosition = (x: number, y: number) => {
+    try {
+      localStorage.setItem(DESKTOP_DOCK_POSITION_KEY, JSON.stringify({ x, y }))
+    } catch (e) {
+      // 忽略存储错误
+    }
+  }
+
+  // 拖拽结束处理
+  const handleDragEnd = (_: any, info: PanInfo) => {
+    // 短暂延迟后重置拖拽状态
+    setTimeout(() => setIsDragging(false), 100)
+    
+    // 计算新位置并保存
+    const newX = position.x + info.offset.x
+    const newY = position.y + info.offset.y
+    setPosition({ x: newX, y: newY })
+    savePosition(newX, newY)
+  }
+
   return (
     <motion.div
+      ref={containerRef}
       className={cn(
-        'fixed bottom-6 left-1/2 -translate-x-1/2 z-50',
+        'fixed bottom-6 left-1/2 z-50 touch-none',
         'flex items-end gap-2 px-4 py-3 rounded-2xl',
+        isDragging && 'cursor-grabbing',
+        !isDragging && 'cursor-grab',
         className
       )}
       style={{
         background: isDark ? 'var(--color-glass)' : 'var(--color-glass)',
         backdropFilter: 'blur(24px) saturate(180%)',
         WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-        border: '1px solid var(--color-glass-border)',
-        boxShadow: isDark 
-          ? 'none' 
-          : 'var(--color-shadow)',
-        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+        border: isDragging 
+          ? `2px solid ${isDark ? 'rgba(34, 211, 238, 0.5)' : 'rgba(59, 130, 246, 0.5)'}` 
+          : '1px solid var(--color-glass-border)',
+        boxShadow: isDragging
+          ? (isDark ? '0 0 20px rgba(34, 211, 238, 0.3)' : '0 0 20px rgba(59, 130, 246, 0.3)')
+          : (isDark ? 'none' : 'var(--color-shadow)'),
+        transition: 'border 0.2s, box-shadow 0.2s',
       }}
-      onMouseMove={(e) => mouseX.set(e.pageX)}
+      drag
+      dragControls={dragControls}
+      dragMomentum={false}
+      dragElastic={0.1}
+      dragConstraints={{
+        top: -window.innerHeight + 100,
+        bottom: 0,
+        left: -window.innerWidth / 2 + 100,
+        right: window.innerWidth / 2 - 100,
+      }}
+      onDragStart={() => {
+        setIsDragging(true)
+        mouseX.set(Infinity) // 拖拽时禁用放大效果
+      }}
+      onDragEnd={handleDragEnd}
+      onMouseMove={(e) => {
+        if (!isDragging) mouseX.set(e.pageX)
+      }}
       onMouseLeave={() => mouseX.set(Infinity)}
-      initial={{ y: 100, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ delay: 0.5, type: 'spring', stiffness: 200, damping: 20 }}
+      initial={{ y: 100, opacity: 0, x: '-50%' }}
+      animate={{ 
+        y: position.y, 
+        opacity: 1, 
+        x: `calc(-50% + ${position.x}px)` 
+      }}
+      transition={{ 
+        delay: position.x === 0 && position.y === 0 ? 0.5 : 0, 
+        type: 'spring', 
+        stiffness: 200, 
+        damping: 20 
+      }}
+      whileDrag={{ scale: 1.02 }}
     >
       {/* Left Items */}
       {leftItems && leftItems.length > 0 && (
