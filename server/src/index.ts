@@ -10,6 +10,7 @@ import {
   metadataRouter,
   quotesRouter,
   dataRouter,
+  systemRouter,
 } from './routes/index.js'
 
 const app = express()
@@ -52,6 +53,7 @@ app.use('/api/admin', adminRouter)
 app.use('/api/settings', settingsRouter)
 app.use('/api/metadata', metadataRouter)
 app.use('/api/quotes', quotesRouter)
+app.use('/api/system', systemRouter)
 app.use('/api', dataRouter)  // /api/export, /api/import, /api/factory-reset
 
 // ========== 启动服务 ==========
