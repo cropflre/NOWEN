@@ -3,8 +3,7 @@
 # GitHub: https://github.com/cropflre/NOWEN
 
 # Build stage for frontend
-# 使用 DaoCloud 镜像源
-FROM m.daocloud.io/docker.io/node:20-alpine AS frontend-builder
+FROM node:20-alpine AS frontend-builder
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
@@ -12,7 +11,7 @@ COPY . .
 RUN npm run build
 
 # Production stage
-FROM m.daocloud.io/docker.io/node:20-alpine AS production
+FROM node:20-alpine AS production
 
 # OCI 标准标签
 LABEL org.opencontainers.image.title="NOWEN"
