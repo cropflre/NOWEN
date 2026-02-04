@@ -5,6 +5,38 @@
 @tailwind utilities;
 
 /* ============================================
+   VIBE CODING 性能优化 - GPU 加速辅助类
+   ============================================ */
+
+/* 强制开启 GPU 加速，防止重绘 */
+.hardware-accelerated {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* 提示浏览器即将发生变换，优化动画性能 */
+.will-change-transform {
+  will-change: transform;
+}
+
+.will-change-opacity {
+  will-change: opacity;
+}
+
+/* 组合提示 */
+.will-change-all {
+  will-change: transform, opacity;
+}
+
+/* 减少模糊效果的性能消耗 */
+.optimize-blur {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* ============================================
    专业级主题系统 - Solar Clarity / Deep Space
    ============================================ */
 

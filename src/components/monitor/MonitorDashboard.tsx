@@ -2,6 +2,11 @@
  * MonitorDashboard - 默认型全功能面板 (The Command Deck)
  * 设计隐喻：主控室大屏
  * 信息密度最高，包含波浪图、液态球、进程矩阵等
+ * 
+ * VIBE CODING 性能优化：
+ * - 使用 CSS Transition 替代 Framer Motion 进度条动画
+ * - 减少 JS 线程动画负担
+ * - 动画在合成层处理，性能更好
  */
 import { motion } from 'framer-motion'
 import { cn } from '../../lib/utils'
@@ -43,7 +48,11 @@ interface MonitorDashboardProps {
   onSwitchMode?: (mode: MonitorViewMode) => void
 }
 
-// 迷你进度条组件
+/**
+ * VIBE CODING 优化：迷你进度条组件
+ * 改用原生 CSS Transition 替代 Framer Motion
+ * 性能提升：减少 JS 计算，动画在 GPU 合成层处理
+ */
 function MiniProgress({ 
   value, 
   label, 
@@ -84,11 +93,13 @@ function MiniProgress({
         </span>
       </div>
       <div className="h-1.5 bg-slate-200 dark:bg-white/5 rounded-full overflow-hidden">
-        <motion.div
-          className={cn("h-full rounded-full shadow-lg", getBarColor(value))}
-          initial={{ width: 0 }}
-          animate={{ width: `${value}%` }}
-          transition={{ duration: 1, ease: "easeOut" }}
+        {/* VIBE CODING：使用 CSS Transition 替代 motion.div */}
+        <div
+          className={cn(
+            "h-full rounded-full shadow-lg transition-all duration-700 ease-out",
+            getBarColor(value)
+          )}
+          style={{ width: `${value}%` }}
         />
       </div>
     </div>
