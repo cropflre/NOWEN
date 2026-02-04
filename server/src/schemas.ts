@@ -115,7 +115,7 @@ export const importDataSchema = z.object({
     color: z.string().optional().nullable(),
     orderIndex: z.number().optional(),
   })).optional(),
-  settings: z.record(z.string()).optional(),
+  settings: z.record(z.string(), z.unknown()).optional(),
 })
 
 // ========== 验证中间件工厂函数 ==========
