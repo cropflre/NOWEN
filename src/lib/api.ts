@@ -415,6 +415,7 @@ export interface SiteSettings {
   siteTitle?: string
   siteFavicon?: string
   enableBeamAnimation?: boolean
+  enableLiteMode?: boolean // 精简模式开关 - 禅 (Zen)
   widgetVisibility?: WidgetVisibility
 }
 
@@ -443,7 +444,9 @@ function parseSettings(raw: Record<string, string>): SiteSettings {
   return {
     siteTitle: raw.siteTitle,
     siteFavicon: raw.siteFavicon,
+    // 默认开启光束，默认关闭精简模式
     enableBeamAnimation: raw.enableBeamAnimation === undefined ? true : raw.enableBeamAnimation === 'true' || raw.enableBeamAnimation === '1',
+    enableLiteMode: raw.enableLiteMode === 'true' || raw.enableLiteMode === '1',
     widgetVisibility,
   }
 }
@@ -459,6 +462,7 @@ export async function updateSettings(settings: SiteSettings): Promise<SiteSettin
     siteTitle: settings.siteTitle,
     siteFavicon: settings.siteFavicon,
     enableBeamAnimation: settings.enableBeamAnimation ? 'true' : 'false',
+    enableLiteMode: settings.enableLiteMode ? 'true' : 'false',
     widgetVisibility: settings.widgetVisibility ? JSON.stringify(settings.widgetVisibility) : undefined,
   }
   const raw = await request<Record<string, string>>('/api/settings', {

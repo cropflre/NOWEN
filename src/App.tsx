@@ -57,10 +57,30 @@ import {
 
 // Dock 导航项
 const dockItems = [
-  { id: "home", title: "首页", icon: <Home className="w-5 h-5" />, IconComponent: Home },
-  { id: "search", title: "搜索", icon: <Search className="w-5 h-5" />, IconComponent: Search },
-  { id: "add", title: "添加", icon: <Plus className="w-5 h-5" />, IconComponent: Plus },
-  { id: "admin", title: "管理", icon: <LayoutDashboard className="w-5 h-5" />, IconComponent: LayoutDashboard },
+  {
+    id: "home",
+    title: "首页",
+    icon: <Home className="w-5 h-5" />,
+    IconComponent: Home,
+  },
+  {
+    id: "search",
+    title: "搜索",
+    icon: <Search className="w-5 h-5" />,
+    IconComponent: Search,
+  },
+  {
+    id: "add",
+    title: "添加",
+    icon: <Plus className="w-5 h-5" />,
+    IconComponent: Plus,
+  },
+  {
+    id: "admin",
+    title: "管理",
+    icon: <LayoutDashboard className="w-5 h-5" />,
+    IconComponent: LayoutDashboard,
+  },
   {
     id: "github",
     title: "GitHub",
@@ -69,6 +89,18 @@ const dockItems = [
     href: "https://github.com/cropflre/NOWEN",
   },
 ];
+
+// ========== VIBE CODING: Lite Background 组件 ==========
+// 极简背景，没有任何 JS 动画，只有 CSS 渐变 - 禅 (Zen)
+const LiteBackground = ({ children }: { children: React.ReactNode }) => (
+  <div className="min-h-screen w-full relative bg-slate-50 dark:bg-slate-950 transition-colors duration-500">
+    {/* 静态的、优雅的渐变背景 */}
+    <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-white/50 to-purple-50/50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 z-0" />
+    {/* 静态噪点增加质感 */}
+    <div className="absolute inset-0 opacity-[0.015] bg-[url('https://grainy-gradients.vercel.app/noise.svg')] z-0 pointer-events-none" />
+    <div className="relative z-10">{children}</div>
+  </div>
+);
 
 function App() {
   const [currentPage, setCurrentPage] = useState<
@@ -85,6 +117,7 @@ function App() {
     siteTitle: "Nebula Portal",
     siteFavicon: "",
     enableBeamAnimation: true,
+    enableLiteMode: false, // 默认关闭精简模式
     widgetVisibility: {
       systemMonitor: true,
       hardwareIdentity: true,
@@ -96,6 +129,9 @@ function App() {
     },
   });
   const [settingsLoaded, setSettingsLoaded] = useState(false);
+
+  // VIBE CODING: 精简模式快捷访问
+  const isLiteMode = siteSettings.enableLiteMode;
 
   // 仪表可见性快捷访问 - 设置未加载完成时默认隐藏所有小部件避免闪烁
   const widgetVisibility = settingsLoaded
@@ -419,10 +455,16 @@ function App() {
     );
   }
 
+  // 选择背景包装组件
+  const BackgroundWrapper = isLiteMode ? LiteBackground : AuroraBackground;
+  const backgroundProps = isLiteMode 
+    ? {} 
+    : { showBeams: siteSettings.enableBeamAnimation !== false };
+
   return (
-    <AuroraBackground showBeams={siteSettings.enableBeamAnimation !== false}>
-      {/* Meteors Effect */}
-      <Meteors number={15} />
+    <BackgroundWrapper {...backgroundProps}>
+      {/* Meteors Effect - 精简模式下不渲染 */}
+      {!isLiteMode && <Meteors number={15} />}
 
       {/* Main Content */}
       <div className="min-h-screen px-4 sm:px-6 lg:px-8 pb-32">
@@ -430,9 +472,9 @@ function App() {
           {/* Hero Section */}
           <motion.section
             className="pt-20 pb-16 text-center relative"
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: isLiteMode ? 10 : 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
+            transition={{ duration: isLiteMode ? 0.5 : 0.8 }}
           >
             {/* Time Display */}
             <motion.div
@@ -442,7 +484,7 @@ function App() {
               transition={{ delay: 0.2 }}
             >
               <div
-                className="text-7xl sm:text-8xl lg:text-9xl font-semibold tracking-tighter font-mono"
+                className="text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tighter font-mono"
                 style={{ color: "var(--color-text-primary)" }}
               >
                 {formattedTime}
@@ -457,64 +499,108 @@ function App() {
 
             {/* Greeting with Typewriter */}
             <motion.h1
-              className="text-xl sm:text-2xl lg:text-3xl font-serif font-medium mb-8 tracking-wide min-h-[3.5em] flex items-center justify-center"
+              className="text-base sm:text-lg lg:text-xl font-serif font-medium mb-8 tracking-wide min-h-[3.5em] flex items-center justify-center"
               style={{ color: "var(--color-text-secondary)" }}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4 }}
               layout
             >
-              <Sparkles>
+              {isLiteMode ? (
+                // 精简模式：静态文字，无 Sparkles 特效
                 <Typewriter
                   getNextWord={getRandomWisdom}
                   initialWord={greeting}
                   delayBetweenWords={5000}
                   fullSentence
                 />
-              </Sparkles>
+              ) : (
+                <Sparkles>
+                  <Typewriter
+                    getNextWord={getRandomWisdom}
+                    initialWord={greeting}
+                    delayBetweenWords={5000}
+                    fullSentence
+                  />
+                </Sparkles>
+              )}
             </motion.h1>
 
-            {/* Search Hint - Moving Border 搜索框 */}
+            {/* Search Hint - 精简模式用简化搜索框 */}
             <motion.div
               className="relative inline-block"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
-              whileHover={{ y: -2 }}
+              whileHover={{ y: isLiteMode ? 0 : -2 }}
             >
-              <MovingBorderButton
-                borderRadius="1rem"
-                duration={3000}
-                containerClassName="cursor-pointer"
-                borderClassName="bg-[radial-gradient(var(--color-primary)_40%,transparent_60%)]"
-                className="bg-[var(--color-glass)] dark:bg-slate-900/[0.8] border-[var(--color-glass-border)] dark:border-slate-800 px-6 py-3.5 gap-3"
-                onClick={() => setIsSpotlightOpen(true)}
-              >
-                <Search
-                  className="w-4 h-4 transition-colors group-hover:text-[var(--color-primary)]"
-                  style={{ color: "var(--color-text-muted)" }}
-                />
-                <span
-                  className="tracking-wide transition-colors"
-                  style={{ color: "var(--color-text-muted)" }}
-                >
-                  搜索或输入命令...
-                </span>
-                <kbd
-                  className="px-2 py-1 rounded text-xs flex items-center gap-1 ml-2"
+              {isLiteMode ? (
+                // 精简模式：简约搜索框，无 Moving Border
+                <div 
+                  className="inline-flex items-center gap-3 px-6 py-3.5 rounded-xl cursor-pointer transition-all duration-300 hover:shadow-md"
                   style={{
-                    background: "var(--color-bg-tertiary)",
-                    color: "var(--color-text-muted)",
-                    border: "1px solid var(--color-border-light)",
+                    background: "var(--color-glass)",
+                    border: "1px solid var(--color-glass-border)",
                   }}
+                  onClick={() => setIsSpotlightOpen(true)}
                 >
-                  <Command className="w-3 h-3" /> K
-                </kbd>
-              </MovingBorderButton>
+                  <Search
+                    className="w-4 h-4"
+                    style={{ color: "var(--color-text-muted)" }}
+                  />
+                  <span
+                    className="tracking-wide"
+                    style={{ color: "var(--color-text-muted)" }}
+                  >
+                    搜索或输入命令...
+                  </span>
+                  <kbd
+                    className="px-2 py-1 rounded text-xs flex items-center gap-1 ml-2"
+                    style={{
+                      background: "var(--color-bg-tertiary)",
+                      color: "var(--color-text-muted)",
+                      border: "1px solid var(--color-border-light)",
+                    }}
+                  >
+                    <Command className="w-3 h-3" /> K
+                  </kbd>
+                </div>
+              ) : (
+                // 完整模式：Moving Border 搜索框
+                <MovingBorderButton
+                  borderRadius="1rem"
+                  duration={3000}
+                  containerClassName="cursor-pointer"
+                  borderClassName="bg-[radial-gradient(var(--color-primary)_40%,transparent_60%)]"
+                  className="bg-[var(--color-glass)] dark:bg-slate-900/[0.8] border-[var(--color-glass-border)] dark:border-slate-800 px-6 py-3.5 gap-3"
+                  onClick={() => setIsSpotlightOpen(true)}
+                >
+                  <Search
+                    className="w-4 h-4 transition-colors group-hover:text-[var(--color-primary)]"
+                    style={{ color: "var(--color-text-muted)" }}
+                  />
+                  <span
+                    className="tracking-wide transition-colors"
+                    style={{ color: "var(--color-text-muted)" }}
+                  >
+                    搜索或输入命令...
+                  </span>
+                  <kbd
+                    className="px-2 py-1 rounded text-xs flex items-center gap-1 ml-2"
+                    style={{
+                      background: "var(--color-bg-tertiary)",
+                      color: "var(--color-text-muted)",
+                      border: "1px solid var(--color-border-light)",
+                    }}
+                  >
+                    <Command className="w-3 h-3" /> K
+                  </kbd>
+                </MovingBorderButton>
+              )}
             </motion.div>
           </motion.section>
 
-          {/* Read Later Hero Card */}
+          {/* Read Later Hero Card - 精简模式下简化 3D 效果 */}
           {readLaterBookmarks.length > 0 && (
             <motion.section
               className="mb-12"
@@ -522,63 +608,48 @@ function App() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.8 }}
             >
-              <Card3D
-                className="cursor-pointer"
-                glowColor="rgba(251, 146, 60, 0.4)"
-              >
-                <div
-                  className="p-8 flex flex-col md:flex-row gap-6"
-                  onClick={() =>
-                    window.open(readLaterBookmarks[0].url, "_blank")
-                  }
+              {isLiteMode ? (
+                // 精简模式：普通卡片，无 3D 效果
+                <div 
+                  className="p-8 rounded-2xl cursor-pointer transition-all duration-300 hover:shadow-lg"
+                  style={{
+                    background: "var(--color-glass)",
+                    border: "1px solid var(--color-glass-border)",
+                  }}
+                  onClick={() => window.open(readLaterBookmarks[0].url, "_blank")}
                 >
-                  {/* Image */}
-                  {readLaterBookmarks[0].ogImage && (
-                    <CardItem
-                      translateZ={30}
-                      className="w-full md:w-1/3 aspect-video rounded-xl overflow-hidden"
-                    >
-                      <img
-                        src={readLaterBookmarks[0].ogImage}
-                        alt=""
-                        className="w-full h-full object-cover"
-                      />
-                    </CardItem>
-                  )}
-
-                  {/* Content */}
-                  <div className="flex-1 flex flex-col justify-between">
-                    <div>
-                      <CardItem translateZ={40}>
+                  <div className="flex flex-col md:flex-row gap-6">
+                    {readLaterBookmarks[0].ogImage && (
+                      <div className="w-full md:w-1/3 aspect-video rounded-xl overflow-hidden">
+                        <img
+                          src={readLaterBookmarks[0].ogImage}
+                          alt=""
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+                    <div className="flex-1 flex flex-col justify-between">
+                      <div>
                         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-500/20 text-orange-400 text-xs font-medium mb-4">
                           <BookMarked className="w-3 h-3" />
                           稍后阅读
                         </span>
-                      </CardItem>
-
-                      <CardItem translateZ={50}>
                         <h2
                           className="text-2xl md:text-3xl font-serif font-medium mb-3 line-clamp-2"
                           style={{ color: "var(--color-text-primary)" }}
                         >
                           {readLaterBookmarks[0].title}
                         </h2>
-                      </CardItem>
-
-                      {readLaterBookmarks[0].description && (
-                        <CardItem translateZ={30}>
+                        {readLaterBookmarks[0].description && (
                           <p
                             className="line-clamp-2"
                             style={{ color: "var(--color-text-secondary)" }}
                           >
                             {readLaterBookmarks[0].description}
                           </p>
-                        </CardItem>
-                      )}
-                    </div>
-
-                    <CardItem translateZ={20} className="mt-6">
-                      <div className="flex items-center justify-between">
+                        )}
+                      </div>
+                      <div className="mt-6 flex items-center justify-between">
                         <span
                           className="text-sm"
                           style={{ color: "var(--color-text-muted)" }}
@@ -592,10 +663,80 @@ function App() {
                           开始阅读 <ExternalLink className="w-4 h-4" />
                         </span>
                       </div>
-                    </CardItem>
+                    </div>
                   </div>
                 </div>
-              </Card3D>
+              ) : (
+                // 完整模式：3D 卡片
+                <Card3D
+                  className="cursor-pointer"
+                  glowColor="rgba(251, 146, 60, 0.4)"
+                >
+                  <div
+                    className="p-8 flex flex-col md:flex-row gap-6"
+                    onClick={() =>
+                      window.open(readLaterBookmarks[0].url, "_blank")
+                    }
+                  >
+                    {readLaterBookmarks[0].ogImage && (
+                      <CardItem
+                        translateZ={30}
+                        className="w-full md:w-1/3 aspect-video rounded-xl overflow-hidden"
+                      >
+                        <img
+                          src={readLaterBookmarks[0].ogImage}
+                          alt=""
+                          className="w-full h-full object-cover"
+                        />
+                      </CardItem>
+                    )}
+                    <div className="flex-1 flex flex-col justify-between">
+                      <div>
+                        <CardItem translateZ={40}>
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-500/20 text-orange-400 text-xs font-medium mb-4">
+                            <BookMarked className="w-3 h-3" />
+                            稍后阅读
+                          </span>
+                        </CardItem>
+                        <CardItem translateZ={50}>
+                          <h2
+                            className="text-2xl md:text-3xl font-serif font-medium mb-3 line-clamp-2"
+                            style={{ color: "var(--color-text-primary)" }}
+                          >
+                            {readLaterBookmarks[0].title}
+                          </h2>
+                        </CardItem>
+                        {readLaterBookmarks[0].description && (
+                          <CardItem translateZ={30}>
+                            <p
+                              className="line-clamp-2"
+                              style={{ color: "var(--color-text-secondary)" }}
+                            >
+                              {readLaterBookmarks[0].description}
+                            </p>
+                          </CardItem>
+                        )}
+                      </div>
+                      <CardItem translateZ={20} className="mt-6">
+                        <div className="flex items-center justify-between">
+                          <span
+                            className="text-sm"
+                            style={{ color: "var(--color-text-muted)" }}
+                          >
+                            {new URL(readLaterBookmarks[0].url).hostname}
+                          </span>
+                          <span
+                            className="flex items-center gap-2 text-sm"
+                            style={{ color: "var(--color-primary)" }}
+                          >
+                            开始阅读 <ExternalLink className="w-4 h-4" />
+                          </span>
+                        </div>
+                      </CardItem>
+                    </div>
+                  </div>
+                </Card3D>
+              )}
             </motion.section>
           )}
 
@@ -637,7 +778,7 @@ function App() {
                     key="system-monitor"
                     colSpan={2}
                     rowSpan={2}
-                    spotlightColor="rgba(6, 182, 212, 0.15)"
+                    spotlightColor={isLiteMode ? undefined : "rgba(6, 182, 212, 0.15)"}
                     delay={0}
                   >
                     <SystemMonitorCard />
@@ -650,7 +791,7 @@ function App() {
                     key="hardware-specs"
                     colSpan={2}
                     rowSpan={2}
-                    spotlightColor="rgba(6, 182, 212, 0.1)"
+                    spotlightColor={isLiteMode ? undefined : "rgba(6, 182, 212, 0.1)"}
                     delay={0.1}
                   >
                     <HardwareIdentityCard />
@@ -663,7 +804,7 @@ function App() {
                     key="vital-signs"
                     colSpan={2}
                     rowSpan={2}
-                    spotlightColor="rgba(6, 182, 212, 0.12)"
+                    spotlightColor={isLiteMode ? undefined : "rgba(6, 182, 212, 0.12)"}
                     delay={0.15}
                   >
                     <VitalSignsCard />
@@ -676,7 +817,7 @@ function App() {
                     key="network-telemetry"
                     colSpan={2}
                     rowSpan={2}
-                    spotlightColor="rgba(168, 85, 247, 0.12)"
+                    spotlightColor={isLiteMode ? undefined : "rgba(168, 85, 247, 0.12)"}
                     delay={0.2}
                   >
                     <NetworkTelemetryCard />
@@ -689,7 +830,7 @@ function App() {
                     key="process-matrix"
                     colSpan={2}
                     rowSpan={2}
-                    spotlightColor="rgba(34, 197, 94, 0.12)"
+                    spotlightColor={isLiteMode ? undefined : "rgba(34, 197, 94, 0.12)"}
                     delay={0.25}
                   >
                     <ProcessMatrixCard />
@@ -706,7 +847,7 @@ function App() {
                       key={bookmark.id}
                       colSpan={colSpan as 1 | 2}
                       rowSpan={rowSpan as 1 | 2}
-                      spotlightColor="rgba(234, 179, 8, 0.15)"
+                      spotlightColor={isLiteMode ? undefined : "rgba(234, 179, 8, 0.15)"}
                       onClick={() => window.open(bookmark.url, "_blank")}
                       onContextMenu={(e) => handleContextMenu(e, bookmark)}
                       delay={(index + 2) * 0.05}
@@ -743,7 +884,7 @@ function App() {
                     key="system-monitor-standalone"
                     colSpan={2}
                     rowSpan={2}
-                    spotlightColor="rgba(6, 182, 212, 0.15)"
+                    spotlightColor={isLiteMode ? undefined : "rgba(6, 182, 212, 0.15)"}
                     delay={0}
                   >
                     <SystemMonitorCard />
@@ -754,7 +895,7 @@ function App() {
                     key="hardware-specs-standalone"
                     colSpan={2}
                     rowSpan={2}
-                    spotlightColor="rgba(6, 182, 212, 0.1)"
+                    spotlightColor={isLiteMode ? undefined : "rgba(6, 182, 212, 0.1)"}
                     delay={0.1}
                   >
                     <HardwareIdentityCard />
@@ -765,7 +906,7 @@ function App() {
                     key="vital-signs-standalone"
                     colSpan={2}
                     rowSpan={2}
-                    spotlightColor="rgba(6, 182, 212, 0.12)"
+                    spotlightColor={isLiteMode ? undefined : "rgba(6, 182, 212, 0.12)"}
                     delay={0.15}
                   >
                     <VitalSignsCard />
@@ -776,7 +917,7 @@ function App() {
                     key="network-telemetry-standalone"
                     colSpan={2}
                     rowSpan={2}
-                    spotlightColor="rgba(168, 85, 247, 0.12)"
+                    spotlightColor={isLiteMode ? undefined : "rgba(168, 85, 247, 0.12)"}
                     delay={0.2}
                   >
                     <NetworkTelemetryCard />
@@ -787,7 +928,7 @@ function App() {
                     key="process-matrix-standalone"
                     colSpan={2}
                     rowSpan={2}
-                    spotlightColor="rgba(34, 197, 94, 0.12)"
+                    spotlightColor={isLiteMode ? undefined : "rgba(34, 197, 94, 0.12)"}
                     delay={0.25}
                   >
                     <ProcessMatrixCard />
@@ -810,17 +951,19 @@ function App() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1.2 + catIndex * 0.1 }}
               >
-                {/* 背景装饰文字 */}
-                <div
-                  className="absolute -top-8 left-0 text-[120px] font-bold pointer-events-none select-none leading-none"
-                  style={{
-                    fontFamily: "Inter, sans-serif",
-                    color: "var(--color-text-muted)",
-                    opacity: 0.03,
-                  }}
-                >
-                  {category.name}
-                </div>
+                {/* 背景装饰文字 - 精简模式下隐藏 */}
+                {!isLiteMode && (
+                  <div
+                    className="absolute -top-8 left-0 text-[120px] font-bold pointer-events-none select-none leading-none"
+                    style={{
+                      fontFamily: "Inter, sans-serif",
+                      color: "var(--color-text-muted)",
+                      opacity: 0.03,
+                    }}
+                  >
+                    {category.name}
+                  </div>
+                )}
 
                 <div className="flex items-center gap-3 mb-6 relative z-10">
                   <div
@@ -853,13 +996,13 @@ function App() {
                   {categoryBookmarks.map((bookmark, index) => (
                     <motion.div
                       key={bookmark.id}
-                      initial={{ opacity: 0, y: 20 }}
+                      initial={{ opacity: 0, y: isLiteMode ? 10 : 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
                     >
                       <SpotlightCard
                         className="h-full cursor-pointer"
-                        spotlightColor={`${category.color}20`}
+                        spotlightColor={isLiteMode ? "transparent" : `${category.color}20`}
                         onClick={() => window.open(bookmark.url, "_blank")}
                         onContextMenu={(e) => handleContextMenu(e, bookmark)}
                       >
@@ -931,12 +1074,19 @@ function App() {
               transition={{ delay: 0.5 }}
             >
               <div className="w-24 h-24 mx-auto mb-6 rounded-3xl bg-gradient-to-br from-nebula-purple/20 to-nebula-pink/20 flex items-center justify-center">
-                <Sparkles>
+                {isLiteMode ? (
                   <BookmarkIcon
                     className="w-10 h-10"
                     style={{ color: "var(--color-text-muted)" }}
                   />
-                </Sparkles>
+                ) : (
+                  <Sparkles>
+                    <BookmarkIcon
+                      className="w-10 h-10"
+                      style={{ color: "var(--color-text-muted)" }}
+                    />
+                  </Sparkles>
+                )}
               </div>
               <h3
                 className="text-2xl font-serif mb-4"
@@ -960,8 +1110,8 @@ function App() {
               <motion.button
                 onClick={() => setIsAddModalOpen(true)}
                 className="px-8 py-4 rounded-2xl bg-gradient-to-r from-nebula-purple to-nebula-pink text-white font-medium shadow-glow-md"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: isLiteMode ? 1.02 : 1.05 }}
+                whileTap={{ scale: isLiteMode ? 0.98 : 0.95 }}
               >
                 添加第一个书签
               </motion.button>
@@ -976,7 +1126,7 @@ function App() {
         {widgetVisibility.dockMiniMonitor !== false && (
           <SystemMonitor variant="mini" size="sm" showLoading={false} />
         )}
-        
+
         <FloatingDock
           items={dockItems.map((item) => ({
             ...item,
@@ -991,7 +1141,7 @@ function App() {
         {widgetVisibility.mobileTicker !== false && (
           <SystemMonitor variant="ticker" compact showLoading={false} />
         )}
-        
+
         <MobileFloatingDock
           items={dockItems
             .filter((item) => !item.href) // 过滤掉外链项（移动端不需要 GitHub 链接）
@@ -1058,7 +1208,7 @@ function App() {
 
       {/* 回到顶部按钮 */}
       <ScrollToTop threshold={400} />
-    </AuroraBackground>
+    </BackgroundWrapper>
   );
 }
 

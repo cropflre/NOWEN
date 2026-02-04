@@ -9,7 +9,8 @@ import {
   AlertCircle,
   ExternalLink,
   Sparkles,
-  Zap
+  Zap,
+  Feather
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { SiteSettings } from '../../lib/api'
@@ -220,17 +221,73 @@ export function SiteSettingsCard({
                 <button
                   type="button"
                   onClick={() => onChange({ ...settings, enableBeamAnimation: !settings.enableBeamAnimation })}
+                  disabled={settings.enableLiteMode}
                   className={cn(
                     'relative w-12 h-6 rounded-full transition-all duration-300',
-                    settings.enableBeamAnimation !== false
-                      ? 'bg-gradient-to-r from-cyan-500 to-blue-500'
+                    settings.enableLiteMode 
+                      ? 'bg-gray-600/30 cursor-not-allowed' 
+                      : settings.enableBeamAnimation !== false
+                        ? 'bg-gradient-to-r from-cyan-500 to-blue-500'
+                        : 'bg-gray-600/50'
+                  )}
+                >
+                  <div
+                    className={cn(
+                      'absolute top-1 w-4 h-4 rounded-full bg-white shadow-md transition-all duration-300',
+                      settings.enableBeamAnimation !== false && !settings.enableLiteMode ? 'left-7' : 'left-1'
+                    )}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {/* VIBE CODING: Lite Mode Toggle - 精简模式开关 (禅) */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--color-text-muted)' }}>
+                <Feather className="w-4 h-4" />
+                精简模式
+              </label>
+              <div 
+                className="flex items-center justify-between px-4 py-3 rounded-xl transition-colors duration-300"
+                style={{
+                  background: settings.enableLiteMode 
+                    ? 'rgba(16, 185, 129, 0.1)' 
+                    : 'var(--color-bg-tertiary)',
+                  border: settings.enableLiteMode
+                    ? '1px solid rgba(16, 185, 129, 0.2)'
+                    : '1px solid var(--color-glass-border)',
+                }}
+              >
+                <div>
+                  <p className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>
+                    性能优先 (Lite)
+                  </p>
+                  <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                    关闭所有耗能特效（极光、流星、3D），仅保留核心功能。
+                    <span className="ml-1 opacity-75 text-emerald-500">
+                      {settings.enableLiteMode ? '当前已开启' : ''}
+                    </span>
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => onChange({ 
+                    ...settings, 
+                    enableLiteMode: !settings.enableLiteMode,
+                    // 开启精简模式时，自动关闭光束动画以确保彻底的 Lite
+                    enableBeamAnimation: !settings.enableLiteMode ? false : settings.enableBeamAnimation 
+                  })}
+                  className={cn(
+                    'relative w-12 h-6 rounded-full transition-all duration-300',
+                    settings.enableLiteMode
+                      ? 'bg-gradient-to-r from-emerald-500 to-green-500'
                       : 'bg-gray-600/50'
                   )}
                 >
                   <div
                     className={cn(
                       'absolute top-1 w-4 h-4 rounded-full bg-white shadow-md transition-all duration-300',
-                      settings.enableBeamAnimation !== false ? 'left-7' : 'left-1'
+                      settings.enableLiteMode ? 'left-7' : 'left-1'
                     )}
                   />
                 </button>
