@@ -18,23 +18,21 @@
 
 <table>
   <tr>
-    <td align="center"><b>桌面端首页</b></td>
-    <td align="center"><b>移动端首页</b></td>
+    <td align="center" colspan="2"><b>桌面端首页 - 系统监控仪表盘</b></td>
   </tr>
   <tr>
-    <td><img src="https://github.com/cropflre/NOWEN/raw/main/public/screenshots/light-desktop.png" alt="日间模式-桌面端" width="500"></td>
-    <td><img src="https://github.com/cropflre/NOWEN/raw/main/public/screenshots/light-mobile.png" alt="日间模式-移动端" width="250"></td>
+    <td colspan="2"><img src="https://github.com/cropflre/NOWEN/raw/main/public/screenshots/light-desktop-monitor.png" alt="日间模式-系统监控" width="800"></td>
   </tr>
 </table>
 
 <table>
   <tr>
-    <td align="center"><b>后台书签管理</b></td>
-    <td align="center"><b>后台侧边栏</b></td>
+    <td align="center"><b>书签分类 & 侧边栏导航</b></td>
+    <td align="center"><b>移动端首页</b></td>
   </tr>
   <tr>
-    <td><img src="https://github.com/cropflre/NOWEN/raw/main/public/screenshots/light-admin-bookmarks.png" alt="日间模式-后台书签" width="300"></td>
-    <td><img src="https://github.com/cropflre/NOWEN/raw/main/public/screenshots/light-admin-sidebar.png" alt="日间模式-后台侧边栏" width="300"></td>
+    <td><img src="https://github.com/cropflre/NOWEN/raw/main/public/screenshots/light-desktop-bookmarks.png" alt="日间模式-书签分类" width="500"></td>
+    <td><img src="https://github.com/cropflre/NOWEN/raw/main/public/screenshots/light-mobile.png" alt="日间模式-移动端" width="250"></td>
   </tr>
 </table>
 
@@ -42,25 +40,25 @@
 
 <table>
   <tr>
-    <td align="center"><b>桌面端首页</b></td>
+    <td align="center"><b>桌面端首页 - 深空美学</b></td>
     <td align="center"><b>移动端首页</b></td>
   </tr>
   <tr>
-    <td><img src="https://github.com/cropflre/NOWEN/raw/main/public/screenshots/dark-desktop.png" alt="夜间模式-桌面端" width="500"></td>
+    <td><img src="https://github.com/cropflre/NOWEN/raw/main/public/screenshots/dark-desktop-monitor.png" alt="夜间模式-桌面端" width="500"></td>
     <td><img src="https://github.com/cropflre/NOWEN/raw/main/public/screenshots/dark-mobile.png" alt="夜间模式-移动端" width="250"></td>
   </tr>
 </table>
 
-<table>
-  <tr>
-    <td align="center"><b>后台书签管理</b></td>
-    <td align="center"><b>后台系统设置</b></td>
-  </tr>
-  <tr>
-    <td><img src="https://github.com/cropflre/NOWEN/raw/main/public/screenshots/dark-admin-bookmarks.png" alt="夜间模式-后台书签" width="300"></td>
-    <td><img src="https://github.com/cropflre/NOWEN/raw/main/public/screenshots/dark-admin-settings.png" alt="夜间模式-后台设置" width="300"></td>
-  </tr>
-</table>
+### 🎛️ 功能亮点
+
+| 功能 | 说明 |
+|------|------|
+| **天气 & 农历** | 实时天气 19°C · 少云 · 75% 湿度 · 5.5m/s 风速 · 农历日期 · 立春节气 |
+| **侧边栏导航** | 分类快速导航（开发/效率/设计/阅读/媒体等）· 智能高亮当前分类 |
+| **分类编辑** | 悬停显示编辑按钮 ✏️ · 无需进入后台直接编辑 |
+| **系统监控** | 引擎室 (CPU 57%/内存 89%/硬盘) · 硬件身份卡 · 核心脉搏 (温度 28°C) · 网络遥测 · 服务蜂巢 |
+| **Dock 状态栏** | SYSTEM ONLINE · CPU/MEM/温度/网速实时显示 · 可拖拽定位 |
+| **移动端悬浮坞** | 可展开菜单 · 搜索/添加/主题切换/应用入口 |
 
 ---
 
@@ -102,12 +100,12 @@
 
 ### 💻 系统监控 (NEW)
 
-- **系统监控卡**：CPU/内存/磁盘使用率实时监控，温度显示
-- **硬件身份卡**：CPU 型号、内存大小、操作系统、主板信息
-- **生命体征卡**：CPU 频率、进程数、系统运行时长、负载均衡
-- **网络遥测卡**：网速实时监控、流量统计、延迟检测
-- **进程矩阵卡**：TOP 5 进程 CPU/内存占用排行
-- **Dock 迷你监控**：桌面端底部 Dock 旁实时监控小部件
+- **引擎室（系统监控卡）**：CPU 使用率、内存占用、硬盘空间、运行时间
+- **硬件身份卡**：CPU 型号、主板信息、固件版本、内存大小、存储设备、显卡、操作系统
+- **核心脉搏（生命体征卡）**：CPU/内存实时仪表盘、温度监控、LIVE 状态指示
+- **网络遥测卡**：下载/上传速率、流量监控图表、IP 地址、连接状态
+- **服务蜂巢（进程矩阵卡）**：Docker 容器状态、运行时间计时器、服务健康监控
+- **Dock 迷你监控**：桌面端底部 SYSTEM ONLINE 状态栏，CPU/MEM/温度/网速实时显示
 - **Ticker 状态栏**：移动端底部滚动状态栏
 - **小部件可见性控制**：后台可单独控制每个监控组件的显示/隐藏
 
