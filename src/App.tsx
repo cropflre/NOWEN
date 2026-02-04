@@ -28,6 +28,7 @@ import { Meteors, Sparkles } from "./components/ui/effects";
 import { BreathingDot } from "./components/ui/advanced-effects";
 import { Button as MovingBorderButton } from "./components/ui/moving-border";
 import { ScrollToTop } from "./components/ui/scroll-to-top";
+import { SidebarNav } from "./components/ui/sidebar-nav";
 import { AddBookmarkModal } from "./components/AddBookmarkModal";
 import { BookmarkCardContent } from "./components/BookmarkCardContent";
 import { ContextMenu, useBookmarkContextMenu } from "./components/ContextMenu";
@@ -479,6 +480,20 @@ function App() {
       {/* Meteors Effect - 精简模式下不渲染 */}
       {!isLiteMode && <Meteors number={15} />}
 
+      {/* Sidebar Navigation - 快速定位分类 */}
+      <SidebarNav
+        items={categories
+          .filter((cat) => (bookmarksByCategory[cat.id] || []).length > 0)
+          .map((cat) => ({
+            id: cat.id,
+            name: cat.name,
+            icon: cat.icon,
+            color: cat.color,
+            count: (bookmarksByCategory[cat.id] || []).length,
+          }))}
+        pinnedCount={pinnedBookmarks.length}
+      />
+
       {/* Main Content */}
       <div className="min-h-screen px-4 sm:px-6 lg:px-8 pb-32">
         <div className="max-w-6xl mx-auto">
@@ -853,6 +868,7 @@ function App() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 1 }}
+              data-section="pinned"
             >
               <div className="flex items-center gap-3 mb-6">
                 <div className="relative">
@@ -1078,6 +1094,7 @@ function App() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1.2 + catIndex * 0.1 }}
+                data-category-id={category.id}
               >
                 {/* 背景装饰文字 - 精简模式下隐藏 */}
                 {!isLiteMode && (
