@@ -17,6 +17,8 @@ import {
   RefreshCw,
   Sun,
   Moon,
+  Edit2,
+  FolderPlus,
 } from "lucide-react";
 import { AuroraBackground } from "./components/ui/aurora-background";
 import { Card3D, CardItem } from "./components/ui/3d-card";
@@ -35,6 +37,7 @@ import { AddBookmarkModal } from "./components/AddBookmarkModal";
 import { BookmarkCardContent } from "./components/BookmarkCardContent";
 import { ContextMenu, useBookmarkContextMenu } from "./components/ContextMenu";
 import { IconManager } from "./components/IconManager";
+import { CategoryEditModal } from "./components/CategoryEditModal";
 import { Admin } from "./pages/Admin";
 import { AdminLogin } from "./components/AdminLogin";
 import { ForcePasswordChange } from "./components/ForcePasswordChange";
@@ -125,6 +128,9 @@ function App() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isIconManagerOpen, setIsIconManagerOpen] = useState(false);
   const [editingBookmark, setEditingBookmark] = useState<Bookmark | null>(null);
+  const [editingCategory, setEditingCategory] = useState<import("./types/bookmark").Category | null>(null);
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [categoryModalMode, setCategoryModalMode] = useState<'edit' | 'add'>('edit');
   const [pendingUrl, setPendingUrl] = useState("");
   const [adminUsername, setAdminUsername] = useState<string>("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -416,8 +422,13 @@ function App() {
     );
   }
 
-  // 强制修改密码页面
+  // 强制修改密码页面 - 需要登录才能访问
   if (currentPage === "force-password-change") {
+    // 二次验证：确保用户已登录
+    if (!isLoggedIn) {
+      setCurrentPage("admin-login");
+      return null;
+    }
     return (
       <ForcePasswordChange
         username={adminUsername}
@@ -427,8 +438,14 @@ function App() {
     );
   }
 
-  // 后台管理页面
+  // 后台管理页面 - 需要登录才能访问
   if (currentPage === "admin") {
+    // 二次验证：确保用户已登录
+    if (!isLoggedIn) {
+      // 未登录，重定向到登录页面
+      setCurrentPage("admin-login");
+      return null;
+    }
     return (
       <>
         <Admin
@@ -1102,7 +1119,7 @@ function App() {
             return (
               <motion.section
                 key={category.id}
-                className="mb-12 relative"
+                className="mb-12 relative group"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1.2 + catIndex * 0.1 }}
@@ -1147,6 +1164,19 @@ function App() {
                   >
                     {categoryBookmarks.length}
                   </span>
+                  {/* 编辑分类按钮 */}
+                  <button
+                    onClick={() => {
+                      setEditingCategory(category);
+                      setCategoryModalMode('edit');
+                      setIsCategoryModalOpen(true);
+                    }}
+                    className="ml-2 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-white/10 transition-all"
+                    style={{ color: "var(--color-text-muted)" }}
+                    title="编辑分类"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 relative z-10">
@@ -1223,6 +1253,33 @@ function App() {
               </motion.section>
             );
           })}
+
+          {/* 新建分类按钮 - 只有登录状态才显示 */}
+          {isLoggedIn && (
+            <motion.div
+              className="mb-12"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.5 }}
+            >
+              <button
+                onClick={() => {
+                  setEditingCategory(null);
+                  setCategoryModalMode('add');
+                  setIsCategoryModalOpen(true);
+                }}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all hover:scale-105"
+                style={{
+                  background: 'var(--color-glass)',
+                  border: '1px dashed var(--color-glass-border)',
+                  color: 'var(--color-text-muted)',
+                }}
+              >
+                <FolderPlus className="w-4 h-4" />
+                <span className="text-sm">新建分类</span>
+              </button>
+            </motion.div>
+          )}
 
           {/* Empty State */}
           {bookmarks.length === 0 && !isLoading && (
@@ -1345,6 +1402,26 @@ function App() {
         customIcons={customIcons}
         onAddIcon={addCustomIcon}
         onDeleteIcon={deleteCustomIcon}
+      />
+
+      {/* Category Edit Modal */}
+      <CategoryEditModal
+        isOpen={isCategoryModalOpen}
+        category={editingCategory}
+        mode={categoryModalMode}
+        onClose={() => {
+          setIsCategoryModalOpen(false);
+          setEditingCategory(null);
+        }}
+        onSave={(id, updates) => {
+          updateCategory(id, updates);
+        }}
+        onDelete={(id) => {
+          deleteCategory(id);
+        }}
+        onAdd={(category) => {
+          addCategory(category);
+        }}
       />
 
       {/* Context Menu */}
