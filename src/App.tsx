@@ -15,6 +15,8 @@ import {
   Droplets,
   Wind,
   RefreshCw,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { AuroraBackground } from "./components/ui/aurora-background";
 import { Card3D, CardItem } from "./components/ui/3d-card";
@@ -61,8 +63,8 @@ import {
   handleQuotesChange,
 } from "./data/quotes";
 
-// Dock 导航项
-const dockItems = [
+// Dock 导航项生成函数
+const createDockItems = (isDark: boolean, onToggleTheme: () => void) => [
   {
     id: "home",
     title: "首页",
@@ -80,6 +82,13 @@ const dockItems = [
     title: "添加",
     icon: <Plus className="w-5 h-5" />,
     IconComponent: Plus,
+  },
+  {
+    id: "theme",
+    title: isDark ? "切换日间模式" : "切换夜间模式",
+    icon: isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />,
+    IconComponent: isDark ? Sun : Moon,
+    onClick: onToggleTheme,
   },
   {
     id: "admin",
@@ -195,7 +204,10 @@ function App() {
     refreshData,
   } = useBookmarkStore();
 
-  const { isDark } = useTheme();
+  const { isDark, toggleDarkMode } = useTheme();
+
+  // 创建 Dock 导航项（响应主题变化）
+  const dockItems = createDockItems(isDark, toggleDarkMode);
 
   // 天气数据
   const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather(showWeather);
@@ -1277,7 +1289,7 @@ function App() {
         <FloatingDock
           items={dockItems.map((item) => ({
             ...item,
-            onClick: item.href ? undefined : () => handleDockClick(item.id),
+            onClick: item.href ? undefined : (item.onClick || (() => handleDockClick(item.id))),
           }))}
         />
       </div>
@@ -1296,7 +1308,7 @@ function App() {
               id: item.id,
               label: item.title,
               icon: item.IconComponent,
-              onClick: () => handleDockClick(item.id),
+              onClick: item.onClick || (() => handleDockClick(item.id)),
               isActive: item.id === "home", // 首页默认激活
             }))}
         />
