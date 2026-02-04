@@ -90,11 +90,16 @@ router.post('/import', authMiddleware, validateBody(importDataSchema), (req: Req
     if (settings && typeof settings === 'object') {
       const now = new Date().toISOString()
       for (const [key, value] of Object.entries(settings)) {
+        // 如果值是对象，需要 JSON 序列化
+        const stringValue = typeof value === 'object' && value !== null 
+          ? JSON.stringify(value) 
+          : String(value ?? '')
+        
         const existing = queryOne('SELECT * FROM settings WHERE key = ?', [key])
         if (existing) {
-          db.run('UPDATE settings SET value = ?, updatedAt = ? WHERE key = ?', [value, now, key])
+          db.run('UPDATE settings SET value = ?, updatedAt = ? WHERE key = ?', [stringValue, now, key])
         } else {
-          db.run('INSERT INTO settings (key, value, updatedAt) VALUES (?, ?, ?)', [key, value, now])
+          db.run('INSERT INTO settings (key, value, updatedAt) VALUES (?, ?, ?)', [key, stringValue, now])
         }
       }
     }
