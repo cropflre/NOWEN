@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { Pin, ChevronRight, ChevronLeft } from "lucide-react";
 import { getIconComponent } from "../../lib/utils";
 
@@ -99,44 +99,44 @@ export function SidebarNav({ items, pinnedCount = 0, className = "" }: SidebarNa
     : items;
 
   return (
-    <AnimatePresence>
-      <motion.div
-        className={`fixed left-4 top-1/2 -translate-y-1/2 z-40 hidden lg:block ${className}`}
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: -20 }}
-        transition={{ duration: 0.3 }}
-      >
-        <div
-          className="relative rounded-2xl backdrop-blur-xl overflow-hidden"
+    <motion.div
+      className={`fixed left-4 top-1/2 -translate-y-1/2 z-40 hidden lg:block ${className}`}
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      {/* 外层容器 - 不使用 overflow-hidden，让按钮可以超出 */}
+      <div className="relative">
+        {/* 折叠/展开按钮 - 放在外层，不受 overflow 影响 */}
+        <button
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          className="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center transition-all hover:scale-110 z-10"
+          style={{
+            background: "var(--color-bg-secondary)",
+            border: "1px solid var(--color-border-light)",
+            color: "var(--color-text-muted)",
+            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
+          }}
+        >
+          {isCollapsed ? (
+            <ChevronRight className="w-3 h-3" />
+          ) : (
+            <ChevronLeft className="w-3 h-3" />
+          )}
+        </button>
+
+        {/* 内层容器 - 带圆角和毛玻璃效果 */}
+        <motion.div
+          className="rounded-2xl backdrop-blur-xl overflow-hidden"
           style={{
             background: "var(--color-glass)",
             border: "1px solid var(--color-glass-border)",
             boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
           }}
+          animate={{ width: isCollapsed ? 56 : 168 }}
+          transition={{ duration: 0.2, ease: "easeInOut" }}
         >
-          {/* 折叠/展开按钮 */}
-          <button
-            onClick={() => setIsCollapsed(!isCollapsed)}
-            className="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center transition-all hover:scale-110"
-            style={{
-              background: "var(--color-bg-secondary)",
-              border: "1px solid var(--color-border-light)",
-              color: "var(--color-text-muted)",
-            }}
-          >
-            {isCollapsed ? (
-              <ChevronRight className="w-3 h-3" />
-            ) : (
-              <ChevronLeft className="w-3 h-3" />
-            )}
-          </button>
-
-          <motion.nav
-            className="py-3"
-            animate={{ width: isCollapsed ? 48 : 160 }}
-            transition={{ duration: 0.2 }}
-          >
+          <nav className="py-3">
             <ul className="space-y-1 px-2">
               {allItems.map((item, index) => {
                 const isActive = activeId === item.id;
@@ -151,9 +151,7 @@ export function SidebarNav({ items, pinnedCount = 0, className = "" }: SidebarNa
                   >
                     <button
                       onClick={() => scrollToSection(item.id)}
-                      className={`w-full flex items-center gap-2 px-2 py-2 rounded-lg transition-all duration-200 group ${
-                        isActive ? "scale-[1.02]" : "hover:scale-[1.01]"
-                      }`}
+                      className="w-full flex items-center gap-2 px-2 py-2 rounded-lg transition-all duration-200 relative"
                       style={{
                         background: isActive 
                           ? `${item.color || "var(--color-primary)"}15`
@@ -166,7 +164,7 @@ export function SidebarNav({ items, pinnedCount = 0, className = "" }: SidebarNa
                     >
                       {/* 激活指示器 */}
                       <div
-                        className="absolute left-0 w-1 h-6 rounded-r-full transition-all duration-200"
+                        className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 rounded-r-full transition-all duration-200"
                         style={{
                           background: isActive ? item.color || "var(--color-primary)" : "transparent",
                           opacity: isActive ? 1 : 0,
@@ -175,7 +173,7 @@ export function SidebarNav({ items, pinnedCount = 0, className = "" }: SidebarNa
 
                       {/* 图标 */}
                       <div
-                        className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors"
+                        className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors"
                         style={{
                           background: isActive 
                             ? `${item.color || "var(--color-primary)"}20`
@@ -193,56 +191,51 @@ export function SidebarNav({ items, pinnedCount = 0, className = "" }: SidebarNa
                       </div>
 
                       {/* 名称和数量 - 折叠时隐藏 */}
-                      <AnimatePresence>
-                        {!isCollapsed && (
-                          <motion.div
-                            className="flex items-center justify-between flex-1 min-w-0"
-                            initial={{ opacity: 0, width: 0 }}
-                            animate={{ opacity: 1, width: "auto" }}
-                            exit={{ opacity: 0, width: 0 }}
-                            transition={{ duration: 0.2 }}
+                      {!isCollapsed && (
+                        <motion.div
+                          className="flex items-center justify-between flex-1 min-w-0 overflow-hidden"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ duration: 0.15, delay: 0.1 }}
+                        >
+                          <span className="text-sm font-medium truncate">
+                            {item.name}
+                          </span>
+                          <span
+                            className="text-xs px-1.5 py-0.5 rounded-full ml-1 flex-shrink-0"
+                            style={{
+                              background: "var(--color-bg-tertiary)",
+                              color: "var(--color-text-muted)",
+                            }}
                           >
-                            <span className="text-sm font-medium truncate">
-                              {item.name}
-                            </span>
-                            <span
-                              className="text-xs px-1.5 py-0.5 rounded-full ml-1"
-                              style={{
-                                background: "var(--color-bg-tertiary)",
-                                color: "var(--color-text-muted)",
-                              }}
-                            >
-                              {item.count}
-                            </span>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
+                            {item.count}
+                          </span>
+                        </motion.div>
+                      )}
                     </button>
                   </motion.li>
                 );
               })}
             </ul>
-          </motion.nav>
+          </nav>
 
           {/* 底部提示 - 折叠时隐藏 */}
-          <AnimatePresence>
-            {!isCollapsed && (
-              <motion.div
-                className="px-4 py-2 text-xs border-t"
-                style={{
-                  borderColor: "var(--color-border-light)",
-                  color: "var(--color-text-muted)",
-                }}
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-              >
-                点击快速定位
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </motion.div>
-    </AnimatePresence>
+          {!isCollapsed && (
+            <motion.div
+              className="px-4 py-2 text-xs border-t"
+              style={{
+                borderColor: "var(--color-border-light)",
+                color: "var(--color-text-muted)",
+              }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.15, delay: 0.1 }}
+            >
+              点击快速定位
+            </motion.div>
+          )}
+        </motion.div>
+      </div>
+    </motion.div>
   );
 }
