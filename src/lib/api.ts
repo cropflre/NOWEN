@@ -416,6 +416,8 @@ export interface SiteSettings {
   siteFavicon?: string
   enableBeamAnimation?: boolean
   enableLiteMode?: boolean // 精简模式开关 - 禅 (Zen)
+  enableWeather?: boolean  // 天气显示开关
+  enableLunar?: boolean    // 农历显示开关
   widgetVisibility?: WidgetVisibility
 }
 
@@ -447,6 +449,9 @@ function parseSettings(raw: Record<string, string>): SiteSettings {
     // 默认开启光束，默认关闭精简模式
     enableBeamAnimation: raw.enableBeamAnimation === undefined ? true : raw.enableBeamAnimation === 'true' || raw.enableBeamAnimation === '1',
     enableLiteMode: raw.enableLiteMode === 'true' || raw.enableLiteMode === '1',
+    // 默认开启天气和农历
+    enableWeather: raw.enableWeather === undefined ? true : raw.enableWeather === 'true' || raw.enableWeather === '1',
+    enableLunar: raw.enableLunar === undefined ? true : raw.enableLunar === 'true' || raw.enableLunar === '1',
     widgetVisibility,
   }
 }
@@ -463,6 +468,8 @@ export async function updateSettings(settings: SiteSettings): Promise<SiteSettin
     siteFavicon: settings.siteFavicon,
     enableBeamAnimation: settings.enableBeamAnimation ? 'true' : 'false',
     enableLiteMode: settings.enableLiteMode ? 'true' : 'false',
+    enableWeather: settings.enableWeather ? 'true' : 'false',
+    enableLunar: settings.enableLunar ? 'true' : 'false',
     widgetVisibility: settings.widgetVisibility ? JSON.stringify(settings.widgetVisibility) : undefined,
   }
   const raw = await request<Record<string, string>>('/api/settings', {

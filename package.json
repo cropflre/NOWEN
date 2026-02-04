@@ -31,6 +31,7 @@
     "express": "^5.2.1",
     "framer-motion": "^11.15.0",
     "lucide-react": "^0.468.0",
+    "lunar-javascript": "^1.7.7",
     "prisma": "^7.3.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

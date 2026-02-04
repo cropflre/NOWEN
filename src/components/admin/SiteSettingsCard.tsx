@@ -10,7 +10,9 @@ import {
   ExternalLink,
   Sparkles,
   Zap,
-  Feather
+  Feather,
+  CloudSun,
+  Moon
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { SiteSettings } from '../../lib/api'
@@ -288,6 +290,96 @@ export function SiteSettingsCard({
                     className={cn(
                       'absolute top-1 w-4 h-4 rounded-full bg-white shadow-md transition-all duration-300',
                       settings.enableLiteMode ? 'left-7' : 'left-1'
+                    )}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {/* 天气显示开关 */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--color-text-muted)' }}>
+                <CloudSun className="w-4 h-4" />
+                天气显示
+              </label>
+              <div 
+                className="flex items-center justify-between px-4 py-3 rounded-xl transition-colors duration-300"
+                style={{
+                  background: settings.enableWeather !== false
+                    ? 'rgba(59, 130, 246, 0.1)' 
+                    : 'var(--color-bg-tertiary)',
+                  border: settings.enableWeather !== false
+                    ? '1px solid rgba(59, 130, 246, 0.2)'
+                    : '1px solid var(--color-glass-border)',
+                }}
+              >
+                <div>
+                  <p className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>
+                    实时天气
+                  </p>
+                  <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                    在首页显示当前位置的天气信息（需要定位权限）
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => onChange({ ...settings, enableWeather: !(settings.enableWeather !== false) })}
+                  className={cn(
+                    'relative w-12 h-6 rounded-full transition-all duration-300',
+                    settings.enableWeather !== false
+                      ? 'bg-gradient-to-r from-blue-500 to-sky-500'
+                      : 'bg-gray-600/50'
+                  )}
+                >
+                  <div
+                    className={cn(
+                      'absolute top-1 w-4 h-4 rounded-full bg-white shadow-md transition-all duration-300',
+                      settings.enableWeather !== false ? 'left-7' : 'left-1'
+                    )}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {/* 农历显示开关 */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--color-text-muted)' }}>
+                <Moon className="w-4 h-4" />
+                农历显示
+              </label>
+              <div 
+                className="flex items-center justify-between px-4 py-3 rounded-xl transition-colors duration-300"
+                style={{
+                  background: settings.enableLunar !== false
+                    ? 'rgba(251, 146, 60, 0.1)' 
+                    : 'var(--color-bg-tertiary)',
+                  border: settings.enableLunar !== false
+                    ? '1px solid rgba(251, 146, 60, 0.2)'
+                    : '1px solid var(--color-glass-border)',
+                }}
+              >
+                <div>
+                  <p className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>
+                    农历日期
+                  </p>
+                  <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                    在日期旁显示农历、节气和传统节日
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => onChange({ ...settings, enableLunar: !(settings.enableLunar !== false) })}
+                  className={cn(
+                    'relative w-12 h-6 rounded-full transition-all duration-300',
+                    settings.enableLunar !== false
+                      ? 'bg-gradient-to-r from-orange-500 to-amber-500'
+                      : 'bg-gray-600/50'
+                  )}
+                >
+                  <div
+                    className={cn(
+                      'absolute top-1 w-4 h-4 rounded-full bg-white shadow-md transition-all duration-300',
+                      settings.enableLunar !== false ? 'left-7' : 'left-1'
                     )}
                   />
                 </button>

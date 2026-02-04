@@ -11,6 +11,10 @@ import {
   BookMarked,
   Command,
   LayoutDashboard,
+  MapPin,
+  Droplets,
+  Wind,
+  RefreshCw,
 } from "lucide-react";
 import { AuroraBackground } from "./components/ui/aurora-background";
 import { Card3D, CardItem } from "./components/ui/3d-card";
@@ -40,6 +44,7 @@ import { SystemMonitor } from "./components/monitor";
 import { useBookmarkStore } from "./hooks/useBookmarkStore";
 import { useTheme } from "./hooks/useTheme";
 import { useTime } from "./hooks/useTime";
+import { useWeather, getWeatherIcon } from "./hooks/useWeather";
 import { Bookmark } from "./types/bookmark";
 import { getIconComponent } from "./lib/utils";
 import {
@@ -118,6 +123,8 @@ function App() {
     siteFavicon: "",
     enableBeamAnimation: true,
     enableLiteMode: false, // 默认关闭精简模式
+    enableWeather: true,   // 默认开启天气
+    enableLunar: true,     // 默认开启农历
     widgetVisibility: {
       systemMonitor: true,
       hardwareIdentity: true,
@@ -132,6 +139,9 @@ function App() {
 
   // VIBE CODING: 精简模式快捷访问
   const isLiteMode = siteSettings.enableLiteMode;
+  // 天气和农历开关
+  const showWeather = siteSettings.enableWeather !== false;
+  const showLunar = siteSettings.enableLunar !== false;
 
   // 仪表可见性快捷访问 - 设置未加载完成时默认隐藏所有小部件避免闪烁
   const widgetVisibility = settingsLoaded
@@ -163,7 +173,7 @@ function App() {
 
   const { getMenuItems } = useBookmarkContextMenu();
 
-  const { greeting, formattedTime, formattedDate } = useTime();
+  const { greeting, formattedTime, formattedDate, lunarDate } = useTime();
 
   const {
     bookmarks,
@@ -185,6 +195,9 @@ function App() {
   } = useBookmarkStore();
 
   const { isDark } = useTheme();
+
+  // 天气数据
+  const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather(showWeather);
 
   // 初始化时检查登录状态和加载站点设置
   useEffect(() => {
@@ -457,8 +470,8 @@ function App() {
 
   // 选择背景包装组件
   const BackgroundWrapper = isLiteMode ? LiteBackground : AuroraBackground;
-  const backgroundProps = isLiteMode 
-    ? {} 
+  const backgroundProps = isLiteMode
+    ? {}
     : { showBeams: siteSettings.enableBeamAnimation !== false };
 
   return (
@@ -490,11 +503,102 @@ function App() {
                 {formattedTime}
               </div>
               <div
-                className="text-base tracking-[0.2em] uppercase mt-3"
+                className="text-base tracking-[0.2em] uppercase mt-3 flex flex-wrap items-center justify-center gap-2"
                 style={{ color: "var(--color-text-muted)" }}
               >
-                {formattedDate}
+                <span>{formattedDate}</span>
+                {showLunar && lunarDate.display && (
+                  <span
+                    className="px-2 py-0.5 rounded-md text-sm normal-case tracking-normal"
+                    style={{
+                      background:
+                        lunarDate.festival || lunarDate.jieQi
+                          ? "rgba(251, 146, 60, 0.15)"
+                          : "var(--color-bg-tertiary)",
+                      color:
+                        lunarDate.festival || lunarDate.jieQi
+                          ? "rgb(251, 146, 60)"
+                          : "var(--color-text-muted)",
+                    }}
+                  >
+                    {lunarDate.display}
+                  </span>
+                )}
               </div>
+
+              {/* 天气显示 */}
+              {showWeather && weather && (
+                <motion.div
+                  className="mt-4 inline-flex items-center gap-3 px-4 py-2 rounded-xl"
+                  style={{
+                    background: "var(--color-glass)",
+                    border: "1px solid var(--color-glass-border)",
+                  }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  {/* 天气图标和温度 */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">{getWeatherIcon(weather.icon)}</span>
+                    <span
+                      className="text-xl font-medium"
+                      style={{ color: "var(--color-text-primary)" }}
+                    >
+                      {weather.temperature}°C
+                    </span>
+                  </div>
+
+                  {/* 分隔线 */}
+                  <div
+                    className="w-px h-6"
+                    style={{ background: "var(--color-glass-border)" }}
+                  />
+
+                  {/* 天气详情 */}
+                  <div className="flex items-center gap-3 text-sm">
+                    <span style={{ color: "var(--color-text-secondary)" }}>
+                      {weather.description}
+                    </span>
+                    <span
+                      className="flex items-center gap-1"
+                      style={{ color: "var(--color-text-muted)" }}
+                    >
+                      <Droplets className="w-3 h-3" />
+                      {weather.humidity}%
+                    </span>
+                    <span
+                      className="hidden sm:flex items-center gap-1"
+                      style={{ color: "var(--color-text-muted)" }}
+                    >
+                      <Wind className="w-3 h-3" />
+                      {weather.windSpeed}m/s
+                    </span>
+                  </div>
+
+                  {/* 城市 */}
+                  <div
+                    className="hidden md:flex items-center gap-1 text-xs"
+                    style={{ color: "var(--color-text-muted)" }}
+                  >
+                    <MapPin className="w-3 h-3" />
+                    {weather.city}
+                  </div>
+
+                  {/* 刷新按钮 */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      refreshWeather();
+                    }}
+                    className="p-1 rounded-md hover:bg-white/10 transition-colors"
+                    style={{ color: "var(--color-text-muted)" }}
+                    title="刷新天气"
+                  >
+                    <RefreshCw className={`w-3 h-3 ${weatherLoading ? 'animate-spin' : ''}`} />
+                  </button>
+                </motion.div>
+              )}
             </motion.div>
 
             {/* Greeting with Typewriter */}
@@ -536,7 +640,7 @@ function App() {
             >
               {isLiteMode ? (
                 // 精简模式：简约搜索框，无 Moving Border
-                <div 
+                <div
                   className="inline-flex items-center gap-3 px-6 py-3.5 rounded-xl cursor-pointer transition-all duration-300 hover:shadow-md"
                   style={{
                     background: "var(--color-glass)",
@@ -610,13 +714,15 @@ function App() {
             >
               {isLiteMode ? (
                 // 精简模式：普通卡片，无 3D 效果
-                <div 
+                <div
                   className="p-8 rounded-2xl cursor-pointer transition-all duration-300 hover:shadow-lg"
                   style={{
                     background: "var(--color-glass)",
                     border: "1px solid var(--color-glass-border)",
                   }}
-                  onClick={() => window.open(readLaterBookmarks[0].url, "_blank")}
+                  onClick={() =>
+                    window.open(readLaterBookmarks[0].url, "_blank")
+                  }
                 >
                   <div className="flex flex-col md:flex-row gap-6">
                     {readLaterBookmarks[0].ogImage && (
@@ -778,7 +884,9 @@ function App() {
                     key="system-monitor"
                     colSpan={2}
                     rowSpan={2}
-                    spotlightColor={isLiteMode ? undefined : "rgba(6, 182, 212, 0.15)"}
+                    spotlightColor={
+                      isLiteMode ? undefined : "rgba(6, 182, 212, 0.15)"
+                    }
                     delay={0}
                   >
                     <SystemMonitorCard />
@@ -791,7 +899,9 @@ function App() {
                     key="hardware-specs"
                     colSpan={2}
                     rowSpan={2}
-                    spotlightColor={isLiteMode ? undefined : "rgba(6, 182, 212, 0.1)"}
+                    spotlightColor={
+                      isLiteMode ? undefined : "rgba(6, 182, 212, 0.1)"
+                    }
                     delay={0.1}
                   >
                     <HardwareIdentityCard />
@@ -804,7 +914,9 @@ function App() {
                     key="vital-signs"
                     colSpan={2}
                     rowSpan={2}
-                    spotlightColor={isLiteMode ? undefined : "rgba(6, 182, 212, 0.12)"}
+                    spotlightColor={
+                      isLiteMode ? undefined : "rgba(6, 182, 212, 0.12)"
+                    }
                     delay={0.15}
                   >
                     <VitalSignsCard />
@@ -817,7 +929,9 @@ function App() {
                     key="network-telemetry"
                     colSpan={2}
                     rowSpan={2}
-                    spotlightColor={isLiteMode ? undefined : "rgba(168, 85, 247, 0.12)"}
+                    spotlightColor={
+                      isLiteMode ? undefined : "rgba(168, 85, 247, 0.12)"
+                    }
                     delay={0.2}
                   >
                     <NetworkTelemetryCard />
@@ -830,7 +944,9 @@ function App() {
                     key="process-matrix"
                     colSpan={2}
                     rowSpan={2}
-                    spotlightColor={isLiteMode ? undefined : "rgba(34, 197, 94, 0.12)"}
+                    spotlightColor={
+                      isLiteMode ? undefined : "rgba(34, 197, 94, 0.12)"
+                    }
                     delay={0.25}
                   >
                     <ProcessMatrixCard />
@@ -847,7 +963,9 @@ function App() {
                       key={bookmark.id}
                       colSpan={colSpan as 1 | 2}
                       rowSpan={rowSpan as 1 | 2}
-                      spotlightColor={isLiteMode ? undefined : "rgba(234, 179, 8, 0.15)"}
+                      spotlightColor={
+                        isLiteMode ? undefined : "rgba(234, 179, 8, 0.15)"
+                      }
                       onClick={() => window.open(bookmark.url, "_blank")}
                       onContextMenu={(e) => handleContextMenu(e, bookmark)}
                       delay={(index + 2) * 0.05}
@@ -884,7 +1002,9 @@ function App() {
                     key="system-monitor-standalone"
                     colSpan={2}
                     rowSpan={2}
-                    spotlightColor={isLiteMode ? undefined : "rgba(6, 182, 212, 0.15)"}
+                    spotlightColor={
+                      isLiteMode ? undefined : "rgba(6, 182, 212, 0.15)"
+                    }
                     delay={0}
                   >
                     <SystemMonitorCard />
@@ -895,7 +1015,9 @@ function App() {
                     key="hardware-specs-standalone"
                     colSpan={2}
                     rowSpan={2}
-                    spotlightColor={isLiteMode ? undefined : "rgba(6, 182, 212, 0.1)"}
+                    spotlightColor={
+                      isLiteMode ? undefined : "rgba(6, 182, 212, 0.1)"
+                    }
                     delay={0.1}
                   >
                     <HardwareIdentityCard />
@@ -906,7 +1028,9 @@ function App() {
                     key="vital-signs-standalone"
                     colSpan={2}
                     rowSpan={2}
-                    spotlightColor={isLiteMode ? undefined : "rgba(6, 182, 212, 0.12)"}
+                    spotlightColor={
+                      isLiteMode ? undefined : "rgba(6, 182, 212, 0.12)"
+                    }
                     delay={0.15}
                   >
                     <VitalSignsCard />
@@ -917,7 +1041,9 @@ function App() {
                     key="network-telemetry-standalone"
                     colSpan={2}
                     rowSpan={2}
-                    spotlightColor={isLiteMode ? undefined : "rgba(168, 85, 247, 0.12)"}
+                    spotlightColor={
+                      isLiteMode ? undefined : "rgba(168, 85, 247, 0.12)"
+                    }
                     delay={0.2}
                   >
                     <NetworkTelemetryCard />
@@ -928,7 +1054,9 @@ function App() {
                     key="process-matrix-standalone"
                     colSpan={2}
                     rowSpan={2}
-                    spotlightColor={isLiteMode ? undefined : "rgba(34, 197, 94, 0.12)"}
+                    spotlightColor={
+                      isLiteMode ? undefined : "rgba(34, 197, 94, 0.12)"
+                    }
                     delay={0.25}
                   >
                     <ProcessMatrixCard />
@@ -1002,7 +1130,9 @@ function App() {
                     >
                       <SpotlightCard
                         className="h-full cursor-pointer"
-                        spotlightColor={isLiteMode ? "transparent" : `${category.color}20`}
+                        spotlightColor={
+                          isLiteMode ? "transparent" : `${category.color}20`
+                        }
                         onClick={() => window.open(bookmark.url, "_blank")}
                         onContextMenu={(e) => handleContextMenu(e, bookmark)}
                       >
