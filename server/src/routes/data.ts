@@ -129,7 +129,7 @@ router.post('/factory-reset', authMiddleware, async (req: Request, res: Response
     
     // 重新初始化默认设置
     const defaultSettings = [
-      { key: 'siteTitle', value: 'Nebula Portal' },
+      { key: 'siteTitle', value: 'NOWEN' },
       { key: 'siteFavicon', value: '' },
       { key: 'useDefaultQuotes', value: 'true' },
     ]

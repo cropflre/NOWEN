@@ -149,7 +149,7 @@ function App() {
   const [adminUsername, setAdminUsername] = useState<string>("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [siteSettings, setSiteSettings] = useState<SiteSettings>({
-    siteTitle: "Nebula Portal",
+    siteTitle: "NOWEN",
     siteFavicon: "",
     enableBeamAnimation: true,
     enableLiteMode: false, // 默认关闭精简模式

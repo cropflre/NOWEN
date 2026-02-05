@@ -494,7 +494,7 @@ export function SpotlightSearch({
                   color: 'var(--color-text-muted)',
                 }}
               >
-                <span>Nebula Portal</span>
+                <span>NOWEN</span>
                 <div className="flex items-center gap-3">
                   <span className="flex items-center gap-1">
                     <kbd 

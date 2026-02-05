@@ -23,7 +23,7 @@ const PORT = parseInt(process.env.PORT || '3001', 10)
 // 启动日志
 console.log(`
 ========================================
-  Nebula Portal Server
+  NOWEN Server
   Environment: ${NODE_ENV}
   Port: ${PORT}
   Debug Mode: ${isDev ? 'ON' : 'OFF'}

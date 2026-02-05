@@ -338,7 +338,7 @@ export function AdminSidebar({
                 className="text-xs text-white/50"
                 style={a11yTextShadow.secondary}
               >
-                Nebula Portal
+                NOWEN
               </p>
             </div>
           </div>

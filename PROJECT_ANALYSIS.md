@@ -2,7 +2,7 @@
 
 ## 一、项目概述
 
-**项目名称**: Digital Zen Garden (Nebula Portal)  
+**项目名称**: Digital Zen Garden (NOWEN)  
 **技术栈**: React 18 + TypeScript + Vite + Tailwind CSS + Express + SQLite (sql.js)  
 **项目类型**: 个人书签导航页面应用
 

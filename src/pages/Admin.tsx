@@ -117,7 +117,7 @@ function AdminContent() {
 
   // 站点设置状态
   const [siteSettings, setSiteSettings] = useState<SiteSettings>({
-    siteTitle: 'Nebula Portal',
+    siteTitle: 'NOWEN',
     siteFavicon: '',
     enableBeamAnimation: true,
     widgetVisibility: {
