@@ -31,10 +31,19 @@ export function SortableBookmarkCard({
     isDragging,
   } = useSortable({ id: bookmark.id })
 
-  const style = {
+  // VIBE CODING: 拖拽时的"悬浮感" - 卡片上浮、变亮、提升层级
+  const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.3 : 1,
+    transition: transition || 'transform 200ms cubic-bezier(0.25, 1, 0.5, 1)',
+    // 拖拽时：不仅变透明，还要稍微放大，并提升层级
+    opacity: isDragging ? 0.6 : 1,
+    zIndex: isDragging ? 50 : 1,
+    // 拖拽时稍微放大，增加"抓起"的感觉
+    scale: isDragging ? 1.05 : 1,
+    // 光标样式
+    cursor: isDragging ? 'grabbing' : 'grab',
+    // 拖拽时添加阴影，增强悬浮感
+    filter: isDragging ? 'drop-shadow(0 20px 25px rgba(0, 0, 0, 0.25))' : 'none',
   }
 
   return (

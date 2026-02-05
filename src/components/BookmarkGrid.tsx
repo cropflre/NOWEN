@@ -87,6 +87,12 @@ export function BookmarkGrid({
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string)
+    
+    // VIBE CODING: 触觉反馈 - 让用户"感觉到"卡片被抓起
+    // 如果设备支持震动（如手机），给手指一个微小的 "Click" 感
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      navigator.vibrate(10) // 10ms 的微震，短促而有力
+    }
   }
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -100,6 +106,11 @@ export function BookmarkGrid({
       if (oldIndex !== -1 && newIndex !== -1) {
         const newOrder = arrayMove(bookmarks, oldIndex, newIndex)
         onReorder?.(newOrder)
+        
+        // VIBE CODING: 落地触觉反馈 - 让用户"感觉到"卡片被放下
+        if (typeof navigator !== 'undefined' && navigator.vibrate) {
+          navigator.vibrate([5, 30, 5]) // 双击节奏，表示"确认放置"
+        }
       }
     }
   }
@@ -129,16 +140,19 @@ export function BookmarkGrid({
     },
   }
 
+  // VIBE CODING: 物理弹簧动画参数 - 让卡片有"重量感"
   const itemVariants = {
-    hidden: { opacity: 0, y: 30, scale: 0.9 },
+    hidden: { opacity: 0, y: 20, scale: 0.95 },
     show: { 
       opacity: 1, 
       y: 0, 
       scale: 1,
       transition: {
+        // Vibe Tuning: 高刚度、适当阻尼的弹簧 - 响应快但不抖动
         type: 'spring',
-        stiffness: 300,
-        damping: 24,
+        stiffness: 400, // 更硬，响应更快
+        damping: 30,    // 阻尼适中，避免过度抖动
+        mass: 1         // 标准质量
       }
     },
   }
