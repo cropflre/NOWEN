@@ -2,6 +2,25 @@ import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+  DragStartEvent,
+  DragOverlay,
+} from '@dnd-kit/core'
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  rectSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
+import {
   Plus,
   Search,
   Home,
@@ -134,6 +153,40 @@ const LiteBackground = ({ children }: { children: React.ReactNode }) => (
   </div>
 );
 
+// ========== VIBE CODING: 可拖拽卡片包装器 ==========
+interface SortableCardProps {
+  id: string;
+  children: React.ReactNode;
+  className?: string;
+}
+
+function SortableCard({ id, children, className }: SortableCardProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition: transition || 'transform 200ms cubic-bezier(0.25, 1, 0.5, 1)',
+    opacity: isDragging ? 0.6 : 1,
+    zIndex: isDragging ? 50 : 1,
+    scale: isDragging ? 1.05 : 1,
+    cursor: isDragging ? 'grabbing' : 'grab',
+    filter: isDragging ? 'drop-shadow(0 20px 25px rgba(0, 0, 0, 0.25))' : 'none',
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className={className} {...attributes} {...listeners}>
+      {children}
+    </div>
+  );
+}
+
 function App() {
   const [currentPage, setCurrentPage] = useState<
     "home" | "admin" | "admin-login" | "force-password-change"
@@ -226,6 +279,7 @@ function App() {
     deleteBookmark,
     togglePin,
     toggleReadLater,
+    reorderBookmarks,
     addCategory,
     updateCategory,
     deleteCategory,
@@ -236,6 +290,52 @@ function App() {
 
   const { isDark, toggleDarkMode } = useTheme();
   const { t, i18n } = useTranslation();
+  
+  // VIBE CODING: 拖拽状态
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const activeBookmark = activeId ? bookmarks.find(b => b.id === activeId) : null;
+  
+  // 拖拽传感器配置
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // 拖动 8px 后激活
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+  
+  // 拖拽开始
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+    // VIBE CODING: 触觉反馈
+    if (typeof navigator !== 'undefined' && navigator.vibrate) {
+      navigator.vibrate(10);
+    }
+  }, []);
+  
+  // 拖拽结束
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveId(null);
+    
+    if (over && active.id !== over.id) {
+      const oldIndex = bookmarks.findIndex(b => b.id === active.id);
+      const newIndex = bookmarks.findIndex(b => b.id === over.id);
+      
+      if (oldIndex !== -1 && newIndex !== -1) {
+        const newOrder = arrayMove(bookmarks, oldIndex, newIndex);
+        reorderBookmarks(newOrder);
+        
+        // VIBE CODING: 落地触觉反馈
+        if (typeof navigator !== 'undefined' && navigator.vibrate) {
+          navigator.vibrate([5, 30, 5]);
+        }
+      }
+    }
+  }, [bookmarks, reorderBookmarks]);
   
   // 语言切换函数
   const toggleLanguage = useCallback(() => {
@@ -1153,7 +1253,13 @@ function App() {
             </motion.section>
           )}
 
-          {/* Category Sections */}
+          {/* Category Sections - 支持拖拽排序 */}
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+          >
           {categories.map((category, catIndex) => {
             const categoryBookmarks = bookmarksByCategory[category.id] || [];
             if (categoryBookmarks.length === 0) return null;
@@ -1221,80 +1327,148 @@ function App() {
                   </button>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 relative z-10">
-                  {categoryBookmarks.map((bookmark, index) => (
-                    <motion.div
-                      key={bookmark.id}
-                      initial={{ opacity: 0, y: isLiteMode ? 10 : 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                    >
-                      <SpotlightCard
-                        className="h-full cursor-pointer"
-                        spotlightColor={
-                          isLiteMode ? "transparent" : `${category.color}20`
-                        }
-                        onClick={() => window.open(bookmark.url, "_blank")}
-                        onContextMenu={(e) => handleContextMenu(e, bookmark)}
-                      >
-                        <div className="flex flex-col h-full">
-                          <div
-                            className="w-10 h-10 rounded-xl flex items-center justify-center mb-4"
-                            style={{ background: "var(--color-bg-tertiary)" }}
+                <SortableContext
+                  items={categoryBookmarks.map(b => b.id)}
+                  strategy={rectSortingStrategy}
+                >
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 relative z-10">
+                    {categoryBookmarks.map((bookmark, index) => (
+                      <SortableCard key={bookmark.id} id={bookmark.id}>
+                        <motion.div
+                          initial={{ opacity: 0, y: isLiteMode ? 10 : 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.05 }}
+                        >
+                          <SpotlightCard
+                            className="h-full cursor-pointer"
+                            spotlightColor={
+                              isLiteMode ? "transparent" : `${category.color}20`
+                            }
+                            onClick={() => window.open(bookmark.url, "_blank")}
+                            onContextMenu={(e) => handleContextMenu(e, bookmark)}
                           >
-                            {bookmark.iconUrl ? (
-                              <img
-                                src={bookmark.iconUrl}
-                                alt=""
-                                className="w-5 h-5 object-contain"
-                              />
-                            ) : bookmark.icon ? (
-                              (() => {
-                                const IconComp = getIconComponent(
-                                  bookmark.icon
-                                );
-                                return (
-                                  <IconComp
-                                    className="w-5 h-5"
-                                    style={{ color: "var(--color-primary)" }}
+                            <div className="flex flex-col h-full">
+                              <div
+                                className="w-10 h-10 rounded-xl flex items-center justify-center mb-4"
+                                style={{ background: "var(--color-bg-tertiary)" }}
+                              >
+                                {bookmark.iconUrl ? (
+                                  <img
+                                    src={bookmark.iconUrl}
+                                    alt=""
+                                    className="w-5 h-5 object-contain"
                                   />
-                                );
-                              })()
-                            ) : bookmark.favicon ? (
-                              <img
-                                src={bookmark.favicon}
-                                alt=""
-                                className="w-5 h-5"
-                              />
-                            ) : (
-                              <ExternalLink
-                                className="w-5 h-5"
-                                style={{ color: "var(--color-text-muted)" }}
-                              />
-                            )}
-                          </div>
+                                ) : bookmark.icon ? (
+                                  (() => {
+                                    const IconComp = getIconComponent(
+                                      bookmark.icon
+                                    );
+                                    return (
+                                      <IconComp
+                                        className="w-5 h-5"
+                                        style={{ color: "var(--color-primary)" }}
+                                      />
+                                    );
+                                  })()
+                                ) : bookmark.favicon ? (
+                                  <img
+                                    src={bookmark.favicon}
+                                    alt=""
+                                    className="w-5 h-5"
+                                  />
+                                ) : (
+                                  <ExternalLink
+                                    className="w-5 h-5"
+                                    style={{ color: "var(--color-text-muted)" }}
+                                  />
+                                )}
+                              </div>
 
-                          <h3
-                            className="font-medium line-clamp-1 mb-1"
-                            style={{ color: "var(--color-text-primary)" }}
-                          >
-                            {bookmark.title}
-                          </h3>
-                          <p
-                            className="text-sm line-clamp-2 flex-1"
-                            style={{ color: "var(--color-text-muted)" }}
-                          >
-                            {bookmark.description ||
-                              new URL(bookmark.url).hostname}
-                          </p>
-                        </div>
-                      </SpotlightCard>
-                    </motion.div>
-                  ))}
-                </div>
+                              <h3
+                                className="font-medium line-clamp-1 mb-1"
+                                style={{ color: "var(--color-text-primary)" }}
+                              >
+                                {bookmark.title}
+                              </h3>
+                              <p
+                                className="text-sm line-clamp-2 flex-1"
+                                style={{ color: "var(--color-text-muted)" }}
+                              >
+                                {bookmark.description ||
+                                  new URL(bookmark.url).hostname}
+                              </p>
+                            </div>
+                          </SpotlightCard>
+                        </motion.div>
+                      </SortableCard>
+                    ))}
+                  </div>
+                </SortableContext>
               </motion.section>
             );
           })}
+          
+          {/* 拖拽覆盖层 */}
+          <DragOverlay>
+            {activeBookmark && (
+              <div className="opacity-80 scale-105 shadow-2xl">
+                <SpotlightCard
+                  className="h-full cursor-grabbing"
+                  spotlightColor="rgba(99, 102, 241, 0.2)"
+                >
+                  <div className="flex flex-col h-full">
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center mb-4"
+                      style={{ background: "var(--color-bg-tertiary)" }}
+                    >
+                      {activeBookmark.iconUrl ? (
+                        <img
+                          src={activeBookmark.iconUrl}
+                          alt=""
+                          className="w-5 h-5 object-contain"
+                        />
+                      ) : activeBookmark.icon ? (
+                        (() => {
+                          const IconComp = getIconComponent(activeBookmark.icon);
+                          return (
+                            <IconComp
+                              className="w-5 h-5"
+                              style={{ color: "var(--color-primary)" }}
+                            />
+                          );
+                        })()
+                      ) : activeBookmark.favicon ? (
+                        <img
+                          src={activeBookmark.favicon}
+                          alt=""
+                          className="w-5 h-5"
+                        />
+                      ) : (
+                        <ExternalLink
+                          className="w-5 h-5"
+                          style={{ color: "var(--color-text-muted)" }}
+                        />
+                      )}
+                    </div>
+                    <h3
+                      className="font-medium line-clamp-1 mb-1"
+                      style={{ color: "var(--color-text-primary)" }}
+                    >
+                      {activeBookmark.title}
+                    </h3>
+                    <p
+                      className="text-sm line-clamp-2 flex-1"
+                      style={{ color: "var(--color-text-muted)" }}
+                    >
+                      {activeBookmark.description ||
+                        new URL(activeBookmark.url).hostname}
+                    </p>
+                  </div>
+                </SpotlightCard>
+              </div>
+            )}
+          </DragOverlay>
+          </DndContext>
 
           {/* 新建分类按钮 - 只有登录状态才显示 */}
           {isLoggedIn && (
