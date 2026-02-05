@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
 import { 
   Gauge,
@@ -17,8 +18,8 @@ import { WidgetVisibility } from '../../lib/api'
 
 interface WidgetConfig {
   id: keyof WidgetVisibility
-  label: string
-  description: string
+  labelKey: string
+  descKey: string
   icon: React.ComponentType<{ className?: string }>
   gradient: string
   category: 'dashboard' | 'dock'
@@ -27,56 +28,56 @@ interface WidgetConfig {
 const widgetConfigs: WidgetConfig[] = [
   {
     id: 'systemMonitor',
-    label: '系统监控仪表',
-    description: '显示 CPU、内存、磁盘、网络等实时数据',
+    labelKey: 'admin.settings.widget.system_monitor',
+    descKey: 'admin.settings.widget.system_monitor_desc',
     icon: Gauge,
     gradient: 'from-cyan-500 to-blue-600',
     category: 'dashboard',
   },
   {
     id: 'hardwareIdentity',
-    label: '硬件信息卡片',
-    description: '显示处理器、主板、固件等硬件信息',
+    labelKey: 'admin.settings.widget.hardware_identity',
+    descKey: 'admin.settings.widget.hardware_identity_desc',
     icon: Cpu,
     gradient: 'from-indigo-500 to-purple-600',
     category: 'dashboard',
   },
   {
     id: 'vitalSigns',
-    label: '生命体征卡片',
-    description: '实时显示 CPU 和内存使用率趋势图',
+    labelKey: 'admin.settings.widget.vital_signs',
+    descKey: 'admin.settings.widget.vital_signs_desc',
     icon: Activity,
     gradient: 'from-emerald-500 to-green-600',
     category: 'dashboard',
   },
   {
     id: 'networkTelemetry',
-    label: '网络遥测卡片',
-    description: '显示网络上传下载速度和流量统计',
+    labelKey: 'admin.settings.widget.network_telemetry',
+    descKey: 'admin.settings.widget.network_telemetry_desc',
     icon: Network,
     gradient: 'from-violet-500 to-purple-600',
     category: 'dashboard',
   },
   {
     id: 'processMatrix',
-    label: '进程矩阵卡片',
-    description: '显示系统运行中的进程列表',
+    labelKey: 'admin.settings.widget.process_matrix',
+    descKey: 'admin.settings.widget.process_matrix_desc',
     icon: ListTree,
     gradient: 'from-amber-500 to-orange-600',
     category: 'dashboard',
   },
   {
     id: 'dockMiniMonitor',
-    label: 'Dock 迷你监控',
-    description: '桌面端 Dock 旁边的迷你监控球',
+    labelKey: 'admin.settings.widget.dock_mini',
+    descKey: 'admin.settings.widget.dock_mini_desc',
     icon: CircleDot,
     gradient: 'from-rose-500 to-pink-600',
     category: 'dock',
   },
   {
     id: 'mobileTicker',
-    label: '移动端状态栏',
-    description: '移动端底部 Dock 上方的状态指示条',
+    labelKey: 'admin.settings.widget.mobile_ticker',
+    descKey: 'admin.settings.widget.mobile_ticker_desc',
     icon: BarChart3,
     gradient: 'from-teal-500 to-cyan-600',
     category: 'dock',
@@ -100,6 +101,8 @@ export function WidgetSettingsCard({
   success,
   error,
 }: WidgetSettingsCardProps) {
+  const { t } = useTranslation()
+  
   const toggleWidget = (id: keyof WidgetVisibility) => {
     onChange({
       ...visibility,
@@ -141,8 +144,8 @@ export function WidgetSettingsCard({
               <div className="absolute -inset-2 rounded-xl bg-sky-500/20 blur-xl opacity-50 -z-10 dark:block hidden" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold" style={{ color: 'var(--color-text-primary)' }}>仪表显示</h3>
-              <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>控制首页仪表组件的显示与隐藏</p>
+              <h3 className="text-lg font-semibold" style={{ color: 'var(--color-text-primary)' }}>{t('admin.settings.widget.title')}</h3>
+              <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>{t('admin.settings.widget.subtitle')}</p>
             </div>
           </div>
 
@@ -158,7 +161,7 @@ export function WidgetSettingsCard({
             <span className="text-[var(--color-primary)]">{visibleCount}</span>
             <span className="mx-1">/</span>
             <span>{totalCount}</span>
-            <span className="ml-1">已启用</span>
+            <span className="ml-1">{t('admin.settings.widget.enabled_count')}</span>
           </div>
         </div>
 
@@ -167,7 +170,7 @@ export function WidgetSettingsCard({
           <div className="flex items-center gap-2 mb-4">
             <Monitor className="w-4 h-4" style={{ color: 'var(--color-text-muted)' }} />
             <span className="text-sm font-medium" style={{ color: 'var(--color-text-secondary)' }}>
-              仪表板组件
+              {t('admin.settings.widget.dashboard_widgets')}
             </span>
             <div className="flex-1 h-px ml-2" style={{ background: 'var(--color-glass-border)' }} />
           </div>
@@ -214,13 +217,13 @@ export function WidgetSettingsCard({
                       className="font-medium"
                       style={{ color: 'var(--color-text-primary)' }}
                     >
-                      {widget.label}
+                      {t(widget.labelKey)}
                     </div>
                     <div 
                       className="text-xs mt-0.5 truncate"
                       style={{ color: 'var(--color-text-muted)' }}
                     >
-                      {widget.description}
+                      {t(widget.descKey)}
                     </div>
                   </div>
                   
@@ -259,7 +262,7 @@ export function WidgetSettingsCard({
           <div className="flex items-center gap-2 mb-4">
             <MonitorSmartphone className="w-4 h-4" style={{ color: 'var(--color-text-muted)' }} />
             <span className="text-sm font-medium" style={{ color: 'var(--color-text-secondary)' }}>
-              Dock 组件
+              {t('admin.settings.widget.dock_widgets')}
             </span>
             <div className="flex-1 h-px ml-2" style={{ background: 'var(--color-glass-border)' }} />
           </div>
@@ -306,13 +309,13 @@ export function WidgetSettingsCard({
                       className="font-medium text-sm"
                       style={{ color: 'var(--color-text-primary)' }}
                     >
-                      {widget.label}
+                      {t(widget.labelKey)}
                     </div>
                     <div 
                       className="text-xs mt-0.5 truncate"
                       style={{ color: 'var(--color-text-muted)' }}
                     >
-                      {widget.description}
+                      {t(widget.descKey)}
                     </div>
                   </div>
                   
@@ -339,7 +342,7 @@ export function WidgetSettingsCard({
           }}
         >
           <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-            💡 提示：隐藏仪表可以减少首页数据请求，提升加载速度。修改后需保存才能生效。
+            {t('admin.settings.widget.hint')}
           </p>
         </div>
 
@@ -360,7 +363,7 @@ export function WidgetSettingsCard({
             animate={{ opacity: 1, y: 0 }}
             className="mb-4 flex items-center gap-2 px-4 py-3 rounded-xl bg-green-500/10 border border-green-500/20 text-sm text-green-400"
           >
-            设置保存成功
+            {t('admin.settings.widget.saved')}
           </motion.div>
         )}
 
@@ -386,9 +389,9 @@ export function WidgetSettingsCard({
                   transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                   className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full"
                 />
-                保存中...
+                {t('admin.settings.widget.saving')}
               </span>
-            ) : '保存配置'}
+            ) : t('admin.settings.widget.save')}
           </span>
         </motion.button>
       </div>

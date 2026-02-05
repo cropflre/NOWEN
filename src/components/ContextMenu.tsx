@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Edit2, Trash2, Pin, BookMarked, ExternalLink, Copy } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '../lib/utils'
 
 interface ContextMenuItem {
@@ -127,6 +128,8 @@ export function ContextMenu({ isOpen, position, onClose, items }: ContextMenuPro
 
 // 书签右键菜单的 Hook
 export function useBookmarkContextMenu() {
+  const { t } = useTranslation()
+  
   return {
     getMenuItems: (
       bookmark: { id: string; url: string; isPinned?: boolean; isReadLater?: boolean },
@@ -139,13 +142,13 @@ export function useBookmarkContextMenu() {
     ): ContextMenuItem[] => [
       {
         id: 'open',
-        label: '在新标签页打开',
+        label: t('bookmark.open_in_new_tab'),
         icon: <ExternalLink className="w-4 h-4" />,
         onClick: () => window.open(bookmark.url, '_blank'),
       },
       {
         id: 'copy',
-        label: '复制链接',
+        label: t('bookmark.copy_link'),
         icon: <Copy className="w-4 h-4" />,
         onClick: () => {
           navigator.clipboard.writeText(bookmark.url)
@@ -153,7 +156,7 @@ export function useBookmarkContextMenu() {
       },
       {
         id: 'pin',
-        label: bookmark.isPinned ? '取消置顶' : '置顶',
+        label: bookmark.isPinned ? t('bookmark.unpin') : t('bookmark.pin'),
         icon: <Pin className="w-4 h-4" />,
         onClick: options.onTogglePin,
         active: bookmark.isPinned,
@@ -161,21 +164,21 @@ export function useBookmarkContextMenu() {
       },
       {
         id: 'readLater',
-        label: bookmark.isReadLater ? '取消稍后阅读' : '稍后阅读',
+        label: bookmark.isReadLater ? t('bookmark.remove_read_later') : t('bookmark.read_later'),
         icon: <BookMarked className="w-4 h-4" />,
         onClick: options.onToggleReadLater,
         active: bookmark.isReadLater,
       },
       {
         id: 'edit',
-        label: '编辑',
+        label: t('bookmark.edit'),
         icon: <Edit2 className="w-4 h-4" />,
         onClick: options.onEdit,
         divider: true,
       },
       {
         id: 'delete',
-        label: '删除',
+        label: t('bookmark.delete'),
         icon: <Trash2 className="w-4 h-4" />,
         onClick: options.onDelete,
         danger: true,

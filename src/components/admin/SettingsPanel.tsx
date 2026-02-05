@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Globe, 
@@ -22,9 +23,9 @@ type SettingsTab = 'site' | 'theme' | 'widget' | 'security' | 'data'
 
 interface SettingsTabItem {
   id: SettingsTab
-  label: string
+  labelKey: string
   icon: React.ComponentType<{ className?: string }>
-  description: string
+  descKey: string
   gradient: string
   iconBg: string
 }
@@ -32,41 +33,41 @@ interface SettingsTabItem {
 const settingsTabs: SettingsTabItem[] = [
   { 
     id: 'site', 
-    label: '站点配置', 
+    labelKey: 'admin.settings.tabs.site', 
     icon: Globe, 
-    description: '网站标题、图标、动画',
+    descKey: 'admin.settings.tabs.site_desc',
     gradient: 'from-cyan-500/20 to-blue-500/20',
     iconBg: 'from-cyan-500/20 to-blue-600/20'
   },
   { 
     id: 'theme', 
-    label: '主题配色', 
+    labelKey: 'admin.settings.tabs.theme', 
     icon: Palette, 
-    description: '外观主题、深浅模式',
+    descKey: 'admin.settings.tabs.theme_desc',
     gradient: 'from-purple-500/20 to-pink-500/20',
     iconBg: 'from-purple-500/20 to-pink-600/20'
   },
   { 
     id: 'widget', 
-    label: '系统状态', 
+    labelKey: 'admin.settings.tabs.widget', 
     icon: Gauge, 
-    description: '仪表显示、组件控制',
+    descKey: 'admin.settings.tabs.widget_desc',
     gradient: 'from-sky-500/20 to-violet-500/20',
     iconBg: 'from-sky-500/20 to-violet-600/20'
   },
   { 
     id: 'security', 
-    label: '安全设置', 
+    labelKey: 'admin.settings.tabs.security', 
     icon: Shield, 
-    description: '密码管理、账户安全',
+    descKey: 'admin.settings.tabs.security_desc',
     gradient: 'from-amber-500/20 to-orange-500/20',
     iconBg: 'from-amber-500/20 to-orange-600/20'
   },
   { 
     id: 'data', 
-    label: '数据管理', 
+    labelKey: 'admin.settings.tabs.data', 
     icon: Database, 
-    description: '导入导出、恢复备份',
+    descKey: 'admin.settings.tabs.data_desc',
     gradient: 'from-emerald-500/20 to-teal-500/20',
     iconBg: 'from-emerald-500/20 to-teal-600/20'
   },
@@ -143,6 +144,7 @@ export function SettingsPanel({
   onImport,
   onFactoryReset,
 }: SettingsPanelProps) {
+  const { t } = useTranslation()
   const [activeSettingsTab, setActiveSettingsTab] = useState<SettingsTab>('site')
 
   return (
@@ -229,13 +231,13 @@ export function SettingsPanel({
                       color: isActive ? 'var(--color-text-primary)' : 'var(--color-text-secondary)' 
                     }}
                   >
-                    {tab.label}
+                    {t(tab.labelKey)}
                   </div>
                   <div 
                     className="text-xs truncate mt-0.5 hidden sm:block"
                     style={{ color: 'var(--color-text-muted)' }}
                   >
-                    {tab.description}
+                    {t(tab.descKey)}
                   </div>
                 </div>
 

@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Sun, Moon, Monitor, Check, Palette, ChevronDown } from 'lucide-react'
 import { themes, darkThemes, lightThemes, ThemeId, Theme } from '../../hooks/useTheme.tsx'
@@ -17,11 +18,13 @@ interface ThemeCardProps {
 function ThemePreview({ 
   theme, 
   isActive, 
-  onClick 
+  onClick,
+  t 
 }: { 
   theme: Theme
   isActive: boolean
-  onClick: (e: React.MouseEvent) => void 
+  onClick: (e: React.MouseEvent) => void
+  t: (key: string) => string
 }) {
   return (
     <motion.button
@@ -71,7 +74,7 @@ function ThemePreview({
             {theme.name}
           </div>
           <div className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-            {theme.mode === 'dark' ? '深色模式' : '浅色模式'}
+            {theme.mode === 'dark' ? t('admin.settings.theme.dark_mode') : t('admin.settings.theme.light_mode')}
           </div>
         </div>
       </div>
@@ -147,6 +150,7 @@ export function ThemeCard({
   onAutoModeChange,
   onToggleDarkMode,
 }: ThemeCardProps) {
+  const { t } = useTranslation()
   const [expandedSection, setExpandedSection] = useState<'dark' | 'light' | null>(
     isDark ? 'dark' : 'light'
   )
@@ -194,10 +198,10 @@ export function ThemeCard({
           </motion.div>
           <div>
             <h3 className="font-semibold" style={{ color: 'var(--color-text-primary)' }}>
-              主题配色
+              {t('admin.settings.theme.title')}
             </h3>
             <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-              自定义界面外观
+              {t('admin.settings.theme.subtitle')}
             </p>
           </div>
         </div>
@@ -303,10 +307,10 @@ export function ThemeCard({
             </motion.div>
             <div>
               <div className="font-medium" style={{ color: 'var(--color-text-primary)' }}>
-                自动切换
+                {t('admin.settings.theme.auto_switch')}
               </div>
               <div className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                根据时间自动切换日夜主题（6:00-18:00 日间）
+                {t('admin.settings.theme.auto_desc')}
               </div>
             </div>
           </div>
@@ -341,7 +345,7 @@ export function ThemeCard({
           <div className="flex items-center gap-2">
             <ThemeToggleIcon isDark={true} />
             <span className="font-medium" style={{ color: 'var(--color-text-primary)' }}>
-              深色主题
+              {t('admin.settings.theme.dark_themes')}
             </span>
             <span 
               className="text-xs px-2 py-0.5 rounded-full"
@@ -350,7 +354,7 @@ export function ThemeCard({
                 color: '#818cf8' 
               }}
             >
-              {darkThemes.length} 款
+              {t('admin.settings.theme.themes_count', { count: darkThemes.length })}
             </span>
           </div>
           <motion.div
@@ -376,6 +380,7 @@ export function ThemeCard({
                     key={theme.id}
                     theme={theme}
                     isActive={currentThemeId === theme.id}
+                    t={t}
                     onClick={(e) => {
                       const rect = e.currentTarget.getBoundingClientRect()
                       onThemeChange(theme.id as ThemeId, {
@@ -403,7 +408,7 @@ export function ThemeCard({
           <div className="flex items-center gap-2">
             <ThemeToggleIcon isDark={false} />
             <span className="font-medium" style={{ color: 'var(--color-text-primary)' }}>
-              浅色主题
+              {t('admin.settings.theme.light_themes')}
             </span>
             <span 
               className="text-xs px-2 py-0.5 rounded-full"
@@ -412,7 +417,7 @@ export function ThemeCard({
                 color: '#fbbf24' 
               }}
             >
-              {lightThemes.length} 款
+              {t('admin.settings.theme.themes_count', { count: lightThemes.length })}
             </span>
           </div>
           <motion.div
@@ -438,6 +443,7 @@ export function ThemeCard({
                     key={theme.id}
                     theme={theme}
                     isActive={currentThemeId === theme.id}
+                    t={t}
                     onClick={(e) => {
                       const rect = e.currentTarget.getBoundingClientRect()
                       onThemeChange(theme.id as ThemeId, {
@@ -460,7 +466,7 @@ export function ThemeCard({
         layout
       >
         <div className="flex items-center justify-between text-sm">
-          <span style={{ color: 'var(--color-text-muted)' }}>当前主题</span>
+          <span style={{ color: 'var(--color-text-muted)' }}>{t('admin.settings.theme.current_theme')}</span>
           <motion.div 
             className="flex items-center gap-2"
             key={currentThemeId}

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 import {
   Plus,
   Search,
@@ -19,6 +20,7 @@ import {
   Moon,
   Edit2,
   FolderPlus,
+  Languages,
 } from "lucide-react";
 import { AuroraBackground } from "./components/ui/aurora-background";
 import { Card3D, CardItem } from "./components/ui/3d-card";
@@ -67,35 +69,47 @@ import {
 } from "./data/quotes";
 
 // Dock 导航项生成函数
-const createDockItems = (isDark: boolean, onToggleTheme: () => void) => [
+const createDockItems = (
+  isDark: boolean, 
+  onToggleTheme: () => void,
+  t: (key: string) => string,
+  onToggleLanguage: () => void
+) => [
   {
     id: "home",
-    title: "首页",
+    title: t('dock.home'),
     icon: <Home className="w-5 h-5" />,
     IconComponent: Home,
   },
   {
     id: "search",
-    title: "搜索",
+    title: t('dock.search'),
     icon: <Search className="w-5 h-5" />,
     IconComponent: Search,
   },
   {
     id: "add",
-    title: "添加",
+    title: t('dock.add'),
     icon: <Plus className="w-5 h-5" />,
     IconComponent: Plus,
   },
   {
+    id: "language",
+    title: t('language_toggle'),
+    icon: <Languages className="w-5 h-5" />,
+    IconComponent: Languages,
+    onClick: onToggleLanguage,
+  },
+  {
     id: "theme",
-    title: isDark ? "切换日间模式" : "切换夜间模式",
+    title: isDark ? t('dock.theme_light') : t('dock.theme_dark'),
     icon: isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />,
     IconComponent: isDark ? Sun : Moon,
     onClick: onToggleTheme,
   },
   {
     id: "admin",
-    title: "管理",
+    title: t('dock.admin'),
     icon: <LayoutDashboard className="w-5 h-5" />,
     IconComponent: LayoutDashboard,
   },
@@ -150,6 +164,10 @@ function App() {
       dockMiniMonitor: true,
       mobileTicker: true,
     },
+    menuVisibility: {
+      languageToggle: true,
+      themeToggle: true,
+    },
   });
   const [settingsLoaded, setSettingsLoaded] = useState(false);
 
@@ -158,6 +176,12 @@ function App() {
   // 天气和农历开关
   const showWeather = siteSettings.enableWeather !== false;
   const showLunar = siteSettings.enableLunar !== false;
+  
+  // 菜单可见性快捷访问
+  const menuVisibility = siteSettings.menuVisibility || {
+    languageToggle: true,
+    themeToggle: true,
+  };
 
   // 仪表可见性快捷访问 - 设置未加载完成时默认隐藏所有小部件避免闪烁
   const widgetVisibility = settingsLoaded
@@ -211,9 +235,27 @@ function App() {
   } = useBookmarkStore();
 
   const { isDark, toggleDarkMode } = useTheme();
+  const { t, i18n } = useTranslation();
+  
+  // 语言切换函数
+  const toggleLanguage = useCallback(() => {
+    const nextLang = i18n.language === 'en' ? 'zh' : 'en';
+    i18n.changeLanguage(nextLang);
+  }, [i18n]);
 
-  // 创建 Dock 导航项（响应主题变化）
-  const dockItems = createDockItems(isDark, toggleDarkMode);
+  // 创建 Dock 导航项（响应主题和语言变化）
+  const dockItems = createDockItems(isDark, toggleDarkMode, t, toggleLanguage);
+  
+  // 根据菜单可见性设置过滤 Dock 项
+  const filteredDockItems = dockItems.filter(item => {
+    if (item.id === 'language' && menuVisibility.languageToggle === false) {
+      return false;
+    }
+    if (item.id === 'theme' && menuVisibility.themeToggle === false) {
+      return false;
+    }
+    return true;
+  });
 
   // 天气数据
   const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather(showWeather);
@@ -394,11 +436,11 @@ function App() {
 
   const handleDelete = useCallback(
     (id: string) => {
-      if (confirm("确定要删除这个书签吗？")) {
+      if (confirm(t('bookmark.delete_confirm'))) {
         deleteBookmark(id);
       }
     },
-    [deleteBookmark]
+    [deleteBookmark, t]
   );
 
   // 分组书签
@@ -700,7 +742,7 @@ function App() {
                     className="tracking-wide"
                     style={{ color: "var(--color-text-muted)" }}
                   >
-                    搜索或输入命令...
+                    {t('search_placeholder')}
                   </span>
                   <kbd
                     className="px-2 py-1 rounded text-xs flex items-center gap-1 ml-2"
@@ -731,7 +773,7 @@ function App() {
                     className="tracking-wide transition-colors"
                     style={{ color: "var(--color-text-muted)" }}
                   >
-                    搜索或输入命令...
+                    {t('search_placeholder')}
                   </span>
                   <kbd
                     className="px-2 py-1 rounded text-xs flex items-center gap-1 ml-2"
@@ -782,7 +824,7 @@ function App() {
                       <div>
                         <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-500/20 text-orange-400 text-xs font-medium mb-4">
                           <BookMarked className="w-3 h-3" />
-                          稍后阅读
+                          {t('bookmark.read_later')}
                         </span>
                         <h2
                           className="text-2xl md:text-3xl font-serif font-medium mb-3 line-clamp-2"
@@ -810,7 +852,7 @@ function App() {
                           className="flex items-center gap-2 text-sm"
                           style={{ color: "var(--color-primary)" }}
                         >
-                          开始阅读 <ExternalLink className="w-4 h-4" />
+                          {t('bookmark.visit')} <ExternalLink className="w-4 h-4" />
                         </span>
                       </div>
                     </div>
@@ -845,7 +887,7 @@ function App() {
                         <CardItem translateZ={40}>
                           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-500/20 text-orange-400 text-xs font-medium mb-4">
                             <BookMarked className="w-3 h-3" />
-                            稍后阅读
+                            {t('bookmark.read_later')}
                           </span>
                         </CardItem>
                         <CardItem translateZ={50}>
@@ -879,7 +921,7 @@ function App() {
                             className="flex items-center gap-2 text-sm"
                             style={{ color: "var(--color-primary)" }}
                           >
-                            开始阅读 <ExternalLink className="w-4 h-4" />
+                            {t('bookmark.visit')} <ExternalLink className="w-4 h-4" />
                           </span>
                         </div>
                       </CardItem>
@@ -1344,7 +1386,7 @@ function App() {
         )}
 
         <FloatingDock
-          items={dockItems.map((item) => ({
+          items={filteredDockItems.map((item) => ({
             ...item,
             onClick: item.href ? undefined : (item.onClick || (() => handleDockClick(item.id))),
           }))}
@@ -1359,7 +1401,7 @@ function App() {
         )}
 
         <MobileFloatingDock
-          items={dockItems
+          items={filteredDockItems
             .filter((item) => !item.href) // 过滤掉外链项（移动端不需要 GitHub 链接）
             .map((item) => ({
               id: item.id,

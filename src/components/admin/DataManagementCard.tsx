@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Database, 
@@ -42,6 +43,7 @@ export function DataManagementCard({
   onImport,
   onFactoryReset,
 }: DataManagementCardProps) {
+  const { t, i18n } = useTranslation()
   const [isExporting, setIsExporting] = useState(false)
   const [isImporting, setIsImporting] = useState(false)
   const [isResetting, setIsResetting] = useState(false)
@@ -80,10 +82,10 @@ export function DataManagementCard({
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
 
-      setSuccess('数据导出成功')
+      setSuccess(t('admin.settings.data.export_success'))
       setTimeout(() => setSuccess(null), 3000)
     } catch (err: any) {
-      setError(err.message || '导出失败')
+      setError(err.message || t('admin.settings.data.export_error'))
     } finally {
       setIsExporting(false)
     }
@@ -104,19 +106,19 @@ export function DataManagementCard({
 
       // 验证数据格式
       if (!data.version || !data.data) {
-        throw new Error('无效的备份文件格式')
+        throw new Error(t('admin.settings.data.invalid_format'))
       }
 
       if (!data.data.bookmarks || !Array.isArray(data.data.bookmarks)) {
-        throw new Error('备份文件中没有书签数据')
+        throw new Error(t('admin.settings.data.no_bookmarks'))
       }
 
       // 确认导入
-      const confirmMsg = `确定要导入此备份吗？\n\n` +
-        `- 书签: ${data.data.bookmarks?.length || 0} 个\n` +
-        `- 分类: ${data.data.categories?.length || 0} 个\n` +
-        `- 备份时间: ${new Date(data.exportedAt).toLocaleString()}\n\n` +
-        `注意: 这将覆盖现有的所有数据！`
+      const confirmMsg = t('admin.settings.data.import_confirm', {
+        bookmarks: data.data.bookmarks?.length || 0,
+        categories: data.data.categories?.length || 0,
+        time: new Date(data.exportedAt).toLocaleString(i18n.language === 'zh' ? 'zh-CN' : 'en-US')
+      })
 
       if (!confirm(confirmMsg)) {
         setIsImporting(false)
@@ -125,13 +127,16 @@ export function DataManagementCard({
 
       await onImport(data.data)
 
-      setSuccess(`成功导入 ${data.data.bookmarks.length} 个书签和 ${data.data.categories?.length || 0} 个分类`)
+      setSuccess(t('admin.settings.data.import_success', {
+        bookmarks: data.data.bookmarks.length,
+        categories: data.data.categories?.length || 0
+      }))
       setTimeout(() => setSuccess(null), 5000)
     } catch (err: any) {
       if (err instanceof SyntaxError) {
-        setError('文件格式错误，请选择有效的 JSON 备份文件')
+        setError(t('admin.settings.data.json_error'))
       } else {
-        setError(err.message || '导入失败')
+        setError(err.message || t('admin.settings.data.import_error'))
       }
     } finally {
       setIsImporting(false)
@@ -150,7 +155,7 @@ export function DataManagementCard({
 
     try {
       await factoryReset()
-      setSuccess('已恢复出厂设置，管理员密码已重置为 admin123')
+      setSuccess(t('admin.settings.data.reset_success'))
       setShowResetConfirm(false)
       
       // 通知父组件刷新数据
@@ -193,8 +198,8 @@ export function DataManagementCard({
             <div className="absolute -inset-2 rounded-xl bg-emerald-500/20 blur-xl opacity-50 -z-10 dark:block hidden" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold" style={{ color: 'var(--color-text-primary)' }}>数据管理</h3>
-            <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>导入导出您的书签数据</p>
+            <h3 className="text-lg font-semibold" style={{ color: 'var(--color-text-primary)' }}>{t('admin.settings.data.title')}</h3>
+            <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>{t('admin.settings.data.subtitle')}</p>
           </div>
         </div>
 
@@ -209,7 +214,7 @@ export function DataManagementCard({
           >
             <div className="flex items-center gap-2 mb-1" style={{ color: 'var(--color-text-muted)' }}>
               <FileText className="w-4 h-4" />
-              <span className="text-xs">书签</span>
+              <span className="text-xs">{t('admin.settings.data.stats.bookmarks')}</span>
             </div>
             <p className="text-xl font-semibold" style={{ color: 'var(--color-text-primary)' }}>{bookmarks.length}</p>
           </div>
@@ -222,7 +227,7 @@ export function DataManagementCard({
           >
             <div className="flex items-center gap-2 mb-1" style={{ color: 'var(--color-text-muted)' }}>
               <Layers className="w-4 h-4" />
-              <span className="text-xs">分类</span>
+              <span className="text-xs">{t('admin.settings.data.stats.categories')}</span>
             </div>
             <p className="text-xl font-semibold" style={{ color: 'var(--color-text-primary)' }}>{categories.length}</p>
           </div>
@@ -235,10 +240,10 @@ export function DataManagementCard({
           >
             <div className="flex items-center gap-2 mb-1" style={{ color: 'var(--color-text-muted)' }}>
               <Calendar className="w-4 h-4" />
-              <span className="text-xs">今日</span>
+              <span className="text-xs">{t('admin.settings.data.stats.today')}</span>
             </div>
             <p className="text-xl font-semibold" style={{ color: 'var(--color-text-primary)' }}>
-              {new Date().toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' })}
+              {new Date().toLocaleDateString(i18n.language === 'zh' ? 'zh-CN' : 'en-US', { month: 'short', day: 'numeric' })}
             </p>
           </div>
         </div>
@@ -271,8 +276,8 @@ export function DataManagementCard({
               )}
             </div>
             <div className="text-center">
-              <p className="font-medium" style={{ color: 'var(--color-text-primary)' }}>导出备份</p>
-              <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>下载 JSON 文件</p>
+              <p className="font-medium" style={{ color: 'var(--color-text-primary)' }}>{t('admin.settings.data.export')}</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>{t('admin.settings.data.export_desc')}</p>
             </div>
           </motion.button>
 
@@ -302,8 +307,8 @@ export function DataManagementCard({
               )}
             </div>
             <div className="text-center">
-              <p className="font-medium" style={{ color: 'var(--color-text-primary)' }}>导入备份</p>
-              <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>恢复 JSON 文件</p>
+              <p className="font-medium" style={{ color: 'var(--color-text-primary)' }}>{t('admin.settings.data.import')}</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>{t('admin.settings.data.import_desc')}</p>
             </div>
           </motion.button>
 
@@ -342,8 +347,8 @@ export function DataManagementCard({
             )}
           </div>
           <div className="text-left">
-            <p className="font-medium" style={{ color: 'var(--color-text-primary)' }}>恢复出厂设置</p>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>清除所有数据并重置为默认状态</p>
+            <p className="font-medium" style={{ color: 'var(--color-text-primary)' }}>{t('admin.settings.data.factory_reset')}</p>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>{t('admin.settings.data.factory_reset_desc')}</p>
           </div>
         </motion.button>
 
@@ -374,10 +379,10 @@ export function DataManagementCard({
                   </div>
                   <div>
                     <h3 className="text-lg font-semibold" style={{ color: 'var(--color-text-primary)' }}>
-                      确认恢复出厂设置？
+                      {t('admin.settings.data.reset_confirm_title')}
                     </h3>
                     <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-                      此操作不可撤销
+                      {t('admin.settings.data.reset_confirm_subtitle')}
                     </p>
                   </div>
                 </div>
@@ -390,14 +395,14 @@ export function DataManagementCard({
                   }}
                 >
                   <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-                    此操作将会:
+                    {t('admin.settings.data.reset_warning')}
                   </p>
                   <ul className="mt-2 space-y-1 text-sm" style={{ color: 'var(--color-text-muted)' }}>
-                    <li>• 删除所有书签数据</li>
-                    <li>• 删除所有分类数据</li>
-                    <li>• 删除所有自定义名言</li>
-                    <li>• 重置站点设置为默认值</li>
-                    <li>• 重置管理员密码为 <span className="text-red-400">admin123</span></li>
+                    <li>• {t('admin.settings.data.reset_warning_bookmarks')}</li>
+                    <li>• {t('admin.settings.data.reset_warning_categories')}</li>
+                    <li>• {t('admin.settings.data.reset_warning_quotes')}</li>
+                    <li>• {t('admin.settings.data.reset_warning_settings')}</li>
+                    <li>• {t('admin.settings.data.reset_warning_password')} <span className="text-red-400">admin123</span></li>
                   </ul>
                 </div>
 
@@ -413,7 +418,7 @@ export function DataManagementCard({
                       color: 'var(--color-text-primary)',
                     }}
                   >
-                    取消
+                    {t('admin.settings.data.reset_cancel')}
                   </motion.button>
                   <motion.button
                     onClick={handleFactoryReset}
@@ -426,7 +431,7 @@ export function DataManagementCard({
                       'disabled:opacity-50 disabled:cursor-not-allowed'
                     )}
                   >
-                    {isResetting ? '重置中...' : '确认重置'}
+                    {isResetting ? t('admin.settings.data.resetting') : t('admin.settings.data.reset_confirm')}
                   </motion.button>
                 </div>
               </motion.div>
@@ -444,7 +449,7 @@ export function DataManagementCard({
         >
           <div className="flex items-center gap-2" style={{ color: 'var(--color-text-muted)' }}>
             <FileJson className="w-4 h-4" />
-            <span className="text-xs">支持格式: JSON 备份文件 (.json)</span>
+            <span className="text-xs">{t('admin.settings.data.format_hint')}</span>
           </div>
         </div>
 

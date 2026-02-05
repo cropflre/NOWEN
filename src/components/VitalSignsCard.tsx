@@ -8,6 +8,7 @@ import { useState, useEffect, useRef } from 'react'
 import { motion, useSpring, useTransform } from 'framer-motion'
 import useSWR from 'swr'
 import { Activity, Thermometer } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '../lib/utils'
 import { useTheme } from '../hooks/useTheme'
 
@@ -621,6 +622,7 @@ function LiquidOrb({
 // ============================================
 export function VitalSignsCard({ className }: { className?: string }) {
   const { isDark } = useTheme()
+  const { t } = useTranslation()
   
   const { data, error, isLoading } = useSWR<DynamicSystemInfo>(
     '/api/system/dynamic',
@@ -688,7 +690,7 @@ export function VitalSignsCard({ className }: { className?: string }) {
           "text-xs sm:text-sm font-medium tracking-wider",
           isDark ? "text-white/80" : "text-slate-700"
         )}>
-          核心脉搏
+          {t('monitor.vital_signs')}
         </span>
         
         {/* 温度显示 */}

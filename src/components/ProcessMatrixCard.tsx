@@ -8,6 +8,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import useSWR from 'swr'
 import { Clock, Satellite } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '../lib/utils'
 import { useTheme } from '../hooks/useTheme'
 
@@ -345,6 +346,7 @@ function MissionTimer({ uptime, isDark = true }: { uptime: string; isDark?: bool
 // ============================================
 export function ProcessMatrixCard({ className }: { className?: string }) {
   const { isDark } = useTheme()
+  const { t } = useTranslation()
   
   // 获取 Docker 容器列表
   const { data: containers, error: containerError, isLoading: containerLoading } = useSWR<DockerContainer[]>(
@@ -420,7 +422,7 @@ export function ProcessMatrixCard({ className }: { className?: string }) {
           "text-xs sm:text-sm font-medium tracking-wider",
           isDark ? "text-green-400/80" : "text-emerald-700"
         )}>
-          服务蜂巢
+          {t('monitor.service_hive')}
         </span>
         
         {/* 容器统计 */}

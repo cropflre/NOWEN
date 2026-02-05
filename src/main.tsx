@@ -4,6 +4,7 @@ import App from './App'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { setupGlobalErrorHandlers } from './lib/error-handling'
 import './index.css'
+import './lib/i18n' // 激活 i18n 多语言支持
 
 // 设置全局错误监听
 setupGlobalErrorHandlers()

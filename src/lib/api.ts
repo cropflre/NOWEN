@@ -411,6 +411,12 @@ export interface WidgetVisibility {
   mobileTicker?: boolean       // 移动端状态栏
 }
 
+// 菜单项可见性配置
+export interface MenuVisibility {
+  languageToggle?: boolean  // 多语言切换开关
+  themeToggle?: boolean     // 日间/夜间模式切换开关
+}
+
 export interface SiteSettings {
   siteTitle?: string
   siteFavicon?: string
@@ -419,6 +425,7 @@ export interface SiteSettings {
   enableWeather?: boolean  // 天气显示开关
   enableLunar?: boolean    // 农历显示开关
   widgetVisibility?: WidgetVisibility
+  menuVisibility?: MenuVisibility  // 菜单项可见性配置
 }
 
 // 转换设置值类型（后端存储为字符串）
@@ -443,6 +450,21 @@ function parseSettings(raw: Record<string, string>): SiteSettings {
     }
   }
 
+  // 解析 menuVisibility JSON
+  let menuVisibility: MenuVisibility = {
+    languageToggle: true,
+    themeToggle: true,
+  }
+  
+  if (raw.menuVisibility) {
+    try {
+      const parsed = JSON.parse(raw.menuVisibility)
+      menuVisibility = { ...menuVisibility, ...parsed }
+    } catch (e) {
+      // 忽略解析错误，使用默认值
+    }
+  }
+
   return {
     siteTitle: raw.siteTitle,
     siteFavicon: raw.siteFavicon,
@@ -453,6 +475,7 @@ function parseSettings(raw: Record<string, string>): SiteSettings {
     enableWeather: raw.enableWeather === undefined ? true : raw.enableWeather === 'true' || raw.enableWeather === '1',
     enableLunar: raw.enableLunar === undefined ? true : raw.enableLunar === 'true' || raw.enableLunar === '1',
     widgetVisibility,
+    menuVisibility,
   }
 }
 
@@ -471,6 +494,7 @@ export async function updateSettings(settings: SiteSettings): Promise<SiteSettin
     enableWeather: settings.enableWeather ? 'true' : 'false',
     enableLunar: settings.enableLunar ? 'true' : 'false',
     widgetVisibility: settings.widgetVisibility ? JSON.stringify(settings.widgetVisibility) : undefined,
+    menuVisibility: settings.menuVisibility ? JSON.stringify(settings.menuVisibility) : undefined,
   }
   const raw = await request<Record<string, string>>('/api/settings', {
     method: 'PATCH',

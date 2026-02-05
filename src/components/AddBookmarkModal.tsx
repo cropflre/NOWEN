@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Plus, Loader2, Check, AlertCircle, Sparkles, BookmarkPlus, ChevronDown, Settings, Link2, Image } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Bookmark, Category, CustomIcon } from '../types/bookmark'
 import { metadataApi } from '../lib/api'
 import { cn } from '../lib/utils'
@@ -34,6 +35,7 @@ export function AddBookmarkModal({
   editBookmark = null,
   onOpenIconManager,
 }: AddBookmarkModalProps) {
+  const { t } = useTranslation()
   const [url, setUrl] = useState(initialUrl)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -153,7 +155,7 @@ export function AddBookmarkModal({
         setShake(true)
         setTimeout(() => setShake(false), 500)
       } catch {
-        setError('无法解析 URL')
+        setError(t('bookmark.modal.url_parse_error'))
       }
     } finally {
       setIsAnalyzing(false)
@@ -176,7 +178,7 @@ export function AddBookmarkModal({
 
   const handleSubmit = () => {
     if (!url || !title) {
-      setError('请填写 URL 和标题')
+      setError(t('bookmark.modal.required_error'))
       setShake(true)
       setTimeout(() => setShake(false), 500)
       return
@@ -239,7 +241,7 @@ export function AddBookmarkModal({
                   className="text-lg font-medium"
                   style={{ color: 'var(--text-primary)' }}
                 >
-                  {editBookmark ? '编辑书签' : '添加书签'}
+                  {editBookmark ? t('bookmark.edit') : t('bookmark.add')}
                 </h2>
               </div>
               <button
@@ -263,7 +265,7 @@ export function AddBookmarkModal({
                   {isAnalyzing && (
                     <span className="flex items-center gap-1 text-xs" style={{ color: 'var(--gradient-1)' }}>
                       <Sparkles className="w-3 h-3 animate-pulse" />
-                      智能分析中...
+                      {t('bookmark.modal.analyzing')}
                     </span>
                   )}
                 </label>
@@ -275,7 +277,7 @@ export function AddBookmarkModal({
                     onChange={(e) => setUrl(e.target.value)}
                     onBlur={handleUrlBlur}
                     onPaste={handlePaste}
-                    placeholder="粘贴链接，自动获取信息..."
+                    placeholder={t('bookmark.modal.url_placeholder')}
                     className={cn(
                       'w-full px-4 py-3 rounded-xl glass',
                       'border border-white/10 focus:border-white/30',
@@ -298,7 +300,7 @@ export function AddBookmarkModal({
                   className="block text-sm mb-2"
                   style={{ color: 'var(--text-secondary)' }}
                 >
-                  标题
+                  {t('bookmark.modal.title')}
                 </label>
                 {isAnalyzing ? (
                   <FieldSkeleton className="h-12 w-full" />
@@ -307,7 +309,7 @@ export function AddBookmarkModal({
                     type="text"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    placeholder="网站标题"
+                    placeholder={t('bookmark.modal.title_placeholder')}
                     className={cn(
                       'w-full px-4 py-3 rounded-xl glass',
                       'border border-white/10 focus:border-white/30',
@@ -325,7 +327,7 @@ export function AddBookmarkModal({
                   className="block text-sm mb-2"
                   style={{ color: 'var(--text-secondary)' }}
                 >
-                  描述 (可选)
+                  {t('bookmark.modal.description_optional')}
                 </label>
                 {isAnalyzing ? (
                   <div className="space-y-2">
@@ -336,7 +338,7 @@ export function AddBookmarkModal({
                     type="text"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder="简短描述"
+                    placeholder={t('bookmark.modal.description_placeholder')}
                     className={cn(
                       'w-full px-4 py-3 rounded-xl glass',
                       'border border-white/10 focus:border-white/30',
@@ -355,7 +357,7 @@ export function AddBookmarkModal({
                     className="text-sm"
                     style={{ color: 'var(--text-secondary)' }}
                   >
-                    自定义图标 (可选)
+                    {t('bookmark.modal.custom_icon')}
                   </label>
                   {onOpenIconManager && (
                     <button
@@ -368,7 +370,7 @@ export function AddBookmarkModal({
                       style={{ color: 'var(--gradient-1)' }}
                     >
                       <Settings className="w-3 h-3" />
-                      管理图标
+                      {t('bookmark.modal.manage_icons')}
                     </button>
                   )}
                 </div>
@@ -386,7 +388,7 @@ export function AddBookmarkModal({
                       <>
                         <img src={iconUrl} alt="" className="w-5 h-5 object-contain" />
                         <span style={{ color: 'var(--text-primary)' }} className="truncate max-w-[200px]">
-                          {customIcons.find(ci => ci.url === iconUrl)?.name || '自定义图片'}
+                          {customIcons.find(ci => ci.url === iconUrl)?.name || t('bookmark.modal.custom_image')}
                         </span>
                       </>
                     ) : icon ? (
@@ -398,7 +400,7 @@ export function AddBookmarkModal({
                         <span style={{ color: 'var(--text-primary)' }}>{icon}</span>
                       </>
                     ) : (
-                      <span style={{ color: 'var(--text-muted)' }}>使用网站图标</span>
+                      <span style={{ color: 'var(--text-muted)' }}>{t('bookmark.modal.use_website_icon')}</span>
                     )}
                   </div>
                   <ChevronDown 
@@ -445,7 +447,7 @@ export function AddBookmarkModal({
                             color: iconTab === 'preset' ? 'var(--color-text-primary)' : 'var(--color-text-muted)'
                           }}
                         >
-                          预设图标
+                          {t('bookmark.modal.preset_icons')}
                         </button>
                         <button
                           type="button"
@@ -459,7 +461,7 @@ export function AddBookmarkModal({
                           }}
                         >
                           <Image className="w-3 h-3" />
-                          我的图标
+                          {t('bookmark.modal.my_icons')}
                         </button>
                         <button
                           type="button"
@@ -495,7 +497,7 @@ export function AddBookmarkModal({
                           background: !icon && !iconUrl ? 'var(--color-bg-tertiary)' : 'transparent'
                         }}
                       >
-                        使用网站图标
+                        {t('bookmark.modal.use_website_icon')}
                       </button>
                       
                       <div 
@@ -544,7 +546,7 @@ export function AddBookmarkModal({
                               style={{ color: 'var(--color-text-muted)' }}
                             >
                               <Image className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                              <p className="text-sm">还没有自定义图标</p>
+                              <p className="text-sm">{t('bookmark.modal.no_custom_icons')}</p>
                               {onOpenIconManager && (
                                 <button
                                   type="button"
@@ -555,7 +557,7 @@ export function AddBookmarkModal({
                                   className="text-xs mt-2 hover:opacity-80"
                                   style={{ color: 'var(--color-primary)' }}
                                 >
-                                  去添加
+                                  {t('bookmark.modal.go_add')}
                                 </button>
                               )}
                             </div>
@@ -654,7 +656,7 @@ export function AddBookmarkModal({
                               whileHover={{ scale: 1.02 }}
                               whileTap={{ scale: 0.98 }}
                             >
-                              使用此图片
+                              {t('bookmark.modal.use_this_image')}
                             </motion.button>
                           </div>
                         </div>
@@ -670,7 +672,7 @@ export function AddBookmarkModal({
                   className="block text-sm mb-2"
                   style={{ color: 'var(--text-secondary)' }}
                 >
-                  分类
+                  {t('bookmark.modal.category')}
                 </label>
                 <select
                   value={category}
@@ -686,7 +688,7 @@ export function AddBookmarkModal({
                     borderColor: 'var(--color-glass-border)',
                   }}
                 >
-                  <option value="" style={{ background: 'var(--color-bg-secondary)', color: 'var(--color-text-primary)' }}>未分类</option>
+                  <option value="" style={{ background: 'var(--color-bg-secondary)', color: 'var(--color-text-primary)' }}>{t('bookmark.modal.uncategorized')}</option>
                   {categories.map(cat => (
                     <option key={cat.id} value={cat.id} style={{ background: 'var(--color-bg-secondary)', color: 'var(--color-text-primary)' }}>
                       {cat.name}
@@ -701,7 +703,7 @@ export function AddBookmarkModal({
                   className="text-sm"
                   style={{ color: 'var(--text-secondary)' }}
                 >
-                  标记为稍后阅读
+                  {t('bookmark.mark_read_later')}
                 </label>
                 <button
                   type="button"
@@ -833,7 +835,7 @@ export function AddBookmarkModal({
                   background: 'var(--color-bg-tertiary)',
                 }}
               >
-                取消
+                {t('bookmark.cancel')}
               </button>
               <motion.button
                 onClick={handleSubmit}
@@ -858,7 +860,7 @@ export function AddBookmarkModal({
                 ) : (
                   <Plus className="w-4 h-4" />
                 )}
-                {editBookmark ? '保存' : '添加'}
+                {editBookmark ? t('bookmark.save') : t('common.add')}
               </motion.button>
             </div>
           </motion.div>

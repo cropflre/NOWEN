@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion'
-import { Sun, Moon, Edit3, Search, Sparkles } from 'lucide-react'
+import { Sun, Moon, Edit3, Search, Sparkles, Languages } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { useTime } from '../hooks/useTime'
 import { useTheme } from '../hooks/useTheme'
 import { cn } from '../lib/utils'
@@ -11,8 +12,15 @@ interface HeaderProps {
 }
 
 export function Header({ onOpenCommand, onToggleEditMode, isEditMode }: HeaderProps) {
+  const { t, i18n } = useTranslation()
   const { formattedTime, formattedDate } = useTime()
   const { isDark, toggleTheme } = useTheme()
+
+  // 切换语言：在 'en' 和 'zh' 之间循环
+  const toggleLanguage = () => {
+    const nextLang = i18n.language === 'en' ? 'zh' : 'en'
+    i18n.changeLanguage(nextLang)
+  }
 
   return (
     <motion.header
@@ -61,10 +69,27 @@ export function Header({ onOpenCommand, onToggleEditMode, isEditMode }: HeaderPr
             whileTap={{ scale: 0.98 }}
           >
             <Search className="w-4 h-4" />
-            <span className="hidden sm:inline text-sm">搜索</span>
+            <span className="hidden sm:inline text-sm">{t('search')}</span>
             <kbd className="hidden md:inline-flex items-center gap-0.5 px-1.5 py-0.5 text-xs rounded bg-white/10 text-white/40">
               ⌘K
             </kbd>
+          </motion.button>
+
+          {/* 语言切换 */}
+          <motion.button
+            onClick={toggleLanguage}
+            className={cn(
+              'p-2.5 rounded-xl',
+              'bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10',
+              'transition-all duration-200 cursor-pointer'
+            )}
+            style={{ color: 'var(--text-secondary)' }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            aria-label={t('language_toggle')}
+            title={t('language_toggle')}
+          >
+            <Languages className="w-4 h-4" />
           </motion.button>
 
           {/* 编辑模式切换 */}
@@ -79,8 +104,8 @@ export function Header({ onOpenCommand, onToggleEditMode, isEditMode }: HeaderPr
             style={{ color: isEditMode ? undefined : 'var(--text-secondary)' }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            aria-label="编辑模式"
-            title="编辑模式 (拖拽排序)"
+            aria-label={t('edit_mode')}
+            title={t('edit_mode_tooltip')}
           >
             <Edit3 className="w-4 h-4" />
           </motion.button>
@@ -96,7 +121,8 @@ export function Header({ onOpenCommand, onToggleEditMode, isEditMode }: HeaderPr
             style={{ color: 'var(--text-secondary)' }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            aria-label="切换主题"
+            aria-label={t('theme_toggle')}
+            title={t('theme_toggle')}
           >
             {isDark ? (
               <Sun className="w-4 h-4" />

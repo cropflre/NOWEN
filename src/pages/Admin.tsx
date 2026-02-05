@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Search,
@@ -62,6 +63,7 @@ const presetColors = [
 ]
 
 function AdminContent() {
+  const { t } = useTranslation()
   // 从 Context 获取数据和操作
   const { 
     bookmarks, 
@@ -175,7 +177,7 @@ function AdminContent() {
       // 通知父组件更新名言
       onQuotesUpdate?.(newQuotes, newUseDefault)
     } catch (error) {
-      console.error('更新名言失败:', error)
+      console.error('Failed to update quotes:', error)
     }
   }
 
@@ -214,10 +216,10 @@ function AdminContent() {
   }
 
   const deleteSelected = () => {
-    if (confirm(`确定要删除选中的 ${selectedIds.size} 个书签吗？`)) {
+    if (confirm(t('admin.bookmark.batch_delete_confirm', { count: selectedIds.size }))) {
       selectedIds.forEach(id => onDeleteBookmark(id))
       setSelectedIds(new Set())
-      showToast('success', `已删除 ${selectedIds.size} 个书签`)
+      showToast('success', t('admin.bookmark.deleted_count', { count: selectedIds.size }))
     }
   }
 
@@ -231,14 +233,14 @@ function AdminContent() {
         color: newCategoryColor,
         icon: newCategoryIcon,
       })
-      showToast('success', '分类已更新')
+      showToast('success', t('admin.category.updated'))
     } else {
       onAddCategory({ 
         name: newCategoryName, 
         color: newCategoryColor,
         icon: newCategoryIcon,
       })
-      showToast('success', '分类创建成功')
+      showToast('success', t('admin.category.created'))
     }
     
     resetCategoryForm()
@@ -268,7 +270,7 @@ function AdminContent() {
     try {
       await adminChangePassword(currentPassword, newPassword)
       setPasswordSuccess(true)
-      showToast('success', '密码修改成功')
+      showToast('success', t('admin.settings.security.changed'))
       setTimeout(() => setPasswordSuccess(false), 3000)
     } catch (err: any) {
       setPasswordError(err.message || '修改密码失败')
@@ -288,7 +290,7 @@ function AdminContent() {
       const updated = await updateSettings(siteSettings)
       setSiteSettings(updated)
       setSettingsSuccess(true)
-      showToast('success', '站点设置已保存')
+      showToast('success', t('admin.settings.site.saved'))
       
       // 通知父组件更新设置（实时生效）
       onSettingsChange(updated)
@@ -313,8 +315,8 @@ function AdminContent() {
       
       setTimeout(() => setSettingsSuccess(false), 3000)
     } catch (err: any) {
-      setSettingsError(err.message || '保存设置失败')
-      showToast('error', '保存设置失败')
+      setSettingsError(err.message || t('admin.settings.data.export_error'))
+      showToast('error', t('admin.settings.data.export_error'))
     } finally {
       setIsSavingSettings(false)
     }
@@ -337,15 +339,15 @@ function AdminContent() {
         setWidgetVisibility(updated.widgetVisibility)
       }
       setWidgetSettingsSuccess(true)
-      showToast('success', '仪表设置已保存')
+      showToast('success', t('admin.settings.widget.saved'))
       
       // 通知父组件更新设置（实时生效）
       onSettingsChange(updated)
       
       setTimeout(() => setWidgetSettingsSuccess(false), 3000)
     } catch (err: any) {
-      setWidgetSettingsError(err.message || '保存仪表设置失败')
-      showToast('error', '保存仪表设置失败')
+      setWidgetSettingsError(err.message || t('admin.settings.data.export_error'))
+      showToast('error', t('admin.settings.data.export_error'))
     } finally {
       setIsSavingWidgetSettings(false)
     }
@@ -353,11 +355,11 @@ function AdminContent() {
 
   // Tab titles for header
   const tabTitles = {
-    bookmarks: '书签管理',
-    categories: '分类管理',
-    quotes: '名言管理',
-    icons: '图标管理',
-    settings: '系统设置',
+    bookmarks: t('admin.nav.bookmarks_full'),
+    categories: t('admin.nav.categories_full'),
+    quotes: t('admin.nav.quotes_full'),
+    icons: t('admin.nav.icons_full'),
+    settings: t('admin.nav.settings_full'),
   }
 
   return (
@@ -405,11 +407,11 @@ function AdminContent() {
                 {tabTitles[activeTab]}
               </h1>
               <p className="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>
-                {activeTab === 'bookmarks' && `共 ${bookmarks.length} 个书签`}
-                {activeTab === 'categories' && `共 ${categories.length} 个分类`}
-                {activeTab === 'quotes' && `共 ${quotes.length} 条名言`}
-                {activeTab === 'icons' && `共 ${customIcons.length} 个图标`}
-                {activeTab === 'settings' && '管理您的网站配置'}
+                {activeTab === 'bookmarks' && t('admin.stats.total_bookmarks', { count: bookmarks.length })}
+                {activeTab === 'categories' && t('admin.stats.total_categories', { count: categories.length })}
+                {activeTab === 'quotes' && t('admin.stats.total_quotes', { count: quotes.length })}
+                {activeTab === 'icons' && t('admin.stats.total_icons', { count: customIcons.length })}
+                {activeTab === 'settings' && t('admin.stats.manage_config')}
               </p>
             </div>
 
@@ -425,7 +427,7 @@ function AdminContent() {
                 }}
               >
                 <Plus className="w-4 h-4" />
-                添加书签
+                {t('admin.bookmark.add')}
               </motion.button>
             )}
           </motion.header>
@@ -447,7 +449,7 @@ function AdminContent() {
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--color-text-muted)' }} />
                     <input
                       type="text"
-                      placeholder="搜索书签..."
+                      placeholder={t('admin.bookmark.search')}
                       value={searchQuery}
                       onChange={e => setSearchQuery(e.target.value)}
                       className="w-full pl-11 pr-4 py-3 rounded-xl backdrop-blur-sm focus:outline-none transition-all duration-300"
@@ -471,8 +473,8 @@ function AdminContent() {
                         color: 'var(--color-text-primary)',
                       }}
                     >
-                      <option value="all" style={{ background: 'var(--color-bg-secondary)' }}>全部分类</option>
-                      <option value="uncategorized" style={{ background: 'var(--color-bg-secondary)' }}>未分类</option>
+                      <option value="all" style={{ background: 'var(--color-bg-secondary)' }}>{t('admin.bookmark.all_categories')}</option>
+                      <option value="uncategorized" style={{ background: 'var(--color-bg-secondary)' }}>{t('admin.bookmark.uncategorized')}</option>
                       {categories.map(cat => (
                         <option key={cat.id} value={cat.id} style={{ background: 'var(--color-bg-secondary)' }}>{cat.name}</option>
                       ))}
@@ -495,7 +497,7 @@ function AdminContent() {
                       }}
                     >
                       <span className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-                        已选择 <span style={{ color: 'var(--color-primary)' }} className="font-medium">{selectedIds.size}</span> 项
+                        {t('admin.bookmark.selected')} <span style={{ color: 'var(--color-primary)' }} className="font-medium">{selectedIds.size}</span> {t('admin.bookmark.items')}
                       </span>
                       <div className="flex-1" />
                       <motion.button
@@ -505,7 +507,7 @@ function AdminContent() {
                         className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500/20 text-red-400 text-sm font-medium hover:bg-red-500/30 transition-colors"
                       >
                         <Trash2 className="w-4 h-4" />
-                        批量删除
+                        {t('admin.bookmark.batch_delete')}
                       </motion.button>
                     </motion.div>
                   )}
@@ -566,10 +568,10 @@ function AdminContent() {
                           <Check className="w-3 h-3" />
                         )}
                       </button>
-                      <span>书签</span>
-                      <span>分类</span>
-                      <span>状态</span>
-                      <span>操作</span>
+                      <span>{t('admin.bookmark.table.bookmark')}</span>
+                      <span>{t('admin.bookmark.table.category')}</span>
+                      <span>{t('admin.bookmark.table.status')}</span>
+                      <span>{t('admin.bookmark.table.actions')}</span>
                     </div>
 
                     {/* 移动端全选按钮 */}
@@ -605,10 +607,10 @@ function AdminContent() {
                             <Check className="w-3 h-3" />
                           )}
                         </div>
-                        全选
+                        {t('admin.bookmark.select_all')}
                       </button>
                       <span className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-                        {filteredBookmarks.length} 项
+                        {filteredBookmarks.length} {t('admin.bookmark.items')}
                       </span>
                     </div>
 
@@ -618,7 +620,7 @@ function AdminContent() {
                         <div className="px-4 py-16 text-center">
                           <Sparkles className="w-12 h-12 mx-auto mb-4" style={{ color: 'var(--color-text-muted)', opacity: 0.3 }} />
                           <p style={{ color: 'var(--color-text-muted)' }}>
-                            {searchQuery || filterCategory !== 'all' ? '没有匹配的书签' : '暂无书签'}
+                            {searchQuery || filterCategory !== 'all' ? t('admin.bookmark.no_match') : t('admin.bookmark.empty')}
                           </p>
                         </div>
                       ) : (
@@ -699,7 +701,7 @@ function AdminContent() {
                                     color: 'var(--color-text-secondary)',
                                   }}
                                 >
-                                  <option value="" style={{ background: 'var(--color-bg-secondary)' }}>未分类</option>
+                                  <option value="" style={{ background: 'var(--color-bg-secondary)' }}>{t('admin.bookmark.uncategorized')}</option>
                                   {categories.map(cat => (
                                     <option key={cat.id} value={cat.id} style={{ background: 'var(--color-bg-secondary)' }}>{cat.name}</option>
                                   ))}
@@ -717,7 +719,7 @@ function AdminContent() {
                                       : 'hover:bg-[var(--color-glass-hover)]'
                                   )}
                                   style={{ color: bookmark.isPinned ? undefined : 'var(--color-text-muted)' }}
-                                  title="置顶"
+                                  title={t('admin.bookmark.pinned')}
                                 >
                                   <Pin className="w-3.5 h-3.5" />
                                 </button>
@@ -730,7 +732,7 @@ function AdminContent() {
                                       : 'hover:bg-[var(--color-glass-hover)]'
                                   )}
                                   style={{ color: bookmark.isReadLater ? undefined : 'var(--color-text-muted)' }}
-                                  title="稍后阅读"
+                                  title={t('bookmark.read_later')}
                                 >
                                   <BookMarked className="w-3.5 h-3.5" />
                                 </button>
@@ -742,7 +744,7 @@ function AdminContent() {
                                   onClick={() => window.open(bookmark.url, '_blank')}
                                   className="p-1.5 rounded-lg hover:bg-[var(--color-glass-hover)] transition-all"
                                   style={{ color: 'var(--color-text-muted)' }}
-                                  title="打开链接"
+                                  title={t('admin.bookmark.open_link')}
                                 >
                                   <ExternalLink className="w-3.5 h-3.5" />
                                 </button>
@@ -750,20 +752,20 @@ function AdminContent() {
                                   onClick={() => onEditBookmark(bookmark)}
                                   className="p-1.5 rounded-lg hover:bg-[var(--color-glass-hover)] transition-all"
                                   style={{ color: 'var(--color-text-muted)' }}
-                                  title="编辑"
+                                  title={t('admin.bookmark.edit')}
                                 >
                                   <Edit2 className="w-3.5 h-3.5" />
                                 </button>
                                 <button
                                   onClick={() => {
-                                    if (confirm('确定删除这个书签？')) {
+                                    if (confirm(t('admin.bookmark.delete_confirm'))) {
                                       onDeleteBookmark(bookmark.id)
-                                      showToast('success', '书签已删除')
+                                      showToast('success', t('admin.bookmark.deleted'))
                                     }
                                   }}
                                   className="p-1.5 rounded-lg hover:text-red-400 hover:bg-red-500/10 transition-all"
                                   style={{ color: 'var(--color-text-muted)' }}
-                                  title="删除"
+                                  title={t('admin.bookmark.delete')}
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
                                 </button>
@@ -841,17 +843,17 @@ function AdminContent() {
                                         color: 'var(--color-text-secondary)',
                                       }}
                                     >
-                                      <option value="" style={{ background: 'var(--color-bg-secondary)' }}>未分类</option>
-                                      {categories.map(cat => (
-                                        <option key={cat.id} value={cat.id} style={{ background: 'var(--color-bg-secondary)' }}>{cat.name}</option>
-                                      ))}
-                                    </select>
+                                      <option value="" style={{ background: 'var(--color-bg-secondary)' }}>{t('admin.bookmark.uncategorized')}</option>
+                                    {categories.map(cat => (
+                                      <option key={cat.id} value={cat.id} style={{ background: 'var(--color-bg-secondary)' }}>{cat.name}</option>
+                                    ))}
+                                  </select>
 
                                     {bookmark.isPinned && (
-                                      <span className="px-2 py-0.5 rounded text-xs bg-yellow-500/20 text-yellow-400">置顶</span>
+                                      <span className="px-2 py-0.5 rounded text-xs bg-yellow-500/20 text-yellow-400">{t('admin.bookmark.pinned')}</span>
                                     )}
                                     {bookmark.isReadLater && (
-                                      <span className="px-2 py-0.5 rounded text-xs bg-orange-500/20 text-orange-400">稍后读</span>
+                                      <span className="px-2 py-0.5 rounded text-xs bg-orange-500/20 text-orange-400">{t('admin.bookmark.read_later_short')}</span>
                                     )}
                                   </div>
 
@@ -897,9 +899,9 @@ function AdminContent() {
                                     </button>
                                     <button
                                       onClick={() => {
-                                        if (confirm('确定删除这个书签？')) {
+                                        if (confirm(t('admin.bookmark.delete_confirm'))) {
                                           onDeleteBookmark(bookmark.id)
-                                          showToast('success', '书签已删除')
+                                          showToast('success', t('admin.bookmark.deleted'))
                                         }
                                       }}
                                       className="p-2 rounded-lg bg-[var(--color-bg-tertiary)] hover:text-red-400 hover:bg-red-500/10 transition-all"
@@ -942,7 +944,7 @@ function AdminContent() {
                     }}
                   >
                     <FolderPlus className="w-4 h-4" />
-                    新建分类
+                    {t('admin.category.add')}
                   </motion.button>
                 </div>
 
@@ -977,7 +979,7 @@ function AdminContent() {
                           style={{ borderBottom: '1px solid var(--color-glass-border)' }}
                         >
                           <h3 className="text-lg font-semibold" style={{ color: 'var(--color-text-primary)' }}>
-                            {editingCategory ? '编辑分类' : '新建分类'}
+                            {editingCategory ? t('admin.category.edit') : t('admin.category.add')}
                           </h3>
                           <button
                             onClick={resetCategoryForm}
@@ -1011,11 +1013,11 @@ function AdminContent() {
 
                             <div className="flex-1">
                               <label className="block text-sm mb-1.5" style={{ color: 'var(--color-text-muted)' }}>
-                                分类名称
+                                {t('admin.category.name')}
                               </label>
                               <input
                                 type="text"
-                                placeholder="输入分类名称"
+                                placeholder={t('admin.category.name_placeholder')}
                                 value={newCategoryName}
                                 onChange={e => setNewCategoryName(e.target.value)}
                                 className="w-full px-4 py-3 rounded-xl focus:outline-none transition-all"
@@ -1045,7 +1047,7 @@ function AdminContent() {
                                     border: '1px solid var(--color-glass-border)',
                                   }}
                                 >
-                                  <p className="text-xs mb-3" style={{ color: 'var(--color-text-muted)' }}>选择图标</p>
+                                  <p className="text-xs mb-3" style={{ color: 'var(--color-text-muted)' }}>{t('admin.category.select_icon')}</p>
                                   <div className="grid grid-cols-11 gap-1">
                                     {presetIcons.map(({ name, icon: IconComp }) => (
                                       <button
@@ -1079,7 +1081,7 @@ function AdminContent() {
                           {/* 颜色选择 */}
                           <div>
                             <label className="block text-sm mb-2" style={{ color: 'var(--color-text-muted)' }}>
-                              选择颜色
+                              {t('admin.category.select_color')}
                             </label>
                             <div className="flex gap-2 flex-wrap">
                               {presetColors.map(color => (
@@ -1116,7 +1118,7 @@ function AdminContent() {
                               color: 'var(--color-text-secondary)',
                             }}
                           >
-                            取消
+                            {t('common.cancel')}
                           </motion.button>
                           <motion.button
                             onClick={handleSaveCategory}
@@ -1125,7 +1127,7 @@ function AdminContent() {
                             className="px-5 py-2.5 rounded-xl text-white font-medium transition-colors"
                             style={{ background: 'var(--color-primary)' }}
                           >
-                            {editingCategory ? '保存更改' : '创建分类'}
+                            {editingCategory ? t('admin.category.save_changes') : t('admin.category.create')}
                           </motion.button>
                         </div>
                       </motion.div>
@@ -1144,7 +1146,7 @@ function AdminContent() {
                       }}
                     >
                       <FolderPlus className="w-10 h-10 md:w-12 md:h-12 mx-auto mb-4" style={{ color: 'var(--color-text-muted)', opacity: 0.3 }} />
-                      <p style={{ color: 'var(--color-text-muted)' }}>暂无分类，点击上方按钮创建</p>
+                      <p style={{ color: 'var(--color-text-muted)' }}>{t('admin.category.empty')}</p>
                     </div>
                   ) : (
                     categories.map((category, index) => {
@@ -1181,7 +1183,7 @@ function AdminContent() {
                           {/* Name */}
                           <div className="flex-1 min-w-0">
                             <span className="font-medium text-sm md:text-base truncate block" style={{ color: 'var(--color-text-primary)' }}>{category.name}</span>
-                            <span className="text-xs md:text-sm" style={{ color: 'var(--color-text-muted)' }}>{count} 个书签</span>
+                            <span className="text-xs md:text-sm" style={{ color: 'var(--color-text-muted)' }}>{t('admin.bookmark.bookmark_count', { count })}</span>
                           </div>
 
                           {/* Actions */}
@@ -1190,20 +1192,20 @@ function AdminContent() {
                               onClick={() => startEditCategory(category)}
                               className="p-2 rounded-lg hover:bg-[var(--color-glass-hover)] transition-all"
                               style={{ color: 'var(--color-text-muted)' }}
-                              title="编辑"
+                              title={t('admin.bookmark.edit')}
                             >
                               <Edit2 className="w-4 h-4" />
                             </button>
                             <button
                               onClick={() => {
-                                if (confirm(`确定删除分类 "${category.name}" 吗？该分类下的书签将变为未分类。`)) {
+                                if (confirm(t('admin.category.delete_confirm', { name: category.name }))) {
                                   onDeleteCategory(category.id)
-                                  showToast('success', '分类已删除')
+                                  showToast('success', t('admin.category.deleted'))
                                 }
                               }}
                               className="p-2 rounded-lg hover:text-red-400 hover:bg-red-500/10 transition-all"
                               style={{ color: 'var(--color-text-muted)' }}
-                              title="删除"
+                              title={t('admin.bookmark.delete')}
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -1225,9 +1227,9 @@ function AdminContent() {
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-4 h-4 rounded-full" style={{ background: 'var(--color-text-muted)', opacity: 0.3 }} />
-                      <span style={{ color: 'var(--color-text-secondary)' }}>未分类</span>
+                      <span style={{ color: 'var(--color-text-secondary)' }}>{t('admin.bookmark.uncategorized')}</span>
                       <span className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-                        {bookmarks.filter(b => !b.category).length} 个书签
+                        {t('admin.bookmark.bookmark_count', { count: bookmarks.filter(b => !b.category).length })}
                       </span>
                     </div>
                   </div>
@@ -1295,7 +1297,7 @@ function AdminContent() {
                   autoMode={autoMode}
                   onThemeChange={(id: ThemeId, origin) => {
                     setTheme(id, origin)
-                    showToast('success', '主题已切换')
+                    showToast('success', t('admin.settings.theme.theme_switched'))
                   }}
                   onAutoModeChange={setAutoMode}
                   onToggleDarkMode={toggleDarkMode}
@@ -1318,11 +1320,11 @@ function AdminContent() {
                   categories={categories}
                   onImport={async (data) => {
                     await importData(data)
-                    showToast('success', '数据导入成功，正在刷新...')
+                    showToast('success', t('admin.settings.data.import_success', { bookmarks: data.bookmarks?.length || 0, categories: data.categories?.length || 0 }))
                     refreshData()
                   }}
                   onFactoryReset={() => {
-                    showToast('success', '已恢复出厂设置，正在刷新...')
+                    showToast('success', t('admin.settings.data.reset_success'))
                     refreshData()
                   }}
                 />

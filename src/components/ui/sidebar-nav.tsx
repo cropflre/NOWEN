@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Pin, ChevronRight, ChevronLeft } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { getIconComponent } from "../../lib/utils";
 
 interface NavItem {
@@ -21,6 +22,7 @@ export function SidebarNav({ items, pinnedCount = 0, className = "" }: SidebarNa
   const [activeId, setActiveId] = useState<string | null>(null);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const { t } = useTranslation();
 
   // 检测页面滚动高度，决定是否显示侧边栏
   useEffect(() => {
@@ -95,7 +97,7 @@ export function SidebarNav({ items, pinnedCount = 0, className = "" }: SidebarNa
   if (!isVisible) return null;
 
   const allItems: NavItem[] = pinnedCount > 0 
-    ? [{ id: "pinned", name: "常用", icon: "Pin", color: "#eab308", count: pinnedCount }, ...items]
+    ? [{ id: "pinned", name: t('sidebar.pinned'), icon: "Pin", color: "#eab308", count: pinnedCount }, ...items]
     : items;
 
   return (
@@ -231,7 +233,7 @@ export function SidebarNav({ items, pinnedCount = 0, className = "" }: SidebarNa
               animate={{ opacity: 1 }}
               transition={{ duration: 0.15, delay: 0.1 }}
             >
-              点击快速定位
+              {t('sidebar.click_to_navigate')}
             </motion.div>
           )}
         </motion.div>

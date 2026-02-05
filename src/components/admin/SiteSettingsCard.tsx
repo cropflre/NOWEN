@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Globe, 
@@ -12,7 +13,9 @@ import {
   Zap,
   Feather,
   CloudSun,
-  Moon
+  Moon,
+  Languages,
+  SunMoon
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { SiteSettings } from '../../lib/api'
@@ -34,6 +37,7 @@ export function SiteSettingsCard({
   success,
   error,
 }: SiteSettingsCardProps) {
+  const { t } = useTranslation()
   const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -88,8 +92,8 @@ export function SiteSettingsCard({
             <div className="absolute -inset-2 rounded-xl bg-cyan-500/20 blur-xl opacity-50 -z-10 dark:block hidden" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold" style={{ color: 'var(--color-text-primary)' }}>站点配置</h3>
-            <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>自定义您的网站外观</p>
+            <h3 className="text-lg font-semibold" style={{ color: 'var(--color-text-primary)' }}>{t('admin.settings.site.title')}</h3>
+            <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>{t('admin.settings.site.subtitle')}</p>
           </div>
         </div>
 
@@ -100,14 +104,14 @@ export function SiteSettingsCard({
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--color-text-muted)' }}>
                 <Type className="w-4 h-4" />
-                站点标题
+                {t('admin.settings.site.site_title')}
               </label>
               <div className="relative">
                 <input
                   type="text"
                   value={settings.siteTitle || ''}
                   onChange={e => onChange({ ...settings, siteTitle: e.target.value })}
-                  placeholder="请输入站点标题"
+                  placeholder={t('admin.settings.site.site_title_placeholder')}
                   className="w-full px-4 py-3 rounded-xl focus:outline-none transition-all duration-300"
                   style={{
                     background: 'var(--color-bg-tertiary)',
@@ -122,7 +126,7 @@ export function SiteSettingsCard({
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--color-text-muted)' }}>
                 <Image className="w-4 h-4" />
-                站点图标
+                {t('admin.settings.site.site_icon')}
               </label>
               
               {/* Drag & Drop Area */}
@@ -141,7 +145,7 @@ export function SiteSettingsCard({
                 }}
               >
                 <div className="flex items-center gap-3">
-                  {settings.siteFavicon ? (
+                    {settings.siteFavicon ? (
                     <>
                       <img 
                         src={settings.siteFavicon} 
@@ -152,14 +156,14 @@ export function SiteSettingsCard({
                         }}
                       />
                       <span className="text-sm truncate flex-1" style={{ color: 'var(--color-text-muted)' }}>
-                        {settings.siteFavicon.startsWith('data:') ? '已上传本地图片' : settings.siteFavicon}
+                        {settings.siteFavicon.startsWith('data:') ? t('admin.settings.site.uploaded_local') : settings.siteFavicon}
                       </span>
                     </>
                   ) : (
                     <>
                       <Upload className="w-5 h-5" style={{ color: 'var(--color-text-muted)' }} />
                       <span className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-                        拖拽图片或点击上传
+                        {t('admin.settings.site.drag_upload')}
                       </span>
                     </>
                   )}
@@ -188,7 +192,7 @@ export function SiteSettingsCard({
                   type="text"
                   value={settings.siteFavicon?.startsWith('data:') ? '' : (settings.siteFavicon || '')}
                   onChange={e => onChange({ ...settings, siteFavicon: e.target.value })}
-                  placeholder="或输入图标 URL"
+                  placeholder={t('admin.settings.site.icon_url_placeholder')}
                   className="w-full px-4 py-3 rounded-xl focus:outline-none transition-all duration-300"
                   style={{
                     background: 'var(--color-bg-tertiary)',
@@ -203,7 +207,7 @@ export function SiteSettingsCard({
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--color-text-muted)' }}>
                 <Zap className="w-4 h-4" />
-                光束动画
+                {t('admin.settings.site.beam_animation')}
               </label>
               <div 
                 className="flex items-center justify-between px-4 py-3 rounded-xl"
@@ -214,10 +218,10 @@ export function SiteSettingsCard({
               >
                 <div>
                   <p className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>
-                    背景光束效果
+                    {t('admin.settings.site.beam_effect')}
                   </p>
                   <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                    开启后显示动态光束碰撞动画
+                    {t('admin.settings.site.beam_desc')}
                   </p>
                 </div>
                 <button
@@ -247,7 +251,7 @@ export function SiteSettingsCard({
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--color-text-muted)' }}>
                 <Feather className="w-4 h-4" />
-                精简模式
+                {t('admin.settings.site.lite_mode')}
               </label>
               <div 
                 className="flex items-center justify-between px-4 py-3 rounded-xl transition-colors duration-300"
@@ -262,12 +266,12 @@ export function SiteSettingsCard({
               >
                 <div>
                   <p className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>
-                    性能优先 (Lite)
+                    {t('admin.settings.site.lite_title')}
                   </p>
                   <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                    关闭所有耗能特效（极光、流星、3D），仅保留核心功能。
+                    {t('admin.settings.site.lite_desc')}
                     <span className="ml-1 opacity-75 text-emerald-500">
-                      {settings.enableLiteMode ? '当前已开启' : ''}
+                      {settings.enableLiteMode ? t('admin.settings.site.lite_enabled') : ''}
                     </span>
                   </p>
                 </div>
@@ -300,7 +304,7 @@ export function SiteSettingsCard({
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--color-text-muted)' }}>
                 <CloudSun className="w-4 h-4" />
-                天气显示
+                {t('admin.settings.site.weather')}
               </label>
               <div 
                 className="flex items-center justify-between px-4 py-3 rounded-xl transition-colors duration-300"
@@ -315,10 +319,10 @@ export function SiteSettingsCard({
               >
                 <div>
                   <p className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>
-                    实时天气
+                    {t('admin.settings.site.weather_title')}
                   </p>
                   <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                    在首页显示当前位置的天气信息（需要定位权限）
+                    {t('admin.settings.site.weather_desc')}
                   </p>
                 </div>
                 <button
@@ -345,7 +349,7 @@ export function SiteSettingsCard({
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--color-text-muted)' }}>
                 <Moon className="w-4 h-4" />
-                农历显示
+                {t('admin.settings.site.lunar')}
               </label>
               <div 
                 className="flex items-center justify-between px-4 py-3 rounded-xl transition-colors duration-300"
@@ -360,10 +364,10 @@ export function SiteSettingsCard({
               >
                 <div>
                   <p className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>
-                    农历日期
+                    {t('admin.settings.site.lunar_title')}
                   </p>
                   <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                    在日期旁显示农历、节气和传统节日
+                    {t('admin.settings.site.lunar_desc')}
                   </p>
                 </div>
                 <button
@@ -385,13 +389,115 @@ export function SiteSettingsCard({
                 </button>
               </div>
             </div>
+
+            {/* 多语言切换开关 */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--color-text-muted)' }}>
+                <Languages className="w-4 h-4" />
+                {t('admin.settings.site.language_toggle')}
+              </label>
+              <div 
+                className="flex items-center justify-between px-4 py-3 rounded-xl transition-colors duration-300"
+                style={{
+                  background: (settings.menuVisibility?.languageToggle !== false)
+                    ? 'rgba(139, 92, 246, 0.1)' 
+                    : 'var(--color-bg-tertiary)',
+                  border: (settings.menuVisibility?.languageToggle !== false)
+                    ? '1px solid rgba(139, 92, 246, 0.2)'
+                    : '1px solid var(--color-glass-border)',
+                }}
+              >
+                <div>
+                  <p className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>
+                    {t('admin.settings.site.language_toggle_title')}
+                  </p>
+                  <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                    {t('admin.settings.site.language_toggle_desc')}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => onChange({ 
+                    ...settings, 
+                    menuVisibility: { 
+                      ...settings.menuVisibility, 
+                      languageToggle: !(settings.menuVisibility?.languageToggle !== false) 
+                    } 
+                  })}
+                  className={cn(
+                    'relative w-12 h-6 rounded-full transition-all duration-300',
+                    (settings.menuVisibility?.languageToggle !== false)
+                      ? 'bg-gradient-to-r from-violet-500 to-purple-500'
+                      : 'bg-gray-600/50'
+                  )}
+                >
+                  <div
+                    className={cn(
+                      'absolute top-1 w-4 h-4 rounded-full bg-white shadow-md transition-all duration-300',
+                      (settings.menuVisibility?.languageToggle !== false) ? 'left-7' : 'left-1'
+                    )}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {/* 主题切换开关 */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--color-text-muted)' }}>
+                <SunMoon className="w-4 h-4" />
+                {t('admin.settings.site.theme_toggle')}
+              </label>
+              <div 
+                className="flex items-center justify-between px-4 py-3 rounded-xl transition-colors duration-300"
+                style={{
+                  background: (settings.menuVisibility?.themeToggle !== false)
+                    ? 'rgba(236, 72, 153, 0.1)' 
+                    : 'var(--color-bg-tertiary)',
+                  border: (settings.menuVisibility?.themeToggle !== false)
+                    ? '1px solid rgba(236, 72, 153, 0.2)'
+                    : '1px solid var(--color-glass-border)',
+                }}
+              >
+                <div>
+                  <p className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>
+                    {t('admin.settings.site.theme_toggle_title')}
+                  </p>
+                  <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                    {t('admin.settings.site.theme_toggle_desc')}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => onChange({ 
+                    ...settings, 
+                    menuVisibility: { 
+                      ...settings.menuVisibility, 
+                      themeToggle: !(settings.menuVisibility?.themeToggle !== false) 
+                    } 
+                  })}
+                  className={cn(
+                    'relative w-12 h-6 rounded-full transition-all duration-300',
+                    (settings.menuVisibility?.themeToggle !== false)
+                      ? 'bg-gradient-to-r from-pink-500 to-rose-500'
+                      : 'bg-gray-600/50'
+                  )}
+                >
+                  <div
+                    className={cn(
+                      'absolute top-1 w-4 h-4 rounded-full bg-white shadow-md transition-all duration-300',
+                      (settings.menuVisibility?.themeToggle !== false) ? 'left-7' : 'left-1'
+                    )}
+                  />
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* Right: Live Preview */}
           <div className="space-y-3">
             <label className="flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--color-text-muted)' }}>
               <ExternalLink className="w-4 h-4" />
-              实时预览
+              {t('admin.settings.site.preview')}
             </label>
             
             {/* Browser Preview */}
@@ -465,7 +571,7 @@ export function SiteSettingsCard({
                   >
                     {settings.siteTitle || 'Nebula Portal'}
                   </motion.h1>
-                  <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>探索精选网站导航</p>
+                  <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>{t('admin.settings.site.preview_subtitle')}</p>
                   
                   {/* Mini Cards Preview */}
                   <div className="flex justify-center gap-2 mt-4">
@@ -510,7 +616,7 @@ export function SiteSettingsCard({
               className="mt-4 flex items-center gap-2 px-4 py-3 rounded-xl bg-green-500/10 border border-green-500/20 text-sm text-green-400"
             >
               <CheckCircle className="w-4 h-4 flex-shrink-0" />
-              设置保存成功
+              {t('admin.settings.site.saved')}
             </motion.div>
           )}
         </AnimatePresence>
@@ -540,9 +646,9 @@ export function SiteSettingsCard({
                   transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                   className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full"
                 />
-                保存中...
+                {t('admin.settings.site.saving')}
               </span>
-            ) : '保存配置'}
+            ) : t('admin.settings.site.save')}
           </span>
         </motion.button>
       </div>

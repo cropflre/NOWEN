@@ -1,4 +1,5 @@
 import { useState, useRef, MouseEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Bookmark, 
@@ -28,11 +29,11 @@ interface AdminSidebarProps {
 }
 
 const navItems = [
-  { id: 'bookmarks' as TabType, label: '书签', fullLabel: '书签管理', icon: Bookmark },
-  { id: 'categories' as TabType, label: '分类', fullLabel: '分类管理', icon: FolderOpen },
-  { id: 'quotes' as TabType, label: '名言', fullLabel: '名言管理', icon: Quote },
-  { id: 'icons' as TabType, label: '图标', fullLabel: '图标管理', icon: ImageIcon },
-  { id: 'settings' as TabType, label: '设置', fullLabel: '系统设置', icon: Settings },
+  { id: 'bookmarks' as TabType, labelKey: 'admin.nav.bookmarks', fullLabelKey: 'admin.nav.bookmarks_full', icon: Bookmark },
+  { id: 'categories' as TabType, labelKey: 'admin.nav.categories', fullLabelKey: 'admin.nav.categories_full', icon: FolderOpen },
+  { id: 'quotes' as TabType, labelKey: 'admin.nav.quotes', fullLabelKey: 'admin.nav.quotes_full', icon: Quote },
+  { id: 'icons' as TabType, labelKey: 'admin.nav.icons', fullLabelKey: 'admin.nav.icons_full', icon: ImageIcon },
+  { id: 'settings' as TabType, labelKey: 'admin.nav.settings', fullLabelKey: 'admin.nav.settings_full', icon: Settings },
 ]
 
 // 液态动画配置 - 如同在蜂蜜中滑动
@@ -99,9 +100,10 @@ interface NavItemProps {
   count: number | null
   onClick: () => void
   index: number
+  t: (key: string) => string
 }
 
-function NavItem({ item, isActive, count, onClick, index }: NavItemProps) {
+function NavItem({ item, isActive, count, onClick, index, t }: NavItemProps) {
   const { ref, offset, isHovering, handleMouseMove, handleMouseLeave } = useMagneticEffect(3)
 
   // 根据是否悬停选择不同的弹簧配置
@@ -202,7 +204,7 @@ function NavItem({ item, isActive, count, onClick, index }: NavItemProps) {
         className="relative z-10 font-medium text-sm"
         style={a11yTextShadow.primary}
       >
-        {item.fullLabel}
+        {t(item.fullLabelKey)}
       </motion.span>
       
       {/* 计数徽章 - 轻微磁吸 */}
@@ -234,6 +236,7 @@ export function AdminSidebar({
   quoteCount,
   iconCount,
 }: AdminSidebarProps) {
+  const { t } = useTranslation()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const getCount = (id: TabType) => {
@@ -329,7 +332,7 @@ export function AdminSidebar({
                 className="text-lg font-semibold text-white/90"
                 style={a11yTextShadow.primary}
               >
-                控制台
+                {t('admin.console')}
               </h1>
               <p 
                 className="text-xs text-white/50"
@@ -351,6 +354,7 @@ export function AdminSidebar({
               count={getCount(item.id)}
               onClick={() => onTabChange(item.id)}
               index={index}
+              t={t}
             />
           ))}
         </nav>
@@ -364,12 +368,12 @@ export function AdminSidebar({
             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-white/60 hover:text-white/80 hover:bg-white/[0.02] transition-colors"
           >
             <ChevronLeft className="w-5 h-5" style={a11yTextShadow.icon} />
-            <span className="text-sm font-medium" style={a11yTextShadow.secondary}>返回前台</span>
+            <span className="text-sm font-medium" style={a11yTextShadow.secondary}>{t('admin.back_to_home')}</span>
           </motion.button>
           
           <motion.button
             onClick={() => {
-              if (confirm('确定退出登录吗？')) {
+              if (confirm(t('admin.logout_confirm'))) {
                 onLogout()
               }
             }}
@@ -379,7 +383,7 @@ export function AdminSidebar({
             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-400/70 hover:text-red-400 hover:bg-red-500/[0.06] transition-all"
           >
             <LogOut className="w-5 h-5" style={a11yTextShadow.icon} />
-            <span className="text-sm font-medium" style={a11yTextShadow.secondary}>退出登录</span>
+            <span className="text-sm font-medium" style={a11yTextShadow.secondary}>{t('admin.logout')}</span>
           </motion.button>
         </div>
       </motion.aside>
@@ -402,7 +406,7 @@ export function AdminSidebar({
             className="font-semibold text-white/90"
             style={a11yTextShadow.primary}
           >
-            控制台
+            {t('admin.console')}
           </span>
         </div>
         
@@ -410,7 +414,7 @@ export function AdminSidebar({
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           whileTap={{ scale: 0.95 }}
           className="p-2 rounded-lg text-white/70 hover:text-white/90 hover:bg-white/[0.05] transition-colors"
-          aria-label={mobileMenuOpen ? '关闭菜单' : '打开菜单'}
+          aria-label={mobileMenuOpen ? t('common.close') : t('common.edit')}
         >
           {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
         </motion.button>
@@ -484,7 +488,7 @@ export function AdminSidebar({
                           ...a11yTextShadow.primary,
                         }}
                       >
-                        {item.fullLabel}
+                        {t(item.fullLabelKey)}
                       </span>
                       {count !== null && (
                         <span 
@@ -513,12 +517,12 @@ export function AdminSidebar({
                   className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-white/60 hover:text-white/80 transition-colors"
                 >
                   <ChevronLeft className="w-5 h-5" style={a11yTextShadow.icon} />
-                  <span className="text-sm font-medium" style={a11yTextShadow.secondary}>返回前台</span>
+                  <span className="text-sm font-medium" style={a11yTextShadow.secondary}>{t('admin.back_to_home')}</span>
                 </motion.button>
                 
                 <motion.button
                   onClick={() => {
-                    if (confirm('确定退出登录吗？')) {
+                    if (confirm(t('admin.logout_confirm'))) {
                       onLogout()
                     }
                     setMobileMenuOpen(false)
@@ -527,7 +531,7 @@ export function AdminSidebar({
                   className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-400/70 hover:text-red-400 transition-colors"
                 >
                   <LogOut className="w-5 h-5" style={a11yTextShadow.icon} />
-                  <span className="text-sm font-medium" style={a11yTextShadow.secondary}>退出登录</span>
+                  <span className="text-sm font-medium" style={a11yTextShadow.secondary}>{t('admin.logout')}</span>
                 </motion.button>
               </div>
             </motion.div>
@@ -544,7 +548,7 @@ export function AdminSidebar({
         className="md:hidden"
         items={navItems.map(item => ({
           id: item.id,
-          label: item.fullLabel,
+          label: t(item.fullLabelKey),
           icon: item.icon,
           onClick: () => onTabChange(item.id),
           isActive: activeTab === item.id,

@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Plus, Trash2, Upload, Link2, Image, AlertCircle } from 'lucide-react'
 import { CustomIcon } from '../types/bookmark'
@@ -21,6 +22,7 @@ export function IconManager({
   onDeleteIcon,
   embedded = false,
 }: IconManagerProps) {
+  const { t } = useTranslation()
   const [activeTab, setActiveTab] = useState<'upload' | 'url'>('upload')
   const [iconName, setIconName] = useState('')
   const [iconUrl, setIconUrl] = useState('')
@@ -49,13 +51,13 @@ export function IconManager({
 
     // 检查文件类型
     if (!file.type.startsWith('image/')) {
-      setError('请选择图片文件')
+      setError(t('admin.icons.file_type_error'))
       return
     }
 
     // 检查文件大小（限制 500KB）
     if (file.size > 500 * 1024) {
-      setError('图片大小不能超过 500KB')
+      setError(t('admin.icons.file_size_error'))
       return
     }
 
@@ -75,7 +77,7 @@ export function IconManager({
       }
     }
     reader.onerror = () => {
-      setError('读取文件失败')
+      setError(t('admin.icons.read_error'))
       setIsUploading(false)
     }
     reader.readAsDataURL(file)
@@ -95,13 +97,13 @@ export function IconManager({
   // 添加图标
   const handleAddIcon = () => {
     if (!iconName.trim()) {
-      setError('请输入图标名称')
+      setError(t('admin.icons.name_required'))
       return
     }
 
     const finalUrl = activeTab === 'upload' ? previewUrl : iconUrl
     if (!finalUrl) {
-      setError(activeTab === 'upload' ? '请上传图片' : '请输入图标 URL')
+      setError(activeTab === 'upload' ? t('admin.icons.upload_required') : t('admin.icons.url_required'))
       return
     }
 
@@ -111,7 +113,7 @@ export function IconManager({
 
   // 删除图标确认
   const handleDeleteIcon = (id: string, name: string) => {
-    if (confirm(`确定要删除图标 "${name}" 吗？`)) {
+    if (confirm(t('admin.icons.delete_confirm', { name }))) {
       onDeleteIcon(id)
     }
   }
@@ -131,7 +133,7 @@ export function IconManager({
           className="text-sm font-medium"
           style={{ color: 'var(--color-text-secondary)' }}
         >
-          添加新图标
+          {t('admin.icons.add_new')}
         </h3>
 
         {/* Tab 切换 */}
@@ -147,7 +149,7 @@ export function IconManager({
             style={{ color: activeTab === 'upload' ? 'var(--color-text-primary)' : 'var(--color-text-muted)' }}
           >
             <Upload className="w-4 h-4" />
-            上传图片
+            {t('admin.icons.upload')}
           </button>
           <button
             onClick={() => setActiveTab('url')}
@@ -160,7 +162,7 @@ export function IconManager({
             style={{ color: activeTab === 'url' ? 'var(--color-text-primary)' : 'var(--color-text-muted)' }}
           >
             <Link2 className="w-4 h-4" />
-            图片 URL
+            {t('admin.icons.url')}
           </button>
         </div>
 
@@ -220,7 +222,7 @@ export function IconManager({
               type="text"
               value={iconName}
               onChange={(e) => setIconName(e.target.value)}
-              placeholder="图标名称"
+              placeholder={t('admin.icons.name')}
               className={cn(
                 'w-full px-4 py-2.5 rounded-xl',
                 'border focus:outline-none',
@@ -239,7 +241,7 @@ export function IconManager({
                 type="url"
                 value={iconUrl}
                 onChange={(e) => handleUrlChange(e.target.value)}
-                placeholder="https://example.com/icon.png"
+                placeholder={t('admin.icons.url_placeholder')}
                 className={cn(
                   'w-full px-4 py-2.5 rounded-xl',
                   'border focus:outline-none',
@@ -269,7 +271,7 @@ export function IconManager({
               whileTap={{ scale: 0.98 }}
             >
               <Plus className="w-4 h-4" />
-              添加图标
+              {t('admin.icons.add')}
             </motion.button>
           </div>
         </div>
@@ -291,7 +293,7 @@ export function IconManager({
           className="text-xs"
           style={{ color: 'var(--color-text-muted)' }}
         >
-          支持 PNG、JPG、SVG、WebP 格式，上传图片大小限制 500KB
+          {t('admin.icons.format_hint')}
         </p>
       </div>
 
@@ -307,7 +309,7 @@ export function IconManager({
           className="text-sm font-medium flex items-center gap-2"
           style={{ color: 'var(--color-text-secondary)' }}
         >
-          我的图标
+          {t('admin.icons.my_icons')}
           <span 
             className="px-2 py-0.5 rounded-full text-xs"
             style={{ 
@@ -325,8 +327,8 @@ export function IconManager({
             style={{ color: 'var(--color-text-muted)' }}
           >
             <Image className="w-12 h-12 mx-auto mb-3 opacity-50" />
-            <p>还没有自定义图标</p>
-            <p className="text-sm mt-1">上传或添加 URL 来创建图标</p>
+            <p>{t('admin.icons.empty')}</p>
+            <p className="text-sm mt-1">{t('admin.icons.empty_hint')}</p>
           </div>
         ) : (
           <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-3">
@@ -435,7 +437,7 @@ export function IconManager({
                   className="text-lg font-medium"
                   style={{ color: 'var(--color-text-primary)' }}
                 >
-                  图标管理
+                  {t('admin.icons.title')}
                 </h2>
               </div>
               <button
@@ -465,7 +467,7 @@ export function IconManager({
                   background: 'var(--color-bg-tertiary)',
                 }}
               >
-                完成
+                {t('admin.icons.done')}
               </button>
             </div>
           </motion.div>

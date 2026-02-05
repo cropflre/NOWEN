@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Lock, Eye, EyeOff, ArrowLeft, Shield, KeyRound, User } from 'lucide-react'
 import { BorderBeam } from './ui/advanced-effects'
@@ -11,6 +12,7 @@ interface AdminLoginProps {
 }
 
 export function AdminLogin({ onLogin, onBack, isDark = true }: AdminLoginProps) {
+  const { t } = useTranslation()
   const [username, setUsername] = useState('admin')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -22,7 +24,7 @@ export function AdminLogin({ onLogin, onBack, isDark = true }: AdminLoginProps) 
     e.preventDefault()
     
     if (!username || !password) {
-      setError('请输入用户名和密码')
+      setError(t('admin.login.empty_error'))
       return
     }
     
@@ -34,7 +36,7 @@ export function AdminLogin({ onLogin, onBack, isDark = true }: AdminLoginProps) 
       // 登录状态已在 adminLogin 函数中自动保存
       onLogin(result.user.username, result.requirePasswordChange)
     } catch (err: any) {
-      setError(err.message || '登录失败，请重试')
+      setError(err.message || t('admin.login.login_error'))
       setIsShaking(true)
       setTimeout(() => setIsShaking(false), 500)
     } finally {
@@ -125,7 +127,7 @@ export function AdminLogin({ onLogin, onBack, isDark = true }: AdminLoginProps) 
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
             >
-              后台管理
+              {t('admin.login.title')}
             </motion.h1>
             <motion.p
               className={`text-sm ${isDark ? 'text-white/40' : 'text-slate-500'}`}
@@ -133,7 +135,7 @@ export function AdminLogin({ onLogin, onBack, isDark = true }: AdminLoginProps) 
               animate={{ opacity: 1 }}
               transition={{ delay: 0.4 }}
             >
-              请输入管理员账号密码
+              {t('admin.login.subtitle')}
             </motion.p>
           </div>
 
@@ -147,7 +149,7 @@ export function AdminLogin({ onLogin, onBack, isDark = true }: AdminLoginProps) 
                 transition={{ delay: 0.45 }}
               >
                 <label className={`block text-sm mb-2 ${isDark ? 'text-white/50' : 'text-slate-600'}`}>
-                  用户名
+                  {t('admin.login.username')}
                 </label>
                 <div className="relative">
                   <User className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 ${
@@ -160,7 +162,7 @@ export function AdminLogin({ onLogin, onBack, isDark = true }: AdminLoginProps) 
                       setUsername(e.target.value)
                       setError('')
                     }}
-                    placeholder="请输入用户名"
+                    placeholder={t('admin.login.username_placeholder')}
                     className={`w-full pl-11 pr-4 py-3.5 rounded-xl border transition-colors ${
                       isDark 
                         ? 'bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-nebula-purple/50' 
@@ -177,7 +179,7 @@ export function AdminLogin({ onLogin, onBack, isDark = true }: AdminLoginProps) 
                 transition={{ delay: 0.5 }}
               >
                 <label className={`block text-sm mb-2 ${isDark ? 'text-white/50' : 'text-slate-600'}`}>
-                  密码
+                  {t('admin.login.password')}
                 </label>
                 <div className="relative">
                   <Lock className={`absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 ${
@@ -191,7 +193,7 @@ export function AdminLogin({ onLogin, onBack, isDark = true }: AdminLoginProps) 
                       setError('')
                     }}
                     onKeyDown={handleKeyDown}
-                    placeholder="请输入密码"
+                    placeholder={t('admin.login.password_placeholder')}
                     className={`w-full pl-11 pr-12 py-3.5 rounded-xl border transition-colors ${
                       isDark 
                         ? 'bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-nebula-purple/50' 
@@ -245,7 +247,7 @@ export function AdminLogin({ onLogin, onBack, isDark = true }: AdminLoginProps) 
               >
                 <span className="relative z-10 flex items-center justify-center gap-2">
                   <KeyRound className="w-4 h-4" />
-                  {isLoading ? '登录中...' : '登录'}
+                  {isLoading ? t('admin.login.logging_in') : t('admin.login.login')}
                 </span>
                 <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity ${
                   isDark 
@@ -263,7 +265,7 @@ export function AdminLogin({ onLogin, onBack, isDark = true }: AdminLoginProps) 
             animate={{ opacity: 1 }}
             transition={{ delay: 0.8 }}
           >
-            首次登录请使用默认账号
+            {t('admin.login.hint')}
           </motion.p>
         </motion.div>
       </motion.div>

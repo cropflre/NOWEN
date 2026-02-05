@@ -16,6 +16,7 @@ import {
   Terminal,
   Scan
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '../lib/utils'
 import { useTheme } from '../hooks/useTheme'
 
@@ -303,6 +304,7 @@ function PostHeader({ onComplete, isMobile, isDark = true }: { onComplete: () =>
 // ============================================
 export function HardwareIdentityCard({ className }: { className?: string }) {
   const { isDark } = useTheme()
+  const { t } = useTranslation()
   
   const { data, error, isLoading } = useSWR<StaticSystemInfo>(
     '/api/system/static',

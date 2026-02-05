@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Shield, 
@@ -29,6 +30,7 @@ export function SecurityCard({
   onClearError,
   onClearSuccess,
 }: SecurityCardProps) {
+  const { t } = useTranslation()
   const [isExpanded, setIsExpanded] = useState(false)
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -62,21 +64,21 @@ export function SecurityCard({
     let color = ''
     
     if (normalizedScore < 30) {
-      label = '弱'
+      label = t('admin.settings.security.strength_weak')
       color = 'from-red-500 to-red-600'
     } else if (normalizedScore < 60) {
-      label = '中等'
+      label = t('admin.settings.security.strength_medium')
       color = 'from-yellow-500 to-orange-500'
     } else if (normalizedScore < 80) {
-      label = '较强'
+      label = t('admin.settings.security.strength_strong')
       color = 'from-blue-500 to-cyan-500'
     } else {
-      label = '非常强'
+      label = t('admin.settings.security.strength_very_strong')
       color = 'from-green-500 to-emerald-500'
     }
     
     return { score: normalizedScore, label, color }
-  }, [newPassword])
+  }, [newPassword, t])
 
   const handleSubmit = async () => {
     setLocalError('')
@@ -84,12 +86,12 @@ export function SecurityCard({
     onClearSuccess()
     
     if (newPassword.length < 6) {
-      setLocalError('新密码长度至少 6 位')
+      setLocalError(t('admin.settings.security.min_length_error'))
       return
     }
     
     if (newPassword !== confirmPassword) {
-      setLocalError('两次输入的新密码不一致')
+      setLocalError(t('admin.settings.security.mismatch_error'))
       return
     }
     
@@ -137,8 +139,8 @@ export function SecurityCard({
               <div className="absolute -inset-2 rounded-xl bg-purple-500/20 blur-xl opacity-50 -z-10 dark:block hidden" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold" style={{ color: 'var(--color-text-primary)' }}>安全设置</h3>
-              <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>管理您的账户密码</p>
+              <h3 className="text-lg font-semibold" style={{ color: 'var(--color-text-primary)' }}>{t('admin.settings.security.title')}</h3>
+              <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>{t('admin.settings.security.subtitle')}</p>
             </div>
           </div>
           
@@ -170,7 +172,7 @@ export function SecurityCard({
                 <div className="space-y-2">
                   <label className="flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--color-text-muted)' }}>
                     <Lock className="w-4 h-4" />
-                    当前密码
+                    {t('admin.settings.security.current_password')}
                   </label>
                   <div className="relative">
                     <input
@@ -181,7 +183,7 @@ export function SecurityCard({
                         setLocalError('')
                         onClearError()
                       }}
-                      placeholder="请输入当前密码"
+                      placeholder={t('admin.settings.security.current_placeholder')}
                       className="w-full px-4 py-3 pr-12 rounded-xl focus:outline-none transition-all duration-300"
                       style={{
                         background: 'var(--color-bg-tertiary)',
@@ -204,7 +206,7 @@ export function SecurityCard({
                 <div className="space-y-2">
                   <label className="flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--color-text-muted)' }}>
                     <Lock className="w-4 h-4" />
-                    新密码
+                    {t('admin.settings.security.new_password')}
                   </label>
                   <div className="relative">
                     <input
@@ -215,7 +217,7 @@ export function SecurityCard({
                         setLocalError('')
                         onClearError()
                       }}
-                      placeholder="请输入新密码（至少6位）"
+                      placeholder={t('admin.settings.security.new_placeholder')}
                       className="w-full px-4 py-3 pr-12 rounded-xl focus:outline-none transition-all duration-300"
                       style={{
                         background: 'var(--color-bg-tertiary)',
@@ -241,7 +243,7 @@ export function SecurityCard({
                       className="space-y-2"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>密码强度</span>
+                        <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>{t('admin.settings.security.strength')}</span>
                         <div className="flex items-center gap-1.5">
                           <Zap className={cn(
                             'w-3.5 h-3.5 transition-colors',
@@ -289,7 +291,7 @@ export function SecurityCard({
                 <div className="space-y-2">
                   <label className="flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--color-text-muted)' }}>
                     <Lock className="w-4 h-4" />
-                    确认新密码
+                    {t('admin.settings.security.confirm_password')}
                   </label>
                   <div className="relative">
                     <input
@@ -300,7 +302,7 @@ export function SecurityCard({
                         setLocalError('')
                         onClearError()
                       }}
-                      placeholder="请再次输入新密码"
+                      placeholder={t('admin.settings.security.confirm_placeholder')}
                       className={cn(
                         'w-full px-4 py-3 pr-12 rounded-xl focus:outline-none transition-all duration-300',
                         confirmPassword && newPassword !== confirmPassword && 'border-red-500/50'
@@ -336,12 +338,12 @@ export function SecurityCard({
                       {newPassword === confirmPassword ? (
                         <>
                           <CheckCircle className="w-3.5 h-3.5" />
-                          密码匹配
+                          {t('admin.settings.security.password_match')}
                         </>
                       ) : (
                         <>
                           <AlertCircle className="w-3.5 h-3.5" />
-                          密码不匹配
+                          {t('admin.settings.security.password_mismatch')}
                         </>
                       )}
                     </motion.div>
@@ -373,7 +375,7 @@ export function SecurityCard({
                       className="flex items-center gap-2 px-4 py-3 rounded-xl bg-green-500/10 border border-green-500/20 text-sm text-green-400"
                     >
                       <CheckCircle className="w-4 h-4 flex-shrink-0" />
-                      密码修改成功
+                      {t('admin.settings.security.changed')}
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -400,9 +402,9 @@ export function SecurityCard({
                           transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                           className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full"
                         />
-                        修改中...
+                        {t('admin.settings.security.changing')}
                       </span>
-                    ) : '确认修改'}
+                    ) : t('admin.settings.security.change_password')}
                   </span>
                 </motion.button>
               </div>

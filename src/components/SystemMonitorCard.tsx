@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence, useSpring, useTransform } from 'framer-motion'
 import useSWR from 'swr'
 import { Activity, HardDrive, Cpu, Database, ChevronLeft, ChevronRight } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '../lib/utils'
 import { useTheme } from '../hooks/useTheme'
 
@@ -894,6 +895,7 @@ function MultiDiskDisplay({ disks, isDark = true }: { disks: DiskInfo[]; isDark?
 // ============================================
 export function SystemMonitorCard({ className }: { className?: string }) {
   const { isDark } = useTheme()
+  const { t } = useTranslation()
   
   const { data, error, isLoading } = useSWR<PulseData>(
     '/api/system/pulse',
@@ -964,7 +966,7 @@ export function SystemMonitorCard({ className }: { className?: string }) {
         <span className={cn(
           "text-sm font-medium",
           isDark ? "text-white/80" : "text-slate-700"
-        )}>引擎室</span>
+        )}>{t('monitor.engine_room')}</span>
         
         {/* 状态指示灯 */}
         <div

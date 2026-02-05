@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Quote, 
@@ -22,6 +23,7 @@ interface QuotesCardProps {
 }
 
 export function QuotesCard({ quotes, useDefaultQuotes, onUpdate }: QuotesCardProps) {
+  const { t } = useTranslation()
   const [localQuotes, setLocalQuotes] = useState<string[]>(quotes)
   const [localUseDefault, setLocalUseDefault] = useState(useDefaultQuotes)
   const [editingIndex, setEditingIndex] = useState<number | null>(null)
@@ -45,7 +47,7 @@ export function QuotesCard({ quotes, useDefaultQuotes, onUpdate }: QuotesCardPro
     const newValue = !localUseDefault
     setLocalUseDefault(newValue)
     onUpdate(localQuotes, newValue)
-    setSuccess(newValue ? '已启用系统默认名言' : '已关闭系统默认名言，仅展示自定义名言')
+    setSuccess(newValue ? t('admin.quotes.enabled_default') : t('admin.quotes.disabled_default'))
     setTimeout(() => setSuccess(null), 2000)
   }
 
@@ -57,11 +59,11 @@ export function QuotesCard({ quotes, useDefaultQuotes, onUpdate }: QuotesCardPro
   // 添加名言
   const handleAdd = () => {
     if (!newQuote.trim()) {
-      setError('名言内容不能为空')
+      setError(t('admin.quotes.empty_error'))
       return
     }
     if (localQuotes.includes(newQuote.trim())) {
-      setError('该名言已存在')
+      setError(t('admin.quotes.duplicate_error'))
       return
     }
     const updated = [...localQuotes, newQuote.trim()]
@@ -69,7 +71,7 @@ export function QuotesCard({ quotes, useDefaultQuotes, onUpdate }: QuotesCardPro
     onUpdate(updated, localUseDefault)
     setNewQuote('')
     setIsAdding(false)
-    setSuccess('添加成功')
+    setSuccess(t('admin.quotes.added'))
     setTimeout(() => setSuccess(null), 2000)
   }
 
@@ -78,7 +80,7 @@ export function QuotesCard({ quotes, useDefaultQuotes, onUpdate }: QuotesCardPro
     const updated = localQuotes.filter((_, i) => i !== index)
     setLocalQuotes(updated)
     onUpdate(updated, localUseDefault)
-    setSuccess('删除成功')
+    setSuccess(t('admin.quotes.deleted'))
     setTimeout(() => setSuccess(null), 2000)
   }
 
@@ -92,7 +94,7 @@ export function QuotesCard({ quotes, useDefaultQuotes, onUpdate }: QuotesCardPro
   const saveEdit = () => {
     if (editingIndex === null) return
     if (!editValue.trim()) {
-      setError('名言内容不能为空')
+      setError(t('admin.quotes.empty_error'))
       return
     }
     const updated = [...localQuotes]
@@ -101,7 +103,7 @@ export function QuotesCard({ quotes, useDefaultQuotes, onUpdate }: QuotesCardPro
     onUpdate(updated, localUseDefault)
     setEditingIndex(null)
     setEditValue('')
-    setSuccess('修改成功')
+    setSuccess(t('admin.quotes.updated'))
     setTimeout(() => setSuccess(null), 2000)
   }
 
@@ -139,10 +141,10 @@ export function QuotesCard({ quotes, useDefaultQuotes, onUpdate }: QuotesCardPro
             </div>
             <div>
               <h3 className="text-lg font-semibold" style={{ color: 'var(--color-text-primary)' }}>
-                名言管理
+                {t('admin.quotes.title')}
               </h3>
               <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-                共 {localQuotes.length} 条自定义名言
+                {t('admin.quotes.count', { count: localQuotes.length })}
               </p>
             </div>
           </div>
@@ -155,7 +157,7 @@ export function QuotesCard({ quotes, useDefaultQuotes, onUpdate }: QuotesCardPro
             className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium shadow-lg shadow-amber-500/20"
           >
             <Plus className="w-4 h-4" />
-            添加
+            {t('admin.quotes.add')}
           </motion.button>
         </div>
 
@@ -169,10 +171,10 @@ export function QuotesCard({ quotes, useDefaultQuotes, onUpdate }: QuotesCardPro
         >
           <div className="flex-1">
             <p className="font-medium" style={{ color: 'var(--color-text-primary)' }}>
-              使用系统默认名言
+              {t('admin.quotes.use_default')}
             </p>
             <p className="text-sm mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
-              {localUseDefault ? '当前展示：系统默认 + 自定义名言' : '当前仅展示自定义名言'}
+              {localUseDefault ? t('admin.quotes.default_enabled') : t('admin.quotes.default_disabled')}
             </p>
           </div>
           <motion.button
@@ -196,7 +198,7 @@ export function QuotesCard({ quotes, useDefaultQuotes, onUpdate }: QuotesCardPro
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="搜索名言..."
+            placeholder={t('admin.quotes.search')}
             className="w-full pl-11 pr-4 py-3 rounded-xl focus:outline-none transition-all duration-300"
             style={{
               background: 'var(--color-bg-tertiary)',
@@ -225,7 +227,7 @@ export function QuotesCard({ quotes, useDefaultQuotes, onUpdate }: QuotesCardPro
                 <textarea
                   value={newQuote}
                   onChange={(e) => setNewQuote(e.target.value)}
-                  placeholder="输入名言内容，格式：名言内容 —— 作者《书名》"
+                  placeholder={t('admin.quotes.add_placeholder')}
                   rows={3}
                   className="w-full px-4 py-3 rounded-xl focus:outline-none transition-all duration-300 resize-none"
                   style={{
@@ -241,7 +243,7 @@ export function QuotesCard({ quotes, useDefaultQuotes, onUpdate }: QuotesCardPro
                     onClick={handleAdd}
                     className="flex-1 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium"
                   >
-                    确认添加
+                    {t('admin.quotes.confirm_add')}
                   </motion.button>
                   <motion.button
                     whileHover={{ scale: 1.02 }}
@@ -254,7 +256,7 @@ export function QuotesCard({ quotes, useDefaultQuotes, onUpdate }: QuotesCardPro
                       color: 'var(--color-text-primary)',
                     }}
                   >
-                    取消
+                    {t('common.cancel')}
                   </motion.button>
                 </div>
               </div>
@@ -301,7 +303,7 @@ export function QuotesCard({ quotes, useDefaultQuotes, onUpdate }: QuotesCardPro
                           className="flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-500 text-sm"
                         >
                           <Save className="w-3.5 h-3.5" />
-                          保存
+                          {t('admin.quotes.save')}
                         </motion.button>
                         <motion.button
                           whileHover={{ scale: 1.05 }}
@@ -314,7 +316,7 @@ export function QuotesCard({ quotes, useDefaultQuotes, onUpdate }: QuotesCardPro
                           }}
                         >
                           <X className="w-3.5 h-3.5" />
-                          取消
+                          {t('common.cancel')}
                         </motion.button>
                       </div>
                     </div>
@@ -366,7 +368,7 @@ export function QuotesCard({ quotes, useDefaultQuotes, onUpdate }: QuotesCardPro
               className="text-center py-8"
               style={{ color: 'var(--color-text-muted)' }}
             >
-              {searchTerm ? '没有找到匹配的名言' : '暂无名言，点击添加按钮新增'}
+              {searchTerm ? t('admin.quotes.no_match') : t('admin.quotes.empty')}
             </div>
           )}
         </div>

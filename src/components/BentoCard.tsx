@@ -9,6 +9,7 @@ import {
   GripVertical
 } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Bookmark } from '../types/bookmark'
 import { cn } from '../lib/utils'
 
@@ -37,6 +38,7 @@ export function BentoCard({
 }: BentoCardProps) {
   const [showMenu, setShowMenu] = useState(false)
   const [imageError, setImageError] = useState(false)
+  const { t } = useTranslation()
 
   // 从 URL 提取域名和首字母
   const domain = new URL(bookmark.url).hostname.replace('www.', '')
@@ -178,7 +180,7 @@ export function BentoCard({
                   ? "bg-yellow-500/20 text-yellow-400" 
                   : "hover:bg-white/10 text-white/40"
               )}
-              title={bookmark.isPinned ? "取消置顶" : "置顶"}
+              title={bookmark.isPinned ? t('bookmark.unpin') : t('bookmark.pin')}
             >
               <Pin className="w-3.5 h-3.5" />
             </button>
@@ -193,7 +195,7 @@ export function BentoCard({
                   ? "bg-orange-500/20 text-orange-400" 
                   : "hover:bg-white/10 text-white/40"
               )}
-              title={bookmark.isReadLater ? "取消稍后读" : "稍后阅读"}
+              title={bookmark.isReadLater ? t('bookmark.remove_read_later') : t('bookmark.read_later')}
             >
               <BookMarked className="w-3.5 h-3.5" />
             </button>
@@ -203,7 +205,7 @@ export function BentoCard({
                 onEdit?.(bookmark)
               }}
               className="p-1.5 rounded-lg hover:bg-white/10 text-white/40 transition-colors"
-              title="编辑"
+              title={t('bookmark.edit')}
             >
               <Edit2 className="w-3.5 h-3.5" />
             </button>
@@ -213,7 +215,7 @@ export function BentoCard({
                 onDelete?.(bookmark.id)
               }}
               className="p-1.5 rounded-lg hover:bg-red-500/20 text-white/40 hover:text-red-400 transition-colors"
-              title="删除"
+              title={t('bookmark.delete')}
             >
               <Trash2 className="w-3.5 h-3.5" />
             </button>

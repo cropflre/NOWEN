@@ -6,6 +6,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import useSWR from 'swr'
 import { Wifi, ArrowUp, ArrowDown, Terminal } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '../lib/utils'
 import { useTheme } from '../hooks/useTheme'
 
@@ -319,6 +320,7 @@ function IPTerminal({ ip, iface, isDark = true }: { ip: string; iface: string; i
 // ============================================
 export function NetworkTelemetryCard({ className }: { className?: string }) {
   const { isDark } = useTheme()
+  const { t } = useTranslation()
   const [rxHistory, setRxHistory] = useState<number[]>([])
   const [txHistory, setTxHistory] = useState<number[]>([])
   const maxPoints = 60
@@ -440,7 +442,7 @@ export function NetworkTelemetryCard({ className }: { className?: string }) {
           "text-xs sm:text-sm font-medium tracking-wider",
           isDark ? "text-white/80" : "text-slate-700"
         )}>
-          网络遥测
+          {t('monitor.network_telemetry')}
         </span>
         
         {/* 在线状态 */}

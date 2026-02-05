@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { MoreHorizontal, Pin, Edit3, Trash2, ExternalLink, BookOpen, CheckCircle2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Bookmark } from '../types/bookmark'
 import { cn } from '../lib/utils'
 import { getIconComponent } from '../lib/icons'
@@ -28,6 +29,7 @@ export function BookmarkCard({
 }: BookmarkCardProps) {
   const [showMenu, setShowMenu] = useState(false)
   const [imageError, setImageError] = useState(false)
+  const { t } = useTranslation()
 
   const handleClick = () => {
     window.open(bookmark.url, '_blank', 'noopener,noreferrer')
@@ -158,7 +160,7 @@ export function BookmarkCard({
               style={{ color: 'var(--text-secondary)' }}
             >
               <Pin className="w-4 h-4" />
-              {bookmark.isPinned ? '取消置顶' : '置顶'}
+              {bookmark.isPinned ? t('bookmark.unpin') : t('bookmark.pin')}
             </button>
             
             <button
@@ -170,7 +172,7 @@ export function BookmarkCard({
               style={{ color: 'var(--text-secondary)' }}
             >
               <BookOpen className="w-4 h-4" />
-              {bookmark.isReadLater ? '移出稍后读' : '稍后阅读'}
+              {bookmark.isReadLater ? t('bookmark.remove_read_later') : t('bookmark.read_later')}
             </button>
 
             {bookmark.isReadLater && (
@@ -183,7 +185,7 @@ export function BookmarkCard({
                 style={{ color: bookmark.isRead ? 'var(--text-muted)' : 'var(--text-secondary)' }}
               >
                 <CheckCircle2 className="w-4 h-4" />
-                {bookmark.isRead ? '标记未读' : '标记已读'}
+                {bookmark.isRead ? t('bookmark.mark_unread') : t('bookmark.mark_read')}
               </button>
             )}
 
@@ -196,7 +198,7 @@ export function BookmarkCard({
               style={{ color: 'var(--text-secondary)' }}
             >
               <Edit3 className="w-4 h-4" />
-              编辑
+              {t('bookmark.edit')}
             </button>
             
             <div className="my-1 border-t border-white/5" />
@@ -209,7 +211,7 @@ export function BookmarkCard({
               )}
             >
               <Trash2 className="w-4 h-4" />
-              删除
+              {t('bookmark.delete')}
             </button>
           </motion.div>
         </div>
