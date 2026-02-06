@@ -1,5 +1,6 @@
-import { useState } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
+import { motion, AnimatePresence } from 'framer-motion'
 import { MoreHorizontal, Pin, Edit3, Trash2, ExternalLink, BookOpen, CheckCircle2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Bookmark } from '../types/bookmark'
@@ -29,7 +30,46 @@ export function BookmarkCard({
 }: BookmarkCardProps) {
   const [showMenu, setShowMenu] = useState(false)
   const [imageError, setImageError] = useState(false)
+  const [showDescTooltip, setShowDescTooltip] = useState(false)
+  const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 })
+  const tooltipTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const descRef = useRef<HTMLDivElement>(null)
   const { t } = useTranslation()
+
+  // 清理 timeout
+  useEffect(() => {
+    return () => {
+      if (tooltipTimeoutRef.current) {
+        clearTimeout(tooltipTimeoutRef.current)
+      }
+    }
+  }, [])
+
+  // 处理鼠标进入描述区域
+  const handleDescMouseEnter = () => {
+    // 计算 Tooltip 位置
+    if (descRef.current) {
+      const rect = descRef.current.getBoundingClientRect()
+      setTooltipPosition({
+        top: rect.bottom + window.scrollY + 8,
+        left: rect.left + window.scrollX,
+      })
+    }
+    
+    // 延迟显示 Tooltip，避免快速划过时闪烁
+    tooltipTimeoutRef.current = setTimeout(() => {
+      setShowDescTooltip(true)
+    }, 300)
+  }
+
+  // 处理鼠标离开描述区域
+  const handleDescMouseLeave = () => {
+    if (tooltipTimeoutRef.current) {
+      clearTimeout(tooltipTimeoutRef.current)
+      tooltipTimeoutRef.current = null
+    }
+    setShowDescTooltip(false)
+  }
 
   const handleClick = () => {
     window.open(bookmark.url, '_blank', 'noopener,noreferrer')
@@ -273,12 +313,57 @@ export function BookmarkCard({
               />
             </h3>
             {bookmark.description && (
-              <p 
-                className="mt-1 text-sm card-desc"
-                style={{ color: 'var(--text-muted)' }}
+              <div 
+                ref={descRef}
+                className="relative"
+                onMouseEnter={handleDescMouseEnter}
+                onMouseLeave={handleDescMouseLeave}
               >
-                {bookmark.description}
-              </p>
+                <p 
+                  className="mt-1 text-sm card-desc cursor-default"
+                  style={{ color: 'var(--text-muted)' }}
+                >
+                  {bookmark.description}
+                </p>
+                
+                {/* 描述 Tooltip - 使用 Portal 渲染到 body，避免被 overflow:hidden 裁剪 */}
+                {showDescTooltip && createPortal(
+                  <AnimatePresence>
+                    <motion.div
+                      initial={{ opacity: 0, y: 5, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 5, scale: 0.95 }}
+                      transition={{ duration: 0.15 }}
+                      className="fixed z-[9999] px-3 py-2 rounded-lg max-w-xs sm:max-w-sm pointer-events-none"
+                      style={{
+                        top: tooltipPosition.top,
+                        left: tooltipPosition.left,
+                        background: 'var(--color-bg-secondary)',
+                        border: '1px solid var(--color-glass-border)',
+                        boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
+                        backdropFilter: 'blur(16px)',
+                      }}
+                    >
+                      <p 
+                        className="text-sm leading-relaxed whitespace-pre-wrap break-words"
+                        style={{ color: 'var(--text-secondary)' }}
+                      >
+                        {bookmark.description}
+                      </p>
+                      {/* 小三角指示器 */}
+                      <div 
+                        className="absolute -top-1.5 left-4 w-3 h-3 rotate-45"
+                        style={{
+                          background: 'var(--color-bg-secondary)',
+                          borderLeft: '1px solid var(--color-glass-border)',
+                          borderTop: '1px solid var(--color-glass-border)',
+                        }}
+                      />
+                    </motion.div>
+                  </AnimatePresence>,
+                  document.body
+                )}
+              </div>
             )}
             <p 
               className="mt-2 text-xs truncate"

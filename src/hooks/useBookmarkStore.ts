@@ -238,6 +238,21 @@ export function useBookmarkStore() {
     }
   }, [])
 
+  // 重排序分类
+  const reorderCategories = useCallback(async (reorderedCategories: Category[]) => {
+    try {
+      const items = reorderedCategories.map((c, index) => ({
+        id: c.id,
+        orderIndex: index,
+      }))
+      await api.reorderCategories(items)
+      setCategories(reorderedCategories.map((c, index) => ({ ...c, orderIndex: index })))
+    } catch (err) {
+      console.error('重排序分类失败:', err)
+      throw err
+    }
+  }, [])
+
   // 获取排序后的书签
   const sortedBookmarks = [...bookmarks].sort((a, b) => {
     // 置顶优先
@@ -311,6 +326,7 @@ export function useBookmarkStore() {
     addCategory,
     updateCategory,
     deleteCategory,
+    reorderCategories,
     addCustomIcon,
     deleteCustomIcon,
     updateCustomIcon,

@@ -222,6 +222,15 @@ body::before {
   overflow: hidden;
 }
 
+/* 卡片描述 - 最多显示2行 */
+.card-desc {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* ============================================
    渐变文字 - 主题自适应
    ============================================ */

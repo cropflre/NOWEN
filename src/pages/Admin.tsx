@@ -1,6 +1,23 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from 'framer-motion'
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core'
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import {
   Search,
   Plus,
@@ -49,11 +66,102 @@ export interface AdminProps {
   onAddCategory: (category: Omit<Category, 'id' | 'orderIndex'>) => void
   onUpdateCategory: (id: string, updates: Partial<Category>) => void
   onDeleteCategory: (id: string) => void
+  onReorderCategories: (categories: Category[]) => void
   onAddCustomIcon: (icon: Omit<CustomIcon, 'id' | 'createdAt'>) => void
   onDeleteCustomIcon: (id: string) => void
   onRefreshData?: () => void
   onQuotesUpdate?: (quotes: string[], useDefault: boolean) => void
   onSettingsChange?: (settings: SiteSettings) => void
+}
+
+// 可拖拽的分类项组件
+interface SortableCategoryItemProps {
+  category: Category
+  bookmarkCount: number
+  onEdit: () => void
+  onDelete: () => void
+  t: (key: string, options?: Record<string, unknown>) => string
+}
+
+function SortableCategoryItem({ category, bookmarkCount, onEdit, onDelete, t }: SortableCategoryItemProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: category.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 10 : undefined,
+  }
+
+  const IconComponent = getIconComponent(category.icon)
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        ...style,
+        background: 'var(--color-glass)',
+        border: '1px solid var(--color-glass-border)',
+      }}
+      className={cn(
+        "flex items-center gap-3 md:gap-4 p-3 md:p-4 rounded-xl transition-all group",
+        isDragging ? "opacity-50 shadow-lg" : "hover:bg-[var(--color-glass-hover)]"
+      )}
+      {...attributes}
+    >
+      {/* Drag Handle */}
+      <div 
+        {...listeners}
+        style={{ color: 'var(--color-text-muted)' }} 
+        className="cursor-grab active:cursor-grabbing touch-none"
+      >
+        <GripVertical className="w-4 h-4" />
+      </div>
+
+      {/* Icon with Color */}
+      <div 
+        className="w-8 h-8 md:w-9 md:h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+        style={{ 
+          backgroundColor: (category.color || '#3b82f6') + '20',
+          color: category.color || '#3b82f6',
+        }}
+      >
+        <IconComponent className="w-4 h-4" />
+      </div>
+
+      {/* Name */}
+      <div className="flex-1 min-w-0">
+        <span className="font-medium text-sm md:text-base truncate block" style={{ color: 'var(--color-text-primary)' }}>{category.name}</span>
+        <span className="text-xs md:text-sm" style={{ color: 'var(--color-text-muted)' }}>{t('admin.bookmark.bookmark_count', { count: bookmarkCount })}</span>
+      </div>
+
+      {/* Actions */}
+      <div className="flex items-center gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+        <button
+          onClick={onEdit}
+          className="p-2 rounded-lg hover:bg-[var(--color-glass-hover)] transition-all"
+          style={{ color: 'var(--color-text-muted)' }}
+          title={t('admin.bookmark.edit')}
+        >
+          <Edit2 className="w-4 h-4" />
+        </button>
+        <button
+          onClick={onDelete}
+          className="p-2 rounded-lg hover:text-red-400 hover:bg-red-500/10 transition-all"
+          style={{ color: 'var(--color-text-muted)' }}
+          title={t('admin.bookmark.delete')}
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
+      </div>
+    </div>
+  )
 }
 
 // 预设颜色
@@ -90,6 +198,7 @@ function AdminContent() {
     addCategory: onAddCategory,
     updateCategory: onUpdateCategory,
     deleteCategory: onDeleteCategory,
+    reorderCategories: onReorderCategories,
   } = useCategoryActions()
 
   const {
@@ -109,6 +218,32 @@ function AdminContent() {
   const [newCategoryColor, setNewCategoryColor] = useState('#3b82f6')
   const [newCategoryIcon, setNewCategoryIcon] = useState('folder')
   const [showIconPicker, setShowIconPicker] = useState(false)
+
+  // 分类拖拽排序
+  const categorySensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  )
+
+  const handleCategoryDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+
+    const oldIndex = categories.findIndex(c => c.id === active.id)
+    const newIndex = categories.findIndex(c => c.id === over.id)
+
+    if (oldIndex !== -1 && newIndex !== -1) {
+      const reordered = arrayMove(categories, oldIndex, newIndex)
+      onReorderCategories(reordered)
+      showToast('success', t('admin.category.reordered'))
+    }
+  }, [categories, onReorderCategories, showToast, t])
   
   // 密码修改状态
   const [isChangingPassword, setIsChangingPassword] = useState(false)
@@ -1135,86 +1270,51 @@ function AdminContent() {
                   )}
                 </AnimatePresence>
 
-                {/* Categories List */}
-                <div className="space-y-2">
-                  {categories.length === 0 ? (
-                    <div 
-                      className="text-center py-12 md:py-16 rounded-2xl"
-                      style={{
-                        background: 'var(--color-glass)',
-                        border: '1px solid var(--color-glass-border)',
-                      }}
-                    >
-                      <FolderPlus className="w-10 h-10 md:w-12 md:h-12 mx-auto mb-4" style={{ color: 'var(--color-text-muted)', opacity: 0.3 }} />
-                      <p style={{ color: 'var(--color-text-muted)' }}>{t('admin.category.empty')}</p>
-                    </div>
-                  ) : (
-                    categories.map((category, index) => {
-                      const count = bookmarks.filter(b => b.category === category.id).length
-                      const IconComponent = getIconComponent(category.icon)
-                      return (
-                        <motion.div
-                          key={category.id}
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: index * 0.05 }}
-                          className="flex items-center gap-3 md:gap-4 p-3 md:p-4 rounded-xl transition-all group hover:bg-[var(--color-glass-hover)]"
-                          style={{
-                            background: 'var(--color-glass)',
-                            border: '1px solid var(--color-glass-border)',
-                          }}
-                        >
-                          {/* Drag Handle - 桌面端显示 */}
-                          <div style={{ color: 'var(--color-text-muted)' }} className="cursor-grab active:cursor-grabbing hidden md:block">
-                            <GripVertical className="w-4 h-4" />
-                          </div>
-
-                          {/* Icon with Color */}
-                          <div 
-                            className="w-8 h-8 md:w-9 md:h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-                            style={{ 
-                              backgroundColor: (category.color || '#3b82f6') + '20',
-                              color: category.color || '#3b82f6',
-                            }}
-                          >
-                            <IconComponent className="w-4 h-4" />
-                          </div>
-
-                          {/* Name */}
-                          <div className="flex-1 min-w-0">
-                            <span className="font-medium text-sm md:text-base truncate block" style={{ color: 'var(--color-text-primary)' }}>{category.name}</span>
-                            <span className="text-xs md:text-sm" style={{ color: 'var(--color-text-muted)' }}>{t('admin.bookmark.bookmark_count', { count })}</span>
-                          </div>
-
-                          {/* Actions */}
-                          <div className="flex items-center gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                            <button
-                              onClick={() => startEditCategory(category)}
-                              className="p-2 rounded-lg hover:bg-[var(--color-glass-hover)] transition-all"
-                              style={{ color: 'var(--color-text-muted)' }}
-                              title={t('admin.bookmark.edit')}
-                            >
-                              <Edit2 className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => {
+                {/* Categories List - 支持拖拽排序 */}
+                <DndContext
+                  sensors={categorySensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleCategoryDragEnd}
+                >
+                  <div className="space-y-2">
+                    {categories.length === 0 ? (
+                      <div 
+                        className="text-center py-12 md:py-16 rounded-2xl"
+                        style={{
+                          background: 'var(--color-glass)',
+                          border: '1px solid var(--color-glass-border)',
+                        }}
+                      >
+                        <FolderPlus className="w-10 h-10 md:w-12 md:h-12 mx-auto mb-4" style={{ color: 'var(--color-text-muted)', opacity: 0.3 }} />
+                        <p style={{ color: 'var(--color-text-muted)' }}>{t('admin.category.empty')}</p>
+                      </div>
+                    ) : (
+                      <SortableContext
+                        items={categories.map(c => c.id)}
+                        strategy={verticalListSortingStrategy}
+                      >
+                        {categories.map((category) => {
+                          const count = bookmarks.filter(b => b.category === category.id).length
+                          return (
+                            <SortableCategoryItem
+                              key={category.id}
+                              category={category}
+                              bookmarkCount={count}
+                              onEdit={() => startEditCategory(category)}
+                              onDelete={() => {
                                 if (confirm(t('admin.category.delete_confirm', { name: category.name }))) {
                                   onDeleteCategory(category.id)
                                   showToast('success', t('admin.category.deleted'))
                                 }
                               }}
-                              className="p-2 rounded-lg hover:text-red-400 hover:bg-red-500/10 transition-all"
-                              style={{ color: 'var(--color-text-muted)' }}
-                              title={t('admin.bookmark.delete')}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </motion.div>
-                      )
-                    })
-                  )}
-                </div>
+                              t={t}
+                            />
+                          )
+                        })}
+                      </SortableContext>
+                    )}
+                  </div>
+                </DndContext>
 
                 {/* Uncategorized Info */}
                 {bookmarks.filter(b => !b.category).length > 0 && (
@@ -1356,6 +1456,7 @@ export function Admin(props: AdminProps) {
       onAddCategory={props.onAddCategory}
       onUpdateCategory={props.onUpdateCategory}
       onDeleteCategory={props.onDeleteCategory}
+      onReorderCategories={props.onReorderCategories}
       onAddCustomIcon={props.onAddCustomIcon}
       onDeleteCustomIcon={props.onDeleteCustomIcon}
       onRefreshData={props.onRefreshData}

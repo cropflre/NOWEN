@@ -45,6 +45,28 @@ router.post('/', validateBody(createCategorySchema), (req, res) => {
   }
 })
 
+// 重排序分类（必须在 /:id 之前定义）
+router.patch('/reorder', (req, res) => {
+  try {
+    const { items } = req.body
+    
+    if (!Array.isArray(items)) {
+      return res.status(400).json({ error: '无效的请求数据' })
+    }
+    
+    for (const item of items) {
+      if (item.id && typeof item.orderIndex === 'number') {
+        run('UPDATE categories SET orderIndex = ? WHERE id = ?', [item.orderIndex, item.id])
+      }
+    }
+    
+    res.json({ success: true })
+  } catch (error) {
+    console.error('重排序分类失败:', error)
+    res.status(500).json({ error: '重排序分类失败' })
+  }
+})
+
 // 更新分类
 router.patch('/:id', validateParams(idParamSchema), validateBody(updateCategorySchema), (req, res) => {
   try {

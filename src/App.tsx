@@ -130,6 +130,7 @@ function App() {
     addCategory,
     updateCategory,
     deleteCategory,
+    reorderCategories,
     addCustomIcon,
     deleteCustomIcon,
     refreshData,
@@ -241,8 +242,15 @@ function App() {
   // ========== 数据分组 ==========
   const pinnedBookmarks = bookmarks.filter((b) => b.isPinned);
   const readLaterBookmarks = bookmarks.filter((b) => b.isReadLater && !b.isRead);
+  // 分类书签：置顶的书签也显示在其所属分类中（置顶优先排序）
   const bookmarksByCategory = categories.reduce((acc, cat) => {
-    acc[cat.id] = bookmarks.filter((b) => b.category === cat.id && !b.isPinned);
+    const categoryBookmarks = bookmarks.filter((b) => b.category === cat.id);
+    // 置顶的排在前面
+    acc[cat.id] = categoryBookmarks.sort((a, b) => {
+      if (a.isPinned && !b.isPinned) return -1;
+      if (!a.isPinned && b.isPinned) return 1;
+      return a.orderIndex - b.orderIndex;
+    });
     return acc;
   }, {} as Record<string, Bookmark[]>);
 
@@ -300,6 +308,7 @@ function App() {
           onAddCategory={addCategory}
           onUpdateCategory={updateCategory}
           onDeleteCategory={deleteCategory}
+          onReorderCategories={reorderCategories}
           onAddCustomIcon={addCustomIcon}
           onDeleteCustomIcon={deleteCustomIcon}
           onRefreshData={refreshData}
@@ -429,7 +438,7 @@ function App() {
                   </BentoGridItem>
                 )}
 
-                {pinnedBookmarks.slice(0, 4).map((bookmark, index) => (
+                {pinnedBookmarks.map((bookmark, index) => (
                   <BentoGridItem
                     key={bookmark.id}
                     colSpan={1}

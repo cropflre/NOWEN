@@ -106,15 +106,15 @@ export function useWeather(enabled: boolean = true) {
       const current = data.current
       const daily = data.daily
       
-      // 获取城市名称 (使用反向地理编码)
+      // 获取城市名称 (使用 BigDataCloud 免费 API，支持 CORS)
       let cityName = '当前位置'
       try {
         const geoResponse = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=zh`
+          `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=zh`
         )
         if (geoResponse.ok) {
           const geoData = await geoResponse.json()
-          cityName = geoData.address?.city || geoData.address?.town || geoData.address?.county || '当前位置'
+          cityName = geoData.city || geoData.locality || geoData.principalSubdivision || '当前位置'
         }
       } catch {
         // 地理编码失败，使用默认值

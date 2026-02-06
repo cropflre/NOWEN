@@ -288,6 +288,13 @@ export async function deleteCategory(id: string): Promise<void> {
   })
 }
 
+export async function reorderCategories(items: ReorderItem[]): Promise<SuccessResponse> {
+  return request<SuccessResponse>('/api/categories/reorder', {
+    method: 'PATCH',
+    body: JSON.stringify({ items }),
+  })
+}
+
 // ========== 元数据 API ==========
 
 export async function fetchMetadata(url: string): Promise<MetadataResponse> {
@@ -520,6 +527,7 @@ export const categoryApi = {
   create: createCategory,
   update: updateCategory,
   delete: deleteCategory,
+  reorder: reorderCategories,
 }
 
 export const adminApi = {

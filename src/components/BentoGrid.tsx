@@ -71,21 +71,28 @@ export function BentoGrid({
 
   // 按分类分组书签
   const pinnedBookmarks = bookmarks.filter(b => b.isPinned && !b.isReadLater)
-  const regularBookmarks = bookmarks.filter(b => !b.isPinned && !b.isReadLater)
+  // 所有非稍后阅读的书签（包括置顶的）
+  const allBookmarks = bookmarks.filter(b => !b.isReadLater)
   
-  // 高频书签 (置顶的)
-  const frequentBookmarks = pinnedBookmarks.slice(0, 6)
+  // 高频书签 (置顶的) - 显示所有置顶书签
+  const frequentBookmarks = pinnedBookmarks
   
-  // 快捷访问 (小图标)
-  const quickAccessBookmarks = regularBookmarks.slice(0, 12)
+  // 快捷访问 (小图标) - 非置顶的前12个
+  const quickAccessBookmarks = allBookmarks.filter(b => !b.isPinned).slice(0, 12)
 
-  // 按分类分组剩余书签
+  // 按分类分组书签（包含置顶书签，置顶优先排序）
   const bookmarksByCategory = categories.reduce((acc, category) => {
-    acc[category.id] = regularBookmarks.filter(b => b.category === category.id)
+    const categoryBookmarks = allBookmarks.filter(b => b.category === category.id)
+    // 置顶的排在前面
+    acc[category.id] = categoryBookmarks.sort((a, b) => {
+      if (a.isPinned && !b.isPinned) return -1
+      if (!a.isPinned && b.isPinned) return 1
+      return a.orderIndex - b.orderIndex
+    })
     return acc
   }, {} as Record<string, Bookmark[]>)
 
-  const uncategorizedBookmarks = regularBookmarks.filter(b => !b.category)
+  const uncategorizedBookmarks = allBookmarks.filter(b => !b.category)
 
   // 处理拖拽结束
   const handleDragEnd = useCallback((event: DragEndEvent) => {

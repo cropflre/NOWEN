@@ -27,6 +27,7 @@ export interface AdminContextValue {
   addCategory: (category: Omit<Category, 'id' | 'orderIndex'>) => void
   updateCategory: (id: string, updates: Partial<Category>) => void
   deleteCategory: (id: string) => void
+  reorderCategories: (categories: Category[]) => void
   
   // 图标操作
   addCustomIcon: (icon: Omit<CustomIcon, 'id' | 'createdAt'>) => void
@@ -71,6 +72,7 @@ export interface AdminProviderProps {
   onAddCategory: (category: Omit<Category, 'id' | 'orderIndex'>) => void
   onUpdateCategory: (id: string, updates: Partial<Category>) => void
   onDeleteCategory: (id: string) => void
+  onReorderCategories: (categories: Category[]) => void
   // 图标回调
   onAddCustomIcon: (icon: Omit<CustomIcon, 'id' | 'createdAt'>) => void
   onDeleteCustomIcon: (id: string) => void
@@ -99,6 +101,7 @@ export function AdminProvider({
   onAddCategory,
   onUpdateCategory,
   onDeleteCategory,
+  onReorderCategories,
   onAddCustomIcon,
   onDeleteCustomIcon,
   onRefreshData,
@@ -157,6 +160,7 @@ export function AdminProvider({
     addCategory: onAddCategory,
     updateCategory: onUpdateCategory,
     deleteCategory: onDeleteCategory,
+    reorderCategories: onReorderCategories,
     
     // 图标操作
     addCustomIcon: onAddCustomIcon,
@@ -228,12 +232,14 @@ export function useCategoryActions() {
     addCategory,
     updateCategory,
     deleteCategory,
+    reorderCategories,
   } = useAdmin()
 
   return {
     addCategory,
     updateCategory,
     deleteCategory,
+    reorderCategories,
   }
 }
 
