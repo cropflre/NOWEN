@@ -102,6 +102,18 @@
     "greeting": "Hello",
     "subtitle": "Let's start exploring"
   },
+  "readLater": {
+    "title": "Read Later",
+    "allRead": "All Read",
+    "allReadDesc": "Nothing to read, enjoy the moment",
+    "markRead": "Mark Read",
+    "startReading": "Start Reading",
+    "remove": "Remove",
+    "more": "more to read",
+    "moreToRead": "{{count}} more to read",
+    "showAll": "Show all (+{{count}})",
+    "collapse": "Collapse ({{count}})"
+  },
   "common": {
     "loading": "Loading...",
     "error": "Error",

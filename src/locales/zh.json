@@ -102,6 +102,18 @@
     "greeting": "你好",
     "subtitle": "让我们开始探索吧"
   },
+  "readLater": {
+    "title": "稍后阅读",
+    "allRead": "全部已读",
+    "allReadDesc": "今日无待办，享受此刻的宁静",
+    "markRead": "已读",
+    "startReading": "开始阅读",
+    "remove": "移出列表",
+    "more": "篇待读",
+    "moreToRead": "还有 {{count}} 篇待读",
+    "showAll": "展开全部 (+{{count}})",
+    "collapse": "收起 ({{count}})"
+  },
   "common": {
     "loading": "加载中...",
     "error": "错误",

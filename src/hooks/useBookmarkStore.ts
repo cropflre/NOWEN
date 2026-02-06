@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Bookmark, Category, CustomIcon } from '../types/bookmark'
 import * as api from '../lib/api'
 
@@ -12,6 +12,10 @@ export function useBookmarkStore() {
   const [isLoading, setIsLoading] = useState(true)
   const [newlyAddedId, setNewlyAddedId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  
+  // 使用 ref 保存最新的 bookmarks，避免 useCallback 依赖问题
+  const bookmarksRef = useRef(bookmarks)
+  bookmarksRef.current = bookmarks
 
   // 加载自定义图标
   const loadCustomIcons = useCallback(() => {
@@ -130,67 +134,82 @@ export function useBookmarkStore() {
     }
   }, [])
 
-  // 切换置顶 - 使用函数式更新减少依赖
+  // 切换置顶
   const togglePin = useCallback(async (id: string) => {
-    // 先获取当前状态用于 API 调用
-    let currentPinned: boolean | undefined
-    setBookmarks(prev => {
-      const bookmark = prev.find(b => b.id === id)
-      currentPinned = bookmark?.isPinned
-      return prev
-    })
+    const bookmark = bookmarksRef.current.find(b => b.id === id)
+    if (!bookmark) return
     
-    if (currentPinned === undefined) return
+    const newIsPinned = !bookmark.isPinned
+    
+    // 乐观更新 UI
+    setBookmarks(prev => prev.map(b => 
+      b.id === id ? { ...b, isPinned: newIsPinned } : b
+    ))
     
     try {
-      const updated = await api.updateBookmark(id, { isPinned: !currentPinned })
+      const updated = await api.updateBookmark(id, { isPinned: newIsPinned })
       setBookmarks(prev => prev.map(b => b.id === id ? updated : b))
     } catch (err) {
+      // 回滚
+      setBookmarks(prev => prev.map(b => 
+        b.id === id ? bookmark : b
+      ))
       console.error('切换置顶失败:', err)
       throw err
     }
   }, [])
 
-  // 切换稍后阅读 - 使用函数式更新减少依赖
+  // 切换稍后阅读
   const toggleReadLater = useCallback(async (id: string) => {
-    let currentState: { isReadLater?: boolean; isRead?: boolean } = {}
-    setBookmarks(prev => {
-      const bookmark = prev.find(b => b.id === id)
-      if (bookmark) {
-        currentState = { isReadLater: bookmark.isReadLater, isRead: bookmark.isRead }
-      }
-      return prev
-    })
+    const bookmark = bookmarksRef.current.find(b => b.id === id)
+    if (!bookmark) return
     
-    if (currentState.isReadLater === undefined) return
+    const newIsReadLater = !bookmark.isReadLater
+    
+    // 乐观更新 UI
+    setBookmarks(prev => prev.map(b => 
+      b.id === id 
+        ? { ...b, isReadLater: newIsReadLater, isRead: newIsReadLater ? false : b.isRead }
+        : b
+    ))
     
     try {
       const updated = await api.updateBookmark(id, { 
-        isReadLater: !currentState.isReadLater,
-        isRead: !currentState.isReadLater ? false : currentState.isRead,
+        isReadLater: newIsReadLater,
+        isRead: newIsReadLater ? false : bookmark.isRead,
       })
+      // 用服务器返回的数据更新
       setBookmarks(prev => prev.map(b => b.id === id ? updated : b))
     } catch (err) {
+      // 回滚
+      setBookmarks(prev => prev.map(b => 
+        b.id === id ? bookmark : b
+      ))
       console.error('切换稍后阅读失败:', err)
       throw err
     }
   }, [])
 
-  // 标记已读/未读 - 使用函数式更新减少依赖
+  // 标记已读/未读
   const toggleRead = useCallback(async (id: string) => {
-    let currentRead: boolean | undefined
-    setBookmarks(prev => {
-      const bookmark = prev.find(b => b.id === id)
-      currentRead = bookmark?.isRead
-      return prev
-    })
+    const bookmark = bookmarksRef.current.find(b => b.id === id)
+    if (!bookmark) return
     
-    if (currentRead === undefined) return
+    const newIsRead = !bookmark.isRead
+    
+    // 乐观更新 UI
+    setBookmarks(prev => prev.map(b => 
+      b.id === id ? { ...b, isRead: newIsRead } : b
+    ))
     
     try {
-      const updated = await api.updateBookmark(id, { isRead: !currentRead })
+      const updated = await api.updateBookmark(id, { isRead: newIsRead })
       setBookmarks(prev => prev.map(b => b.id === id ? updated : b))
     } catch (err) {
+      // 回滚
+      setBookmarks(prev => prev.map(b => 
+        b.id === id ? bookmark : b
+      ))
       console.error('切换已读失败:', err)
       throw err
     }

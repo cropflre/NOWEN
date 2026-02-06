@@ -34,7 +34,7 @@ import {
   LiteBackground,
   SortableCard,
   HeroSection,
-  ReadLaterHero,
+  ReadLaterSection,
   EmptyState,
   BookmarkDragOverlay,
 } from "./components/home";
@@ -126,6 +126,7 @@ function App() {
     deleteBookmark,
     togglePin,
     toggleReadLater,
+    toggleRead,
     reorderBookmarks,
     addCategory,
     updateCategory,
@@ -241,7 +242,6 @@ function App() {
 
   // ========== 数据分组 ==========
   const pinnedBookmarks = bookmarks.filter((b) => b.isPinned);
-  const readLaterBookmarks = bookmarks.filter((b) => b.isReadLater && !b.isRead);
   // 分类书签：置顶的书签也显示在其所属分类中（置顶优先排序）
   const bookmarksByCategory = categories.reduce((acc, cat) => {
     const categoryBookmarks = bookmarks.filter((b) => b.category === cat.id);
@@ -383,10 +383,13 @@ function App() {
             onOpenSearch={() => setIsSpotlightOpen(true)}
           />
 
-          {/* Read Later Hero Card */}
-          {readLaterBookmarks.length > 0 && (
-            <ReadLaterHero bookmark={readLaterBookmarks[0]} isLiteMode={isLiteMode ?? false} />
-          )}
+          {/* Read Later Section */}
+          <ReadLaterSection
+            bookmarks={bookmarks}
+            isLiteMode={isLiteMode ?? false}
+            onMarkRead={toggleRead}
+            onRemove={toggleReadLater}
+          />
 
           {/* Pinned Bookmarks - Bento Grid */}
           {pinnedBookmarks.length > 0 ? (
