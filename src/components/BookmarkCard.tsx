@@ -259,8 +259,8 @@ export function BookmarkCard({
       </motion.div>
 
       {/* 4. 内容层：z-10 保证在光效之上 */}
-      <div className="relative z-10 p-5">
-        <div className="flex items-start gap-4">
+      <div className="relative z-10 p-5 h-full flex flex-col">
+        <div className="flex items-start gap-4 flex-1">
           {/* Favicon/Icon - 图标微动：Hover 时轻轻摇晃，像是在对焦 */}
           <motion.div 
             className={cn(
@@ -303,7 +303,7 @@ export function BookmarkCard({
           </motion.div>
 
           {/* 文本内容 */}
-          <div className="flex-1 min-w-0 flex flex-col">
+          <div className="flex-1 min-w-0 flex flex-col h-full">
             <h3 
               className="font-medium text-base truncate flex items-center gap-2"
               style={{ color: 'var(--text-primary)' }}
@@ -317,7 +317,6 @@ export function BookmarkCard({
             <div 
               ref={descRef}
               className="flex-1 mt-1"
-              style={{ minHeight: '2.5rem' }}
               onMouseEnter={bookmark.description ? handleDescMouseEnter : undefined}
               onMouseLeave={bookmark.description ? handleDescMouseLeave : undefined}
             >
@@ -366,8 +365,9 @@ export function BookmarkCard({
                 document.body
               )}
             </div>
+            {/* 域名固定在底部 */}
             <p 
-              className="mt-2 text-xs truncate"
+              className="text-xs truncate mt-auto pt-2"
               style={{ color: 'var(--text-muted)' }}
             >
               {new URL(bookmark.url).hostname}
