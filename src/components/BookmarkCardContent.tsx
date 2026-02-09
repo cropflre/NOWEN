@@ -145,7 +145,7 @@ export function BookmarkCardContent({
       </div>
 
       {/* Content */}
-      <div className="flex-1">
+      <div className="flex-1 flex flex-col">
         <h3
           className={cn(
             "font-medium mb-2",
@@ -155,17 +155,19 @@ export function BookmarkCardContent({
         >
           {bookmark.title}
         </h3>
-        {bookmark.description && (
-          <p
-            className={cn(
-              "mb-4",
-              isLarge ? "text-base line-clamp-3" : "text-sm line-clamp-2"
-            )}
-            style={{ color: "var(--color-text-muted)" }}
-          >
-            {bookmark.description}
-          </p>
-        )}
+        {/* 描述区域 - 固定高度保持对齐 */}
+        <p
+          className={cn(
+            "flex-1",
+            isLarge ? "text-base line-clamp-3" : "text-sm line-clamp-2"
+          )}
+          style={{ 
+            color: "var(--color-text-muted)",
+            minHeight: isLarge ? '4.5rem' : '2.5rem',
+          }}
+        >
+          {bookmark.description || ''}
+        </p>
       </div>
 
       {/* Footer */}
