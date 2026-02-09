@@ -222,13 +222,15 @@ body::before {
   overflow: hidden;
 }
 
-/* 卡片描述 - 最多显示2行 */
+/* 卡片描述 - 固定2行高度保持对齐 */
 .card-desc {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-height: 2.5rem; /* 约2行文本高度 */
+  line-height: 1.25rem;
 }
 
 /* ============================================
