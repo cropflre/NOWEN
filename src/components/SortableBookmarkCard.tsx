@@ -47,7 +47,7 @@ export function SortableBookmarkCard({
   }
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+    <div ref={setNodeRef} style={{ ...style, height: '100%' }} {...attributes} {...listeners}>
       <BookmarkCard
         bookmark={bookmark}
         onEdit={onEdit}
