@@ -8,50 +8,16 @@ import {
   ChevronRight,
   ChevronDown,
   Clock,
-  Sparkles,
   X,
-  MoreHorizontal,
 } from 'lucide-react';
 import { Card3D, CardItem } from '../ui/3d-card';
 import { Bookmark } from '../../types/bookmark';
-import { cn } from '../../lib/utils';
 
 interface ReadLaterSectionProps {
   bookmarks: Bookmark[];
   isLiteMode?: boolean;
   onMarkRead?: (id: string) => void;
   onRemove?: (id: string) => void;
-}
-
-// 空状态组件
-function EmptyState() {
-  const { t } = useTranslation();
-  
-  return (
-    <motion.div
-      className="flex flex-col items-center justify-center py-12 px-8 rounded-2xl"
-      style={{
-        background: 'var(--color-glass)',
-        border: '1px solid var(--color-glass-border)',
-      }}
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.4 }}
-    >
-      <div className="w-16 h-16 mb-4 rounded-2xl bg-gradient-to-br from-green-400/20 to-emerald-500/20 flex items-center justify-center">
-        <CheckCircle2 className="w-8 h-8 text-green-400" />
-      </div>
-      <h3 
-        className="text-xl font-medium mb-2"
-        style={{ color: 'var(--color-text-primary)' }}
-      >
-        {t('readLater.allRead')}
-      </h3>
-      <p className="text-center" style={{ color: 'var(--color-text-muted)' }}>
-        {t('readLater.allReadDesc')}
-      </p>
-    </motion.div>
-  );
 }
 
 // 主 Hero 卡片
@@ -441,18 +407,9 @@ export function ReadLaterSection({
   // 过滤未读的稍后阅读书签
   const unreadBookmarks = bookmarks.filter(b => b.isReadLater && !b.isRead);
   
-  // 如果没有稍后阅读书签，显示空状态
+  // 如果没有稍后阅读书签，直接隐藏整个区域
   if (unreadBookmarks.length === 0) {
-    return (
-      <motion.section
-        className="mb-12"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.8 }}
-      >
-        <EmptyState />
-      </motion.section>
-    );
+    return null;
   }
   
   const heroBookmark = unreadBookmarks[0];
