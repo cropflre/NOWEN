@@ -27,6 +27,7 @@ export function SortableCard({ id, children, className }: SortableCardProps) {
     scale: isDragging ? 1.05 : 1,
     cursor: isDragging ? 'grabbing' : 'grab',
     filter: isDragging ? 'drop-shadow(0 20px 25px rgba(0, 0, 0, 0.25))' : 'none',
+    height: '100%', // 确保撑满 Grid 单元格高度
   };
 
   return (

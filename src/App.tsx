@@ -561,6 +561,7 @@ function App() {
                       {categoryBookmarks.map((bookmark, index) => (
                         <SortableCard key={bookmark.id} id={bookmark.id}>
                           <motion.div
+                            className="h-full"
                             initial={{ opacity: 0, y: isLiteMode ? 10 : 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: index * 0.05 }}
