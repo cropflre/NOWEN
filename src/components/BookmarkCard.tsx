@@ -100,9 +100,10 @@ export function BookmarkCard({
       }}
       // 2. 视觉层：使用 vibe-card 全局能量类
       className={cn(
-        'vibe-card vibe-card--glow group cursor-pointer h-[140px]',
+        'vibe-card vibe-card--glow group cursor-pointer',
         isDragging && 'shadow-2xl ring-2 ring-[var(--color-glow)]/30'
       )}
+      style={{ height: '140px' }}
       onClick={handleClick}
       onMouseEnter={() => setShowMenu(true)}
       onMouseLeave={() => setShowMenu(false)}
