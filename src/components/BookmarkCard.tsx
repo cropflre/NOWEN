@@ -100,7 +100,7 @@ export function BookmarkCard({
       }}
       // 2. 视觉层：使用 vibe-card 全局能量类
       className={cn(
-        'vibe-card vibe-card--glow group cursor-pointer',
+        'vibe-card vibe-card--glow group cursor-pointer h-[140px]',
         isDragging && 'shadow-2xl ring-2 ring-[var(--color-glow)]/30'
       )}
       onClick={handleClick}
@@ -302,7 +302,7 @@ export function BookmarkCard({
           </motion.div>
 
           {/* 文本内容 */}
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 flex flex-col">
             <h3 
               className="font-medium text-base truncate flex items-center gap-2"
               style={{ color: 'var(--text-primary)' }}
@@ -312,18 +312,19 @@ export function BookmarkCard({
                 className="w-3.5 h-3.5 opacity-0 group-hover:opacity-50 transition-opacity flex-shrink-0" 
               />
             </h3>
-            {/* 描述区域 - 固定两行高度保持对齐 */}
+            {/* 描述区域 - 固定高度保持对齐 */}
             <div 
               ref={descRef}
-              className="relative min-h-[2.5rem]"
+              className="flex-1 mt-1"
+              style={{ minHeight: '2.5rem' }}
               onMouseEnter={bookmark.description ? handleDescMouseEnter : undefined}
               onMouseLeave={bookmark.description ? handleDescMouseLeave : undefined}
             >
               <p 
-                className="mt-1 text-sm card-desc cursor-default"
+                className="text-sm card-desc cursor-default"
                 style={{ color: 'var(--text-muted)' }}
               >
-                {bookmark.description || '\u00A0'}
+                {bookmark.description || ''}
               </p>
               
               {/* 描述 Tooltip - 使用 Portal 渲染到 body，避免被 overflow:hidden 裁剪 */}
