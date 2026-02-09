@@ -312,59 +312,58 @@ export function BookmarkCard({
                 className="w-3.5 h-3.5 opacity-0 group-hover:opacity-50 transition-opacity flex-shrink-0" 
               />
             </h3>
-            {bookmark.description && (
-              <div 
-                ref={descRef}
-                className="relative"
-                onMouseEnter={handleDescMouseEnter}
-                onMouseLeave={handleDescMouseLeave}
+            {/* 描述区域 - 固定两行高度保持对齐 */}
+            <div 
+              ref={descRef}
+              className="relative min-h-[2.5rem]"
+              onMouseEnter={bookmark.description ? handleDescMouseEnter : undefined}
+              onMouseLeave={bookmark.description ? handleDescMouseLeave : undefined}
+            >
+              <p 
+                className="mt-1 text-sm card-desc cursor-default"
+                style={{ color: 'var(--text-muted)' }}
               >
-                <p 
-                  className="mt-1 text-sm card-desc cursor-default"
-                  style={{ color: 'var(--text-muted)' }}
-                >
-                  {bookmark.description}
-                </p>
-                
-                {/* 描述 Tooltip - 使用 Portal 渲染到 body，避免被 overflow:hidden 裁剪 */}
-                {showDescTooltip && createPortal(
-                  <AnimatePresence>
-                    <motion.div
-                      initial={{ opacity: 0, y: 5, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 5, scale: 0.95 }}
-                      transition={{ duration: 0.15 }}
-                      className="fixed z-[9999] px-3 py-2 rounded-lg max-w-xs sm:max-w-sm pointer-events-none"
-                      style={{
-                        top: tooltipPosition.top,
-                        left: tooltipPosition.left,
-                        background: 'var(--color-bg-secondary)',
-                        border: '1px solid var(--color-glass-border)',
-                        boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
-                        backdropFilter: 'blur(16px)',
-                      }}
+                {bookmark.description || '\u00A0'}
+              </p>
+              
+              {/* 描述 Tooltip - 使用 Portal 渲染到 body，避免被 overflow:hidden 裁剪 */}
+              {showDescTooltip && bookmark.description && createPortal(
+                <AnimatePresence>
+                  <motion.div
+                    initial={{ opacity: 0, y: 5, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 5, scale: 0.95 }}
+                    transition={{ duration: 0.15 }}
+                    className="fixed z-[9999] px-3 py-2 rounded-lg max-w-xs sm:max-w-sm pointer-events-none"
+                    style={{
+                      top: tooltipPosition.top,
+                      left: tooltipPosition.left,
+                      background: 'var(--color-bg-secondary)',
+                      border: '1px solid var(--color-glass-border)',
+                      boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
+                      backdropFilter: 'blur(16px)',
+                    }}
+                  >
+                    <p 
+                      className="text-sm leading-relaxed whitespace-pre-wrap break-words"
+                      style={{ color: 'var(--text-secondary)' }}
                     >
-                      <p 
-                        className="text-sm leading-relaxed whitespace-pre-wrap break-words"
-                        style={{ color: 'var(--text-secondary)' }}
-                      >
-                        {bookmark.description}
-                      </p>
-                      {/* 小三角指示器 */}
-                      <div 
-                        className="absolute -top-1.5 left-4 w-3 h-3 rotate-45"
-                        style={{
-                          background: 'var(--color-bg-secondary)',
-                          borderLeft: '1px solid var(--color-glass-border)',
-                          borderTop: '1px solid var(--color-glass-border)',
-                        }}
-                      />
-                    </motion.div>
-                  </AnimatePresence>,
-                  document.body
-                )}
-              </div>
-            )}
+                      {bookmark.description}
+                    </p>
+                    {/* 小三角指示器 */}
+                    <div 
+                      className="absolute -top-1.5 left-4 w-3 h-3 rotate-45"
+                      style={{
+                        background: 'var(--color-bg-secondary)',
+                        borderLeft: '1px solid var(--color-glass-border)',
+                        borderTop: '1px solid var(--color-glass-border)',
+                      }}
+                    />
+                  </motion.div>
+                </AnimatePresence>,
+                document.body
+              )}
+            </div>
             <p 
               className="mt-2 text-xs truncate"
               style={{ color: 'var(--text-muted)' }}
