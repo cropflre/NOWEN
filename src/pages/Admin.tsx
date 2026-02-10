@@ -271,13 +271,13 @@ function AdminContent() {
 
   // 仪表设置状态
   const [widgetVisibility, setWidgetVisibility] = useState<WidgetVisibility>({
-    systemMonitor: true,
-    hardwareIdentity: true,
-    vitalSigns: true,
-    networkTelemetry: true,
-    processMatrix: true,
-    dockMiniMonitor: true,
-    mobileTicker: true,
+    systemMonitor: false,
+    hardwareIdentity: false,
+    vitalSigns: false,
+    networkTelemetry: false,
+    processMatrix: false,
+    dockMiniMonitor: false,
+    mobileTicker: false,
   })
   const [isSavingWidgetSettings, setIsSavingWidgetSettings] = useState(false)
   const [widgetSettingsSuccess, setWidgetSettingsSuccess] = useState(false)

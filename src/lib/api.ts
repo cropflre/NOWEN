@@ -439,13 +439,13 @@ export interface SiteSettings {
 function parseSettings(raw: Record<string, string>): SiteSettings {
   // 解析 widgetVisibility JSON
   let widgetVisibility: WidgetVisibility = {
-    systemMonitor: true,
-    hardwareIdentity: true,
-    vitalSigns: true,
-    networkTelemetry: true,
-    processMatrix: true,
-    dockMiniMonitor: true,
-    mobileTicker: true,
+    systemMonitor: false,
+    hardwareIdentity: false,
+    vitalSigns: false,
+    networkTelemetry: false,
+    processMatrix: false,
+    dockMiniMonitor: false,
+    mobileTicker: false,
   }
   
   if (raw.widgetVisibility) {
