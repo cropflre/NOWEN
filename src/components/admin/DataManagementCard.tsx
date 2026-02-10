@@ -163,7 +163,10 @@ export function DataManagementCard({
         onFactoryReset()
       }
       
-      setTimeout(() => setSuccess(null), 5000)
+      // 延迟后刷新页面，让用户看到成功提示
+      setTimeout(() => {
+        window.location.reload()
+      }, 1500)
     } catch (err: any) {
       setError(err.message || '恢复出厂设置失败')
     } finally {
