@@ -1,12 +1,27 @@
 import initSqlJs, { Database as SqlJsDatabase } from 'sql.js'
 import fs from 'fs'
 import path from 'path'
-import { fileURLToPath } from 'url'
 import crypto from 'crypto'
 import bcrypt from 'bcryptjs';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const dbPath = path.join(__dirname, '..', 'data', 'zen-garden.db')
+// 数据库路径：优先使用环境变量，否则使用 /app/server/data（Docker）或当前目录下的 data
+const getDbPath = () => {
+  // 优先使用环境变量指定的路径
+  if (process.env.DB_PATH) {
+    return process.env.DB_PATH
+  }
+  
+  // Docker 环境下使用绝对路径
+  if (process.env.NODE_ENV === 'production') {
+    return '/app/server/data/zen-garden.db'
+  }
+  
+  // 开发环境使用相对路径
+  return path.join(process.cwd(), 'server', 'data', 'zen-garden.db')
+}
+
+const dbPath = getDbPath()
+console.log(`📂 Database path: ${dbPath}`)
 
 // bcrypt 加密轮数
 const BCRYPT_ROUNDS = 12
@@ -22,11 +37,16 @@ let db: SqlJsDatabase
 export async function initDatabase() {
   const SQL = await initSqlJs()
   
+  // 检查数据库文件是否存在
+  const isNewDatabase = !fs.existsSync(dbPath)
+  
   // 加载已有数据库或创建新的
-  if (fs.existsSync(dbPath)) {
+  if (!isNewDatabase) {
+    console.log('📖 Loading existing database...')
     const buffer = fs.readFileSync(dbPath)
     db = new SQL.Database(buffer)
   } else {
+    console.log('🆕 Creating new database...')
     db = new SQL.Database()
   }
   
@@ -120,45 +140,73 @@ export async function initDatabase() {
   // 清理过期的 Token
   db.run('DELETE FROM tokens WHERE expiresAt < ?', [Date.now()])
   
-  // 初始化默认设置
-  const defaultSettings = [
-    { key: 'siteTitle', value: 'NOWEN' },
-    { key: 'siteFavicon', value: '' },
-    { key: 'useDefaultQuotes', value: 'true' },
-  ]
-  
-  for (const setting of defaultSettings) {
-    db.run(
-      `INSERT OR IGNORE INTO settings (key, value, updatedAt) VALUES (?, ?, ?)`,
-      [setting.key, setting.value, new Date().toISOString()]
-    )
-  }
-  
-  // 初始化默认分类
-  const defaultCategories = [
-    { id: 'dev', name: '开发', icon: 'code', color: '#667eea', orderIndex: 0 },
-    { id: 'productivity', name: '效率', icon: 'zap', color: '#f093fb', orderIndex: 1 },
-    { id: 'design', name: '设计', icon: 'palette', color: '#f5576c', orderIndex: 2 },
-    { id: 'reading', name: '阅读', icon: 'book', color: '#43e97b', orderIndex: 3 },
-    { id: 'media', name: '媒体', icon: 'play', color: '#fa709a', orderIndex: 4 },
-  ]
-  
-  for (const cat of defaultCategories) {
-    db.run(
-      `INSERT OR IGNORE INTO categories (id, name, icon, color, orderIndex) VALUES (?, ?, ?, ?, ?)`,
-      [cat.id, cat.name, cat.icon, cat.color, cat.orderIndex]
-    )
-  }
-  
-  // 初始化默认管理员（密码: admin123）
-  // 检查是否已有管理员，避免重复初始化
-  const existingAdmin = db.exec('SELECT id FROM admins WHERE id = ?', ['admin_default'])
-  if (existingAdmin.length === 0 || existingAdmin[0].values.length === 0) {
+  // 只在新数据库时初始化默认数据
+  if (isNewDatabase) {
+    console.log('📝 Initializing default data...')
+    
+    // 初始化默认设置
+    const defaultSettings = [
+      { key: 'siteTitle', value: 'NOWEN' },
+      { key: 'siteFavicon', value: '' },
+      { key: 'useDefaultQuotes', value: 'true' },
+    ]
+    
+    for (const setting of defaultSettings) {
+      db.run(
+        `INSERT OR IGNORE INTO settings (key, value, updatedAt) VALUES (?, ?, ?)`,
+        [setting.key, setting.value, new Date().toISOString()]
+      )
+    }
+    
+    // 初始化默认分类
+    const defaultCategories = [
+      { id: 'dev', name: '开发', icon: 'code', color: '#667eea', orderIndex: 0 },
+      { id: 'productivity', name: '效率', icon: 'zap', color: '#f093fb', orderIndex: 1 },
+      { id: 'design', name: '设计', icon: 'palette', color: '#f5576c', orderIndex: 2 },
+      { id: 'reading', name: '阅读', icon: 'book', color: '#43e97b', orderIndex: 3 },
+      { id: 'media', name: '媒体', icon: 'play', color: '#fa709a', orderIndex: 4 },
+    ]
+    
+    for (const cat of defaultCategories) {
+      db.run(
+        `INSERT OR IGNORE INTO categories (id, name, icon, color, orderIndex) VALUES (?, ?, ?, ?, ?)`,
+        [cat.id, cat.name, cat.icon, cat.color, cat.orderIndex]
+      )
+    }
+    
+    // 初始化默认管理员（密码: admin123）
     const defaultPassword = await hashPassword('admin123')
     db.run(
       `INSERT OR IGNORE INTO admins (id, username, password, isDefaultPassword, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?)`,
       ['admin_default', 'admin', defaultPassword, 1, new Date().toISOString(), new Date().toISOString()]
     )
+    
+    console.log('✅ Default data initialized')
+  } else {
+    // 已有数据库，检查是否需要补充必要的默认设置（不覆盖已有数据）
+    const defaultSettings = [
+      { key: 'siteTitle', value: 'NOWEN' },
+      { key: 'siteFavicon', value: '' },
+      { key: 'useDefaultQuotes', value: 'true' },
+    ]
+    
+    for (const setting of defaultSettings) {
+      db.run(
+        `INSERT OR IGNORE INTO settings (key, value, updatedAt) VALUES (?, ?, ?)`,
+        [setting.key, setting.value, new Date().toISOString()]
+      )
+    }
+    
+    // 确保至少有一个管理员账户
+    const existingAdmin = db.exec('SELECT COUNT(*) as count FROM admins')
+    if (existingAdmin.length === 0 || existingAdmin[0].values[0][0] === 0) {
+      console.log('⚠️ No admin found, creating default admin...')
+      const defaultPassword = await hashPassword('admin123')
+      db.run(
+        `INSERT OR IGNORE INTO admins (id, username, password, isDefaultPassword, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?)`,
+        ['admin_default', 'admin', defaultPassword, 1, new Date().toISOString(), new Date().toISOString()]
+      )
+    }
   }
   
   saveDatabase()
