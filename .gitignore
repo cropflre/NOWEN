@@ -28,3 +28,4 @@ coverage/
 # Temp files
 *.tmp
 *.temp
+server/data/zen-garden.db
