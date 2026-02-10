@@ -16,7 +16,7 @@ import {
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { Bookmark, Category } from '../../types/bookmark'
-import { SiteSettings, factoryReset } from '../../lib/api'
+import { SiteSettings, factoryReset, clearAuthStatus } from '../../lib/api'
 
 interface ExportData {
   version: string
@@ -162,6 +162,9 @@ export function DataManagementCard({
       if (onFactoryReset) {
         onFactoryReset()
       }
+      
+      // 清除登录状态，刷新后需要重新登录
+      clearAuthStatus()
       
       // 延迟后刷新页面，让用户看到成功提示
       setTimeout(() => {
