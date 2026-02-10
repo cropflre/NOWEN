@@ -7,7 +7,6 @@ import {
   Pin,
   ExternalLink,
   Edit2,
-  FolderPlus,
 } from "lucide-react";
 
 // UI 组件
@@ -612,24 +611,6 @@ function App() {
             {/* 拖拽覆盖层 */}
             <BookmarkDragOverlay activeBookmark={activeBookmark} />
           </DndContext>
-
-          {/* 新建分类按钮 */}
-          {isLoggedIn && (
-            <motion.div className="mb-12" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.5 }}>
-              <button
-                onClick={() => {
-                  setEditingCategory(null);
-                  setCategoryModalMode('add');
-                  setIsCategoryModalOpen(true);
-                }}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all hover:scale-105"
-                style={{ background: 'var(--color-glass)', border: '1px dashed var(--color-glass-border)', color: 'var(--color-text-muted)' }}
-              >
-                <FolderPlus className="w-4 h-4" />
-                <span className="text-sm">新建分类</span>
-              </button>
-            </motion.div>
-          )}
 
           {/* Empty State */}
           {bookmarks.length === 0 && !isLoading && (
