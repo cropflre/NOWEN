@@ -231,6 +231,17 @@ export function useBookmarkStore() {
     }
   }, [])
 
+  // 追加分类到本地状态（不调用API，用于已通过API创建的分类）
+  const appendCategory = useCallback((category: Category) => {
+    setCategories(prev => {
+      // 避免重复添加
+      if (prev.some(c => c.id === category.id)) {
+        return prev
+      }
+      return [...prev, category]
+    })
+  }, [])
+
   // 更新分类
   const updateCategory = useCallback(async (id: string, updates: Partial<Category>) => {
     try {
@@ -343,6 +354,7 @@ export function useBookmarkStore() {
     toggleReadLater,
     toggleRead,
     addCategory,
+    appendCategory,
     updateCategory,
     deleteCategory,
     reorderCategories,

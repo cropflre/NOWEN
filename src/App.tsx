@@ -129,6 +129,7 @@ function App() {
     toggleRead,
     reorderBookmarks,
     addCategory,
+    appendCategory,
     updateCategory,
     deleteCategory,
     reorderCategories,
@@ -328,6 +329,7 @@ function App() {
           initialUrl={pendingUrl}
           editBookmark={editingBookmark}
           onOpenIconManager={() => setIsIconManagerOpen(true)}
+          onCategoryAdded={(newCategory) => appendCategory(newCategory)}
         />
         <IconManager
           isOpen={isIconManagerOpen}
@@ -688,6 +690,7 @@ function App() {
         initialUrl={pendingUrl}
         editBookmark={editingBookmark}
         onOpenIconManager={() => setIsIconManagerOpen(true)}
+        onCategoryAdded={(newCategory) => appendCategory(newCategory)}
       />
 
       <IconManager
