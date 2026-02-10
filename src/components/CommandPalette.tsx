@@ -1,10 +1,11 @@
-import { useState, useEffect, useRef, useMemo, useCallback, memo } from 'react'
+import { useState, useEffect, useRef, useMemo, memo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { Search, Globe, Github, Plus, ArrowRight, Command } from 'lucide-react'
 import { Bookmark } from '../types/bookmark'
 import { cn, getIconComponent } from '../lib/utils'
 import { popUpVariant } from '../lib/animation'
+import { visitsApi } from '../lib/api'
 
 interface CommandPaletteProps {
   isOpen: boolean
@@ -202,6 +203,7 @@ export function CommandPalette({
           description: new URL(bookmark.url).hostname,
           icon: iconElement,
           action: () => {
+            visitsApi.track(bookmark.id).catch(console.error)
             window.open(bookmark.url, '_blank')
             onClose()
           },

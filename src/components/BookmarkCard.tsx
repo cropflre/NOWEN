@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next'
 import { Bookmark } from '../types/bookmark'
 import { cn } from '../lib/utils'
 import { getIconComponent } from '../lib/icons'
+import { visitsApi } from '../lib/api'
 
 interface BookmarkCardProps {
   bookmark: Bookmark
@@ -32,7 +33,7 @@ export function BookmarkCard({
   const [imageError, setImageError] = useState(false)
   const [showDescTooltip, setShowDescTooltip] = useState(false)
   const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 })
-  const tooltipTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const tooltipTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const descRef = useRef<HTMLDivElement>(null)
   const { t } = useTranslation()
 
@@ -72,6 +73,8 @@ export function BookmarkCard({
   }
 
   const handleClick = () => {
+    // 异步记录访问，不阻塞跳转
+    visitsApi.track(bookmark.id).catch(console.error)
     window.open(bookmark.url, '_blank', 'noopener,noreferrer')
   }
 

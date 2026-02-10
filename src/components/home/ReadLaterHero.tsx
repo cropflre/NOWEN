@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { ExternalLink, BookMarked } from 'lucide-react';
 import { Card3D, CardItem } from '../ui/3d-card';
 import { Bookmark } from '../../types/bookmark';
+import { visitsApi } from '../../lib/api';
 
 interface ReadLaterHeroProps {
   bookmark: Bookmark;
@@ -14,6 +15,7 @@ export function ReadLaterHero({ bookmark, isLiteMode }: ReadLaterHeroProps) {
   const { t } = useTranslation();
 
   const handleClick = () => {
+    visitsApi.track(bookmark.id).catch(console.error);
     window.open(bookmark.url, '_blank');
   };
 

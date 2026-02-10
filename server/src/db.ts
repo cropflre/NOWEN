@@ -137,6 +137,29 @@ export async function initDatabase() {
     )
   `)
 
+  // 访问统计表
+  db.run(`
+    CREATE TABLE IF NOT EXISTS visits (
+      id TEXT PRIMARY KEY,
+      bookmarkId TEXT NOT NULL,
+      visitedAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      ip TEXT,
+      userAgent TEXT,
+      referer TEXT
+    )
+  `)
+
+  // 为 visits 表创建索引以提高查询性能
+  db.run(`CREATE INDEX IF NOT EXISTS idx_visits_bookmarkId ON visits(bookmarkId)`)
+  db.run(`CREATE INDEX IF NOT EXISTS idx_visits_visitedAt ON visits(visitedAt)`)
+
+  // 数据库迁移：为 bookmarks 表添加 visitCount 字段
+  try {
+    db.run('ALTER TABLE bookmarks ADD COLUMN visitCount INTEGER DEFAULT 0')
+  } catch (e) {
+    // 字段已存在，忽略错误
+  }
+
   // 清理过期的 Token
   db.run('DELETE FROM tokens WHERE expiresAt < ?', [Date.now()])
   

@@ -11,11 +11,12 @@ import {
   Quote,
   Menu,
   X,
-  ImageIcon
+  ImageIcon,
+  BarChart3
 } from 'lucide-react'
 import { MobileFloatingDock } from '../ui/mobile-floating-dock'
 
-type TabType = 'bookmarks' | 'categories' | 'quotes' | 'icons' | 'settings'
+type TabType = 'bookmarks' | 'categories' | 'quotes' | 'icons' | 'analytics' | 'settings'
 
 interface AdminSidebarProps {
   activeTab: TabType
@@ -33,6 +34,7 @@ const navItems = [
   { id: 'categories' as TabType, labelKey: 'admin.nav.categories', fullLabelKey: 'admin.nav.categories_full', icon: FolderOpen },
   { id: 'quotes' as TabType, labelKey: 'admin.nav.quotes', fullLabelKey: 'admin.nav.quotes_full', icon: Quote },
   { id: 'icons' as TabType, labelKey: 'admin.nav.icons', fullLabelKey: 'admin.nav.icons_full', icon: ImageIcon },
+  { id: 'analytics' as TabType, labelKey: 'admin.nav.analytics', fullLabelKey: 'admin.nav.analytics_full', icon: BarChart3 },
   { id: 'settings' as TabType, labelKey: 'admin.nav.settings', fullLabelKey: 'admin.nav.settings_full', icon: Settings },
 ]
 

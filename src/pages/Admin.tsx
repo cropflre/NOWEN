@@ -40,6 +40,7 @@ import { adminChangePassword, fetchSettings, updateSettings, SiteSettings, Widge
 import { AdminSidebar } from '../components/admin/AdminSidebar'
 import { QuotesCard } from '../components/admin/QuotesCard'
 import { SettingsPanel } from '../components/admin/SettingsPanel'
+import { AnalyticsCard } from '../components/admin/AnalyticsCard'
 import { ToastProvider, useToast } from '../components/admin/Toast'
 import { useTheme, ThemeId } from '../hooks/useTheme.tsx'
 import { AdminProvider, useAdmin, useBookmarkActions, useCategoryActions, useIconActions } from '../contexts/AdminContext'
@@ -208,7 +209,7 @@ function AdminContent() {
 
   const { showToast } = useToast()
   const { themeId, isDark, setTheme, toggleDarkMode, autoMode, setAutoMode } = useTheme()
-  const [activeTab, setActiveTab] = useState<'bookmarks' | 'categories' | 'quotes' | 'icons' | 'settings'>('bookmarks')
+  const [activeTab, setActiveTab] = useState<'bookmarks' | 'categories' | 'quotes' | 'icons' | 'analytics' | 'settings'>('bookmarks')
   const [searchQuery, setSearchQuery] = useState('')
   const [filterCategory, setFilterCategory] = useState<string>('all')
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
@@ -494,6 +495,7 @@ function AdminContent() {
     categories: t('admin.nav.categories_full'),
     quotes: t('admin.nav.quotes_full'),
     icons: t('admin.nav.icons_full'),
+    analytics: t('admin.nav.analytics_full'),
     settings: t('admin.nav.settings_full'),
   }
 
@@ -546,6 +548,7 @@ function AdminContent() {
                 {activeTab === 'categories' && t('admin.stats.total_categories', { count: categories.length })}
                 {activeTab === 'quotes' && t('admin.stats.total_quotes', { count: quotes.length })}
                 {activeTab === 'icons' && t('admin.stats.total_icons', { count: customIcons.length })}
+                {activeTab === 'analytics' && t('admin.stats.view_analytics')}
                 {activeTab === 'settings' && t('admin.stats.manage_config')}
               </p>
             </div>
@@ -1371,6 +1374,19 @@ function AdminContent() {
                   onDeleteIcon={onDeleteCustomIcon}
                   embedded
                 />
+              </motion.div>
+            )}
+
+            {/* Analytics Tab */}
+            {activeTab === 'analytics' && (
+              <motion.div
+                key="analytics"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="max-w-5xl"
+              >
+                <AnalyticsCard onShowToast={showToast} />
               </motion.div>
             )}
 

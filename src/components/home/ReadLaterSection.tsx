@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { Card3D, CardItem } from '../ui/3d-card';
 import { Bookmark } from '../../types/bookmark';
+import { visitsApi } from '../../lib/api';
 
 interface ReadLaterSectionProps {
   bookmarks: Bookmark[];
@@ -38,8 +39,9 @@ function HeroBookmark({
   const domain = new URL(bookmark.url).hostname.replace('www.', '');
   
   const handleClick = useCallback(() => {
+    visitsApi.track(bookmark.id).catch(console.error);
     window.open(bookmark.url, '_blank');
-  }, [bookmark.url]);
+  }, [bookmark.id, bookmark.url]);
 
   const handleMarkRead = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -490,7 +492,10 @@ export function ReadLaterSection({
                       index={index}
                       onMarkRead={onMarkRead}
                       onRemove={onRemove}
-                      onClick={() => window.open(bookmark.url, '_blank')}
+                      onClick={() => {
+                        visitsApi.track(bookmark.id).catch(console.error);
+                        window.open(bookmark.url, '_blank');
+                      }}
                     />
                   ))}
                 </motion.div>

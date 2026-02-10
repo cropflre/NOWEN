@@ -142,6 +142,8 @@
       "quotes_full": "Quote Management",
       "icons": "Icons",
       "icons_full": "Icon Management",
+      "analytics": "Analytics",
+      "analytics_full": "Visit Analytics",
       "settings": "Settings",
       "settings_full": "System Settings"
     },
@@ -150,6 +152,7 @@
       "total_categories": "{{count}} categories",
       "total_quotes": "{{count}} quotes",
       "total_icons": "{{count}} icons",
+      "view_analytics": "View visit data and trends",
       "manage_config": "Manage your website configuration"
     },
     "bookmark": {
@@ -396,6 +399,39 @@
       "empty_error": "Please enter username and password",
       "login_error": "Login failed, please try again",
       "hint": "Use default account for first login"
+    },
+    "analytics": {
+      "title": "Visit Analytics",
+      "description": "View bookmark visit data and trend analysis",
+      "load_error": "Failed to load analytics data",
+      "total_visits": "Total Visits",
+      "today_visits": "Today",
+      "week_visits": "This Week",
+      "visited_bookmarks": "Visited Bookmarks",
+      "visit_trend": "Visit Trend",
+      "last_7_days": "Last 7 days",
+      "tabs": {
+        "overview": "Overview",
+        "top": "Top",
+        "recent": "Recent"
+      },
+      "period": {
+        "all": "All Time",
+        "year": "Past Year",
+        "month": "Past Month",
+        "week": "Past Week",
+        "day": "Today"
+      },
+      "no_visits": "No visits recorded yet",
+      "no_recent_visits": "No recent visits",
+      "just_now": "Just now",
+      "minutes_ago": "{{count}} min ago",
+      "hours_ago": "{{count}} hr ago",
+      "days_ago": "{{count}} days ago",
+      "clear_confirm_title": "Clear Visit Records",
+      "clear_confirm_message": "Are you sure you want to clear all visit records? This action cannot be undone.",
+      "clear_success": "Visit records cleared",
+      "clear_error": "Failed to clear visit records"
     }
   }
 }

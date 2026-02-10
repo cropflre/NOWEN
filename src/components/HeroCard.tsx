@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import { Bookmark } from '../types/bookmark'
 import { cn } from '../lib/utils'
+import { visitsApi } from '../lib/api'
 
 interface HeroCardProps {
   bookmark: Bookmark | null
@@ -51,7 +52,10 @@ export function HeroCard({ bookmark, onArchive, onMarkRead }: HeroCardProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6 }}
-      onClick={() => window.open(bookmark.url, '_blank')}
+      onClick={() => {
+        visitsApi.track(bookmark.id).catch(console.error)
+        window.open(bookmark.url, '_blank')
+      }}
       whileHover={{ scale: 1.01 }}
     >
       <div className="flex h-full min-h-[200px]">
@@ -128,6 +132,7 @@ export function HeroCard({ bookmark, onArchive, onMarkRead }: HeroCardProps) {
                 className="px-4 py-2 rounded-xl bg-gradient-to-r from-[var(--gradient-1)] to-[var(--gradient-2)] text-white flex items-center gap-2"
                 onClick={(e) => {
                   e.stopPropagation()
+                  visitsApi.track(bookmark.id).catch(console.error)
                   window.open(bookmark.url, '_blank')
                 }}
                 whileHover={{ scale: 1.02 }}

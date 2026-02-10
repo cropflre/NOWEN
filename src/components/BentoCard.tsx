@@ -12,6 +12,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Bookmark } from '../types/bookmark'
 import { cn } from '../lib/utils'
+import { visitsApi } from '../lib/api'
 
 interface BentoCardProps {
   bookmark: Bookmark
@@ -49,6 +50,8 @@ export function BentoCard({
 
   const handleClick = () => {
     if (!isEditMode) {
+      // 异步记录访问
+      visitsApi.track(bookmark.id).catch(console.error)
       window.open(bookmark.url, '_blank')
     }
     onClick?.()

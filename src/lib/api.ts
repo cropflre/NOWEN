@@ -613,5 +613,109 @@ export const quotesApi = {
   update: updateQuotes,
 }
 
+// ========== 访问统计 API ==========
+
+export interface VisitStats {
+  totalVisits: number
+  todayVisits: number
+  weekVisits: number
+  monthVisits: number
+  totalBookmarks: number
+  visitedBookmarks: number
+}
+
+export interface TopBookmark {
+  id: string
+  url: string
+  title: string
+  description?: string
+  favicon?: string
+  icon?: string
+  iconUrl?: string
+  category?: string
+  visitCount: number
+}
+
+export interface VisitTrend {
+  date: string
+  count: number
+}
+
+export interface RecentVisit {
+  id: string
+  visitedAt: string
+  ip?: string
+  userAgent?: string
+  bookmark: {
+    id: string
+    url: string
+    title: string
+    favicon?: string
+    icon?: string
+    iconUrl?: string
+  }
+}
+
+export interface BookmarkVisitStats {
+  bookmarkId: string
+  visitCount: number
+  lastVisited: string | null
+  trend: number[]
+}
+
+// 获取总体统计概览
+export async function fetchVisitStats(): Promise<VisitStats> {
+  return request<VisitStats>('/api/visits/stats', { requireAuth: true })
+}
+
+// 获取热门书签排行
+export async function fetchTopBookmarks(
+  limit: number = 10,
+  period: 'day' | 'week' | 'month' | 'year' | 'all' = 'all'
+): Promise<TopBookmark[]> {
+  return request<TopBookmark[]>(`/api/visits/top?limit=${limit}&period=${period}`, { requireAuth: true })
+}
+
+// 获取访问趋势
+export async function fetchVisitTrend(days: number = 7): Promise<VisitTrend[]> {
+  return request<VisitTrend[]>(`/api/visits/trend?days=${days}`, { requireAuth: true })
+}
+
+// 获取最近访问记录
+export async function fetchRecentVisits(limit: number = 20): Promise<RecentVisit[]> {
+  return request<RecentVisit[]>(`/api/visits/recent?limit=${limit}`, { requireAuth: true })
+}
+
+// 获取单个书签的统计
+export async function fetchBookmarkStats(bookmarkId: string): Promise<BookmarkVisitStats> {
+  return request<BookmarkVisitStats>(`/api/visits/stats/${bookmarkId}`, { requireAuth: true })
+}
+
+// 记录访问（公开接口）
+export async function trackVisit(bookmarkId: string): Promise<{ success: boolean }> {
+  return request<{ success: boolean }>('/api/visits/track', {
+    method: 'POST',
+    body: JSON.stringify({ bookmarkId }),
+  })
+}
+
+// 清除所有访问记录
+export async function clearVisits(): Promise<{ success: boolean; message: string }> {
+  return request<{ success: boolean; message: string }>('/api/visits/clear', {
+    method: 'DELETE',
+    requireAuth: true,
+  })
+}
+
+export const visitsApi = {
+  stats: fetchVisitStats,
+  top: fetchTopBookmarks,
+  trend: fetchVisitTrend,
+  recent: fetchRecentVisits,
+  bookmarkStats: fetchBookmarkStats,
+  track: trackVisit,
+  clear: clearVisits,
+}
+
 // 重新导出类型供外部使用
 export type { Bookmark, Category } from '../types/bookmark'

@@ -142,6 +142,8 @@
       "quotes_full": "名言管理",
       "icons": "图标",
       "icons_full": "图标管理",
+      "analytics": "统计",
+      "analytics_full": "访问统计",
       "settings": "设置",
       "settings_full": "系统设置"
     },
@@ -150,6 +152,7 @@
       "total_categories": "共 {{count}} 个分类",
       "total_quotes": "共 {{count}} 条名言",
       "total_icons": "共 {{count}} 个图标",
+      "view_analytics": "查看访问数据与趋势",
       "manage_config": "管理您的网站配置"
     },
     "bookmark": {
@@ -396,6 +399,39 @@
       "empty_error": "请输入用户名和密码",
       "login_error": "登录失败，请重试",
       "hint": "首次登录请使用默认账号"
+    },
+    "analytics": {
+      "title": "访问统计",
+      "description": "查看书签访问数据与趋势分析",
+      "load_error": "加载统计数据失败",
+      "total_visits": "总访问量",
+      "today_visits": "今日访问",
+      "week_visits": "本周访问",
+      "visited_bookmarks": "已访问书签",
+      "visit_trend": "访问趋势",
+      "last_7_days": "最近7天",
+      "tabs": {
+        "overview": "概览",
+        "top": "热门",
+        "recent": "最近"
+      },
+      "period": {
+        "all": "全部",
+        "year": "近一年",
+        "month": "近一月",
+        "week": "近一周",
+        "day": "今日"
+      },
+      "no_visits": "暂无访问记录",
+      "no_recent_visits": "暂无最近访问",
+      "just_now": "刚刚",
+      "minutes_ago": "{{count}}分钟前",
+      "hours_ago": "{{count}}小时前",
+      "days_ago": "{{count}}天前",
+      "clear_confirm_title": "清除访问记录",
+      "clear_confirm_message": "确定要清除所有访问记录吗？此操作不可撤销。",
+      "clear_success": "访问记录已清除",
+      "clear_error": "清除访问记录失败"
     }
   }
 }
