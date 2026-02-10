@@ -1420,8 +1420,12 @@ function AdminContent() {
                   categories={categories}
                   onImport={async (data) => {
                     await importData(data)
+                    await refreshData()
                     showToast('success', t('admin.settings.data.import_success', { bookmarks: data.bookmarks?.length || 0, categories: data.categories?.length || 0 }))
-                    refreshData()
+                    // 导入成功后跳转到首页
+                    setTimeout(() => {
+                      onBack()
+                    }, 1000)
                   }}
                   onFactoryReset={() => {
                     showToast('success', t('admin.settings.data.reset_success'))

@@ -2,7 +2,7 @@
 
 > A minimalist personal navigation hub combining bookmark management and system monitoring, featuring deep space aesthetics and glassmorphism design, supporting day/night dual modes with complete real-time hardware monitoring capabilities
 
-![Version](https://img.shields.io/badge/version-0.1.0-blue)
+![Version](https://img.shields.io/badge/version-0.1.3-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Node](https://img.shields.io/badge/node-%3E%3D20-brightgreen)
 ![React](https://img.shields.io/badge/React-18.3-61dafb)
@@ -67,9 +67,12 @@
 | **Weather & Lunar**      | Real-time weather 19°C · Cloudy · 75% humidity · 5.5m/s wind · Lunar date · Solar terms    |
 | **Sidebar Navigation**   | Quick category navigation (Dev/Tools/Design/Reading/Media) · Smart highlighting            |
 | **Category Editing**     | Hover to show edit button ✏️ · Edit directly without backend                               |
+| **Quick Add Category**   | Create category while adding bookmark · 10 preset colors · Real-time refresh               |
 | **System Monitoring**    | Engine Room (CPU 57%/RAM 89%/Disk) · Hardware ID · Vital Signs (28°C) · Network · Services |
 | **Dock Status Bar**      | SYSTEM ONLINE · CPU/MEM/Temp/Network speed · Draggable                                     |
 | **Mobile Floating Dock** | Expandable menu · Search/Add/Theme/Apps                                                    |
+| **Read Later**           | Hero card display · 3D card effect · List view · Mark as read                              |
+| **Data Management**      | Import/Export JSON · Factory reset · Auto redirect to home after import                    |
 
 ---
 
@@ -133,26 +136,28 @@
 - **Smart Metadata Fetching**: Auto-fetch title, description, favicon, OG image
 - **Category Management**: Custom category names, icons, and colors
 - **Frontend Category Editing** (NEW): Edit/create/delete categories directly on homepage
+- **Quick Add Category** (NEW): Create new categories while adding bookmarks, inline form with 10 preset colors
 - **Quick Navigation Sidebar** (NEW): Auto-display category nav, quick positioning, smart highlighting
 - **Pin Feature**: Pin frequently used bookmarks (Bento Grid asymmetric layout)
-- **Read Later**: Hero card display for pending reads, read mark support
+- **Read Later**: Hero card display for pending reads, read mark support, 3D card effect
 - **Drag & Drop Sorting**: Smooth drag experience with @dnd-kit
 - **Context Menu**: Quick operations when logged in (edit/delete/pin)
-- **Custom Icons**: Upload custom icons for bookmark display
+- **Custom Icons**: Three icon modes (preset icons, custom upload, URL remote image)
+- **Virtual Scroll**: Auto-enabled when 50+ bookmarks, optimized rendering performance
 
 ### ⚙️ Admin Panel
 
-| Module              | Features                                                                                    |
-| ------------------- | ------------------------------------------------------------------------------------------- |
-| **Bookmarks**       | CRUD, batch operations, category filter, search, virtual scroll                             |
-| **Categories**      | Custom names, icon picker, color picker, sorting                                            |
-| **Icons**           | Upload custom icons, preview, delete management                                             |
-| **Quotes**          | Custom quotes, system default toggle                                                        |
-| **Site Settings**   | Custom site name and icon, lite mode toggle, weather/lunar toggle, menu visibility          |
-| **Theme Settings**  | 8 preset themes, light/dark mode, auto switch, circle expand animation                      |
-| **Widget Settings** | Control each monitor component visibility, Beam border toggle                               |
-| **Security**        | Password change with strength indicator, first login force change, login state verification |
-| **Data Management** | JSON import/export backup, factory reset, nested object support                             |
+| Module              | Features                                                                                          |
+| ------------------- | ------------------------------------------------------------------------------------------------- |
+| **Bookmarks**       | CRUD, batch operations, category filter, search, virtual scroll, quick category change            |
+| **Categories**      | Custom names, icon picker, color picker, drag sorting                                             |
+| **Icons**           | Upload custom icons, preview, delete management                                                   |
+| **Quotes**          | Custom quotes, system default toggle                                                              |
+| **Site Settings**   | Custom site name and icon, lite mode toggle, weather/lunar toggle, menu visibility                |
+| **Theme Settings**  | 8 preset themes, light/dark mode, auto switch, day/night animation, circle expand animation       |
+| **Widget Settings** | Control each monitor component visibility, Beam border toggle                                     |
+| **Security**        | Password change with strength indicator, first login force change, login state verification       |
+| **Data Management** | JSON import/export backup, factory reset, auto redirect to home after import, nested object support |
 
 ### 🎨 Visual Design
 
@@ -571,6 +576,26 @@ A: Admin → System Settings → Data Management → Export Backup, or copy `ser
 ---
 
 ## 📝 Changelog
+
+### v0.1.3 (2026-02-10)
+
+#### ✨ New Features
+
+- **Quick Add Category in Bookmark Modal**: Create new categories directly while adding/editing bookmarks
+  - Inline category creation form, no navigation needed
+  - 10 preset color picker
+  - Auto-select newly created category
+  - Real-time category list refresh
+
+#### 🐛 Bug Fixes
+
+- Fixed bookmark management page showing blank after successful backup import
+- Auto redirect to homepage after successful import
+- Fixed login state not cleared after factory reset
+- Fixed database being reset after Docker update (using absolute path)
+- Fixed light mode create category button style issue
+
+---
 
 ### v0.1.2 (2026-02-05)
 

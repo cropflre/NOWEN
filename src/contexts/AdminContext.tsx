@@ -34,7 +34,7 @@ export interface AdminContextValue {
   deleteCustomIcon: (id: string) => void
   
   // 其他操作
-  refreshData: () => void
+  refreshData: () => Promise<void> | void
   updateQuotes: (quotes: string[], useDefault: boolean) => void
   updateSettings: (settings: SiteSettings) => void
   
@@ -77,7 +77,7 @@ export interface AdminProviderProps {
   onAddCustomIcon: (icon: Omit<CustomIcon, 'id' | 'createdAt'>) => void
   onDeleteCustomIcon: (id: string) => void
   // 其他回调
-  onRefreshData?: () => void
+  onRefreshData?: () => Promise<void> | void
   onQuotesUpdate?: (quotes: string[], useDefault: boolean) => void
   onSettingsChange?: (settings: SiteSettings) => void
 }
@@ -125,8 +125,8 @@ export function AdminProvider({
     onEditBookmark(bookmark)
   }, [onEditBookmark])
 
-  const handleRefreshData = useCallback(() => {
-    onRefreshData?.()
+  const handleRefreshData = useCallback(async () => {
+    await onRefreshData?.()
   }, [onRefreshData])
 
   const handleUpdateQuotes = useCallback((quotes: string[], useDefault: boolean) => {
