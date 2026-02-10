@@ -843,7 +843,7 @@ export function AddBookmarkModal({
                           isAddingCategory ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'
                         )}
                         style={{
-                          background: `linear-gradient(135deg, var(--gradient-1), var(--gradient-2))`,
+                          background: 'var(--color-primary)',
                           color: 'white',
                         }}
                       >
