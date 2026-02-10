@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Plus, Loader2, Check, AlertCircle, Sparkles, BookmarkPlus, ChevronDown, Settings, Link2, Image } from 'lucide-react'
+import { X, Plus, Loader2, Check, AlertCircle, Sparkles, BookmarkPlus, ChevronDown, Settings, Link2, Image, FolderPlus } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Bookmark, Category, CustomIcon } from '../types/bookmark'
-import { metadataApi } from '../lib/api'
+import { metadataApi, categoryApi } from '../lib/api'
 import { cn } from '../lib/utils'
 import { presetIcons, getIconComponent } from '../lib/icons'
 
@@ -16,6 +16,7 @@ interface AddBookmarkModalProps {
   initialUrl?: string
   editBookmark?: Bookmark | null
   onOpenIconManager?: () => void
+  onCategoryAdded?: (category: Category) => void
 }
 
 // 骨架屏组件
@@ -34,6 +35,7 @@ export function AddBookmarkModal({
   initialUrl = '',
   editBookmark = null,
   onOpenIconManager,
+  onCategoryAdded,
 }: AddBookmarkModalProps) {
   const { t } = useTranslation()
   const [url, setUrl] = useState(initialUrl)
@@ -53,6 +55,19 @@ export function AddBookmarkModal({
   const [shake, setShake] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const iconPickerRef = useRef<HTMLDivElement>(null)
+  
+  // 新增分类相关状态
+  const [showAddCategory, setShowAddCategory] = useState(false)
+  const [newCategoryName, setNewCategoryName] = useState('')
+  const [isAddingCategory, setIsAddingCategory] = useState(false)
+  const [addCategoryError, setAddCategoryError] = useState('')
+  
+  // 预设颜色
+  const categoryColors = [
+    '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', 
+    '#EC4899', '#06B6D4', '#84CC16', '#F97316', '#6366F1'
+  ]
+  const [selectedColor, setSelectedColor] = useState(categoryColors[0])
 
   // 编辑模式初始化
   useEffect(() => {
@@ -668,12 +683,23 @@ export function AddBookmarkModal({
 
               {/* 分类选择 */}
               <div>
-                <label 
-                  className="block text-sm mb-2"
-                  style={{ color: 'var(--text-secondary)' }}
-                >
-                  {t('bookmark.modal.category')}
-                </label>
+                <div className="flex items-center justify-between mb-2">
+                  <label 
+                    className="block text-sm"
+                    style={{ color: 'var(--text-secondary)' }}
+                  >
+                    {t('bookmark.modal.category')}
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddCategory(true)}
+                    className="text-xs flex items-center gap-1 hover:opacity-80 transition-opacity"
+                    style={{ color: 'var(--gradient-1)' }}
+                  >
+                    <FolderPlus className="w-3 h-3" />
+                    {t('category.add')}
+                  </button>
+                </div>
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
@@ -695,6 +721,142 @@ export function AddBookmarkModal({
                     </option>
                   ))}
                 </select>
+                
+                {/* 新增分类弹窗 */}
+                <AnimatePresence>
+                  {showAddCategory && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="mt-3 p-4 rounded-xl border"
+                      style={{
+                        background: 'var(--color-bg-tertiary)',
+                        borderColor: 'var(--color-glass-border)',
+                      }}
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                          {t('admin.category.add')}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowAddCategory(false)
+                            setNewCategoryName('')
+                            setAddCategoryError('')
+                          }}
+                          className="p-1 rounded-lg hover:bg-white/10 transition-colors"
+                        >
+                          <X className="w-4 h-4" style={{ color: 'var(--text-muted)' }} />
+                        </button>
+                      </div>
+                      
+                      {/* 分类名称输入 */}
+                      <input
+                        type="text"
+                        value={newCategoryName}
+                        onChange={(e) => setNewCategoryName(e.target.value)}
+                        placeholder={t('admin.category.name_placeholder')}
+                        className={cn(
+                          'w-full px-3 py-2 rounded-lg text-sm',
+                          'border outline-none transition-colors',
+                          'focus:border-[var(--gradient-1)]'
+                        )}
+                        style={{
+                          color: 'var(--color-text-primary)',
+                          background: 'var(--color-bg-secondary)',
+                          borderColor: 'var(--color-glass-border)',
+                        }}
+                      />
+                      
+                      {/* 颜色选择 */}
+                      <div className="mt-3">
+                        <span className="text-xs mb-2 block" style={{ color: 'var(--text-muted)' }}>
+                          {t('admin.category.select_color')}
+                        </span>
+                        <div className="flex gap-2 flex-wrap">
+                          {categoryColors.map((color) => (
+                            <button
+                              key={color}
+                              type="button"
+                              onClick={() => setSelectedColor(color)}
+                              className={cn(
+                                'w-6 h-6 rounded-full transition-all',
+                                selectedColor === color ? 'ring-2 ring-offset-2 ring-offset-[var(--color-bg-tertiary)]' : ''
+                              )}
+                              style={{ 
+                                background: color,
+                                ['--tw-ring-color' as any]: color,
+                              }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      
+                      {/* 错误提示 */}
+                      {addCategoryError && (
+                        <p className="mt-2 text-xs text-red-400">{addCategoryError}</p>
+                      )}
+                      
+                      {/* 确认按钮 */}
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          if (!newCategoryName.trim()) {
+                            setAddCategoryError(t('admin.category.name_placeholder'))
+                            return
+                          }
+                          
+                          setIsAddingCategory(true)
+                          setAddCategoryError('')
+                          
+                          try {
+                            const newCategory = await categoryApi.create({
+                              name: newCategoryName.trim(),
+                              color: selectedColor,
+                            })
+                            
+                            // 自动选中新创建的分类
+                            setCategory(newCategory.id)
+                            
+                            // 通知父组件刷新分类列表
+                            if (onCategoryAdded) {
+                              onCategoryAdded(newCategory)
+                            }
+                            
+                            // 重置状态
+                            setShowAddCategory(false)
+                            setNewCategoryName('')
+                            setSelectedColor(categoryColors[0])
+                          } catch (err: any) {
+                            setAddCategoryError(err.message || '创建分类失败')
+                          } finally {
+                            setIsAddingCategory(false)
+                          }
+                        }}
+                        disabled={isAddingCategory}
+                        className={cn(
+                          'mt-3 w-full py-2 rounded-lg text-sm font-medium',
+                          'flex items-center justify-center gap-2',
+                          'transition-all',
+                          isAddingCategory ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'
+                        )}
+                        style={{
+                          background: `linear-gradient(135deg, var(--gradient-1), var(--gradient-2))`,
+                          color: 'white',
+                        }}
+                      >
+                        {isAddingCategory ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Check className="w-4 h-4" />
+                        )}
+                        {t('admin.category.create')}
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
               {/* 稍后阅读开关 */}
