@@ -22,7 +22,8 @@ import { SortableBookmarkCard } from './SortableBookmarkCard'
 import { BookmarkCard, BookmarkCardSkeleton } from './BookmarkCard'
 import { Bookmark, Category } from '../types/bookmark'
 import { Folder, Clock } from 'lucide-react'
-import { cn, getIconComponent } from '../lib/utils'
+import { cn } from '../lib/utils'
+import { IconRenderer } from './IconRenderer'
 
 interface BookmarkGridProps {
   bookmarks: Bookmark[]
@@ -260,8 +261,7 @@ export function BookmarkGrid({
                   transition={{ type: 'spring', stiffness: 400 }}
                 >
                   {(() => {
-                    const IconComp = getIconComponent(category.icon)
-                    return <IconComp className="w-4 h-4" />
+                    return <IconRenderer icon={category.icon} className="w-4 h-4" />
                   })()}
                 </motion.div>
                 <h2 

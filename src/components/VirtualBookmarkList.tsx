@@ -10,7 +10,9 @@ import {
   Sparkles,
 } from 'lucide-react'
 import { Bookmark, Category } from '../types/bookmark'
-import { cn, getIconComponent } from '../lib/utils'
+import { cn } from '../lib/utils'
+import { IconRenderer } from './IconRenderer'
+import { useNetworkEnv, getBookmarkUrl } from '../hooks/useNetworkEnv'
 
 interface VirtualBookmarkListProps {
   bookmarks: Bookmark[]
@@ -43,6 +45,7 @@ export function VirtualBookmarkList({
   showToast,
 }: VirtualBookmarkListProps) {
   const parentRef = useRef<HTMLDivElement>(null)
+  const { isInternal } = useNetworkEnv()
 
   const virtualizer = useVirtualizer({
     count: bookmarks.length,
@@ -88,10 +91,7 @@ export function VirtualBookmarkList({
             {bookmark.iconUrl ? (
               <img src={bookmark.iconUrl} alt="" className="w-5 h-5 rounded object-contain" loading="lazy" />
             ) : bookmark.icon ? (
-              (() => {
-                const IconComp = getIconComponent(bookmark.icon)
-                return <IconComp className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />
-              })()
+              <IconRenderer icon={bookmark.icon} className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />
             ) : bookmark.favicon ? (
               <img src={bookmark.favicon} alt="" className="w-5 h-5 rounded" loading="lazy" />
             ) : (
@@ -168,7 +168,7 @@ export function VirtualBookmarkList({
         {/* Actions */}
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           <button
-            onClick={() => window.open(bookmark.url, '_blank')}
+            onClick={() => window.open(getBookmarkUrl(bookmark, isInternal), '_blank')}
             className="p-1.5 rounded-lg hover:bg-[var(--color-glass-hover)] transition-all"
             style={{ color: 'var(--color-text-muted)' }}
             title="打开链接"

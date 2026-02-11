@@ -4,7 +4,7 @@ import { DragOverlay } from '@dnd-kit/core';
 import { ExternalLink } from 'lucide-react';
 import { SpotlightCard } from '../ui/spotlight-card';
 import { Bookmark } from '../../types/bookmark';
-import { getIconComponent } from '../../lib/utils';
+import { IconRenderer } from '../IconRenderer';
 
 interface BookmarkDragOverlayProps {
   activeBookmark: Bookmark | null | undefined;
@@ -25,10 +25,7 @@ export function BookmarkDragOverlay({ activeBookmark }: BookmarkDragOverlayProps
               {activeBookmark.iconUrl ? (
                 <img src={activeBookmark.iconUrl} alt="" className="w-5 h-5 object-contain" />
               ) : activeBookmark.icon ? (
-                (() => {
-                  const IconComp = getIconComponent(activeBookmark.icon);
-                  return <IconComp className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />;
-                })()
+                <IconRenderer icon={activeBookmark.icon} className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />
               ) : activeBookmark.favicon ? (
                 <img src={activeBookmark.favicon} alt="" className="w-5 h-5" />
               ) : (

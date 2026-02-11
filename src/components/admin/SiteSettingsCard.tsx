@@ -15,7 +15,8 @@ import {
   CloudSun,
   Moon,
   Languages,
-  SunMoon
+  SunMoon,
+  FileText
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { SiteSettings } from '../../lib/api'
@@ -490,6 +491,31 @@ export function SiteSettingsCard({
                   />
                 </button>
               </div>
+            </div>
+
+            {/* 底部备案信息 */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--color-text-muted)' }}>
+                <FileText className="w-4 h-4" />
+                {t('admin.settings.site.footer_text')}
+              </label>
+              <div className="relative">
+                <textarea
+                  value={settings.footerText || ''}
+                  onChange={e => onChange({ ...settings, footerText: e.target.value })}
+                  placeholder={t('admin.settings.site.footer_text_placeholder')}
+                  rows={3}
+                  className="w-full px-4 py-3 rounded-xl focus:outline-none transition-all duration-300 resize-none"
+                  style={{
+                    background: 'var(--color-bg-tertiary)',
+                    border: '1px solid var(--color-glass-border)',
+                    color: 'var(--color-text-primary)',
+                  }}
+                />
+              </div>
+              <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                {t('admin.settings.site.footer_text_hint')}
+              </p>
             </div>
           </div>
 

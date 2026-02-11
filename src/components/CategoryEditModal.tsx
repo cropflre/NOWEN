@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Trash2, FolderPlus } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Category } from '../types/bookmark'
-import { cn, presetIcons, getIconComponent } from '../lib/utils'
+import { cn, presetIcons } from '../lib/utils'
+import { IconRenderer } from './IconRenderer'
+import { IconifyPicker } from './IconifyPicker'
 
 // 预设颜色
 const presetColors = [
@@ -29,11 +32,13 @@ export function CategoryEditModal({
   onAdd,
   mode = 'edit',
 }: CategoryEditModalProps) {
+  const { t } = useTranslation()
   const [name, setName] = useState('')
   const [color, setColor] = useState('#3b82f6')
   const [icon, setIcon] = useState('folder')
   const [showIconPicker, setShowIconPicker] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [catIconTab, setCatIconTab] = useState<'preset' | 'iconify'>('preset')
 
   // 当 category 变化时更新表单
   useEffect(() => {
@@ -48,6 +53,7 @@ export function CategoryEditModal({
     }
     setShowIconPicker(false)
     setShowDeleteConfirm(false)
+    setCatIconTab('preset')
   }, [category, isOpen])
 
   const handleSave = () => {
@@ -67,8 +73,6 @@ export function CategoryEditModal({
       onClose()
     }
   }
-
-  const IconComponent = getIconComponent(icon)
 
   return (
     <AnimatePresence>
@@ -111,7 +115,7 @@ export function CategoryEditModal({
                   {mode === 'add' ? (
                     <FolderPlus className="w-4 h-4" />
                   ) : (
-                    <IconComponent className="w-4 h-4" />
+                    <IconRenderer icon={icon} className="w-4 h-4" />
                   )}
                 </div>
                 <h3 className="text-lg font-semibold" style={{ color: 'var(--color-text-primary)' }}>
@@ -142,7 +146,7 @@ export function CategoryEditModal({
                   }}
                   title="选择图标"
                 >
-                  <IconComponent className="w-6 h-6" />
+                  <IconRenderer icon={icon} className="w-6 h-6" />
                 </button>
 
                 <div className="flex-1">
@@ -186,32 +190,68 @@ export function CategoryEditModal({
                         border: '1px solid var(--color-glass-border)',
                       }}
                     >
-                      <p className="text-xs mb-3" style={{ color: 'var(--color-text-muted)' }}>选择图标</p>
-                      <div className="grid grid-cols-11 gap-1">
-                        {presetIcons.map(({ name: iconName, icon: IconComp }) => (
-                          <button
-                            key={iconName}
-                            onClick={() => {
-                              setIcon(iconName)
-                              setShowIconPicker(false)
-                            }}
-                            className={cn(
-                              'p-2 rounded-lg transition-all hover:scale-110',
-                              icon === iconName 
-                                ? 'ring-2' 
-                                : 'hover:bg-[var(--color-glass-hover)]'
-                            )}
-                            style={{
-                              background: icon === iconName ? color + '20' : 'transparent',
-                              color: icon === iconName ? color : 'var(--color-text-secondary)',
-                              ringColor: color,
-                            }}
-                            title={iconName}
-                          >
-                            <IconComp className="w-4 h-4" />
-                          </button>
-                        ))}
+                      {/* Tab 切换 */}
+                      <div className="flex gap-1 mb-3 p-1 rounded-lg" style={{ background: 'var(--color-bg-secondary)' }}>
+                        <button
+                          onClick={() => setCatIconTab('preset')}
+                          className="flex-1 px-3 py-1.5 rounded-md text-xs transition-colors"
+                          style={{
+                            background: catIconTab === 'preset' ? 'var(--color-bg-tertiary)' : 'transparent',
+                            color: catIconTab === 'preset' ? 'var(--color-text-primary)' : 'var(--color-text-muted)',
+                          }}
+                        >
+                          {t('bookmark.modal.preset_icons')}
+                        </button>
+                        <button
+                          onClick={() => setCatIconTab('iconify')}
+                          className="flex-1 px-3 py-1.5 rounded-md text-xs transition-colors"
+                          style={{
+                            background: catIconTab === 'iconify' ? 'var(--color-bg-tertiary)' : 'transparent',
+                            color: catIconTab === 'iconify' ? 'var(--color-text-primary)' : 'var(--color-text-muted)',
+                          }}
+                        >
+                          {t('bookmark.modal.iconify_icons')}
+                        </button>
                       </div>
+
+                      {catIconTab === 'preset' && (
+                        <div className="grid grid-cols-11 gap-1">
+                          {presetIcons.map(({ name: iconName, icon: IconComp }) => (
+                            <button
+                              key={iconName}
+                              onClick={() => {
+                                setIcon(iconName)
+                                setShowIconPicker(false)
+                              }}
+                              className={cn(
+                                'p-2 rounded-lg transition-all hover:scale-110',
+                                icon === iconName 
+                                  ? 'ring-2' 
+                                  : 'hover:bg-[var(--color-glass-hover)]'
+                              )}
+                              style={{
+                                background: icon === iconName ? color + '20' : 'transparent',
+                                color: icon === iconName ? color : 'var(--color-text-secondary)',
+                                ringColor: color,
+                              }}
+                              title={iconName}
+                            >
+                              <IconComp className="w-4 h-4" />
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {catIconTab === 'iconify' && (
+                        <IconifyPicker
+                          selectedIcon={icon}
+                          color={color}
+                          onSelect={(iconName) => {
+                            setIcon(iconName)
+                            setShowIconPicker(false)
+                          }}
+                        />
+                      )}
                     </div>
                   </motion.div>
                 )}

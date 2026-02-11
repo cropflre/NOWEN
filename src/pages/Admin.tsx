@@ -35,15 +35,18 @@ import {
   X,
 } from 'lucide-react'
 import { Bookmark, Category, CustomIcon } from '../types/bookmark'
-import { cn, presetIcons, getIconComponent } from '../lib/utils'
+import { cn, presetIcons } from '../lib/utils'
 import { adminChangePassword, fetchSettings, updateSettings, SiteSettings, WidgetVisibility, importData, fetchQuotes, updateQuotes } from '../lib/api'
 import { AdminSidebar } from '../components/admin/AdminSidebar'
 import { QuotesCard } from '../components/admin/QuotesCard'
 import { SettingsPanel } from '../components/admin/SettingsPanel'
 import { AnalyticsCard } from '../components/admin/AnalyticsCard'
 import { HealthCheckCard } from '../components/admin/HealthCheckCard'
+import { IconRenderer } from '../components/IconRenderer'
+import { IconifyPicker } from '../components/IconifyPicker'
 import { ToastProvider, useToast } from '../components/admin/Toast'
 import { useTheme, ThemeId } from '../hooks/useTheme.tsx'
+import { useNetworkEnv, getBookmarkUrl } from '../hooks/useNetworkEnv'
 import { AdminProvider, useAdmin, useBookmarkActions, useCategoryActions, useIconActions } from '../contexts/AdminContext'
 import { VirtualBookmarkList } from '../components/VirtualBookmarkList'
 import { IconManager } from '../components/IconManager'
@@ -101,8 +104,6 @@ function SortableCategoryItem({ category, bookmarkCount, onEdit, onDelete, t }: 
     zIndex: isDragging ? 10 : undefined,
   }
 
-  const IconComponent = getIconComponent(category.icon)
-
   return (
     <div
       ref={setNodeRef}
@@ -134,7 +135,7 @@ function SortableCategoryItem({ category, bookmarkCount, onEdit, onDelete, t }: 
           color: category.color || '#3b82f6',
         }}
       >
-        <IconComponent className="w-4 h-4" />
+        <IconRenderer icon={category.icon} className="w-4 h-4" />
       </div>
 
       {/* Name */}
@@ -174,6 +175,7 @@ const presetColors = [
 
 function AdminContent() {
   const { t } = useTranslation()
+  const { isInternal } = useNetworkEnv()
   // 从 Context 获取数据和操作
   const { 
     bookmarks, 
@@ -220,6 +222,7 @@ function AdminContent() {
   const [newCategoryColor, setNewCategoryColor] = useState('#3b82f6')
   const [newCategoryIcon, setNewCategoryIcon] = useState('folder')
   const [showIconPicker, setShowIconPicker] = useState(false)
+  const [adminIconTab, setAdminIconTab] = useState<'preset' | 'iconify'>('preset')
 
   // 分类拖拽排序
   const categorySensors = useSensors(
@@ -802,10 +805,7 @@ function AdminContent() {
                                   {bookmark.iconUrl ? (
                                     <img src={bookmark.iconUrl} alt="" className="w-5 h-5 rounded object-contain" />
                                   ) : bookmark.icon ? (
-                                    (() => {
-                                      const IconComp = getIconComponent(bookmark.icon)
-                                      return <IconComp className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />
-                                    })()
+                                    <IconRenderer icon={bookmark.icon} className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />
                                   ) : bookmark.favicon ? (
                                     <img src={bookmark.favicon} alt="" className="w-5 h-5 rounded" />
                                   ) : (
@@ -882,7 +882,7 @@ function AdminContent() {
                               {/* Actions */}
                               <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <button
-                                  onClick={() => window.open(bookmark.url, '_blank')}
+                                  onClick={() => window.open(getBookmarkUrl(bookmark, isInternal), '_blank')}
                                   className="p-1.5 rounded-lg hover:bg-[var(--color-glass-hover)] transition-all"
                                   style={{ color: 'var(--color-text-muted)' }}
                                   title={t('admin.bookmark.open_link')}
@@ -944,10 +944,7 @@ function AdminContent() {
                                       {bookmark.iconUrl ? (
                                         <img src={bookmark.iconUrl} alt="" className="w-4 h-4 rounded object-contain" />
                                       ) : bookmark.icon ? (
-                                        (() => {
-                                          const IconComp = getIconComponent(bookmark.icon)
-                                          return <IconComp className="w-4 h-4" style={{ color: 'var(--color-primary)' }} />
-                                        })()
+                                        <IconRenderer icon={bookmark.icon} className="w-4 h-4" style={{ color: 'var(--color-primary)' }} />
                                       ) : bookmark.favicon ? (
                                         <img src={bookmark.favicon} alt="" className="w-4 h-4 rounded" />
                                       ) : (
@@ -1025,7 +1022,7 @@ function AdminContent() {
                                       <BookMarked className="w-4 h-4" />
                                     </button>
                                     <button
-                                      onClick={() => window.open(bookmark.url, '_blank')}
+                                      onClick={() => window.open(getBookmarkUrl(bookmark, isInternal), '_blank')}
                                       className="p-2 rounded-lg bg-[var(--color-bg-tertiary)] transition-all"
                                       style={{ color: 'var(--color-text-muted)' }}
                                     >
@@ -1147,8 +1144,7 @@ function AdminContent() {
                               title="选择图标"
                             >
                               {(() => {
-                                const IconComponent = getIconComponent(newCategoryIcon)
-                                return <IconComponent className="w-6 h-6" />
+                                return <IconRenderer icon={newCategoryIcon} className="w-6 h-6" />
                               })()}
                             </button>
 
@@ -1188,32 +1184,68 @@ function AdminContent() {
                                     border: '1px solid var(--color-glass-border)',
                                   }}
                                 >
-                                  <p className="text-xs mb-3" style={{ color: 'var(--color-text-muted)' }}>{t('admin.category.select_icon')}</p>
-                                  <div className="grid grid-cols-11 gap-1">
-                                    {presetIcons.map(({ name, icon: IconComp }) => (
-                                      <button
-                                        key={name}
-                                        onClick={() => {
-                                          setNewCategoryIcon(name)
-                                          setShowIconPicker(false)
-                                        }}
-                                        className={cn(
-                                          'p-2 rounded-lg transition-all hover:scale-110',
-                                          newCategoryIcon === name 
-                                            ? 'ring-2' 
-                                            : 'hover:bg-[var(--color-glass-hover)]'
-                                        )}
-                                        style={{
-                                          background: newCategoryIcon === name ? newCategoryColor + '20' : 'transparent',
-                                          color: newCategoryIcon === name ? newCategoryColor : 'var(--color-text-secondary)',
-                                          ringColor: newCategoryColor,
-                                        }}
-                                        title={name}
-                                      >
-                                        <IconComp className="w-4 h-4" />
-                                      </button>
-                                    ))}
+                                  {/* Tab 切换 */}
+                                  <div className="flex gap-1 mb-3 p-1 rounded-lg" style={{ background: 'var(--color-bg-secondary)' }}>
+                                    <button
+                                      onClick={() => setAdminIconTab('preset')}
+                                      className="flex-1 px-3 py-1.5 rounded-md text-xs transition-colors"
+                                      style={{
+                                        background: adminIconTab === 'preset' ? 'var(--color-bg-tertiary)' : 'transparent',
+                                        color: adminIconTab === 'preset' ? 'var(--color-text-primary)' : 'var(--color-text-muted)',
+                                      }}
+                                    >
+                                      {t('bookmark.modal.preset_icons')}
+                                    </button>
+                                    <button
+                                      onClick={() => setAdminIconTab('iconify')}
+                                      className="flex-1 px-3 py-1.5 rounded-md text-xs transition-colors"
+                                      style={{
+                                        background: adminIconTab === 'iconify' ? 'var(--color-bg-tertiary)' : 'transparent',
+                                        color: adminIconTab === 'iconify' ? 'var(--color-text-primary)' : 'var(--color-text-muted)',
+                                      }}
+                                    >
+                                      {t('bookmark.modal.iconify_icons')}
+                                    </button>
                                   </div>
+
+                                  {adminIconTab === 'preset' && (
+                                    <div className="grid grid-cols-11 gap-1">
+                                      {presetIcons.map(({ name, icon: IconComp }) => (
+                                        <button
+                                          key={name}
+                                          onClick={() => {
+                                            setNewCategoryIcon(name)
+                                            setShowIconPicker(false)
+                                          }}
+                                          className={cn(
+                                            'p-2 rounded-lg transition-all hover:scale-110',
+                                            newCategoryIcon === name 
+                                              ? 'ring-2' 
+                                              : 'hover:bg-[var(--color-glass-hover)]'
+                                          )}
+                                          style={{
+                                            background: newCategoryIcon === name ? newCategoryColor + '20' : 'transparent',
+                                            color: newCategoryIcon === name ? newCategoryColor : 'var(--color-text-secondary)',
+                                            ringColor: newCategoryColor,
+                                          }}
+                                          title={name}
+                                        >
+                                          <IconComp className="w-4 h-4" />
+                                        </button>
+                                      ))}
+                                    </div>
+                                  )}
+
+                                  {adminIconTab === 'iconify' && (
+                                    <IconifyPicker
+                                      selectedIcon={newCategoryIcon}
+                                      color={newCategoryColor}
+                                      onSelect={(iconName) => {
+                                        setNewCategoryIcon(iconName)
+                                        setShowIconPicker(false)
+                                      }}
+                                    />
+                                  )}
                                 </div>
                               </motion.div>
                             )}

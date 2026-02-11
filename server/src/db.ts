@@ -84,6 +84,13 @@ export async function initDatabase() {
   } catch (e) {
     // 字段已存在，忽略错误
   }
+
+  // 数据库迁移：添加 internalUrl 字段（如果不存在）
+  try {
+    db.run('ALTER TABLE bookmarks ADD COLUMN internalUrl TEXT')
+  } catch (e) {
+    // 字段已存在，忽略错误
+  }
   
   db.run(`
     CREATE TABLE IF NOT EXISTS categories (

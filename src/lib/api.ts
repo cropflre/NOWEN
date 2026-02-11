@@ -10,6 +10,7 @@ import { ApiError, NetworkError, getHttpErrorMessage } from './error-handling'
 // 创建书签请求参数
 export interface CreateBookmarkParams {
   url: string
+  internalUrl?: string
   title: string
   description?: string
   favicon?: string
@@ -24,6 +25,7 @@ export interface CreateBookmarkParams {
 // 更新书签请求参数
 export interface UpdateBookmarkParams {
   url?: string
+  internalUrl?: string
   title?: string
   description?: string
   favicon?: string
@@ -297,17 +299,17 @@ export async function reorderCategories(items: ReorderItem[]): Promise<SuccessRe
 
 // ========== 元数据 API ==========
 
-export async function fetchMetadata(url: string): Promise<MetadataResponse> {
+export async function fetchMetadata(url: string, lang?: string): Promise<MetadataResponse> {
   return request<MetadataResponse>('/api/metadata', {
     method: 'POST',
-    body: JSON.stringify({ url }),
+    body: JSON.stringify({ url, lang }),
   })
 }
 
 // 兼容旧导入名称
 export const metadataApi = {
   parse: fetchMetadata,
-}
+} as const
 
 // ========== 管理员 API ==========
 
@@ -431,6 +433,7 @@ export interface SiteSettings {
   enableLiteMode?: boolean // 精简模式开关 - 禅 (Zen)
   enableWeather?: boolean  // 天气显示开关
   enableLunar?: boolean    // 农历显示开关
+  footerText?: string      // 底部备案信息
   widgetVisibility?: WidgetVisibility
   menuVisibility?: MenuVisibility  // 菜单项可见性配置
 }
@@ -481,6 +484,7 @@ function parseSettings(raw: Record<string, string>): SiteSettings {
     // 默认开启天气和农历
     enableWeather: raw.enableWeather === undefined ? true : raw.enableWeather === 'true' || raw.enableWeather === '1',
     enableLunar: raw.enableLunar === undefined ? true : raw.enableLunar === 'true' || raw.enableLunar === '1',
+    footerText: raw.footerText || '',
     widgetVisibility,
     menuVisibility,
   }
@@ -500,6 +504,7 @@ export async function updateSettings(settings: SiteSettings): Promise<SiteSettin
     enableLiteMode: settings.enableLiteMode ? 'true' : 'false',
     enableWeather: settings.enableWeather ? 'true' : 'false',
     enableLunar: settings.enableLunar ? 'true' : 'false',
+    footerText: settings.footerText ?? '',
     widgetVisibility: settings.widgetVisibility ? JSON.stringify(settings.widgetVisibility) : undefined,
     menuVisibility: settings.menuVisibility ? JSON.stringify(settings.menuVisibility) : undefined,
   }
@@ -627,6 +632,7 @@ export interface VisitStats {
 export interface TopBookmark {
   id: string
   url: string
+  internalUrl?: string
   title: string
   description?: string
   favicon?: string
@@ -649,6 +655,7 @@ export interface RecentVisit {
   bookmark: {
     id: string
     url: string
+    internalUrl?: string
     title: string
     favicon?: string
     icon?: string

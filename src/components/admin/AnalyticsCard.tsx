@@ -24,6 +24,7 @@ import {
   RecentVisit,
   visitsApi,
 } from '../../lib/api'
+import { useNetworkEnv, getBookmarkUrl } from '../../hooks/useNetworkEnv'
 
 interface AnalyticsCardProps {
   onShowToast?: (type: 'success' | 'error' | 'info', message: string) => void
@@ -31,6 +32,7 @@ interface AnalyticsCardProps {
 
 export function AnalyticsCard({ onShowToast }: AnalyticsCardProps) {
   const { t } = useTranslation()
+  const { isInternal } = useNetworkEnv()
   const [stats, setStats] = useState<VisitStats | null>(null)
   const [topBookmarks, setTopBookmarks] = useState<TopBookmark[]>([])
   const [trend, setTrend] = useState<VisitTrend[]>([])
@@ -342,7 +344,7 @@ export function AnalyticsCard({ onShowToast }: AnalyticsCardProps) {
                       'bg-gray-50 hover:bg-gray-100 dark:bg-white/5 dark:hover:bg-white/10 transition-all',
                       'group cursor-pointer'
                     )}
-                    onClick={() => window.open(bookmark.url, '_blank')}
+                    onClick={() => window.open(getBookmarkUrl(bookmark, isInternal), '_blank')}
                   >
                     {/* 排名 */}
                     <div className={cn(
@@ -423,7 +425,7 @@ export function AnalyticsCard({ onShowToast }: AnalyticsCardProps) {
                     'bg-gray-50 hover:bg-gray-100 dark:bg-white/5 dark:hover:bg-white/10 transition-all',
                     'group cursor-pointer'
                   )}
-                  onClick={() => window.open(visit.bookmark.url, '_blank')}
+                  onClick={() => window.open(getBookmarkUrl(visit.bookmark, isInternal), '_blank')}
                 >
                   {/* 图标 */}
                   <div className="w-8 h-8 rounded-md bg-gray-100 dark:bg-white/10 flex items-center justify-center overflow-hidden">

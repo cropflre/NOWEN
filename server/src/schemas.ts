@@ -5,6 +5,7 @@ import { Request, Response, NextFunction } from 'express'
 
 export const createBookmarkSchema = z.object({
   url: z.string().url('请输入有效的 URL'),
+  internalUrl: z.string().url('内网链接必须是有效的 URL').optional().nullable().or(z.literal('')),
   title: z.string().min(1, '标题不能为空').max(200, '标题不能超过200字符'),
   description: z.string().max(1000, '描述不能超过1000字符').optional().nullable(),
   favicon: z.string().url('favicon 必须是有效的 URL').optional().nullable().or(z.literal('')),
@@ -18,6 +19,7 @@ export const createBookmarkSchema = z.object({
 
 export const updateBookmarkSchema = z.object({
   url: z.string().url('请输入有效的 URL').optional(),
+  internalUrl: z.string().url('内网链接必须是有效的 URL').optional().nullable().or(z.literal('')),
   title: z.string().min(1, '标题不能为空').max(200, '标题不能超过200字符').optional(),
   description: z.string().max(1000, '描述不能超过1000字符').optional().nullable(),
   favicon: z.string().url('favicon 必须是有效的 URL').optional().nullable().or(z.literal('')),
@@ -70,6 +72,7 @@ export const changePasswordSchema = z.object({
 
 export const metadataSchema = z.object({
   url: z.string().url('请输入有效的 URL'),
+  lang: z.string().optional(),
 })
 
 // ========== 设置相关 Schema ==========
@@ -93,6 +96,7 @@ export const importDataSchema = z.object({
   bookmarks: z.array(z.object({
     id: z.string().optional(),
     url: z.string().url(),
+    internalUrl: z.string().optional().nullable(),
     title: z.string(),
     description: z.string().optional().nullable(),
     favicon: z.string().optional().nullable(),

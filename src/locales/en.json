@@ -56,6 +56,11 @@
       "use_website_icon": "Use Website Icon",
       "custom_image": "Custom Image",
       "preset_icons": "Preset Icons",
+      "iconify_icons": "Search Icons",
+      "iconify_search_placeholder": "Search icon name...",
+      "iconify_loading": "Searching...",
+      "iconify_no_results": "No icons found",
+      "iconify_popular": "Popular Icon Sets",
       "my_icons": "My Icons",
       "no_custom_icons": "No custom icons yet",
       "go_add": "Add Now",
@@ -63,7 +68,10 @@
       "category": "Category",
       "uncategorized": "Uncategorized",
       "url_parse_error": "Unable to parse URL",
-      "required_error": "Please fill in URL and title"
+      "required_error": "Please fill in URL and title",
+      "internal_url": "Internal URL (optional)",
+      "internal_url_placeholder": "Enter intranet URL, e.g. http://192.168.1.100:8080",
+      "internal_url_hint": "When set, this URL will be used automatically in intranet environment"
     }
   },
   "category": {
@@ -287,6 +295,9 @@
         "theme_toggle": "Theme Toggle",
         "theme_toggle_title": "Day/Night Mode Button",
         "theme_toggle_desc": "Show day/night mode toggle button in frontend menu bar",
+        "footer_text": "Footer Info",
+        "footer_text_placeholder": "e.g. ICP License No. XXXXXXXX | Public Security No. XXXXXXXXXXXXXXX",
+        "footer_text_hint": "Supports HTML format. Leave empty to hide. For ICP filing numbers, public security filing, etc.",
         "preview": "Live Preview",
         "preview_subtitle": "Explore curated website navigation",
         "save": "Save Settings",

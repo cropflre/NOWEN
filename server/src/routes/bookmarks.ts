@@ -110,7 +110,7 @@ router.get('/paginated', validateQuery(paginationQuerySchema), (req, res) => {
 // 创建书签
 router.post('/', validateBody(createBookmarkSchema), (req, res) => {
   try {
-    const { url, title, description, favicon, ogImage, icon, iconUrl, category, tags, isReadLater } = req.body
+    const { url, internalUrl, title, description, favicon, ogImage, icon, iconUrl, category, tags, isReadLater } = req.body
     
     const maxOrder = queryOne('SELECT MAX(orderIndex) as max FROM bookmarks')
     const newOrderIndex = (maxOrder?.max ?? -1) + 1
@@ -119,9 +119,9 @@ router.post('/', validateBody(createBookmarkSchema), (req, res) => {
     const now = new Date().toISOString()
     
     run(`
-      INSERT INTO bookmarks (id, url, title, description, favicon, ogImage, icon, iconUrl, category, tags, orderIndex, isReadLater, createdAt, updatedAt)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `, [id, url, title, description || null, favicon || null, ogImage || null, icon || null, iconUrl || null, category || null, tags || null, newOrderIndex, isReadLater ? 1 : 0, now, now])
+      INSERT INTO bookmarks (id, url, internalUrl, title, description, favicon, ogImage, icon, iconUrl, category, tags, orderIndex, isReadLater, createdAt, updatedAt)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [id, url, internalUrl || null, title, description || null, favicon || null, ogImage || null, icon || null, iconUrl || null, category || null, tags || null, newOrderIndex, isReadLater ? 1 : 0, now, now])
     
     const bookmark = queryOne('SELECT * FROM bookmarks WHERE id = ?', [id])
     
@@ -166,12 +166,12 @@ router.patch('/:id', validateParams(idParamSchema), validateBody(updateBookmarkS
     
     run(`
       UPDATE bookmarks SET 
-        url = ?, title = ?, description = ?, favicon = ?, ogImage = ?, icon = ?, iconUrl = ?,
+        url = ?, internalUrl = ?, title = ?, description = ?, favicon = ?, ogImage = ?, icon = ?, iconUrl = ?,
         category = ?, tags = ?, orderIndex = ?, isPinned = ?, 
         isReadLater = ?, isRead = ?, updatedAt = ?
       WHERE id = ?
     `, [
-      merged.url, merged.title, merged.description, merged.favicon, merged.ogImage, merged.icon, merged.iconUrl,
+      merged.url, merged.internalUrl || null, merged.title, merged.description, merged.favicon, merged.ogImage, merged.icon, merged.iconUrl,
       merged.category, merged.tags, merged.orderIndex, merged.isPinned ? 1 : 0,
       merged.isReadLater ? 1 : 0, merged.isRead ? 1 : 0, now, id
     ])

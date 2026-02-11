@@ -13,6 +13,7 @@ import { useTranslation } from 'react-i18next'
 import { Bookmark } from '../types/bookmark'
 import { cn } from '../lib/utils'
 import { visitsApi } from '../lib/api'
+import { useNetworkEnv, getBookmarkUrl } from '../hooks/useNetworkEnv'
 
 interface BentoCardProps {
   bookmark: Bookmark
@@ -44,6 +45,7 @@ export function BentoCard({
   // 从 URL 提取域名和首字母
   const domain = new URL(bookmark.url).hostname.replace('www.', '')
   const initial = bookmark.title.charAt(0).toUpperCase()
+  const { isInternal } = useNetworkEnv()
 
   // 根据 favicon 生成 glow 颜色 (简化版，实际可以用 color-thief)
   const glowColor = bookmark.favicon ? 'rgba(102, 126, 234, 0.3)' : 'transparent'
@@ -52,7 +54,7 @@ export function BentoCard({
     if (!isEditMode) {
       // 异步记录访问
       visitsApi.track(bookmark.id).catch(console.error)
-      window.open(bookmark.url, '_blank')
+      window.open(getBookmarkUrl(bookmark, isInternal), '_blank')
     }
     onClick?.()
   }

@@ -5,6 +5,7 @@ import { ExternalLink, BookMarked } from 'lucide-react';
 import { Card3D, CardItem } from '../ui/3d-card';
 import { Bookmark } from '../../types/bookmark';
 import { visitsApi } from '../../lib/api';
+import { useNetworkEnv, getBookmarkUrl } from '../../hooks/useNetworkEnv';
 
 interface ReadLaterHeroProps {
   bookmark: Bookmark;
@@ -13,10 +14,11 @@ interface ReadLaterHeroProps {
 
 export function ReadLaterHero({ bookmark, isLiteMode }: ReadLaterHeroProps) {
   const { t } = useTranslation();
+  const { isInternal } = useNetworkEnv();
 
   const handleClick = () => {
     visitsApi.track(bookmark.id).catch(console.error);
-    window.open(bookmark.url, '_blank');
+    window.open(getBookmarkUrl(bookmark, isInternal), '_blank');
   };
 
   if (isLiteMode) {

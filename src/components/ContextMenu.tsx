@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Edit2, Trash2, Pin, BookMarked, ExternalLink, Copy } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '../lib/utils'
+import { useNetworkEnv, getBookmarkUrl } from '../hooks/useNetworkEnv'
 
 interface ContextMenuItem {
   id: string
@@ -129,10 +130,11 @@ export function ContextMenu({ isOpen, position, onClose, items }: ContextMenuPro
 // 书签右键菜单的 Hook
 export function useBookmarkContextMenu() {
   const { t } = useTranslation()
+  const { isInternal } = useNetworkEnv()
   
   return {
     getMenuItems: (
-      bookmark: { id: string; url: string; isPinned?: boolean; isReadLater?: boolean },
+      bookmark: { id: string; url: string; internalUrl?: string; isPinned?: boolean; isReadLater?: boolean },
       options: {
         onEdit: () => void
         onDelete: () => void
@@ -144,14 +146,14 @@ export function useBookmarkContextMenu() {
         id: 'open',
         label: t('bookmark.open_in_new_tab'),
         icon: <ExternalLink className="w-4 h-4" />,
-        onClick: () => window.open(bookmark.url, '_blank'),
+        onClick: () => window.open(getBookmarkUrl(bookmark, isInternal), '_blank'),
       },
       {
         id: 'copy',
         label: t('bookmark.copy_link'),
         icon: <Copy className="w-4 h-4" />,
         onClick: () => {
-          navigator.clipboard.writeText(bookmark.url)
+          navigator.clipboard.writeText(getBookmarkUrl(bookmark, isInternal))
         },
       },
       {

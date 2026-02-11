@@ -5,8 +5,9 @@ import { MoreHorizontal, Pin, Edit3, Trash2, ExternalLink, BookOpen, CheckCircle
 import { useTranslation } from 'react-i18next'
 import { Bookmark } from '../types/bookmark'
 import { cn } from '../lib/utils'
-import { getIconComponent } from '../lib/icons'
+import { IconRenderer } from './IconRenderer'
 import { visitsApi } from '../lib/api'
+import { useNetworkEnv, getBookmarkUrl } from '../hooks/useNetworkEnv'
 
 interface BookmarkCardProps {
   bookmark: Bookmark
@@ -36,6 +37,7 @@ export function BookmarkCard({
   const tooltipTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const descRef = useRef<HTMLDivElement>(null)
   const { t } = useTranslation()
+  const { isInternal } = useNetworkEnv()
 
   // 清理 timeout
   useEffect(() => {
@@ -75,7 +77,7 @@ export function BookmarkCard({
   const handleClick = () => {
     // 异步记录访问，不阻塞跳转
     visitsApi.track(bookmark.id).catch(console.error)
-    window.open(bookmark.url, '_blank', 'noopener,noreferrer')
+    window.open(getBookmarkUrl(bookmark, isInternal), '_blank', 'noopener,noreferrer')
   }
 
   return (
@@ -283,10 +285,7 @@ export function BookmarkCard({
                 onError={() => setImageError(true)}
               />
             ) : bookmark.icon ? (
-              (() => {
-                const IconComp = getIconComponent(bookmark.icon)
-                return <IconComp className="w-7 h-7" style={{ color: 'var(--gradient-1)' }} />
-              })()
+              <IconRenderer icon={bookmark.icon} className="w-7 h-7" style={{ color: 'var(--gradient-1)' }} />
             ) : bookmark.favicon && !imageError ? (
               <img
                 src={bookmark.favicon}

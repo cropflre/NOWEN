@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Pin, ChevronRight, ChevronLeft } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { getIconComponent } from "../../lib/utils";
+import { IconRenderer } from "../IconRenderer";
 
 interface NavItem {
   id: string;
@@ -142,7 +142,7 @@ export function SidebarNav({ items, pinnedCount = 0, className = "" }: SidebarNa
             <ul className="space-y-1 px-2">
               {allItems.map((item, index) => {
                 const isActive = activeId === item.id;
-                const IconComp = item.id === "pinned" ? Pin : getIconComponent(item.icon || "Folder");
+                const isPinned = item.id === "pinned";
                 
                 return (
                   <motion.li
@@ -182,14 +182,26 @@ export function SidebarNav({ items, pinnedCount = 0, className = "" }: SidebarNa
                             : "var(--color-bg-tertiary)",
                         }}
                       >
-                        <IconComp 
-                          className="w-4 h-4 transition-colors"
-                          style={{ 
-                            color: isActive 
-                              ? item.color || "var(--color-primary)"
-                              : "var(--color-text-muted)"
-                          }}
-                        />
+                        {isPinned ? (
+                          <Pin 
+                            className="w-4 h-4 transition-colors"
+                            style={{ 
+                              color: isActive 
+                                ? item.color || "var(--color-primary)"
+                                : "var(--color-text-muted)"
+                            }}
+                          />
+                        ) : (
+                          <IconRenderer 
+                            icon={item.icon || "folder"} 
+                            className="w-4 h-4 transition-colors"
+                            style={{ 
+                              color: isActive 
+                                ? item.color || "var(--color-primary)"
+                                : "var(--color-text-muted)"
+                            }}
+                          />
+                        )}
                       </div>
 
                       {/* 名称和数量 - 折叠时隐藏 */}

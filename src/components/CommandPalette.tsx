@@ -3,9 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import { Search, Globe, Github, Plus, ArrowRight, Command } from 'lucide-react'
 import { Bookmark } from '../types/bookmark'
-import { cn, getIconComponent } from '../lib/utils'
+import { cn } from '../lib/utils'
+import { IconRenderer } from './IconRenderer'
 import { popUpVariant } from '../lib/animation'
 import { visitsApi } from '../lib/api'
+import { useNetworkEnv, getBookmarkUrl } from '../hooks/useNetworkEnv'
 
 interface CommandPaletteProps {
   isOpen: boolean
@@ -125,6 +127,7 @@ export function CommandPalette({
   const [selectedIndex, setSelectedIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
   const listContainerRef = useRef<HTMLDivElement>(null)
+  const { isInternal } = useNetworkEnv()
 
   // 解析命令 - 移除限制，让虚拟列表处理大量数据
   const commands = useMemo((): CommandItem[] => {
@@ -186,10 +189,7 @@ export function CommandPalette({
         const iconElement = bookmark.iconUrl ? (
           <img src={bookmark.iconUrl} alt="" className="w-5 h-5 rounded object-contain" />
         ) : bookmark.icon ? (
-          (() => {
-            const IconComp = getIconComponent(bookmark.icon)
-            return <IconComp className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />
-          })()
+          <IconRenderer icon={bookmark.icon} className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />
         ) : bookmark.favicon ? (
           <img src={bookmark.favicon} alt="" className="w-5 h-5 rounded" />
         ) : (
@@ -204,7 +204,7 @@ export function CommandPalette({
           icon: iconElement,
           action: () => {
             visitsApi.track(bookmark.id).catch(console.error)
-            window.open(bookmark.url, '_blank')
+            window.open(getBookmarkUrl(bookmark, isInternal), '_blank')
             onClose()
           },
         })

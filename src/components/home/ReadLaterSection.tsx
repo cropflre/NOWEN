@@ -13,6 +13,7 @@ import {
 import { Card3D, CardItem } from '../ui/3d-card';
 import { Bookmark } from '../../types/bookmark';
 import { visitsApi } from '../../lib/api';
+import { useNetworkEnv, getBookmarkUrl } from '../../hooks/useNetworkEnv';
 
 interface ReadLaterSectionProps {
   bookmarks: Bookmark[];
@@ -36,12 +37,13 @@ function HeroBookmark({
   onRemove?: (id: string) => void;
 }) {
   const { t } = useTranslation();
+  const { isInternal } = useNetworkEnv();
   const domain = new URL(bookmark.url).hostname.replace('www.', '');
   
   const handleClick = useCallback(() => {
     visitsApi.track(bookmark.id).catch(console.error);
-    window.open(bookmark.url, '_blank');
-  }, [bookmark.id, bookmark.url]);
+    window.open(getBookmarkUrl(bookmark, isInternal), '_blank');
+  }, [bookmark.id, bookmark.url, bookmark.internalUrl, isInternal]);
 
   const handleMarkRead = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -404,6 +406,7 @@ export function ReadLaterSection({
   onRemove,
 }: ReadLaterSectionProps) {
   const { t } = useTranslation();
+  const { isInternal } = useNetworkEnv();
   const [isExpanded, setIsExpanded] = useState(false);
   
   // 过滤未读的稍后阅读书签
@@ -494,7 +497,7 @@ export function ReadLaterSection({
                       onRemove={onRemove}
                       onClick={() => {
                         visitsApi.track(bookmark.id).catch(console.error);
-                        window.open(bookmark.url, '_blank');
+                        window.open(getBookmarkUrl(bookmark, isInternal), '_blank');
                       }}
                     />
                   ))}

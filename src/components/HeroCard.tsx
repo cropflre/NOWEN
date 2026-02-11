@@ -10,6 +10,7 @@ import {
 import { Bookmark } from '../types/bookmark'
 import { cn } from '../lib/utils'
 import { visitsApi } from '../lib/api'
+import { useNetworkEnv, getBookmarkUrl } from '../hooks/useNetworkEnv'
 
 interface HeroCardProps {
   bookmark: Bookmark | null
@@ -18,6 +19,7 @@ interface HeroCardProps {
 }
 
 export function HeroCard({ bookmark, onArchive, onMarkRead }: HeroCardProps) {
+  const { isInternal } = useNetworkEnv()
   if (!bookmark) {
     return (
       <motion.div
@@ -54,7 +56,7 @@ export function HeroCard({ bookmark, onArchive, onMarkRead }: HeroCardProps) {
       transition={{ duration: 0.6 }}
       onClick={() => {
         visitsApi.track(bookmark.id).catch(console.error)
-        window.open(bookmark.url, '_blank')
+        window.open(getBookmarkUrl(bookmark, isInternal), '_blank')
       }}
       whileHover={{ scale: 1.01 }}
     >
@@ -133,7 +135,7 @@ export function HeroCard({ bookmark, onArchive, onMarkRead }: HeroCardProps) {
                 onClick={(e) => {
                   e.stopPropagation()
                   visitsApi.track(bookmark.id).catch(console.error)
-                  window.open(bookmark.url, '_blank')
+                  window.open(getBookmarkUrl(bookmark, isInternal), '_blank')
                 }}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}

@@ -59,10 +59,11 @@ import { useWeather } from "./hooks/useWeather";
 import { useSiteSettings } from "./hooks/useSiteSettings";
 import { useDragAndDrop } from "./hooks/useDragAndDrop";
 import { useAuth } from "./hooks/useAuth";
+import { useNetworkEnv, getBookmarkUrl } from "./hooks/useNetworkEnv";
 
 // 工具函数和类型
 import { Bookmark } from "./types/bookmark";
-import { getIconComponent } from "./lib/utils";
+import { IconRenderer } from "./components/IconRenderer";
 import { handleQuotesChange } from "./data/quotes";
 import { createDockItems, filterDockItems } from "./config/dockItems";
 
@@ -89,6 +90,7 @@ function App() {
   const { greeting, formattedTime, formattedDate, lunarDate } = useTime();
   const { isDark, toggleDarkMode } = useTheme();
   const { t, i18n } = useTranslation();
+  const { isInternal } = useNetworkEnv();
 
   // 站点设置
   const {
@@ -448,7 +450,7 @@ function App() {
                     colSpan={1}
                     rowSpan={1}
                     spotlightColor={isLiteMode ? undefined : "rgba(234, 179, 8, 0.15)"}
-                    onClick={() => window.open(bookmark.url, "_blank")}
+                    onClick={() => window.open(getBookmarkUrl(bookmark, isInternal), "_blank")}
                     onContextMenu={(e) => handleContextMenu(e, bookmark)}
                     delay={(index + 2) * 0.05}
                   >
@@ -533,8 +535,7 @@ function App() {
                       style={{ backgroundColor: `${category.color}15`, color: category.color }}
                     >
                       {(() => {
-                        const IconComp = getIconComponent(category.icon);
-                        return <IconComp className="w-4 h-4" />;
+                        return <IconRenderer icon={category.icon} className="w-4 h-4" />;
                       })()}
                     </div>
                     <h2 className="text-xl font-medium tracking-wide" style={{ color: "var(--color-text-primary)" }}>
@@ -570,7 +571,7 @@ function App() {
                             <SpotlightCard
                               className="h-full cursor-pointer"
                               spotlightColor={isLiteMode ? "transparent" : `${category.color}20`}
-                              onClick={() => window.open(bookmark.url, "_blank")}
+                              onClick={() => window.open(getBookmarkUrl(bookmark, isInternal), "_blank")}
                               onContextMenu={(e) => handleContextMenu(e, bookmark)}
                             >
                               <div className="flex flex-col h-full">
@@ -581,10 +582,7 @@ function App() {
                                   {bookmark.iconUrl ? (
                                     <img src={bookmark.iconUrl} alt="" className="w-5 h-5 object-contain" />
                                   ) : bookmark.icon ? (
-                                    (() => {
-                                      const IconComp = getIconComponent(bookmark.icon);
-                                      return <IconComp className="w-5 h-5" style={{ color: "var(--color-primary)" }} />;
-                                    })()
+                                    <IconRenderer icon={bookmark.icon} className="w-5 h-5" style={{ color: "var(--color-primary)" }} />
                                   ) : bookmark.favicon ? (
                                     <img src={bookmark.favicon} alt="" className="w-5 h-5" />
                                   ) : (
@@ -618,6 +616,17 @@ function App() {
           )}
         </div>
       </div>
+
+      {/* Footer 备案信息 */}
+      {siteSettings.footerText && (
+        <div className="w-full text-center pb-20 md:pb-24 pt-8 px-4">
+          <p
+            className="text-xs leading-relaxed"
+            style={{ color: 'var(--color-text-muted)' }}
+            dangerouslySetInnerHTML={{ __html: siteSettings.footerText }}
+          />
+        </div>
+      )}
 
       {/* Floating Dock - 桌面端 */}
       <div className="hidden md:flex fixed bottom-6 left-1/2 -translate-x-1/2 items-end gap-4 z-50">

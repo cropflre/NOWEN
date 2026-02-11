@@ -2,7 +2,7 @@ import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
 // 从 icons.ts 统一导出图标相关内容
-export { iconMap, presetIcons, getIconComponent } from './icons'
+export { iconMap, presetIcons, getIconComponent, isIconifyIcon } from './icons'
 export type { LucideIcon } from './icons'
 
 export function cn(...inputs: ClassValue[]) {

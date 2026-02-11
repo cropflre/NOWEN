@@ -8,9 +8,9 @@ const router = Router()
 // 元数据抓取
 router.post('/', metadataLimiter, validateBody(metadataSchema), async (req, res) => {
   try {
-    const { url } = req.body
+    const { url, lang } = req.body
     
-    const metadata = await parseMetadata(url)
+    const metadata = await parseMetadata(url, lang)
     res.json(metadata)
   } catch (error) {
     console.error('抓取元数据失败:', error)

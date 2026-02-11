@@ -1,11 +1,13 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Plus, Loader2, Check, AlertCircle, Sparkles, BookmarkPlus, ChevronDown, Settings, Link2, Image, FolderPlus } from 'lucide-react'
+import { X, Plus, Loader2, Check, AlertCircle, Sparkles, BookmarkPlus, ChevronDown, Settings, Link2, Image, FolderPlus, Search, Network } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Bookmark, Category, CustomIcon } from '../types/bookmark'
 import { metadataApi, categoryApi } from '../lib/api'
 import { cn } from '../lib/utils'
-import { presetIcons, getIconComponent } from '../lib/icons'
+import { presetIcons } from '../lib/icons'
+import { IconifyPicker } from './IconifyPicker'
+import { IconRenderer } from './IconRenderer'
 
 interface AddBookmarkModalProps {
   isOpen: boolean
@@ -37,7 +39,7 @@ export function AddBookmarkModal({
   onOpenIconManager,
   onCategoryAdded,
 }: AddBookmarkModalProps) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [url, setUrl] = useState(initialUrl)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -45,9 +47,11 @@ export function AddBookmarkModal({
   const [icon, setIcon] = useState('')  // lucide 图标名称
   const [iconUrl, setIconUrl] = useState('')  // 自定义图标 URL
   const [iconUrlInput, setIconUrlInput] = useState('')  // URL 输入框
-  const [iconTab, setIconTab] = useState<'preset' | 'custom' | 'url'>('preset')
+  const [iconTab, setIconTab] = useState<'preset' | 'iconify' | 'custom' | 'url'>('preset')
   const [showIconPicker, setShowIconPicker] = useState(false)
   const [category, setCategory] = useState('')
+  const [internalUrl, setInternalUrl] = useState('')  // 内网链接
+  const [showInternalUrl, setShowInternalUrl] = useState(false)  // 是否展开内网链接输入
   const [isReadLater, setIsReadLater] = useState(false)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [hasAnalyzed, setHasAnalyzed] = useState(false)
@@ -80,6 +84,8 @@ export function AddBookmarkModal({
       setIconUrl(editBookmark.iconUrl || '')
       setIconUrlInput(editBookmark.iconUrl || '')
       setCategory(editBookmark.category || '')
+      setInternalUrl(editBookmark.internalUrl || '')
+      setShowInternalUrl(!!editBookmark.internalUrl)
       setIsReadLater(editBookmark.isReadLater || false)
       setHasAnalyzed(true)
       // 判断使用哪个 tab
@@ -115,6 +121,8 @@ export function AddBookmarkModal({
       setIconUrlInput('')
       setIconTab('preset')
       setCategory('')
+      setInternalUrl('')
+      setShowInternalUrl(false)
       setIsReadLater(false)
       setError('')
       setHasAnalyzed(false)
@@ -147,7 +155,7 @@ export function AddBookmarkModal({
     setFavicon('')
 
     try {
-      const metadata = await metadataApi.parse(inputUrl)
+      const metadata = await metadataApi.parse(inputUrl, i18n.language)
       
       if (metadata.error) {
         throw new Error(metadata.error)
@@ -201,6 +209,7 @@ export function AddBookmarkModal({
 
     onAdd({
       url,
+      internalUrl: internalUrl || undefined,
       title,
       description: description || undefined,
       favicon: favicon || undefined,
@@ -309,6 +318,51 @@ export function AddBookmarkModal({
                 </div>
               </div>
 
+              {/* 内网链接（可折叠） */}
+              <div>
+                <button
+                  type="button"
+                  onClick={() => setShowInternalUrl(!showInternalUrl)}
+                  className="flex items-center gap-1.5 text-sm mb-2 hover:opacity-80 transition-opacity"
+                  style={{ color: 'var(--text-secondary)' }}
+                >
+                  <Network className="w-3.5 h-3.5" />
+                  {t('bookmark.modal.internal_url')}
+                  <ChevronDown className={cn(
+                    'w-3.5 h-3.5 transition-transform duration-200',
+                    showInternalUrl && 'rotate-180'
+                  )} />
+                </button>
+                <AnimatePresence>
+                  {showInternalUrl && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden"
+                    >
+                      <input
+                        type="url"
+                        value={internalUrl}
+                        onChange={(e) => setInternalUrl(e.target.value)}
+                        placeholder={t('bookmark.modal.internal_url_placeholder')}
+                        className={cn(
+                          'w-full px-4 py-3 rounded-xl glass',
+                          'border border-white/10 focus:border-white/30',
+                          'outline-none transition-colors',
+                          'placeholder:text-white/30'
+                        )}
+                        style={{ color: 'var(--text-primary)' }}
+                      />
+                      <p className="text-xs mt-1.5" style={{ color: 'var(--text-secondary)', opacity: 0.6 }}>
+                        {t('bookmark.modal.internal_url_hint')}
+                      </p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
               {/* 标题 - 带骨架屏 */}
               <div>
                 <label 
@@ -408,10 +462,7 @@ export function AddBookmarkModal({
                       </>
                     ) : icon ? (
                       <>
-                        {(() => {
-                          const IconComp = getIconComponent(icon)
-                          return <IconComp className="w-5 h-5" style={{ color: 'var(--gradient-1)' }} />
-                        })()}
+                        <IconRenderer icon={icon} className="w-5 h-5" style={{ color: 'var(--gradient-1)' }} />
                         <span style={{ color: 'var(--text-primary)' }}>{icon}</span>
                       </>
                     ) : (
@@ -439,7 +490,7 @@ export function AddBookmarkModal({
                         'absolute z-50 left-0 right-0 bottom-full mb-2',
                         'p-3 rounded-xl shadow-xl',
                         'border',
-                        'max-h-[260px] overflow-y-auto'
+                        'max-h-[340px] overflow-y-auto'
                       )}
                       style={{
                         background: 'var(--color-bg-secondary)',
@@ -455,7 +506,7 @@ export function AddBookmarkModal({
                           type="button"
                           onClick={() => setIconTab('preset')}
                           className={cn(
-                            'flex-1 px-3 py-1.5 rounded-md text-xs transition-colors'
+                            'flex-1 px-2 py-1.5 rounded-md text-xs transition-colors'
                           )}
                           style={{ 
                             background: iconTab === 'preset' ? 'var(--color-bg-secondary)' : 'transparent',
@@ -466,9 +517,23 @@ export function AddBookmarkModal({
                         </button>
                         <button
                           type="button"
+                          onClick={() => setIconTab('iconify')}
+                          className={cn(
+                            'flex-1 px-2 py-1.5 rounded-md text-xs transition-colors flex items-center justify-center gap-1'
+                          )}
+                          style={{ 
+                            background: iconTab === 'iconify' ? 'var(--color-bg-secondary)' : 'transparent',
+                            color: iconTab === 'iconify' ? 'var(--color-text-primary)' : 'var(--color-text-muted)'
+                          }}
+                        >
+                          <Search className="w-3 h-3" />
+                          {t('bookmark.modal.iconify_icons')}
+                        </button>
+                        <button
+                          type="button"
                           onClick={() => setIconTab('custom')}
                           className={cn(
-                            'flex-1 px-3 py-1.5 rounded-md text-xs transition-colors flex items-center justify-center gap-1'
+                            'flex-1 px-2 py-1.5 rounded-md text-xs transition-colors flex items-center justify-center gap-1'
                           )}
                           style={{ 
                             background: iconTab === 'custom' ? 'var(--color-bg-secondary)' : 'transparent',
@@ -482,7 +547,7 @@ export function AddBookmarkModal({
                           type="button"
                           onClick={() => setIconTab('url')}
                           className={cn(
-                            'flex-1 px-3 py-1.5 rounded-md text-xs transition-colors flex items-center justify-center gap-1'
+                            'flex-1 px-2 py-1.5 rounded-md text-xs transition-colors flex items-center justify-center gap-1'
                           )}
                           style={{ 
                             background: iconTab === 'url' ? 'var(--color-bg-secondary)' : 'transparent',
@@ -550,6 +615,18 @@ export function AddBookmarkModal({
                             </motion.button>
                           ))}
                         </div>
+                      )}
+
+                      {/* Iconify 搜索图标 */}
+                      {iconTab === 'iconify' && (
+                        <IconifyPicker
+                          selectedIcon={icon}
+                          onSelect={(iconName) => {
+                            setIcon(iconName)
+                            setIconUrl('')
+                            setShowIconPicker(false)
+                          }}
+                        />
                       )}
 
                       {/* 自定义图标库 */}
@@ -913,10 +990,7 @@ export function AddBookmarkModal({
                             className="w-full h-full object-contain rounded-lg"
                           />
                         ) : icon ? (
-                          (() => {
-                            const IconComp = getIconComponent(icon)
-                            return <IconComp className="w-7 h-7" style={{ color: 'var(--gradient-1)' }} />
-                          })()
+                          <IconRenderer icon={icon} className="w-7 h-7" style={{ color: 'var(--gradient-1)' }} />
                         ) : favicon ? (
                           <img 
                             src={favicon} 

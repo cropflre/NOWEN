@@ -1,6 +1,7 @@
 export interface Bookmark {
   id: string
   url: string
+  internalUrl?: string  // 内网链接，用于内外网环境自动切换
   title: string
   description?: string
   favicon?: string

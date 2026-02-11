@@ -2,7 +2,8 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ExternalLink, Pin, BookMarked, Edit2, Trash2 } from "lucide-react";
 import { Bookmark } from "../types/bookmark";
-import { cn, getIconComponent } from "../lib/utils";
+import { cn } from "../lib/utils";
+import { IconRenderer } from "./IconRenderer";
 
 export interface BookmarkCardContentProps {
   bookmark: Bookmark;
@@ -49,15 +50,11 @@ export function BookmarkCardContent({
               className={cn(isLarge ? "w-7 h-7" : "w-6 h-6", "object-contain")}
             />
           ) : bookmark.icon ? (
-            (() => {
-              const IconComp = getIconComponent(bookmark.icon);
-              return (
-                <IconComp
-                  className={isLarge ? "w-7 h-7" : "w-6 h-6"}
-                  style={{ color: "var(--color-primary)" }}
-                />
-              );
-            })()
+            <IconRenderer
+              icon={bookmark.icon}
+              className={isLarge ? "w-7 h-7" : "w-6 h-6"}
+              style={{ color: "var(--color-primary)" }}
+            />
           ) : bookmark.favicon ? (
             <img
               src={bookmark.favicon}
