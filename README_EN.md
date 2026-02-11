@@ -2,7 +2,7 @@
 
 > A minimalist personal navigation hub combining bookmark management and system monitoring, featuring deep space aesthetics and glassmorphism design, supporting day/night dual modes with complete real-time hardware monitoring capabilities
 
-![Version](https://img.shields.io/badge/version-0.1.6-blue)
+![Version](https://img.shields.io/badge/version-0.1.7-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Node](https://img.shields.io/badge/node-%3E%3D20-brightgreen)
 ![React](https://img.shields.io/badge/React-18.3-61dafb)
@@ -76,6 +76,7 @@
 | **Link Health Check**    | Batch check · Dead link detection · Timeout/redirect detection · Response time stats · Delete dead links |
 | **Network Switching**    | Dual URLs per bookmark (Internal/External) · Auto network detection · Smart URL switching              |
 | **Footer Filing Info**   | Configure footer text in settings · HTML rendering support · Homepage bottom display                   |
+| **Wallpaper**            | Custom background wallpaper · Upload/Drag/URL/Picsum/Bing · Adjustable blur and overlay · Beam effects layered |
 | **Data Management**      | Import/Export JSON · Factory reset · Auto redirect to home after import                    |
 
 ---
@@ -115,6 +116,7 @@
 - **Meteor Effects**: Random meteor animations for sci-fi atmosphere
 - **System Monitor Dashboard**: Real-time display of CPU, memory, disk, network, processes
 - **Lite Mode**: Disable animations and effects, significantly reduce CPU/GPU usage
+- **Wallpaper Background** (NEW): Custom page background image, supports upload/drag/URL/Picsum/Bing, adjustable blur and overlay
 
 ### 💻 System Monitoring (NEW)
 
@@ -162,6 +164,7 @@
 | **Site Settings**   | Custom site name and icon, lite mode toggle, weather/lunar toggle, menu visibility, footer filing info |
 | **Theme Settings**  | 8 preset themes, light/dark mode, auto switch, day/night animation, circle expand animation       |
 | **Widget Settings** | Control each monitor component visibility, Beam border toggle                                     |
+| **Wallpaper Settings** | Custom background wallpaper, image source selection (Upload/URL/Picsum/Bing), blur and overlay control |
 | **Security**        | Password change with strength indicator, first login force change, login state verification       |
 | **Data Management** | JSON import/export backup, factory reset, auto redirect to home after import, nested object support |
 | **Analytics**       | Bookmark click tracking, top bookmarks ranking, visit trends, recent visits, data clearing          |
@@ -602,6 +605,28 @@ A: Admin → System Settings → Data Management → Export Backup, or copy `ser
 
 ## 📝 Changelog
 
+### v0.1.7 (2026-02-11)
+
+#### ✨ New Features
+
+- **Wallpaper Background**: Custom page background image
+  - 5 image sources: local upload/drag, URL, Picsum random, Lorem Picsum, Bing daily wallpaper
+  - Blur slider (0-20px) via CSS `filter: blur()`
+  - Overlay slider (0-100%) semi-transparent black layer
+  - Live preview with blur + overlay effects
+  - Wallpaper layer rendered independently, aurora/beam effects visible on top
+  - New wallpaper settings tab in admin panel (violet gradient icon)
+  - Disabled by default, no impact on existing deployments
+  - Full i18n support (Chinese/English)
+
+#### 🐛 Bug Fixes
+
+- Fixed background beam effects disappearing when scrolling to page bottom (background layers switched to `fixed` positioning)
+- Restored beam collision explosion particle effects (using `useAnimationFrame` for precise collision detection)
+- Replaced discontinued `source.unsplash.com` with working Picsum/Bing image sources
+
+---
+
 ### v0.1.6 (2026-02-11)
 
 #### ✨ New Features
@@ -781,6 +806,7 @@ A: Admin → System Settings → Data Management → Export Backup, or copy `ser
 - [ ] More theme colors
 - [x] ~~Access statistics~~ ✅ v0.1.4 Implemented
 - [x] ~~Link health check~~ ✅ v0.1.5 Implemented
+- [x] ~~Custom wallpaper background~~ ✅ v0.1.7 Implemented
 - [ ] WebDAV sync support
 - [ ] System monitoring alerts
 - [ ] Custom monitoring metrics
