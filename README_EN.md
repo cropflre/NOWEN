@@ -2,7 +2,7 @@
 
 > A minimalist personal navigation hub combining bookmark management and system monitoring, featuring deep space aesthetics and glassmorphism design, supporting day/night dual modes with complete real-time hardware monitoring capabilities
 
-![Version](https://img.shields.io/badge/version-0.1.4-blue)
+![Version](https://img.shields.io/badge/version-0.1.5-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Node](https://img.shields.io/badge/node-%3E%3D20-brightgreen)
 ![React](https://img.shields.io/badge/React-18.3-61dafb)
@@ -73,6 +73,7 @@
 | **Mobile Floating Dock** | Expandable menu · Search/Add/Theme/Apps                                                    |
 | **Read Later**           | Hero card display · 3D card effect · List view · Mark as read                              |
 | **Visit Analytics**      | Click tracking · Top ranking · Trend charts · Recent visits · Data clearing               |
+| **Link Health Check**    | Batch check · Dead link detection · Timeout/redirect detection · Response time stats · Delete dead links |
 | **Data Management**      | Import/Export JSON · Factory reset · Auto redirect to home after import                    |
 
 ---
@@ -145,6 +146,7 @@
 - **Context Menu**: Quick operations when logged in (edit/delete/pin)
 - **Custom Icons**: Three icon modes (preset icons, custom upload, URL remote image)
 - **Virtual Scroll**: Auto-enabled when 50+ bookmarks, optimized rendering performance
+- **Link Health Check** (NEW): Batch check all bookmark links accessibility, dead link detection and cleanup
 
 ### ⚙️ Admin Panel
 
@@ -160,6 +162,7 @@
 | **Security**        | Password change with strength indicator, first login force change, login state verification       |
 | **Data Management** | JSON import/export backup, factory reset, auto redirect to home after import, nested object support |
 | **Analytics**       | Bookmark click tracking, top bookmarks ranking, visit trends, recent visits, data clearing          |
+| **Health Check**    | Batch check bookmark link accessibility, 4 status types (OK/Error/Timeout/Redirect), delete dead links |
 
 ### 🎨 Visual Design
 
@@ -501,6 +504,12 @@ Access: `http://NAS_IP:3000`
 | GET    | `/api/visits/recent` | ✅   | Get recent visits        |
 | DELETE | `/api/visits/clear`  | ✅   | Clear all visit data     |
 
+### Health Check API
+
+| Method | Path                 | Auth | Description                          |
+| ------ | -------------------- | ---- | ------------------------------------ |
+| POST   | `/api/health-check`  | ✅   | Batch check bookmark link health     |
+
 ### Other APIs
 
 | Method | Path                 | Auth | Description         |
@@ -589,6 +598,23 @@ A: Admin → System Settings → Data Management → Export Backup, or copy `ser
 ---
 
 ## 📝 Changelog
+
+### v0.1.5 (2026-02-11)
+
+#### ✨ New Features
+
+- **Link Health Check (Dead Link Detection)**: Complete bookmark link accessibility check
+  - Batch check all bookmark links (concurrency 5, 10s timeout)
+  - 4 status types: OK / Error / Timeout / Redirect
+  - Smart request strategy: HEAD first, fallback to GET for 405/403
+  - Summary card: total, counts per status, average response time
+  - Filter by status type
+  - Response time color indicators (green <1s / yellow <3s / red >3s)
+  - HTTP status code color labels (2xx/3xx/4xx/5xx)
+  - One-click delete dead links (error and timeout bookmarks, with confirmation)
+  - Full i18n support (Chinese/English)
+
+---
 
 ### v0.1.4 (2026-02-10)
 
@@ -732,6 +758,7 @@ A: Admin → System Settings → Data Management → Export Backup, or copy `ser
 - [ ] PWA offline support
 - [ ] More theme colors
 - [x] ~~Access statistics~~ ✅ v0.1.4 Implemented
+- [x] ~~Link health check~~ ✅ v0.1.5 Implemented
 - [ ] WebDAV sync support
 - [ ] System monitoring alerts
 - [ ] Custom monitoring metrics
