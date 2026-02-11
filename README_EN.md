@@ -2,7 +2,7 @@
 
 > A minimalist personal navigation hub combining bookmark management and system monitoring, featuring deep space aesthetics and glassmorphism design, supporting day/night dual modes with complete real-time hardware monitoring capabilities
 
-![Version](https://img.shields.io/badge/version-0.1.5-blue)
+![Version](https://img.shields.io/badge/version-0.1.6-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Node](https://img.shields.io/badge/node-%3E%3D20-brightgreen)
 ![React](https://img.shields.io/badge/React-18.3-61dafb)
@@ -74,6 +74,8 @@
 | **Read Later**           | Hero card display · 3D card effect · List view · Mark as read                              |
 | **Visit Analytics**      | Click tracking · Top ranking · Trend charts · Recent visits · Data clearing               |
 | **Link Health Check**    | Batch check · Dead link detection · Timeout/redirect detection · Response time stats · Delete dead links |
+| **Network Switching**    | Dual URLs per bookmark (Internal/External) · Auto network detection · Smart URL switching              |
+| **Footer Filing Info**   | Configure footer text in settings · HTML rendering support · Homepage bottom display                   |
 | **Data Management**      | Import/Export JSON · Factory reset · Auto redirect to home after import                    |
 
 ---
@@ -147,6 +149,7 @@
 - **Custom Icons**: Three icon modes (preset icons, custom upload, URL remote image)
 - **Virtual Scroll**: Auto-enabled when 50+ bookmarks, optimized rendering performance
 - **Link Health Check** (NEW): Batch check all bookmark links accessibility, dead link detection and cleanup
+- **Internal/External URL Switching** (NEW): Configure dual URLs per bookmark, auto-detect network environment for smart URL switching
 
 ### ⚙️ Admin Panel
 
@@ -156,7 +159,7 @@
 | **Categories**      | Custom names, icon picker, color picker, drag sorting                                             |
 | **Icons**           | Upload custom icons, preview, delete management                                                   |
 | **Quotes**          | Custom quotes, system default toggle                                                              |
-| **Site Settings**   | Custom site name and icon, lite mode toggle, weather/lunar toggle, menu visibility                |
+| **Site Settings**   | Custom site name and icon, lite mode toggle, weather/lunar toggle, menu visibility, footer filing info |
 | **Theme Settings**  | 8 preset themes, light/dark mode, auto switch, day/night animation, circle expand animation       |
 | **Widget Settings** | Control each monitor component visibility, Beam border toggle                                     |
 | **Security**        | Password change with strength indicator, first login force change, login state verification       |
@@ -598,6 +601,25 @@ A: Admin → System Settings → Data Management → Export Backup, or copy `ser
 ---
 
 ## 📝 Changelog
+
+### v0.1.6 (2026-02-11)
+
+#### ✨ New Features
+
+- **Footer Filing Information Display**: New footer text configuration in site settings
+  - Text input in site settings for ICP filing info
+  - HTML rendering support (e.g., ICP number with links)
+  - Auto-display at homepage bottom, hidden when empty
+  - Full i18n support (Chinese/English)
+- **Internal/External URL Auto-Switching**: Dual URL support for bookmarks
+  - New internal URL field for bookmarks with collapsible input
+  - Auto-detect network environment (internal/external)
+  - Hostname-based detection: private IP ranges (10.x / 172.16-31.x / 192.168.x) and internal domain suffixes (.local / .lan / .internal / .corp / .home)
+  - All bookmark-opening entry points adapted for dual URL logic (15 components, 18+ window.open calls)
+  - Auto-expand internal URL input when editing bookmarks with existing internal URLs
+  - Full i18n support (Chinese/English)
+
+---
 
 ### v0.1.5 (2026-02-11)
 
