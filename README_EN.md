@@ -14,6 +14,8 @@
 
 **🔗 Access URL**: [http://118.145.185.221/](http://118.145.185.221/)
 
+> 🎯 **Demo Mode**: When accessed via the URL above, the login page auto-fills default credentials (admin / admin123). Just click login to explore the admin panel. Password change is disabled in demo mode.
+
 ## 📖 Documentation
 
 | Language    | Document                                 |
