@@ -9,9 +9,11 @@ import {
   CheckCircle, 
   AlertCircle,
   ChevronDown,
-  Zap
+  Zap,
+  Info
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
+import { isDemoMode } from '../../lib/api'
 
 interface SecurityCardProps {
   onChangePassword: (currentPassword: string, newPassword: string) => Promise<void>
@@ -31,6 +33,7 @@ export function SecurityCard({
   onClearSuccess,
 }: SecurityCardProps) {
   const { t } = useTranslation()
+  const isDemo = isDemoMode()
   const [isExpanded, setIsExpanded] = useState(false)
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -168,6 +171,14 @@ export function SecurityCard({
                 {/* Divider */}
                 <div className="h-px" style={{ background: 'linear-gradient(to right, transparent, var(--color-glass-border), transparent)' }} />
 
+                {/* Demo Mode Warning */}
+                {isDemo && (
+                  <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-sm text-amber-400">
+                    <Info className="w-4 h-4 flex-shrink-0" />
+                    <span>演示模式下禁止修改密码 / Password change is disabled in demo mode</span>
+                  </div>
+                )}
+
                 {/* Current Password */}
                 <div className="space-y-2">
                   <label className="flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--color-text-muted)' }}>
@@ -183,8 +194,9 @@ export function SecurityCard({
                         setLocalError('')
                         onClearError()
                       }}
+                      disabled={isDemo}
                       placeholder={t('admin.settings.security.current_placeholder')}
-                      className="w-full px-4 py-3 pr-12 rounded-xl focus:outline-none transition-all duration-300"
+                      className="w-full px-4 py-3 pr-12 rounded-xl focus:outline-none transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                       style={{
                         background: 'var(--color-bg-tertiary)',
                         border: '1px solid var(--color-glass-border)',
@@ -217,8 +229,9 @@ export function SecurityCard({
                         setLocalError('')
                         onClearError()
                       }}
+                      disabled={isDemo}
                       placeholder={t('admin.settings.security.new_placeholder')}
-                      className="w-full px-4 py-3 pr-12 rounded-xl focus:outline-none transition-all duration-300"
+                      className="w-full px-4 py-3 pr-12 rounded-xl focus:outline-none transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                       style={{
                         background: 'var(--color-bg-tertiary)',
                         border: '1px solid var(--color-glass-border)',
@@ -302,6 +315,7 @@ export function SecurityCard({
                         setLocalError('')
                         onClearError()
                       }}
+                      disabled={isDemo}
                       placeholder={t('admin.settings.security.confirm_placeholder')}
                       className={cn(
                         'w-full px-4 py-3 pr-12 rounded-xl focus:outline-none transition-all duration-300',
@@ -383,7 +397,7 @@ export function SecurityCard({
                 {/* Submit Button */}
                 <motion.button
                   onClick={handleSubmit}
-                  disabled={isChanging || !currentPassword || !newPassword || !confirmPassword}
+                  disabled={isDemo || isChanging || !currentPassword || !newPassword || !confirmPassword}
                   whileHover={{ scale: isChanging ? 1 : 1.02 }}
                   whileTap={{ scale: isChanging ? 1 : 0.98 }}
                   className={cn(

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { checkAuthStatus, clearAuthStatus } from '../lib/api';
+import { checkAuthStatus, clearAuthStatus, isDemoMode } from '../lib/api';
 
 export type PageType = 'home' | 'admin' | 'admin-login' | 'force-password-change';
 
@@ -14,8 +14,8 @@ export function useAuth() {
     if (isValid && username) {
       setIsLoggedIn(true);
       setAdminUsername(username);
-      // 检查是否需要强制修改密码
-      if (requirePasswordChange) {
+      // 检查是否需要强制修改密码（演示模式下跳过）
+      if (requirePasswordChange && !isDemoMode()) {
         setCurrentPage('force-password-change');
       }
     }
@@ -26,8 +26,8 @@ export function useAuth() {
     const { isValid, username, requirePasswordChange } = checkAuthStatus();
     if (isValid && username) {
       setAdminUsername(username);
-      // 如果需要强制修改密码，返回特殊标识
-      if (requirePasswordChange) {
+      // 如果需要强制修改密码，返回特殊标识（演示模式下跳过）
+      if (requirePasswordChange && !isDemoMode()) {
         return 'require-password-change';
       }
       return true;
@@ -39,8 +39,8 @@ export function useAuth() {
   const handleAdminLogin = useCallback((username: string, requirePasswordChange?: boolean) => {
     setAdminUsername(username);
     setIsLoggedIn(true);
-    // 如果需要强制修改密码，跳转到密码修改页面
-    if (requirePasswordChange) {
+    // 如果需要强制修改密码，跳转到密码修改页面（演示模式下跳过）
+    if (requirePasswordChange && !isDemoMode()) {
       setCurrentPage('force-password-change');
     } else {
       setCurrentPage('admin');

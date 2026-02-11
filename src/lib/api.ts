@@ -311,6 +311,13 @@ export const metadataApi = {
   parse: fetchMetadata,
 } as const
 
+// ========== 演示模式判断 ==========
+
+/** 判断当前是否为演示模式（通过 118.145.185.221 访问） */
+export function isDemoMode(): boolean {
+  return window.location.hostname === '118.145.185.221'
+}
+
 // ========== 管理员 API ==========
 
 export async function adminLogin(username: string, password: string): Promise<LoginResponse> {
@@ -325,8 +332,8 @@ export async function adminLogin(username: string, password: string): Promise<Lo
     localStorage.setItem('admin_login_time', Date.now().toString())
     localStorage.setItem('admin_token', data.token)
     localStorage.setItem('admin_username', data.user.username)
-    // 保存是否需要修改密码的状态
-    if (data.requirePasswordChange) {
+    // 保存是否需要修改密码的状态（演示模式下跳过强制改密）
+    if (data.requirePasswordChange && !isDemoMode()) {
       localStorage.setItem('admin_require_password_change', 'true')
     } else {
       localStorage.removeItem('admin_require_password_change')

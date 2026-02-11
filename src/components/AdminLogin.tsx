@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Lock, Eye, EyeOff, ArrowLeft, Shield, KeyRound, User } from 'lucide-react'
 import { BorderBeam } from './ui/advanced-effects'
-import { adminLogin } from '../lib/api'
+import { adminLogin, isDemoMode } from '../lib/api'
 
 interface AdminLoginProps {
   onLogin: (username: string, requirePasswordChange?: boolean) => void
@@ -13,8 +13,9 @@ interface AdminLoginProps {
 
 export function AdminLogin({ onLogin, onBack, isDark = true }: AdminLoginProps) {
   const { t } = useTranslation()
+  const isDemo = isDemoMode()
   const [username, setUsername] = useState('admin')
-  const [password, setPassword] = useState('')
+  const [password, setPassword] = useState(isDemo ? 'admin123' : '')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [isShaking, setIsShaking] = useState(false)
@@ -162,12 +163,13 @@ export function AdminLogin({ onLogin, onBack, isDark = true }: AdminLoginProps) 
                       setUsername(e.target.value)
                       setError('')
                     }}
+                    disabled={isDemo}
                     placeholder={t('admin.login.username_placeholder')}
                     className={`w-full pl-11 pr-4 py-3.5 rounded-xl border transition-colors ${
                       isDark 
                         ? 'bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-nebula-purple/50' 
                         : 'bg-slate-50 border-slate-200 text-slate-800 placeholder:text-slate-400 focus:border-blue-400 focus:bg-white'
-                    } focus:outline-none`}
+                    } focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed`}
                   />
                 </div>
               </motion.div>
@@ -193,12 +195,13 @@ export function AdminLogin({ onLogin, onBack, isDark = true }: AdminLoginProps) 
                       setError('')
                     }}
                     onKeyDown={handleKeyDown}
+                    disabled={isDemo}
                     placeholder={t('admin.login.password_placeholder')}
                     className={`w-full pl-11 pr-12 py-3.5 rounded-xl border transition-colors ${
                       isDark 
                         ? 'bg-white/5 border-white/10 text-white placeholder:text-white/30 focus:border-nebula-purple/50' 
                         : 'bg-slate-50 border-slate-200 text-slate-800 placeholder:text-slate-400 focus:border-blue-400 focus:bg-white'
-                    } focus:outline-none`}
+                    } focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed`}
                   />
                   <button
                     type="button"
