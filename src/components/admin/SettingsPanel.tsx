@@ -6,7 +6,8 @@ import {
   Palette, 
   Shield, 
   Database,
-  Gauge
+  Gauge,
+  Image
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { SiteSettingsCard } from './SiteSettingsCard'
@@ -14,12 +15,13 @@ import { ThemeCard } from './ThemeCard'
 import { SecurityCard } from './SecurityCard'
 import { DataManagementCard } from './DataManagementCard'
 import { WidgetSettingsCard } from './WidgetSettingsCard'
+import { WallpaperSettingsCard } from './WallpaperSettingsCard'
 import { SiteSettings, WidgetVisibility } from '../../lib/api'
 import { Bookmark, Category } from '../../types/bookmark'
 import { ThemeId } from '../../hooks/useTheme.tsx'
 
 // 设置子标签页类型
-type SettingsTab = 'site' | 'theme' | 'widget' | 'security' | 'data'
+type SettingsTab = 'site' | 'theme' | 'wallpaper' | 'widget' | 'security' | 'data'
 
 interface SettingsTabItem {
   id: SettingsTab
@@ -46,6 +48,14 @@ const settingsTabs: SettingsTabItem[] = [
     descKey: 'admin.settings.tabs.theme_desc',
     gradient: 'from-purple-500/20 to-pink-500/20',
     iconBg: 'from-purple-500/20 to-pink-600/20'
+  },
+  { 
+    id: 'wallpaper', 
+    labelKey: 'admin.settings.tabs.wallpaper', 
+    icon: Image, 
+    descKey: 'admin.settings.tabs.wallpaper_desc',
+    gradient: 'from-violet-500/20 to-fuchsia-500/20',
+    iconBg: 'from-violet-500/20 to-fuchsia-600/20'
   },
   { 
     id: 'widget', 
@@ -107,6 +117,11 @@ interface SettingsPanelProps {
   categories: Category[]
   onImport: (data: { bookmarks: Bookmark[]; categories: Category[]; settings: SiteSettings }) => Promise<void>
   onFactoryReset?: () => void
+  // 壁纸设置
+  onSaveWallpaperSettings: () => Promise<void>
+  isSavingWallpaperSettings: boolean
+  wallpaperSettingsSuccess: boolean
+  wallpaperSettingsError: string
 }
 
 export function SettingsPanel({
@@ -143,6 +158,11 @@ export function SettingsPanel({
   categories,
   onImport,
   onFactoryReset,
+  // 壁纸设置
+  onSaveWallpaperSettings,
+  isSavingWallpaperSettings,
+  wallpaperSettingsSuccess,
+  wallpaperSettingsError,
 }: SettingsPanelProps) {
   const { t } = useTranslation()
   const [activeSettingsTab, setActiveSettingsTab] = useState<SettingsTab>('site')
@@ -158,7 +178,7 @@ export function SettingsPanel({
         }}
       >
         {/* 标签页按钮网格 - 响应式 */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-2">
+        <div className="grid grid-cols-2 lg:grid-cols-6 gap-2">
           {settingsTabs.map((tab) => {
             const Icon = tab.icon
             const isActive = activeSettingsTab === tab.id
@@ -288,6 +308,18 @@ export function SettingsPanel({
               onThemeChange={onThemeChange}
               onAutoModeChange={onAutoModeChange}
               onToggleDarkMode={onToggleDarkMode}
+            />
+          )}
+
+          {/* 壁纸设置 */}
+          {activeSettingsTab === 'wallpaper' && (
+            <WallpaperSettingsCard
+              settings={siteSettings}
+              onChange={onSiteSettingsChange}
+              onSave={onSaveWallpaperSettings}
+              isSaving={isSavingWallpaperSettings}
+              success={wallpaperSettingsSuccess}
+              error={wallpaperSettingsError}
             />
           )}
 

@@ -288,6 +288,11 @@ function AdminContent() {
   const [widgetSettingsSuccess, setWidgetSettingsSuccess] = useState(false)
   const [widgetSettingsError, setWidgetSettingsError] = useState('')
 
+  // 壁纸设置状态
+  const [isSavingWallpaperSettings, setIsSavingWallpaperSettings] = useState(false)
+  const [wallpaperSettingsSuccess, setWallpaperSettingsSuccess] = useState(false)
+  const [wallpaperSettingsError, setWallpaperSettingsError] = useState('')
+
   // 名言状态
   const [quotes, setQuotes] = useState<string[]>([])
   const [useDefaultQuotes, setUseDefaultQuotes] = useState(true)
@@ -490,6 +495,30 @@ function AdminContent() {
       showToast('error', t('admin.settings.data.export_error'))
     } finally {
       setIsSavingWidgetSettings(false)
+    }
+  }
+
+  // 保存壁纸设置
+  const handleSaveWallpaperSettings = async () => {
+    setWallpaperSettingsError('')
+    setWallpaperSettingsSuccess(false)
+    setIsSavingWallpaperSettings(true)
+    
+    try {
+      const updated = await updateSettings(siteSettings)
+      setSiteSettings(updated)
+      setWallpaperSettingsSuccess(true)
+      showToast('success', t('admin.settings.wallpaper.saved'))
+      
+      // 通知父组件更新设置（实时生效）
+      onSettingsChange(updated)
+      
+      setTimeout(() => setWallpaperSettingsSuccess(false), 3000)
+    } catch (err: any) {
+      setWallpaperSettingsError(err.message || t('admin.settings.data.export_error'))
+      showToast('error', t('admin.settings.data.export_error'))
+    } finally {
+      setIsSavingWallpaperSettings(false)
     }
   }
 
@@ -1495,6 +1524,11 @@ function AdminContent() {
                     showToast('success', t('admin.settings.data.reset_success'))
                     refreshData()
                   }}
+                  // 壁纸设置
+                  onSaveWallpaperSettings={handleSaveWallpaperSettings}
+                  isSavingWallpaperSettings={isSavingWallpaperSettings}
+                  wallpaperSettingsSuccess={wallpaperSettingsSuccess}
+                  wallpaperSettingsError={wallpaperSettingsError}
                 />
               </motion.div>
             )}

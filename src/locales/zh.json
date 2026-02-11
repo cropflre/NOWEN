@@ -260,6 +260,8 @@
         "site_desc": "网站标题、图标、动画",
         "theme": "主题配色",
         "theme_desc": "外观主题、深浅模式",
+        "wallpaper": "壁纸设置",
+        "wallpaper_desc": "背景图片、模糊遮罩",
         "widget": "系统状态",
         "widget_desc": "仪表显示、组件控制",
         "security": "安全设置",
@@ -341,6 +343,24 @@
         "save": "保存配置",
         "saving": "保存中...",
         "saved": "设置保存成功"
+      },
+      "wallpaper": {
+        "title": "壁纸设置",
+        "subtitle": "自定义页面背景图片",
+        "source": "图片来源",
+        "upload": "上传",
+        "drag_hint": "拖拽图片或点击上传",
+        "size_hint": "支持 JPG、PNG、WebP，建议不超过 5MB",
+        "url_placeholder": "输入图片 URL 地址",
+        "click_refresh": "点击下方按钮获取随机图片",
+        "refresh": "换一张",
+        "blur": "模糊度",
+        "overlay": "遮罩",
+        "preview": "实时预览",
+        "preview_hint": "实际效果预览",
+        "save": "保存壁纸设置",
+        "saving": "保存中...",
+        "saved": "壁纸设置保存成功"
       },
       "security": {
         "title": "安全设置",

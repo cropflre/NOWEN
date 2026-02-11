@@ -260,6 +260,8 @@
         "site_desc": "Title, favicon, animations",
         "theme": "Theme",
         "theme_desc": "Appearance, dark/light mode",
+        "wallpaper": "Wallpaper",
+        "wallpaper_desc": "Background, blur, overlay",
         "widget": "Widgets",
         "widget_desc": "Dashboard components",
         "security": "Security",
@@ -341,6 +343,24 @@
         "save": "Save Settings",
         "saving": "Saving...",
         "saved": "Settings saved successfully"
+      },
+      "wallpaper": {
+        "title": "Wallpaper Settings",
+        "subtitle": "Customize page background image",
+        "source": "Image Source",
+        "upload": "Upload",
+        "drag_hint": "Drag image or click to upload",
+        "size_hint": "Supports JPG, PNG, WebP. Max 5MB recommended",
+        "url_placeholder": "Enter image URL",
+        "click_refresh": "Click the button below to get a random image",
+        "refresh": "Shuffle",
+        "blur": "Blur",
+        "overlay": "Overlay",
+        "preview": "Live Preview",
+        "preview_hint": "Actual effect preview",
+        "save": "Save Wallpaper",
+        "saving": "Saving...",
+        "saved": "Wallpaper settings saved"
       },
       "security": {
         "title": "Security Settings",

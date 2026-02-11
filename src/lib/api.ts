@@ -426,6 +426,16 @@ export interface MenuVisibility {
   themeToggle?: boolean     // 日间/夜间模式切换开关
 }
 
+// 壁纸设置
+export interface WallpaperSettings {
+  enabled?: boolean         // 是否启用壁纸
+  source?: 'upload' | 'url' | 'unsplash' | 'picsum' | 'pexels'  // 壁纸来源
+  imageData?: string        // 上传的图片 data URL
+  imageUrl?: string         // 外部图片 URL
+  blur?: number             // 模糊度 0-20
+  overlay?: number          // 遮罩透明度 0-100
+}
+
 export interface SiteSettings {
   siteTitle?: string
   siteFavicon?: string
@@ -436,6 +446,7 @@ export interface SiteSettings {
   footerText?: string      // 底部备案信息
   widgetVisibility?: WidgetVisibility
   menuVisibility?: MenuVisibility  // 菜单项可见性配置
+  wallpaper?: WallpaperSettings    // 壁纸设置
 }
 
 // 转换设置值类型（后端存储为字符串）
@@ -475,6 +486,25 @@ function parseSettings(raw: Record<string, string>): SiteSettings {
     }
   }
 
+  // 解析 wallpaper JSON
+  let wallpaper: WallpaperSettings = {
+    enabled: false,
+    source: 'upload',
+    imageData: '',
+    imageUrl: '',
+    blur: 0,
+    overlay: 30,
+  }
+  
+  if (raw.wallpaper) {
+    try {
+      const parsed = JSON.parse(raw.wallpaper)
+      wallpaper = { ...wallpaper, ...parsed }
+    } catch (e) {
+      // 忽略解析错误，使用默认值
+    }
+  }
+
   return {
     siteTitle: raw.siteTitle,
     siteFavicon: raw.siteFavicon,
@@ -487,6 +517,7 @@ function parseSettings(raw: Record<string, string>): SiteSettings {
     footerText: raw.footerText || '',
     widgetVisibility,
     menuVisibility,
+    wallpaper,
   }
 }
 
@@ -507,6 +538,7 @@ export async function updateSettings(settings: SiteSettings): Promise<SiteSettin
     footerText: settings.footerText ?? '',
     widgetVisibility: settings.widgetVisibility ? JSON.stringify(settings.widgetVisibility) : undefined,
     menuVisibility: settings.menuVisibility ? JSON.stringify(settings.menuVisibility) : undefined,
+    wallpaper: settings.wallpaper ? JSON.stringify(settings.wallpaper) : undefined,
   }
   const raw = await request<Record<string, string>>('/api/settings', {
     method: 'PATCH',

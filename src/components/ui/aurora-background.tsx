@@ -8,6 +8,7 @@ interface AuroraBackgroundProps {
   className?: string
   showRadialGradient?: boolean
   showBeams?: boolean  // 新增：是否显示碰撞光束
+  transparent?: boolean // 新增：透明背景模式（壁纸启用时）
 }
 
 export function AuroraBackground({
@@ -15,6 +16,7 @@ export function AuroraBackground({
   className,
   showRadialGradient = true,
   showBeams = false,  // 默认关闭碰撞光束
+  transparent = false, // 默认非透明
 }: AuroraBackgroundProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [isDark, setIsDark] = useState(true)
@@ -74,7 +76,7 @@ export function AuroraBackground({
       style={{
         '--mouse-x': '50%',
         '--mouse-y': '50%',
-        background: 'var(--color-bg-primary)',
+        background: transparent ? 'transparent' : 'var(--color-bg-primary)',
         transition: 'background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
       } as React.CSSProperties}
     >
@@ -85,7 +87,7 @@ export function AuroraBackground({
       <AnimatePresence>
         {isDark && (
           <motion.div 
-            className="absolute inset-0 overflow-hidden"
+            className="fixed inset-0 overflow-hidden pointer-events-none"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -207,7 +209,7 @@ export function AuroraBackground({
       <AnimatePresence>
         {!isDark && (
           <motion.div 
-            className="absolute inset-0 overflow-hidden"
+            className="fixed inset-0 overflow-hidden pointer-events-none"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -396,9 +398,9 @@ export function AuroraBackground({
       </AnimatePresence>
 
       {/* Radial Gradient Overlay - 聚焦中心内容 */}
-      {showRadialGradient && (
+      {showRadialGradient && !transparent && (
         <div 
-          className="absolute inset-0 pointer-events-none"
+          className="fixed inset-0 pointer-events-none"
           style={{
             background: isDark 
               ? 'radial-gradient(ellipse 80% 80% at 50% 50%, transparent 0%, var(--color-bg-primary) 70%)'
@@ -417,7 +419,7 @@ export function AuroraBackground({
 
       {/* 碰撞光束效果 - 日间和夜间模式都显示 */}
       {showBeams && (
-        <div className="absolute inset-0 pointer-events-none">
+        <div className="fixed inset-0 pointer-events-none">
           <BackgroundBeamsWithCollision
             containerClassName="absolute inset-0"
             className="w-full h-full"

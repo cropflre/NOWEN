@@ -343,6 +343,15 @@ function App() {
     );
   }
 
+  // ========== 壁纸设置 ==========
+  const wallpaper = siteSettings.wallpaper;
+  const wallpaperEnabled = wallpaper?.enabled === true;
+  const wallpaperImageSrc = wallpaperEnabled
+    ? wallpaper?.source === 'upload'
+      ? wallpaper?.imageData
+      : wallpaper?.imageUrl
+    : undefined;
+
   // ========== 首页渲染 ==========
   const BackgroundWrapper = isLiteMode ? LiteBackground : AuroraBackground;
   const backgroundProps = isLiteMode
@@ -350,7 +359,36 @@ function App() {
     : { showBeams: siteSettings.enableBeamAnimation !== false };
 
   return (
-    <BackgroundWrapper {...backgroundProps}>
+    <>
+      {/* 壁纸背景层 - 独立于 BackgroundWrapper，位于最底层 */}
+      {wallpaperEnabled && wallpaperImageSrc && (
+        <>
+          <div
+            className="fixed inset-0 bg-cover bg-center bg-no-repeat"
+            style={{
+              backgroundImage: `url(${wallpaperImageSrc})`,
+              filter: `blur(${wallpaper?.blur || 0}px)`,
+              transform: 'scale(1.1)',
+              zIndex: 0,
+            }}
+          />
+          {/* 遮罩层 */}
+          {(wallpaper?.overlay ?? 30) > 0 && (
+            <div
+              className="fixed inset-0"
+              style={{
+                backgroundColor: `rgba(0, 0, 0, ${(wallpaper?.overlay ?? 30) / 100})`,
+                zIndex: 0,
+              }}
+            />
+          )}
+        </>
+      )}
+
+    <BackgroundWrapper
+      {...backgroundProps}
+      {...(wallpaperEnabled && wallpaperImageSrc ? { transparent: true } : {})}
+    >
       {/* Meteors Effect - 精简模式下不渲染 */}
       {!isLiteMode && <Meteors number={15} />}
 
@@ -724,6 +762,7 @@ function App() {
 
       <ScrollToTop threshold={400} />
     </BackgroundWrapper>
+    </>
   );
 }
 

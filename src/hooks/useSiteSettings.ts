@@ -23,6 +23,14 @@ export const defaultSiteSettings: SiteSettings = {
     languageToggle: true,
     themeToggle: true,
   },
+  wallpaper: {
+    enabled: false,
+    source: 'upload',
+    imageData: '',
+    imageUrl: '',
+    blur: 0,
+    overlay: 30,
+  },
 };
 
 // 默认小部件可见性（加载前隐藏避免闪烁）
