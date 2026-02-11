@@ -144,6 +144,8 @@
       "icons_full": "图标管理",
       "analytics": "统计",
       "analytics_full": "访问统计",
+      "health_check": "健康",
+      "health_check_full": "链接检查",
       "settings": "设置",
       "settings_full": "系统设置"
     },
@@ -153,6 +155,7 @@
       "total_quotes": "共 {{count}} 条名言",
       "total_icons": "共 {{count}} 个图标",
       "view_analytics": "查看访问数据与趋势",
+      "check_health": "检测书签链接健康状态",
       "manage_config": "管理您的网站配置"
     },
     "bookmark": {
@@ -432,6 +435,37 @@
       "clear_confirm_message": "确定要清除所有访问记录吗？此操作不可撤销。",
       "clear_success": "访问记录已清除",
       "clear_error": "清除访问记录失败"
+    },
+    "healthCheck": {
+      "title": "链接健康检查",
+      "description": "检测书签链接是否可正常访问",
+      "ready_title": "开始检测书签健康状态",
+      "ready_desc": "系统将逐一检测所有书签链接的可访问性，包括响应时间、状态码和重定向情况。",
+      "start_check": "开始检测",
+      "checking": "检测中...",
+      "checking_desc": "正在逐一检测所有书签链接，请稍候...",
+      "recheck": "重新检测",
+      "check_error": "检测过程出现错误",
+      "all_healthy": "所有链接均正常",
+      "found_issues": "发现 {{count}} 个问题链接",
+      "status_ok": "正常",
+      "status_error": "异常",
+      "status_timeout": "超时",
+      "status_redirect": "重定向",
+      "stat_total": "总计",
+      "avg_time": "平均响应",
+      "filter_all": "全部",
+      "filter_ok": "正常",
+      "filter_error": "异常",
+      "filter_timeout": "超时",
+      "filter_redirect": "重定向",
+      "no_bookmarks": "暂无书签",
+      "no_results": "该分类下暂无结果",
+      "delete_dead": "删除死链",
+      "deleted_dead": "已删除 {{count}} 个失效书签",
+      "delete_error": "删除失败",
+      "delete_confirm_title": "删除失效书签",
+      "delete_confirm_message": "确定要删除 {{count}} 个失效（异常/超时）书签吗？此操作不可撤销。"
     }
   }
 }

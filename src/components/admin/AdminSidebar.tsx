@@ -12,7 +12,8 @@ import {
   Menu,
   X,
   ImageIcon,
-  BarChart3
+  BarChart3,
+  HeartPulse
 } from 'lucide-react'
 import { MobileFloatingDock } from '../ui/mobile-floating-dock'
 
@@ -35,6 +36,7 @@ const navItems = [
   { id: 'quotes' as TabType, labelKey: 'admin.nav.quotes', fullLabelKey: 'admin.nav.quotes_full', icon: Quote },
   { id: 'icons' as TabType, labelKey: 'admin.nav.icons', fullLabelKey: 'admin.nav.icons_full', icon: ImageIcon },
   { id: 'analytics' as TabType, labelKey: 'admin.nav.analytics', fullLabelKey: 'admin.nav.analytics_full', icon: BarChart3 },
+  { id: 'health-check' as TabType, labelKey: 'admin.nav.health_check', fullLabelKey: 'admin.nav.health_check_full', icon: HeartPulse },
   { id: 'settings' as TabType, labelKey: 'admin.nav.settings', fullLabelKey: 'admin.nav.settings_full', icon: Settings },
 ]
 

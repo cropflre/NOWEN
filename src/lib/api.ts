@@ -717,5 +717,49 @@ export const visitsApi = {
   clear: clearVisits,
 }
 
+// ========== 健康检查 API ==========
+
+export interface HealthCheckResult {
+  bookmarkId: string
+  url: string
+  title: string
+  favicon?: string
+  icon?: string
+  iconUrl?: string
+  category?: string
+  status: 'ok' | 'error' | 'timeout' | 'redirect'
+  statusCode?: number
+  responseTime: number
+  error?: string
+  redirectUrl?: string
+}
+
+export interface HealthCheckSummary {
+  total: number
+  ok: number
+  error: number
+  timeout: number
+  redirect: number
+  averageResponseTime: number
+}
+
+export interface HealthCheckResponse {
+  results: HealthCheckResult[]
+  summary: HealthCheckSummary
+}
+
+export async function checkBookmarksHealth(bookmarkIds?: string[]): Promise<HealthCheckResponse> {
+  return request<HealthCheckResponse>('/api/health-check', {
+    method: 'POST',
+    body: JSON.stringify({ bookmarkIds }),
+    requireAuth: true,
+    timeout: 300000, // 5 分钟超时（批量检查耗时）
+  })
+}
+
+export const healthCheckApi = {
+  check: checkBookmarksHealth,
+}
+
 // 重新导出类型供外部使用
 export type { Bookmark, Category } from '../types/bookmark'

@@ -144,6 +144,8 @@
       "icons_full": "Icon Management",
       "analytics": "Analytics",
       "analytics_full": "Visit Analytics",
+      "health_check": "Health",
+      "health_check_full": "Link Check",
       "settings": "Settings",
       "settings_full": "System Settings"
     },
@@ -153,6 +155,7 @@
       "total_quotes": "{{count}} quotes",
       "total_icons": "{{count}} icons",
       "view_analytics": "View visit data and trends",
+      "check_health": "Check bookmark link health",
       "manage_config": "Manage your website configuration"
     },
     "bookmark": {
@@ -432,6 +435,37 @@
       "clear_confirm_message": "Are you sure you want to clear all visit records? This action cannot be undone.",
       "clear_success": "Visit records cleared",
       "clear_error": "Failed to clear visit records"
+    },
+    "healthCheck": {
+      "title": "Link Health Check",
+      "description": "Check if bookmark links are accessible",
+      "ready_title": "Check Bookmark Health",
+      "ready_desc": "The system will check the accessibility of all bookmark links, including response time, status codes, and redirects.",
+      "start_check": "Start Check",
+      "checking": "Checking...",
+      "checking_desc": "Checking all bookmark links one by one, please wait...",
+      "recheck": "Recheck",
+      "check_error": "Error occurred during check",
+      "all_healthy": "All links are healthy",
+      "found_issues": "Found {{count}} problematic links",
+      "status_ok": "OK",
+      "status_error": "Error",
+      "status_timeout": "Timeout",
+      "status_redirect": "Redirect",
+      "stat_total": "Total",
+      "avg_time": "Avg Response",
+      "filter_all": "All",
+      "filter_ok": "OK",
+      "filter_error": "Error",
+      "filter_timeout": "Timeout",
+      "filter_redirect": "Redirect",
+      "no_bookmarks": "No bookmarks",
+      "no_results": "No results in this category",
+      "delete_dead": "Delete Dead Links",
+      "deleted_dead": "Deleted {{count}} dead bookmarks",
+      "delete_error": "Delete failed",
+      "delete_confirm_title": "Delete Dead Links",
+      "delete_confirm_message": "Are you sure you want to delete {{count}} dead (error/timeout) bookmarks? This action cannot be undone."
     }
   }
 }
