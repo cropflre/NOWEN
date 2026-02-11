@@ -2,7 +2,7 @@
 
 > A minimalist personal navigation hub combining bookmark management and system monitoring, featuring deep space aesthetics and glassmorphism design, supporting day/night dual modes with complete real-time hardware monitoring capabilities
 
-![Version](https://img.shields.io/badge/version-0.1.3-blue)
+![Version](https://img.shields.io/badge/version-0.1.4-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Node](https://img.shields.io/badge/node-%3E%3D20-brightgreen)
 ![React](https://img.shields.io/badge/React-18.3-61dafb)
@@ -72,6 +72,7 @@
 | **Dock Status Bar**      | SYSTEM ONLINE · CPU/MEM/Temp/Network speed · Draggable                                     |
 | **Mobile Floating Dock** | Expandable menu · Search/Add/Theme/Apps                                                    |
 | **Read Later**           | Hero card display · 3D card effect · List view · Mark as read                              |
+| **Visit Analytics**      | Click tracking · Top ranking · Trend charts · Recent visits · Data clearing               |
 | **Data Management**      | Import/Export JSON · Factory reset · Auto redirect to home after import                    |
 
 ---
@@ -158,6 +159,7 @@
 | **Widget Settings** | Control each monitor component visibility, Beam border toggle                                     |
 | **Security**        | Password change with strength indicator, first login force change, login state verification       |
 | **Data Management** | JSON import/export backup, factory reset, auto redirect to home after import, nested object support |
+| **Analytics**       | Bookmark click tracking, top bookmarks ranking, visit trends, recent visits, data clearing          |
 
 ### 🎨 Visual Design
 
@@ -488,6 +490,17 @@ Access: `http://NAS_IP:3000`
 | GET    | `/api/admin/verify`          | ✅   | Verify token        |
 | POST   | `/api/admin/change-password` | ✅   | Change password     |
 
+### Visit Analytics API
+
+| Method | Path                 | Auth | Description              |
+| ------ | -------------------- | ---- | ------------------------ |
+| POST   | `/api/visits/track`  | ❌   | Track bookmark visit     |
+| GET    | `/api/visits/stats`  | ✅   | Get visit stats overview |
+| GET    | `/api/visits/top`    | ✅   | Get top bookmarks        |
+| GET    | `/api/visits/trend`  | ✅   | Get visit trend by day   |
+| GET    | `/api/visits/recent` | ✅   | Get recent visits        |
+| DELETE | `/api/visits/clear`  | ✅   | Clear all visit data     |
+
 ### Other APIs
 
 | Method | Path                 | Auth | Description         |
@@ -576,6 +589,25 @@ A: Admin → System Settings → Data Management → Export Backup, or copy `ser
 ---
 
 ## 📝 Changelog
+
+### v0.1.4 (2026-02-10)
+
+#### ✨ New Features
+
+- **Visit Analytics**: Complete bookmark visit data analysis
+  - Automatic bookmark click tracking
+  - Total visits, today's visits, active bookmarks statistics
+  - Top bookmarks ranking (filter by day/week/month/all)
+  - 7-day visit trend chart
+  - Recent visits history
+  - One-click clear all visit data
+
+#### 🐛 Bug Fixes
+
+- Fixed sql.js parameter binding issue, using queryAll/queryOne/run utility functions
+- Optimized light mode styling for analytics card
+
+---
 
 ### v0.1.3 (2026-02-10)
 
@@ -699,7 +731,7 @@ A: Admin → System Settings → Data Management → Export Backup, or copy `ser
 - [ ] Browser extensions (Chrome/Firefox)
 - [ ] PWA offline support
 - [ ] More theme colors
-- [ ] Access statistics
+- [x] ~~Access statistics~~ ✅ v0.1.4 Implemented
 - [ ] WebDAV sync support
 - [ ] System monitoring alerts
 - [ ] Custom monitoring metrics

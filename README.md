@@ -2,7 +2,7 @@
 
 > 一个集书签管理、系统监控于一体的极简主义个人导航站，采用深空美学与玻璃态设计风格，支持日间/夜间双模式，提供完整的硬件实时监控能力
 
-![Version](https://img.shields.io/badge/version-0.1.3-blue)
+![Version](https://img.shields.io/badge/version-0.1.4-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Node](https://img.shields.io/badge/node-%3E%3D20-brightgreen)
 ![React](https://img.shields.io/badge/React-18.3-61dafb)
@@ -72,6 +72,7 @@
 | **Dock 状态栏**    | SYSTEM ONLINE · CPU/MEM/温度/网速实时显示 · 可拖拽定位                                   |
 | **移动端悬浮坞**   | 可展开菜单 · 搜索/添加/主题切换/应用入口                                                 |
 | **稍后阅读**       | Hero 卡片展示 · 3D 卡片效果 · 列表视图 · 标记已读                                        |
+| **访问统计**       | 点击追踪 · 热门排行 · 趋势图表 · 最近访问 · 数据清除                                     |
 | **数据管理**       | 导入/导出 JSON · 恢复出厂设置 · 导入成功自动返回首页                                     |
 
 ---
@@ -158,6 +159,7 @@
 | **小部件设置** | 控制各监控组件的显示/隐藏、Beam 流光边框开关                            |
 | **安全设置**   | 密码修改、带强度指示器动画、首次登录强制改密、登录状态二次验证          |
 | **数据管理**   | JSON 格式导入导出备份、恢复出厂设置、导入成功自动返回首页、嵌套对象支持 |
+| **访问统计**   | 书签点击追踪、热门书签排行、访问趋势图、最近访问记录、数据清除          |
 
 ### 🎨 视觉设计
 
@@ -974,6 +976,17 @@ server {
 | GET  | `/api/admin/verify`          | ✅   | 验证 Token 有效性      |
 | POST | `/api/admin/change-password` | ✅   | 修改密码               |
 
+### 访问统计 API
+
+| 方法   | 路径                 | 认证 | 说明                       |
+| ------ | -------------------- | ---- | -------------------------- |
+| POST   | `/api/visits/track`  | ❌   | 记录书签访问               |
+| GET    | `/api/visits/stats`  | ✅   | 获取访问统计概览           |
+| GET    | `/api/visits/top`    | ✅   | 获取热门书签排行           |
+| GET    | `/api/visits/trend`  | ✅   | 获取访问趋势（按天）       |
+| GET    | `/api/visits/recent` | ✅   | 获取最近访问记录           |
+| DELETE | `/api/visits/clear`  | ✅   | 清除所有访问数据           |
+
 ### 其他 API
 
 | 方法  | 路径                    | 认证 | 说明                           |
@@ -1100,6 +1113,17 @@ CREATE TABLE quotes (
 );
 ```
 
+### visits 表
+
+```sql
+CREATE TABLE visits (
+  id TEXT PRIMARY KEY,
+  bookmarkId TEXT NOT NULL,
+  visitedAt TEXT NOT NULL,
+  FOREIGN KEY (bookmarkId) REFERENCES bookmarks(id) ON DELETE CASCADE
+);
+```
+
 ### settings 表 (键值对)
 
 ```sql
@@ -1217,6 +1241,25 @@ docker-compose up -d
 ---
 
 ## 📝 更新日志
+
+### v0.1.4 (2026-02-10)
+
+#### ✨ 新功能
+
+- **访问统计功能**：完整的书签访问数据分析
+  - 书签点击自动追踪记录
+  - 总访问次数、今日访问、活跃书签数统计
+  - 热门书签排行榜（支持按天/周/月/全部筛选）
+  - 7 天访问趋势图表
+  - 最近访问记录列表
+  - 一键清除所有访问数据
+
+#### 🐛 Bug 修复
+
+- 修复 sql.js 参数绑定问题，使用 queryAll/queryOne/run 工具函数
+- 优化日间模式下访问统计卡片的样式显示
+
+---
 
 ### v0.1.3 (2026-02-10)
 
@@ -1362,7 +1405,7 @@ docker-compose up -d
 - [ ] 浏览器扩展（Chrome/Firefox）
 - [ ] PWA 离线支持
 - [ ] 更多主题配色
-- [ ] 访问统计分析
+- [x] ~~访问统计分析~~ ✅ v0.1.4 已实现
 - [ ] WebDAV 同步支持
 - [ ] 系统监控告警功能
 - [ ] 自定义监控指标
