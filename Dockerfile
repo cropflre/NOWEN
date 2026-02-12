@@ -23,6 +23,9 @@ LABEL org.opencontainers.image.licenses="MIT"
 
 WORKDIR /app
 
+# Install nginx
+RUN apk add --no-cache nginx
+
 # Install production dependencies for backend
 COPY server/package*.json ./server/
 RUN cd server && npm install --omit=dev
@@ -37,8 +40,8 @@ COPY server/tsconfig.json ./server/
 # Copy built frontend
 COPY --from=frontend-builder /app/dist ./dist
 
-# Install http-server with proxy support
-RUN npm install -g http-server
+# Copy nginx config
+COPY nginx.conf /etc/nginx/http.d/default.conf
 
 # Create data directory
 RUN mkdir -p /app/server/data
@@ -53,8 +56,8 @@ echo "=== NOWEN Starting ==="
 echo "Starting backend on port 3001..."
 cd /app/server && tsx src/index.ts &
 sleep 2
-echo "Starting frontend on port 3000..."
-cd /app && http-server dist -p 3000 -a 0.0.0.0 --proxy http://127.0.0.1:3001
+echo "Starting nginx on port 3000..."
+nginx -g "daemon off;"
 EOF
 
 RUN sed -i 's/\r$//' /app/start.sh && chmod +x /app/start.sh
