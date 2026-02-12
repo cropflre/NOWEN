@@ -9,6 +9,9 @@ import {
   Edit2,
 } from "lucide-react";
 
+// API
+import { visitsApi } from "./lib/api";
+
 // UI 组件
 import { AuroraBackground } from "./components/ui/aurora-background";
 import { BentoGrid, BentoGridItem } from "./components/ui/bento-grid";
@@ -488,7 +491,7 @@ function App() {
                     colSpan={1}
                     rowSpan={1}
                     spotlightColor={isLiteMode ? undefined : "rgba(234, 179, 8, 0.15)"}
-                    onClick={() => window.open(getBookmarkUrl(bookmark, isInternal), "_blank")}
+                    onClick={() => { visitsApi.track(bookmark.id).catch(console.error); window.open(getBookmarkUrl(bookmark, isInternal), "_blank") }}
                     onContextMenu={(e) => handleContextMenu(e, bookmark)}
                     delay={(index + 2) * 0.05}
                   >
@@ -609,7 +612,7 @@ function App() {
                             <SpotlightCard
                               className="h-full cursor-pointer"
                               spotlightColor={isLiteMode ? "transparent" : `${category.color}20`}
-                              onClick={() => window.open(getBookmarkUrl(bookmark, isInternal), "_blank")}
+                              onClick={() => { visitsApi.track(bookmark.id).catch(console.error); window.open(getBookmarkUrl(bookmark, isInternal), "_blank") }}
                               onContextMenu={(e) => handleContextMenu(e, bookmark)}
                             >
                               <div className="flex flex-col h-full">

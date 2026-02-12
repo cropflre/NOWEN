@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Edit2, Trash2, Pin, BookMarked, ExternalLink, Copy } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '../lib/utils'
+import { visitsApi } from '../lib/api'
 import { useNetworkEnv, getBookmarkUrl } from '../hooks/useNetworkEnv'
 
 interface ContextMenuItem {
@@ -146,7 +147,7 @@ export function useBookmarkContextMenu() {
         id: 'open',
         label: t('bookmark.open_in_new_tab'),
         icon: <ExternalLink className="w-4 h-4" />,
-        onClick: () => window.open(getBookmarkUrl(bookmark, isInternal), '_blank'),
+        onClick: () => { visitsApi.track(bookmark.id).catch(console.error); window.open(getBookmarkUrl(bookmark, isInternal), '_blank') },
       },
       {
         id: 'copy',
