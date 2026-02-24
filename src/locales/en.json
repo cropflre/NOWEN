@@ -88,6 +88,8 @@
     "vital_signs": "Vital Signs",
     "network_telemetry": "Network Telemetry",
     "service_hive": "Service Hive",
+    "tab_matrix": "Matrix",
+    "tab_docker": "Docker",
     "cpu": "CPU",
     "memory": "Memory",
     "disk": "Disk",

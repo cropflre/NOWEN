@@ -13,7 +13,11 @@
  * - GET /dynamic   - 热数据（实时状态，2-3秒刷新）
  */
 import { Router } from 'express'
+import { exec } from 'child_process'
+import { promisify } from 'util'
 import si from 'systeminformation'
+
+const execAsync = promisify(exec)
 
 const router = Router()
 
@@ -887,6 +891,50 @@ router.get('/docker', async (_req, res) => {
       success: false,
       error: 'Failed to retrieve docker containers',
       data: [],
+    })
+  }
+})
+
+// ============================================
+// Docker 容器控制：启动 / 停止 / 重启
+// ============================================
+
+router.post('/docker/:id/:action', async (req, res) => {
+  try {
+    const { id, action } = req.params
+
+    // 只允许特定操作
+    const allowedActions = ['start', 'stop', 'restart']
+    if (!allowedActions.includes(action)) {
+      return res.status(400).json({
+        success: false,
+        error: `Invalid action: ${action}. Allowed: ${allowedActions.join(', ')}`,
+      })
+    }
+
+    // 安全校验：ID 只允许十六进制字符（Docker 短 ID 格式）
+    if (!/^[a-f0-9]{6,12}$/i.test(id)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid container ID format',
+      })
+    }
+
+    // 执行 docker 命令
+    await execAsync(`docker ${action} ${id}`, { timeout: 30000 })
+
+    // 清除缓存，让下次请求获取最新状态
+    dockerContainersCache = { data: null, timestamp: 0 }
+
+    res.json({
+      success: true,
+      message: `Container ${id} ${action} successful`,
+    })
+  } catch (error: any) {
+    console.error(`Docker ${req.params.action} failed:`, error)
+    res.status(500).json({
+      success: false,
+      error: error?.message || `Failed to ${req.params.action} container`,
     })
   }
 })

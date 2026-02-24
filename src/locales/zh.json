@@ -88,6 +88,8 @@
     "vital_signs": "核心脉搏",
     "network_telemetry": "网络遥测",
     "service_hive": "服务蜂巢",
+    "tab_matrix": "光点",
+    "tab_docker": "Docker",
     "cpu": "处理器",
     "memory": "内存",
     "disk": "硬盘",
