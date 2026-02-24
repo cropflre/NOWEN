@@ -12,11 +12,13 @@ import {
   Calendar,
   Layers,
   RotateCcw,
-  AlertTriangle
+  AlertTriangle,
+  Globe
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { Bookmark, Category } from '../../types/bookmark'
 import { SiteSettings, factoryReset, clearAuthStatus } from '../../lib/api'
+import { isBrowserBookmarkHTML, parseBrowserBookmarks } from '../../lib/bookmarkParser'
 
 interface ExportData {
   version: string
@@ -159,6 +161,10 @@ export function DataManagementCard({
   const [success, setSuccess] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const htmlFileInputRef = useRef<HTMLInputElement>(null)
+  const [showImportModeModal, setShowImportModeModal] = useState(false)
+  const [pendingBrowserData, setPendingBrowserData] = useState<ExportData['data'] | null>(null)
+  const [pendingBrowserStats, setPendingBrowserStats] = useState<{ totalLinks: number; totalFolders: number } | null>(null)
 
   // 导出数据
   const handleExport = async () => {
@@ -292,6 +298,117 @@ export function DataManagementCard({
     }
   }
 
+  // 导入浏览器 HTML 书签
+  const handleBrowserImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setError(null)
+    setSuccess(null)
+
+    try {
+      const text = await file.text()
+
+      if (!isBrowserBookmarkHTML(text)) {
+        throw new Error(t('admin.settings.data.not_bookmark_html'))
+      }
+
+      const result = parseBrowserBookmarks(text)
+
+      if (result.bookmarks.length === 0) {
+        throw new Error(t('admin.settings.data.no_bookmarks'))
+      }
+
+      // 保存解析结果，弹出导入模式选择
+      setPendingBrowserData({
+        bookmarks: result.bookmarks,
+        categories: result.categories,
+        settings: result.settings,
+      })
+      setPendingBrowserStats({
+        totalLinks: result.stats.totalLinks,
+        totalFolders: result.categories.length,
+      })
+      setShowImportModeModal(true)
+    } catch (err: any) {
+      setError(err.message || t('admin.settings.data.import_error'))
+    } finally {
+      if (htmlFileInputRef.current) {
+        htmlFileInputRef.current.value = ''
+      }
+    }
+  }
+
+  // 执行浏览器书签导入（覆盖模式）
+  const handleBrowserImportExecute = async (mode: 'overwrite' | 'merge') => {
+    if (!pendingBrowserData) return
+
+    setShowImportModeModal(false)
+    setIsImporting(true)
+    setError(null)
+
+    try {
+      if (mode === 'merge') {
+        // 合并模式：保留现有数据，将新书签追加
+        const existingUrls = new Set(bookmarks.map(b => b.url))
+        const newBookmarks = pendingBrowserData.bookmarks.filter(b => !existingUrls.has(b.url))
+
+        // 合并分类：避免重名
+        const existingCatNames = new Set(categories.map(c => c.name))
+        const newCategories = pendingBrowserData.categories.filter(c => !existingCatNames.has(c.name))
+
+        // 更新新书签的分类 ID 映射（如果同名分类已存在，使用已有的 ID）
+        const catNameToId = new Map<string, string>()
+        categories.forEach(c => catNameToId.set(c.name, c.id))
+        newCategories.forEach(c => catNameToId.set(c.name, c.id))
+
+        const remappedBookmarks = newBookmarks.map(b => {
+          if (b.category) {
+            const cat = pendingBrowserData.categories.find(c => c.id === b.category)
+            if (cat && catNameToId.has(cat.name)) {
+              return { ...b, category: catNameToId.get(cat.name) }
+            }
+          }
+          return b
+        })
+
+        // 构造合并后的完整数据发送给后端
+        const mergedData = {
+          bookmarks: [...bookmarks, ...remappedBookmarks],
+          categories: [...categories, ...newCategories],
+          settings: pendingBrowserData.settings,
+        }
+
+        await onImport(mergedData)
+
+        const skipped = pendingBrowserData.bookmarks.length - newBookmarks.length
+        let msg = t('admin.settings.data.browser_merge_success', {
+          bookmarks: newBookmarks.length,
+          categories: newCategories.length,
+        })
+        if (skipped > 0) {
+          msg += ' ' + t('admin.settings.data.browser_merge_skipped', { count: skipped })
+        }
+        setSuccess(msg)
+      } else {
+        // 覆盖模式：直接替换
+        await onImport(pendingBrowserData)
+        setSuccess(t('admin.settings.data.browser_import_success', {
+          bookmarks: pendingBrowserData.bookmarks.length,
+          categories: pendingBrowserData.categories.length,
+        }))
+      }
+
+      setTimeout(() => setSuccess(null), 5000)
+    } catch (err: any) {
+      setError(err.message || t('admin.settings.data.import_error'))
+    } finally {
+      setIsImporting(false)
+      setPendingBrowserData(null)
+      setPendingBrowserStats(null)
+    }
+  }
+
   // 恢复出厂设置
   const handleFactoryReset = async () => {
     setIsResetting(true)
@@ -400,22 +517,22 @@ export function DataManagementCard({
         </div>
 
         {/* Actions */}
-        <div className="relative grid grid-cols-2 gap-4">
-          {/* Export Button - NOWEN 原生格式 */}
+        <div className="relative grid grid-cols-3 gap-3">
+          {/* Export Button */}
           <motion.button
             onClick={handleExport}
             disabled={isExporting}
             whileHover={{ scale: isExporting ? 1 : 1.02 }}
             whileTap={{ scale: isExporting ? 1 : 0.98 }}
             className={cn(
-              'flex flex-col items-center gap-3 p-5 rounded-xl',
+              'flex flex-col items-center gap-2 p-4 rounded-xl',
               'bg-gradient-to-br from-emerald-500/10 to-teal-500/10',
               'border border-emerald-500/20 hover:border-emerald-500/40',
               'transition-all duration-300',
               'disabled:opacity-50 disabled:cursor-not-allowed'
             )}
           >
-            <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center">
               {isExporting ? (
                 <motion.span
                   animate={{ rotate: 360 }}
@@ -427,26 +544,26 @@ export function DataManagementCard({
               )}
             </div>
             <div className="text-center">
-              <p className="font-medium" style={{ color: 'var(--color-text-primary)' }}>{t('admin.settings.data.export')}</p>
-              <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>{t('admin.settings.data.export_desc')}</p>
+              <p className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>{t('admin.settings.data.export')}</p>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>{t('admin.settings.data.export_desc')}</p>
             </div>
           </motion.button>
 
-          {/* Import Button */}
+          {/* Import JSON Button */}
           <motion.button
             onClick={() => fileInputRef.current?.click()}
             disabled={isImporting}
             whileHover={{ scale: isImporting ? 1 : 1.02 }}
             whileTap={{ scale: isImporting ? 1 : 0.98 }}
             className={cn(
-              'flex flex-col items-center gap-3 p-5 rounded-xl',
+              'flex flex-col items-center gap-2 p-4 rounded-xl',
               'bg-gradient-to-br from-blue-500/10 to-indigo-500/10',
               'border border-blue-500/20 hover:border-blue-500/40',
               'transition-all duration-300',
               'disabled:opacity-50 disabled:cursor-not-allowed'
             )}
           >
-            <div className="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center">
               {isImporting ? (
                 <motion.span
                   animate={{ rotate: 360 }}
@@ -458,8 +575,31 @@ export function DataManagementCard({
               )}
             </div>
             <div className="text-center">
-              <p className="font-medium" style={{ color: 'var(--color-text-primary)' }}>{t('admin.settings.data.import')}</p>
-              <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>{t('admin.settings.data.import_desc')}</p>
+              <p className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>{t('admin.settings.data.import')}</p>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>{t('admin.settings.data.import_desc')}</p>
+            </div>
+          </motion.button>
+
+          {/* Import Browser Bookmarks Button */}
+          <motion.button
+            onClick={() => htmlFileInputRef.current?.click()}
+            disabled={isImporting}
+            whileHover={{ scale: isImporting ? 1 : 1.02 }}
+            whileTap={{ scale: isImporting ? 1 : 0.98 }}
+            className={cn(
+              'flex flex-col items-center gap-2 p-4 rounded-xl',
+              'bg-gradient-to-br from-purple-500/10 to-violet-500/10',
+              'border border-purple-500/20 hover:border-purple-500/40',
+              'transition-all duration-300',
+              'disabled:opacity-50 disabled:cursor-not-allowed'
+            )}
+          >
+            <div className="w-10 h-10 rounded-full bg-purple-500/20 flex items-center justify-center">
+              <Globe className="w-5 h-5 text-purple-500" />
+            </div>
+            <div className="text-center">
+              <p className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>{t('admin.settings.data.browser_import')}</p>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>{t('admin.settings.data.browser_import_desc')}</p>
             </div>
           </motion.button>
 
@@ -468,6 +608,13 @@ export function DataManagementCard({
             type="file"
             accept=".json"
             onChange={handleImport}
+            className="hidden"
+          />
+          <input
+            ref={htmlFileInputRef}
+            type="file"
+            accept=".html,.htm"
+            onChange={handleBrowserImport}
             className="hidden"
           />
         </div>
@@ -590,6 +737,116 @@ export function DataManagementCard({
           )}
         </AnimatePresence>
 
+        {/* Browser Import Mode Modal */}
+        <AnimatePresence>
+          {showImportModeModal && pendingBrowserStats && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+              onClick={() => { setShowImportModeModal(false); setPendingBrowserData(null); setPendingBrowserStats(null); }}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                onClick={e => e.stopPropagation()}
+                className="w-full max-w-md rounded-2xl p-6"
+                style={{
+                  background: 'var(--color-bg-secondary)',
+                  border: '1px solid var(--color-glass-border)',
+                }}
+              >
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center">
+                    <Globe className="w-6 h-6 text-purple-500" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold" style={{ color: 'var(--color-text-primary)' }}>
+                      {t('admin.settings.data.browser_import_title')}
+                    </h3>
+                    <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+                      {t('admin.settings.data.browser_import_detected', {
+                        bookmarks: pendingBrowserStats.totalLinks,
+                        categories: pendingBrowserStats.totalFolders,
+                      })}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-3 mb-6">
+                  {/* Merge Mode */}
+                  <motion.button
+                    onClick={() => handleBrowserImportExecute('merge')}
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                    className="w-full p-4 rounded-xl text-left transition-colors"
+                    style={{
+                      background: 'var(--color-bg-tertiary)',
+                      border: '1px solid var(--color-glass-border)',
+                    }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center shrink-0">
+                        <Layers className="w-4 h-4 text-blue-400" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>
+                          {t('admin.settings.data.import_mode_merge')}
+                        </p>
+                        <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+                          {t('admin.settings.data.import_mode_merge_desc')}
+                        </p>
+                      </div>
+                    </div>
+                  </motion.button>
+
+                  {/* Overwrite Mode */}
+                  <motion.button
+                    onClick={() => handleBrowserImportExecute('overwrite')}
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                    className="w-full p-4 rounded-xl text-left transition-colors"
+                    style={{
+                      background: 'var(--color-bg-tertiary)',
+                      border: '1px solid rgba(239, 68, 68, 0.2)',
+                    }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center shrink-0">
+                        <RotateCcw className="w-4 h-4 text-red-400" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>
+                          {t('admin.settings.data.import_mode_overwrite')}
+                        </p>
+                        <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+                          {t('admin.settings.data.import_mode_overwrite_desc')}
+                        </p>
+                      </div>
+                    </div>
+                  </motion.button>
+                </div>
+
+                <motion.button
+                  onClick={() => { setShowImportModeModal(false); setPendingBrowserData(null); setPendingBrowserStats(null); }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full py-2.5 rounded-xl text-sm font-medium transition-colors"
+                  style={{
+                    background: 'var(--color-bg-tertiary)',
+                    border: '1px solid var(--color-glass-border)',
+                    color: 'var(--color-text-muted)',
+                  }}
+                >
+                  {t('admin.settings.data.reset_cancel')}
+                </motion.button>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         {/* File Format Info */}
         <div 
           className="relative mt-4 p-3 rounded-xl"
@@ -601,6 +858,10 @@ export function DataManagementCard({
           <div className="flex items-center gap-2" style={{ color: 'var(--color-text-muted)' }}>
             <FileJson className="w-4 h-4" />
             <span className="text-xs">{t('admin.settings.data.format_hint')}</span>
+          </div>
+          <div className="flex items-center gap-2 mt-1 ml-6" style={{ color: 'var(--color-text-muted)' }}>
+            <Globe className="w-3.5 h-3.5" />
+            <span className="text-xs">{t('admin.settings.data.browser_format_hint')}</span>
           </div>
         </div>
 

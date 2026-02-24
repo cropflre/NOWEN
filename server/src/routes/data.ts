@@ -132,7 +132,7 @@ router.post('/import', authMiddleware, validateBody(importDataSchema), (req: Req
     if (categories && Array.isArray(categories)) {
       for (const cat of categories) {
         db.run(`
-          INSERT INTO categories (id, name, icon, color, orderIndex)
+          INSERT OR REPLACE INTO categories (id, name, icon, color, orderIndex)
           VALUES (?, ?, ?, ?, ?)
         `, [cat.id, cat.name, cat.icon || null, cat.color, cat.orderIndex || 0])
       }
@@ -143,7 +143,7 @@ router.post('/import', authMiddleware, validateBody(importDataSchema), (req: Req
     for (const bookmark of bookmarks) {
       const id = bookmark.id || generateId()
       db.run(`
-        INSERT INTO bookmarks (id, url, internalUrl, title, description, favicon, ogImage, icon, iconUrl, category, tags, orderIndex, isPinned, isReadLater, isRead, createdAt, updatedAt)
+        INSERT OR REPLACE INTO bookmarks (id, url, internalUrl, title, description, favicon, ogImage, icon, iconUrl, category, tags, orderIndex, isPinned, isReadLater, isRead, createdAt, updatedAt)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [
         id,
