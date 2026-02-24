@@ -23,8 +23,8 @@ LABEL org.opencontainers.image.licenses="MIT"
 
 WORKDIR /app
 
-# Install nginx
-RUN apk add --no-cache nginx
+# Install nginx and docker-cli (for container management via docker.sock)
+RUN apk add --no-cache nginx docker-cli
 
 # Install production dependencies for backend
 COPY server/package*.json ./server/
