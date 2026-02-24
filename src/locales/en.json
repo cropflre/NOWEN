@@ -384,7 +384,20 @@
         "mismatch_error": "New passwords do not match",
         "change_password": "Change Password",
         "changing": "Changing...",
-        "changed": "Password changed successfully"
+        "changed": "Password changed successfully",
+        "change_username": "Change Username",
+        "new_username": "New Username",
+        "new_username_placeholder": "Enter new username",
+        "username_hint": "Only letters, numbers, underscores and hyphens, min 2 characters",
+        "verify_password": "Verify Password",
+        "verify_password_placeholder": "Enter current password to verify identity",
+        "confirm_change_username": "Confirm Change Username",
+        "confirm_change_password": "Confirm Change Password",
+        "username_changing": "Changing...",
+        "username_changed": "Username changed successfully",
+        "username_min_error": "Username must be at least 2 characters",
+        "username_format_error": "Username can only contain letters, numbers, underscores and hyphens",
+        "username_same_error": "New username is the same as current"
       },
       "data": {
         "title": "Data Management",

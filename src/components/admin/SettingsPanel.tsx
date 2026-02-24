@@ -107,11 +107,18 @@ interface SettingsPanelProps {
   widgetSettingsError: string
   // 安全设置
   onChangePassword: (currentPassword: string, newPassword: string) => Promise<void>
+  onChangeUsername: (newUsername: string, password: string) => Promise<void>
   isChangingPassword: boolean
+  isChangingUsername: boolean
   passwordSuccess: boolean
+  usernameSuccess: boolean
   passwordError: string
+  usernameError: string
+  currentUsername: string
   onClearPasswordError: () => void
   onClearPasswordSuccess: () => void
+  onClearUsernameError: () => void
+  onClearUsernameSuccess: () => void
   // 数据管理
   bookmarks: Bookmark[]
   categories: Category[]
@@ -148,11 +155,18 @@ export function SettingsPanel({
   widgetSettingsError,
   // 安全设置
   onChangePassword,
+  onChangeUsername,
   isChangingPassword,
+  isChangingUsername,
   passwordSuccess,
+  usernameSuccess,
   passwordError,
+  usernameError,
+  currentUsername,
   onClearPasswordError,
   onClearPasswordSuccess,
+  onClearUsernameError,
+  onClearUsernameSuccess,
   // 数据管理
   bookmarks,
   categories,
@@ -339,11 +353,18 @@ export function SettingsPanel({
           {activeSettingsTab === 'security' && (
             <SecurityCard
               onChangePassword={onChangePassword}
+              onChangeUsername={onChangeUsername}
               isChanging={isChangingPassword}
+              isChangingUsername={isChangingUsername}
               success={passwordSuccess}
+              usernameSuccess={usernameSuccess}
               error={passwordError}
+              usernameError={usernameError}
+              currentUsername={currentUsername}
               onClearError={onClearPasswordError}
               onClearSuccess={onClearPasswordSuccess}
+              onClearUsernameError={onClearUsernameError}
+              onClearUsernameSuccess={onClearUsernameSuccess}
             />
           )}
 

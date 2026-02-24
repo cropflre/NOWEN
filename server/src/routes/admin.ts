@@ -8,7 +8,7 @@ import {
   deleteTokenFromDb, 
   generateToken 
 } from '../middleware/index.js'
-import { validateBody, loginSchema, changePasswordSchema } from '../schemas.js'
+import { validateBody, loginSchema, changePasswordSchema, changeUsernameSchema } from '../schemas.js'
 
 const router = Router()
 
@@ -77,6 +77,45 @@ router.post('/change-password', authMiddleware, validateBody(changePasswordSchem
   } catch (error) {
     console.error('修改密码失败:', error)
     res.status(500).json({ error: '修改密码失败' })
+  }
+})
+
+// 修改用户名
+router.post('/change-username', authMiddleware, validateBody(changeUsernameSchema), async (req: Request, res: Response) => {
+  try {
+    const { newUsername, password } = req.body
+    const user = (req as any).user
+    
+    const admin = queryOne('SELECT * FROM admins WHERE username = ?', [user.username])
+    
+    if (!admin) {
+      return res.status(404).json({ error: '用户不存在' })
+    }
+    
+    // 验证密码
+    const isValidPassword = await verifyPassword(password, admin.password)
+    if (!isValidPassword) {
+      return res.status(401).json({ error: '密码错误' })
+    }
+    
+    // 检查新用户名是否已存在
+    const existing = queryOne('SELECT id FROM admins WHERE username = ? AND id != ?', [newUsername, admin.id])
+    if (existing) {
+      return res.status(409).json({ error: '用户名已被占用' })
+    }
+    
+    const now = new Date().toISOString()
+    
+    // 更新用户名
+    run('UPDATE admins SET username = ?, updatedAt = ? WHERE id = ?', [newUsername, now, admin.id])
+    
+    // 更新 tokens 表中的用户名
+    run('UPDATE tokens SET username = ? WHERE userId = ?', [newUsername, admin.id])
+    
+    res.json({ success: true, message: '用户名修改成功', username: newUsername })
+  } catch (error) {
+    console.error('修改用户名失败:', error)
+    res.status(500).json({ error: '修改用户名失败' })
   }
 })
 

@@ -36,7 +36,7 @@ import {
 } from 'lucide-react'
 import { Bookmark, Category, CustomIcon } from '../types/bookmark'
 import { cn, presetIcons } from '../lib/utils'
-import { adminChangePassword, fetchSettings, updateSettings, SiteSettings, WidgetVisibility, importData, fetchQuotes, updateQuotes } from '../lib/api'
+import { adminChangePassword, adminChangeUsername, fetchSettings, updateSettings, SiteSettings, WidgetVisibility, importData, fetchQuotes, updateQuotes } from '../lib/api'
 import { AdminSidebar } from '../components/admin/AdminSidebar'
 import { QuotesCard } from '../components/admin/QuotesCard'
 import { SettingsPanel } from '../components/admin/SettingsPanel'
@@ -254,6 +254,11 @@ function AdminContent() {
   const [isChangingPassword, setIsChangingPassword] = useState(false)
   const [passwordError, setPasswordError] = useState('')
   const [passwordSuccess, setPasswordSuccess] = useState(false)
+  // 用户名修改状态
+  const [isChangingUsername, setIsChangingUsername] = useState(false)
+  const [usernameError, setUsernameError] = useState('')
+  const [usernameSuccess, setUsernameSuccess] = useState(false)
+  const [currentUsername, setCurrentUsername] = useState(() => localStorage.getItem('admin_username') || 'admin')
 
   // 站点设置状态
   const [siteSettings, setSiteSettings] = useState<SiteSettings>({
@@ -422,6 +427,26 @@ function AdminContent() {
       throw err
     } finally {
       setIsChangingPassword(false)
+    }
+  }
+
+  // 修改用户名
+  const handleChangeUsername = async (newUsername: string, password: string) => {
+    setIsChangingUsername(true)
+    
+    try {
+      const result = await adminChangeUsername(newUsername, password)
+      if (result.username) {
+        setCurrentUsername(result.username)
+      }
+      setUsernameSuccess(true)
+      showToast('success', t('admin.settings.security.username_changed'))
+      setTimeout(() => setUsernameSuccess(false), 3000)
+    } catch (err: any) {
+      setUsernameError(err.message || '修改用户名失败')
+      throw err
+    } finally {
+      setIsChangingUsername(false)
     }
   }
 
@@ -1503,11 +1528,18 @@ function AdminContent() {
                   widgetSettingsError={widgetSettingsError}
                   // 安全设置
                   onChangePassword={handleChangePassword}
+                  onChangeUsername={handleChangeUsername}
                   isChangingPassword={isChangingPassword}
+                  isChangingUsername={isChangingUsername}
                   passwordSuccess={passwordSuccess}
+                  usernameSuccess={usernameSuccess}
                   passwordError={passwordError}
+                  usernameError={usernameError}
+                  currentUsername={currentUsername}
                   onClearPasswordError={() => setPasswordError('')}
                   onClearPasswordSuccess={() => setPasswordSuccess(false)}
+                  onClearUsernameError={() => setUsernameError('')}
+                  onClearUsernameSuccess={() => setUsernameSuccess(false)}
                   // 数据管理
                   bookmarks={bookmarks}
                   categories={categories}

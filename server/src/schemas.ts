@@ -68,6 +68,11 @@ export const changePasswordSchema = z.object({
   newPassword: z.string().min(6, '新密码长度至少6位').max(100, '密码不能超过100字符'),
 })
 
+export const changeUsernameSchema = z.object({
+  newUsername: z.string().min(2, '用户名长度至少2位').max(50, '用户名不能超过50字符').regex(/^[a-zA-Z0-9_\-]+$/, '用户名只能包含字母、数字、下划线和横线'),
+  password: z.string().min(1, '密码不能为空'),
+})
+
 // ========== 元数据相关 Schema ==========
 
 export const metadataSchema = z.object({

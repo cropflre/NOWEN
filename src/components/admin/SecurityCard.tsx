@@ -10,31 +10,48 @@ import {
   AlertCircle,
   ChevronDown,
   Zap,
-  Info
+  Info,
+  User,
+  Pencil
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { isDemoMode } from '../../lib/api'
 
 interface SecurityCardProps {
   onChangePassword: (currentPassword: string, newPassword: string) => Promise<void>
+  onChangeUsername: (newUsername: string, password: string) => Promise<void>
   isChanging: boolean
+  isChangingUsername: boolean
   success: boolean
+  usernameSuccess: boolean
   error: string
+  usernameError: string
+  currentUsername: string
   onClearError: () => void
   onClearSuccess: () => void
+  onClearUsernameError: () => void
+  onClearUsernameSuccess: () => void
 }
 
 export function SecurityCard({
   onChangePassword,
+  onChangeUsername,
   isChanging,
+  isChangingUsername,
   success,
+  usernameSuccess,
   error,
+  usernameError,
+  currentUsername,
   onClearError,
   onClearSuccess,
+  onClearUsernameError,
+  onClearUsernameSuccess,
 }: SecurityCardProps) {
   const { t } = useTranslation()
   const isDemo = isDemoMode()
   const [isExpanded, setIsExpanded] = useState(false)
+  const [isUsernameExpanded, setIsUsernameExpanded] = useState(false)
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -42,6 +59,11 @@ export function SecurityCard({
   const [showNewPwd, setShowNewPwd] = useState(false)
   const [showConfirmPwd, setShowConfirmPwd] = useState(false)
   const [localError, setLocalError] = useState('')
+  // 修改用户名
+  const [newUsername, setNewUsername] = useState('')
+  const [usernamePassword, setUsernamePassword] = useState('')
+  const [showUsernamePwd, setShowUsernamePwd] = useState(false)
+  const [localUsernameError, setLocalUsernameError] = useState('')
 
   // Password Strength Calculator
   const passwordStrength = useMemo(() => {
@@ -100,7 +122,6 @@ export function SecurityCard({
     
     try {
       await onChangePassword(currentPassword, newPassword)
-      // Clear form on success
       setCurrentPassword('')
       setNewPassword('')
       setConfirmPassword('')
@@ -108,6 +129,37 @@ export function SecurityCard({
       // Error handled by parent
     }
   }
+
+  const handleUsernameSubmit = async () => {
+    setLocalUsernameError('')
+    onClearUsernameError()
+    onClearUsernameSuccess()
+    
+    if (newUsername.length < 2) {
+      setLocalUsernameError(t('admin.settings.security.username_min_error'))
+      return
+    }
+    
+    if (!/^[a-zA-Z0-9_\-]+$/.test(newUsername)) {
+      setLocalUsernameError(t('admin.settings.security.username_format_error'))
+      return
+    }
+    
+    if (newUsername === currentUsername) {
+      setLocalUsernameError(t('admin.settings.security.username_same_error'))
+      return
+    }
+    
+    try {
+      await onChangeUsername(newUsername, usernamePassword)
+      setNewUsername('')
+      setUsernamePassword('')
+    } catch (err) {
+      // Error handled by parent
+    }
+  }
+
+  const displayUsernameError = usernameError || localUsernameError
 
   const displayError = error || localError
 
@@ -130,10 +182,7 @@ export function SecurityCard({
         <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-purple-500/20 via-transparent to-pink-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 dark:block hidden" />
         
         {/* Header - Always Visible */}
-        <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="relative w-full p-6 flex items-center justify-between text-left"
-        >
+        <div className="relative w-full p-6">
           <div className="flex items-center gap-4">
             <div className="relative">
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-pink-600/20 border border-purple-500/20 flex items-center justify-center">
@@ -146,40 +195,223 @@ export function SecurityCard({
               <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>{t('admin.settings.security.subtitle')}</p>
             </div>
           </div>
-          
-          <motion.div
-            animate={{ rotate: isExpanded ? 180 : 0 }}
-            transition={{ duration: 0.3 }}
-            className="w-8 h-8 rounded-lg flex items-center justify-center"
-            style={{ background: 'var(--color-bg-tertiary)' }}
+        </div>
+
+        <div className="px-6 pb-6 space-y-4">
+          {/* Divider */}
+          <div className="h-px" style={{ background: 'linear-gradient(to right, transparent, var(--color-glass-border), transparent)' }} />
+
+          {/* Demo Mode Warning */}
+          {isDemo && (
+            <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-sm text-amber-400">
+              <Info className="w-4 h-4 flex-shrink-0" />
+              <span>演示模式下禁止修改 / Changes disabled in demo mode</span>
+            </div>
+          )}
+
+          {/* ======== 修改用户名区域 ======== */}
+          <div 
+            className="rounded-xl overflow-hidden"
+            style={{ border: '1px solid var(--color-glass-border)' }}
           >
-            <ChevronDown className="w-5 h-5" style={{ color: 'var(--color-text-muted)' }} />
-          </motion.div>
-        </button>
-
-        {/* Expandable Content */}
-        <AnimatePresence>
-          {isExpanded && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.3, ease: 'easeInOut' }}
-              className="overflow-hidden"
+            <button
+              onClick={() => setIsUsernameExpanded(!isUsernameExpanded)}
+              className="relative w-full px-4 py-3 flex items-center justify-between text-left transition-colors duration-200 hover:opacity-80"
+              style={{ background: 'var(--color-bg-tertiary)' }}
             >
-              <div className="px-6 pb-6 space-y-5">
-                {/* Divider */}
-                <div className="h-px" style={{ background: 'linear-gradient(to right, transparent, var(--color-glass-border), transparent)' }} />
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500/20 to-cyan-500/20 border border-blue-500/20 flex items-center justify-center">
+                  <User className="w-4 h-4 text-blue-500" />
+                </div>
+                <div>
+                  <span className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>
+                    {t('admin.settings.security.change_username')}
+                  </span>
+                  <span className="ml-2 text-xs px-2 py-0.5 rounded-full" style={{ background: 'var(--color-glass)', color: 'var(--color-text-muted)' }}>
+                    {currentUsername}
+                  </span>
+                </div>
+              </div>
+              <motion.div
+                animate={{ rotate: isUsernameExpanded ? 180 : 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <ChevronDown className="w-4 h-4" style={{ color: 'var(--color-text-muted)' }} />
+              </motion.div>
+            </button>
 
-                {/* Demo Mode Warning */}
-                {isDemo && (
-                  <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-sm text-amber-400">
-                    <Info className="w-4 h-4 flex-shrink-0" />
-                    <span>演示模式下禁止修改密码 / Password change is disabled in demo mode</span>
+            <AnimatePresence>
+              {isUsernameExpanded && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3, ease: 'easeInOut' }}
+                  className="overflow-hidden"
+                >
+                  <div className="p-4 space-y-4" style={{ borderTop: '1px solid var(--color-glass-border)' }}>
+                    {/* New Username */}
+                    <div className="space-y-2">
+                      <label className="flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--color-text-muted)' }}>
+                        <Pencil className="w-4 h-4" />
+                        {t('admin.settings.security.new_username')}
+                      </label>
+                      <input
+                        type="text"
+                        value={newUsername}
+                        onChange={e => {
+                          setNewUsername(e.target.value)
+                          setLocalUsernameError('')
+                          onClearUsernameError()
+                        }}
+                        disabled={isDemo}
+                        placeholder={t('admin.settings.security.new_username_placeholder')}
+                        className="w-full px-4 py-3 rounded-xl focus:outline-none transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                        style={{
+                          background: 'var(--color-bg-tertiary)',
+                          border: '1px solid var(--color-glass-border)',
+                          color: 'var(--color-text-primary)',
+                        }}
+                      />
+                      <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                        {t('admin.settings.security.username_hint')}
+                      </p>
+                    </div>
+
+                    {/* Password for Verification */}
+                    <div className="space-y-2">
+                      <label className="flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--color-text-muted)' }}>
+                        <Lock className="w-4 h-4" />
+                        {t('admin.settings.security.verify_password')}
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showUsernamePwd ? 'text' : 'password'}
+                          value={usernamePassword}
+                          onChange={e => {
+                            setUsernamePassword(e.target.value)
+                            setLocalUsernameError('')
+                            onClearUsernameError()
+                          }}
+                          disabled={isDemo}
+                          placeholder={t('admin.settings.security.verify_password_placeholder')}
+                          className="w-full px-4 py-3 pr-12 rounded-xl focus:outline-none transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                          style={{
+                            background: 'var(--color-bg-tertiary)',
+                            border: '1px solid var(--color-glass-border)',
+                            color: 'var(--color-text-primary)',
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowUsernamePwd(!showUsernamePwd)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 p-1 transition-colors"
+                          style={{ color: 'var(--color-text-muted)' }}
+                        >
+                          {showUsernamePwd ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Username Error */}
+                    <AnimatePresence>
+                      {displayUsernameError && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          className="flex items-center gap-2 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-sm text-red-400"
+                        >
+                          <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                          {displayUsernameError}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    {/* Username Success */}
+                    <AnimatePresence>
+                      {usernameSuccess && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          className="flex items-center gap-2 px-4 py-3 rounded-xl bg-green-500/10 border border-green-500/20 text-sm text-green-400"
+                        >
+                          <CheckCircle className="w-4 h-4 flex-shrink-0" />
+                          {t('admin.settings.security.username_changed')}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    {/* Submit Username */}
+                    <motion.button
+                      onClick={handleUsernameSubmit}
+                      disabled={isDemo || isChangingUsername || !newUsername || !usernamePassword}
+                      whileHover={{ scale: isChangingUsername ? 1 : 1.02 }}
+                      whileTap={{ scale: isChangingUsername ? 1 : 0.98 }}
+                      className={cn(
+                        'relative w-full py-3 rounded-xl font-medium overflow-hidden',
+                        'bg-gradient-to-r from-blue-600 to-cyan-600',
+                        'text-white shadow-lg shadow-blue-500/20',
+                        'disabled:opacity-50 disabled:cursor-not-allowed',
+                        'transition-all duration-300'
+                      )}
+                    >
+                      <span className="relative z-10">
+                        {isChangingUsername ? (
+                          <span className="flex items-center justify-center gap-2">
+                            <motion.span
+                              animate={{ rotate: 360 }}
+                              transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                              className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full"
+                            />
+                            {t('admin.settings.security.username_changing')}
+                          </span>
+                        ) : t('admin.settings.security.confirm_change_username')}
+                      </span>
+                    </motion.button>
                   </div>
-                )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
-                {/* Current Password */}
+          {/* ======== 修改密码区域 ======== */}
+          <div 
+            className="rounded-xl overflow-hidden"
+            style={{ border: '1px solid var(--color-glass-border)' }}
+          >
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="relative w-full px-4 py-3 flex items-center justify-between text-left transition-colors duration-200 hover:opacity-80"
+              style={{ background: 'var(--color-bg-tertiary)' }}
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/20 flex items-center justify-center">
+                  <Lock className="w-4 h-4 text-purple-500" />
+                </div>
+                <span className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>
+                  {t('admin.settings.security.change_password')}
+                </span>
+              </div>
+              <motion.div
+                animate={{ rotate: isExpanded ? 180 : 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <ChevronDown className="w-4 h-4" style={{ color: 'var(--color-text-muted)' }} />
+              </motion.div>
+            </button>
+
+            <AnimatePresence>
+              {isExpanded && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3, ease: 'easeInOut' }}
+                  className="overflow-hidden"
+                >
+                  <div className="p-4 space-y-4" style={{ borderTop: '1px solid var(--color-glass-border)' }}>
                 <div className="space-y-2">
                   <label className="flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--color-text-muted)' }}>
                     <Lock className="w-4 h-4" />
@@ -418,13 +650,15 @@ export function SecurityCard({
                         />
                         {t('admin.settings.security.changing')}
                       </span>
-                    ) : t('admin.settings.security.change_password')}
+                    ) : t('admin.settings.security.confirm_change_password')}
                   </span>
                 </motion.button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
       </div>
     </motion.div>
   )

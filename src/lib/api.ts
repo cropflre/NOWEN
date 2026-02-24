@@ -354,6 +354,24 @@ export async function adminChangePassword(
   })
 }
 
+export async function adminChangeUsername(
+  newUsername: string,
+  password: string
+): Promise<SuccessResponse & { username?: string }> {
+  const data = await request<SuccessResponse & { username?: string }>('/api/admin/change-username', {
+    method: 'POST',
+    body: JSON.stringify({ newUsername, password }),
+    requireAuth: true,
+  })
+  
+  // 更新 localStorage 中的用户名
+  if (data.success && data.username) {
+    localStorage.setItem('admin_username', data.username)
+  }
+  
+  return data
+}
+
 // 验证 Token 有效性
 export async function adminVerify(): Promise<VerifyResponse> {
   return request<VerifyResponse>('/api/admin/verify', {
