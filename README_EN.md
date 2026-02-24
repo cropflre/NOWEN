@@ -79,7 +79,7 @@
 | **Network Switching**    | Dual URLs per bookmark (Internal/External) · Auto network detection · Smart URL switching              |
 | **Footer Filing Info**   | Configure footer text in settings · HTML rendering support · Homepage bottom display                   |
 | **Wallpaper**            | Custom background wallpaper · Upload/Drag/URL/Picsum/Bing · Adjustable blur and overlay · Beam effects layered |
-| **Data Management**      | Import/Export JSON · Factory reset · Auto redirect to home after import · SunPanel data import compatible · Auto-fetch icons after import |
+| **Data Management**      | Import/Export JSON · Factory reset · Auto redirect to home after import · SunPanel data import compatible · Auto-fetch icons after import (≤50 bookmarks) |
 
 ---
 
@@ -151,7 +151,7 @@
 - **Drag & Drop Sorting**: Smooth drag experience with @dnd-kit
 - **Context Menu**: Quick operations when logged in (edit/delete/pin)
 - **Custom Icons**: Three icon modes (preset icons, custom upload, URL remote image)
-- **Virtual Scroll**: Auto-enabled when 50+ bookmarks, optimized rendering performance
+- **Virtual Scroll**: Auto-enabled on homepage when 50+ bookmarks, optimized rendering performance
 - **Link Health Check** (NEW): Batch check all bookmark links accessibility, dead link detection and cleanup
 - **Internal/External URL Switching** (NEW): Configure dual URLs per bookmark, auto-detect network environment for smart URL switching
 
@@ -159,7 +159,7 @@
 
 | Module              | Features                                                                                          |
 | ------------------- | ------------------------------------------------------------------------------------------------- |
-| **Bookmarks**       | CRUD, batch operations, category filter, search, virtual scroll, quick category change            |
+| **Bookmarks**       | CRUD, batch operations, category filter, search, numeric pagination, quick category change            |
 | **Categories**      | Custom names, icon picker, color picker, drag sorting                                             |
 | **Icons**           | Upload custom icons, preview, delete management                                                   |
 | **Quotes**          | Custom quotes, system default toggle                                                              |
@@ -168,7 +168,7 @@
 | **Widget Settings** | Control each monitor component visibility, Beam border toggle                                     |
 | **Wallpaper Settings** | Custom background wallpaper, image source selection (Upload/URL/Picsum/Bing), blur and overlay control |
 | **Security**        | Password change with strength indicator, first login force change, login state verification, admin username change |
-| **Data Management** | JSON import/export backup, factory reset, auto redirect to home after import, nested object support, SunPanel data compatible import, auto-fetch bookmark icons after import |
+| **Data Management** | JSON import/export backup, factory reset, auto redirect to home after import, nested object support, SunPanel data compatible import, auto-fetch bookmark icons after import (≤50) |
 | **Analytics**       | Bookmark click tracking, top bookmarks ranking, visit trends, recent visits, data clearing          |
 | **Health Check**    | Batch check bookmark link accessibility, 4 status types (OK/Error/Timeout/Redirect), delete dead links |
 
@@ -623,7 +623,10 @@ A: Admin → System Settings → Data Management → Export Backup, or copy `ser
   - Concurrency limited to 3 requests to avoid overloading target sites
   - Frontend polls fetch progress in real-time, auto-refreshes on completion
   - Toast notifications for fetch progress and results
+  - Skips icon fetching when importing more than 50 bookmarks to avoid excessive requests
 - **Admin Username Change**: Security settings now support changing admin account username
+- **Category Collapse Threshold**: Categories with 100+ bookmarks show first 8 with "Show More" button
+- **Admin Numeric Pagination**: Bookmark management page switched from scroll pagination to numeric pagination (20 per page)
 
 #### 🐛 Bug Fixes
 
