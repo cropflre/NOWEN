@@ -2,7 +2,7 @@
 
 > A minimalist personal navigation hub combining bookmark management and system monitoring, featuring deep space aesthetics and glassmorphism design, supporting day/night dual modes with complete real-time hardware monitoring capabilities
 
-![Version](https://img.shields.io/badge/version-0.1.7-blue)
+![Version](https://img.shields.io/badge/version-0.1.8-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Node](https://img.shields.io/badge/node-%3E%3D20-brightgreen)
 ![React](https://img.shields.io/badge/React-18.3-61dafb)
@@ -79,7 +79,7 @@
 | **Network Switching**    | Dual URLs per bookmark (Internal/External) · Auto network detection · Smart URL switching              |
 | **Footer Filing Info**   | Configure footer text in settings · HTML rendering support · Homepage bottom display                   |
 | **Wallpaper**            | Custom background wallpaper · Upload/Drag/URL/Picsum/Bing · Adjustable blur and overlay · Beam effects layered |
-| **Data Management**      | Import/Export JSON · Factory reset · Auto redirect to home after import                    |
+| **Data Management**      | Import/Export JSON · Factory reset · Auto redirect to home after import · SunPanel data import compatible · Auto-fetch icons after import |
 
 ---
 
@@ -167,8 +167,8 @@
 | **Theme Settings**  | 8 preset themes, light/dark mode, auto switch, day/night animation, circle expand animation       |
 | **Widget Settings** | Control each monitor component visibility, Beam border toggle                                     |
 | **Wallpaper Settings** | Custom background wallpaper, image source selection (Upload/URL/Picsum/Bing), blur and overlay control |
-| **Security**        | Password change with strength indicator, first login force change, login state verification       |
-| **Data Management** | JSON import/export backup, factory reset, auto redirect to home after import, nested object support |
+| **Security**        | Password change with strength indicator, first login force change, login state verification, admin username change |
+| **Data Management** | JSON import/export backup, factory reset, auto redirect to home after import, nested object support, SunPanel data compatible import, auto-fetch bookmark icons after import |
 | **Analytics**       | Bookmark click tracking, top bookmarks ranking, visit trends, recent visits, data clearing          |
 | **Health Check**    | Batch check bookmark link accessibility, 4 status types (OK/Error/Timeout/Redirect), delete dead links |
 
@@ -529,6 +529,7 @@ Access: `http://NAS_IP:3000`
 | GET    | `/api/system/stats`  | ❌   | Get real-time stats |
 | GET    | `/api/export`        | ✅   | Export data (JSON)  |
 | POST   | `/api/import`        | ✅   | Import data (JSON)  |
+| GET    | `/api/import/enrich-status` | ✅ | Query icon fetch progress after import |
 | POST   | `/api/factory-reset` | ✅   | Factory reset       |
 
 ---
@@ -606,6 +607,33 @@ A: Admin → System Settings → Data Management → Export Backup, or copy `ser
 ---
 
 ## 📝 Changelog
+
+### v0.1.8 (2026-02-24)
+
+#### ✨ New Features
+
+- **SunPanel Data Import Compatibility**: Support direct import of SunPanel exported JSON configuration files
+  - Auto-detect SunPanel format (`appName: "Sun-Panel-Config"`)
+  - SunPanel categories → NOWEN categories with auto-assigned colors
+  - Bookmark field mapping: `title`/`url`/`lanUrl`(→`internalUrl`)/`description`/`icon.src`(→`iconUrl`)
+  - SunPanel-specific confirmation dialog showing version and export time
+  - Full i18n support (Chinese/English)
+- **Auto-Fetch Bookmark Icons After Import**: Automatically detect bookmarks missing favicons during import
+  - Async batch metadata fetching (favicon/ogImage) after import, non-blocking
+  - Concurrency limited to 3 requests to avoid overloading target sites
+  - Frontend polls fetch progress in real-time, auto-refreshes on completion
+  - Toast notifications for fetch progress and results
+- **Admin Username Change**: Security settings now support changing admin account username
+
+#### 🐛 Bug Fixes
+
+- Fixed `internalUrl` field not being written to database during import
+- Fixed import schema incompatible with number type `createdAt`/`updatedAt`
+- Fixed `validateBody` crash due to missing defensive check on `result.error.errors.map()`
+- Fixed dark mode theme switch not syncing without page refresh (unified ThemeContext)
+- Improved Engine Room / Vital Signs card text clarity and dark mode adaptation
+
+---
 
 ### v0.1.7 (2026-02-11)
 

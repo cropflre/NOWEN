@@ -2,7 +2,7 @@
 
 > 一个集书签管理、系统监控于一体的极简主义个人导航站，采用深空美学与玻璃态设计风格，支持日间/夜间双模式，提供完整的硬件实时监控能力
 
-![Version](https://img.shields.io/badge/version-0.1.7-blue)
+![Version](https://img.shields.io/badge/version-0.1.8-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Node](https://img.shields.io/badge/node-%3E%3D20-brightgreen)
 ![React](https://img.shields.io/badge/React-18.3-61dafb)
@@ -79,7 +79,7 @@
 | **内外网切换**     | 书签支持双链接（内网/外网）· 自动检测网络环境 · 智能切换访问地址                          |
 | **底部备案信息**   | 系统设置配置备案文本 · 支持 HTML 渲染 · 首页底部展示                                      |
 | **壁纸背景**       | 自定义背景壁纸 · 上传/拖拽/URL/Picsum/Bing壁纸 · 模糊度和遮罩可调 · 光束效果叠加          |
-| **数据管理**       | 导入/导出 JSON · 恢复出厂设置 · 导入成功自动返回首页                                     |
+| **数据管理**       | 导入/导出 JSON · 恢复出厂设置 · 导入成功自动返回首页 · 兼容 SunPanel 数据导入 · 导入后自动抓取图标 |
 
 ---
 
@@ -167,8 +167,8 @@
 | **主题设置**   | 8 款预设主题、明/暗模式、自动切换、日夜动画切换、圆圈扩散动画           |
 | **小部件设置** | 控制各监控组件的显示/隐藏、Beam 流光边框开关                            |
 | **壁纸设置**   | 自定义背景壁纸、图片来源选择（上传/URL/Picsum/Bing）、模糊度和遮罩调节  |
-| **安全设置**   | 密码修改、带强度指示器动画、首次登录强制改密、登录状态二次验证          |
-| **数据管理**   | JSON 格式导入导出备份、恢复出厂设置、导入成功自动返回首页、嵌套对象支持 |
+| **安全设置**   | 密码修改、带强度指示器动画、首次登录强制改密、登录状态二次验证、管理员用户名修改 |
+| **数据管理**   | JSON 格式导入导出备份、恢复出厂设置、导入成功自动返回首页、嵌套对象支持、SunPanel 数据兼容导入、导入后自动抓取书签图标 |
 | **访问统计**   | 书签点击追踪、热门书签排行、访问趋势图、最近访问记录、数据清除          |
 | **链接健康检查** | 批量检测书签链接可访问性、4 种状态识别（正常/异常/超时/重定向）、一键删除死链 |
 
@@ -1023,6 +1023,7 @@ server {
 | GET   | `/api/system/processes` | ❌   | 获取进程列表                   |
 | GET   | `/api/export`           | ✅   | 导出全部数据 (JSON)            |
 | POST  | `/api/import`           | ✅   | 导入数据 (JSON)                |
+| GET   | `/api/import/enrich-status` | ✅ | 查询导入后图标抓取进度         |
 | POST  | `/api/factory-reset`    | ✅   | 恢复出厂设置                   |
 
 ---
@@ -1079,7 +1080,7 @@ server {
 - **快速新增分类**：添加书签时可直接创建新分类
 - 快速导航侧边栏
 - 三种图标模式：预设图标、自定义上传、URL 远程图片
-- 数据导入导出（支持嵌套对象）
+- 数据导入导出（支持嵌套对象、SunPanel 兼容导入、导入后自动抓取图标）
 - **链接健康检查**：批量检测死链，一键清理失效书签
 - **内外网链接切换**：支持配置内网/外网双链接，自动检测网络环境智能切换
 - **底部备案信息**：系统设置配置备案文本，首页底部展示
@@ -1107,6 +1108,8 @@ CREATE TABLE bookmarks (
   description TEXT,
   favicon TEXT,
   ogImage TEXT,
+  icon TEXT,
+  iconUrl TEXT,
   category TEXT,
   tags TEXT,
   orderIndex INTEGER DEFAULT 0,
@@ -1269,6 +1272,33 @@ docker-compose up -d
 ---
 
 ## 📝 更新日志
+
+### v0.1.8 (2026-02-24)
+
+#### ✨ 新功能
+
+- **SunPanel 数据兼容导入**：支持直接导入 SunPanel 导出的 JSON 配置文件
+  - 自动检测 SunPanel 格式（`appName: "Sun-Panel-Config"`）
+  - SunPanel 分类 → NOWEN 分类，自动分配颜色
+  - 书签字段映射：`title`/`url`/`lanUrl`(→`internalUrl`)/`description`/`icon.src`(→`iconUrl`)
+  - SunPanel 专属确认弹窗，显示版本号和导出时间
+  - 完整中英文国际化支持
+- **导入后自动抓取书签图标**：导入数据时自动检测缺少 favicon 的书签
+  - 导入完成后异步批量抓取 metadata（favicon/ogImage），不阻塞页面
+  - 并发限制 3 个请求，避免对目标站点造成压力
+  - 前端实时轮询抓取进度，完成后自动刷新页面
+  - Toast 提示抓取进度和结果
+- **管理员用户名修改**：后台安全设置支持修改 admin 账户用户名
+
+#### 🐛 Bug 修复
+
+- 修复导入数据时 `internalUrl` 字段未写入数据库的问题
+- 修复导入 schema 中 `createdAt`/`updatedAt` 不兼容 number 类型的问题
+- 修复 `validateBody` 中 `result.error.errors.map()` 缺少防御性检查导致崩溃的问题
+- 修复暗色模式主题切换不同步需刷新的问题（统一使用 ThemeContext）
+- 优化引擎室/生命体征卡片文字清晰度和暗色适配
+
+---
 
 ### v0.1.7 (2026-02-11)
 
