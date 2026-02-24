@@ -3,8 +3,85 @@ import { getDatabase, saveDatabase, generateId, hashPassword } from '../db.js'
 import { queryAll, queryOne, booleanize } from '../utils/index.js'
 import { authMiddleware } from '../middleware/index.js'
 import { validateBody, importDataSchema } from '../schemas.js'
+import { parseMetadata } from '../services/metadata.js'
 
 const router = Router()
+
+// 导入后异步抓取 metadata 的状态管理
+let enrichStatus: {
+  running: boolean
+  total: number
+  completed: number
+  failed: number
+  current: string
+} = { running: false, total: 0, completed: 0, failed: 0, current: '' }
+
+// 异步抓取缺少 favicon 的书签 metadata
+async function enrichBookmarkMetadata(bookmarkIds: string[]) {
+  if (bookmarkIds.length === 0) return
+
+  enrichStatus = { running: true, total: bookmarkIds.length, completed: 0, failed: 0, current: '' }
+  
+  const CONCURRENCY = 3 // 并发数限制
+  let index = 0
+
+  async function processNext() {
+    while (index < bookmarkIds.length) {
+      const i = index++
+      const id = bookmarkIds[i]
+
+      try {
+        const bookmark = queryOne('SELECT id, url, title, favicon FROM bookmarks WHERE id = ?', [id]) as any
+        if (!bookmark) continue
+
+        enrichStatus.current = bookmark.title || bookmark.url
+
+        const meta = await parseMetadata(bookmark.url)
+        const db = getDatabase()
+        
+        // 更新 favicon 和可能缺失的 ogImage
+        const updates: string[] = []
+        const values: any[] = []
+
+        if (meta.favicon && !bookmark.favicon) {
+          updates.push('favicon = ?')
+          values.push(meta.favicon)
+        }
+        if (meta.ogImage) {
+          updates.push('ogImage = ?')
+          values.push(meta.ogImage)
+        }
+
+        if (updates.length > 0) {
+          updates.push('updatedAt = ?')
+          values.push(new Date().toISOString())
+          values.push(id)
+          db.run(`UPDATE bookmarks SET ${updates.join(', ')} WHERE id = ?`, values)
+        }
+
+        enrichStatus.completed++
+      } catch (err: any) {
+        console.warn(`抓取 metadata 失败 [${id}]:`, err?.message || err)
+        enrichStatus.completed++
+        enrichStatus.failed++
+      }
+    }
+  }
+
+  // 启动并发任务
+  const workers = Array.from({ length: Math.min(CONCURRENCY, bookmarkIds.length) }, () => processNext())
+  await Promise.all(workers)
+
+  // 完成后保存数据库
+  try {
+    saveDatabase()
+    console.log(`✅ Metadata 抓取完成: ${enrichStatus.completed - enrichStatus.failed}/${enrichStatus.total} 成功`)
+  } catch (err) {
+    console.error('保存数据库失败:', err)
+  }
+
+  enrichStatus.running = false
+}
 
 // 导出所有数据
 router.get('/export', authMiddleware, (req: Request, res: Response) => {
@@ -62,13 +139,16 @@ router.post('/import', authMiddleware, validateBody(importDataSchema), (req: Req
     }
     
     // 导入书签
+    const insertedIds: string[] = []
     for (const bookmark of bookmarks) {
+      const id = bookmark.id || generateId()
       db.run(`
-        INSERT INTO bookmarks (id, url, title, description, favicon, ogImage, icon, iconUrl, category, tags, orderIndex, isPinned, isReadLater, isRead, createdAt, updatedAt)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO bookmarks (id, url, internalUrl, title, description, favicon, ogImage, icon, iconUrl, category, tags, orderIndex, isPinned, isReadLater, isRead, createdAt, updatedAt)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [
-        bookmark.id || generateId(),
+        id,
         bookmark.url,
+        bookmark.internalUrl || null,
         bookmark.title,
         bookmark.description || null,
         bookmark.favicon || null,
@@ -84,6 +164,11 @@ router.post('/import', authMiddleware, validateBody(importDataSchema), (req: Req
         bookmark.createdAt || new Date().toISOString(),
         bookmark.updatedAt || new Date().toISOString(),
       ])
+
+      // 记录缺少 favicon 的书签 ID
+      if (!bookmark.favicon && !bookmark.iconUrl) {
+        insertedIds.push(id)
+      }
     }
     
     // 导入设置
@@ -105,15 +190,29 @@ router.post('/import', authMiddleware, validateBody(importDataSchema), (req: Req
     }
     
     saveDatabase()
+
+    // 异步启动 metadata 抓取（不阻塞响应）
+    if (insertedIds.length > 0) {
+      console.log(`🔍 开始异步抓取 ${insertedIds.length} 个书签的 metadata...`)
+      enrichBookmarkMetadata(insertedIds).catch(err => {
+        console.error('Metadata 抓取任务异常:', err)
+      })
+    }
     
     res.json({ 
       success: true, 
-      message: `成功导入 ${bookmarks.length} 个书签和 ${categories?.length || 0} 个分类` 
+      message: `成功导入 ${bookmarks.length} 个书签和 ${categories?.length || 0} 个分类`,
+      enriching: insertedIds.length,
     })
   } catch (error) {
     console.error('导入数据失败:', error)
     res.status(500).json({ error: '导入数据失败' })
   }
+})
+
+// 查询 metadata 抓取进度
+router.get('/import/enrich-status', authMiddleware, (req: Request, res: Response) => {
+  res.json(enrichStatus)
 })
 
 // 恢复出厂设置

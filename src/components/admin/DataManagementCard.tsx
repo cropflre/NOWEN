@@ -28,6 +28,114 @@ interface ExportData {
   }
 }
 
+// SunPanel 数据格式
+interface SunPanelIcon {
+  itemType?: number
+  src?: string
+  text?: string
+  backgroundColor?: string
+}
+
+interface SunPanelChild {
+  icon?: SunPanelIcon
+  sort?: number
+  title: string
+  url: string
+  lanUrl?: string
+  description?: string
+  openMethod?: number
+  cardType?: number
+  backgroundColor?: string
+  expandParam?: Record<string, unknown>
+}
+
+interface SunPanelCategory {
+  title: string
+  sort?: number
+  children: SunPanelChild[]
+  cardStyle?: Record<string, unknown>
+}
+
+interface SunPanelData {
+  version?: number
+  appName?: string
+  exportTime?: string
+  appVersion?: string
+  md5?: string
+  icons: SunPanelCategory[]
+}
+
+// 检测是否为 SunPanel 格式
+function isSunPanelFormat(data: any): data is SunPanelData {
+  return (
+    data?.appName === 'Sun-Panel-Config' ||
+    (Array.isArray(data?.icons) && data.icons.length > 0 && data.icons[0]?.children)
+  )
+}
+
+// 生成随机颜色（用于分类）
+const CATEGORY_COLORS = [
+  '#667eea', '#f093fb', '#f5576c', '#43e97b', '#fa709a',
+  '#4facfe', '#00f2fe', '#a18cd1', '#fbc2eb', '#fccb90',
+  '#e0c3fc', '#8fd3f4', '#84fab0', '#fad0c4', '#a6c0fe',
+]
+
+// 将 SunPanel 数据转换为 NOWEN 格式
+function convertSunPanelData(sunPanel: SunPanelData): ExportData['data'] {
+  const now = Date.now()
+  const categories: Category[] = []
+  const bookmarks: Bookmark[] = []
+
+  sunPanel.icons.forEach((group, groupIndex) => {
+    // 创建分类
+    const categoryId = `sunpanel-${groupIndex}-${now}`
+    categories.push({
+      id: categoryId,
+      name: group.title,
+      color: CATEGORY_COLORS[groupIndex % CATEGORY_COLORS.length],
+      orderIndex: group.sort !== undefined && group.sort !== 9999 ? group.sort : groupIndex,
+    })
+
+    // 转换该分类下的书签
+    group.children.forEach((child, childIndex) => {
+      if (!child.url) return
+
+      const bookmark: Bookmark = {
+        id: `sunpanel-${groupIndex}-${childIndex}-${now}`,
+        url: child.url,
+        title: child.title || child.url,
+        description: child.description || undefined,
+        category: categoryId,
+        orderIndex: child.sort !== undefined && child.sort !== 9999 ? child.sort : childIndex,
+        createdAt: now + childIndex,
+        updatedAt: now + childIndex,
+      }
+
+      // 内网链接
+      if (child.lanUrl) {
+        bookmark.internalUrl = child.lanUrl
+      }
+
+      // 图标：SunPanel 的 icon.src 可能是相对路径（/uploads/...）或完整 URL
+      if (child.icon?.src) {
+        const iconSrc = child.icon.src
+        if (iconSrc.startsWith('http://') || iconSrc.startsWith('https://')) {
+          bookmark.iconUrl = iconSrc
+        }
+        // 相对路径的图标（/uploads/...）无法直接使用，跳过
+      }
+
+      bookmarks.push(bookmark)
+    })
+  })
+
+  return {
+    bookmarks,
+    categories,
+    settings: {} as SiteSettings,
+  }
+}
+
 interface DataManagementCardProps {
   bookmarks: Bookmark[]
   categories: Category[]
@@ -102,35 +210,73 @@ export function DataManagementCard({
 
     try {
       const text = await file.text()
-      const data: ExportData = JSON.parse(text)
+      const rawData = JSON.parse(text)
 
-      // 验证数据格式
-      if (!data.version || !data.data) {
-        throw new Error(t('admin.settings.data.invalid_format'))
+      let importPayload: ExportData['data']
+      let sourceLabel = ''
+
+      // 检测是否为 SunPanel 格式
+      if (isSunPanelFormat(rawData)) {
+        const converted = convertSunPanelData(rawData)
+
+        if (converted.bookmarks.length === 0) {
+          throw new Error(t('admin.settings.data.no_bookmarks'))
+        }
+
+        const confirmMsg = t('admin.settings.data.sunpanel_import_confirm', {
+          bookmarks: converted.bookmarks.length,
+          categories: converted.categories.length,
+          version: rawData.appVersion || '?',
+          time: rawData.exportTime || '-',
+        })
+
+        if (!confirm(confirmMsg)) {
+          setIsImporting(false)
+          return
+        }
+
+        importPayload = converted
+        sourceLabel = 'SunPanel'
+      } else {
+        // NOWEN 原生格式
+        const data: ExportData = rawData
+
+        if (!data.version || !data.data) {
+          throw new Error(t('admin.settings.data.invalid_format'))
+        }
+
+        if (!data.data.bookmarks || !Array.isArray(data.data.bookmarks)) {
+          throw new Error(t('admin.settings.data.no_bookmarks'))
+        }
+
+        const confirmMsg = t('admin.settings.data.import_confirm', {
+          bookmarks: data.data.bookmarks?.length || 0,
+          categories: data.data.categories?.length || 0,
+          time: new Date(data.exportedAt).toLocaleString(i18n.language === 'zh' ? 'zh-CN' : 'en-US')
+        })
+
+        if (!confirm(confirmMsg)) {
+          setIsImporting(false)
+          return
+        }
+
+        importPayload = data.data
+        sourceLabel = 'NOWEN'
       }
 
-      if (!data.data.bookmarks || !Array.isArray(data.data.bookmarks)) {
-        throw new Error(t('admin.settings.data.no_bookmarks'))
-      }
+      await onImport(importPayload)
 
-      // 确认导入
-      const confirmMsg = t('admin.settings.data.import_confirm', {
-        bookmarks: data.data.bookmarks?.length || 0,
-        categories: data.data.categories?.length || 0,
-        time: new Date(data.exportedAt).toLocaleString(i18n.language === 'zh' ? 'zh-CN' : 'en-US')
-      })
+      const successMsg = sourceLabel === 'SunPanel'
+        ? t('admin.settings.data.sunpanel_import_success', {
+            bookmarks: importPayload.bookmarks.length,
+            categories: importPayload.categories.length,
+          })
+        : t('admin.settings.data.import_success', {
+            bookmarks: importPayload.bookmarks.length,
+            categories: importPayload.categories?.length || 0,
+          })
 
-      if (!confirm(confirmMsg)) {
-        setIsImporting(false)
-        return
-      }
-
-      await onImport(data.data)
-
-      setSuccess(t('admin.settings.data.import_success', {
-        bookmarks: data.data.bookmarks.length,
-        categories: data.data.categories?.length || 0
-      }))
+      setSuccess(successMsg)
       setTimeout(() => setSuccess(null), 5000)
     } catch (err: any) {
       if (err instanceof SyntaxError) {
@@ -140,7 +286,6 @@ export function DataManagementCard({
       }
     } finally {
       setIsImporting(false)
-      // 重置 input
       if (fileInputRef.current) {
         fileInputRef.current.value = ''
       }
@@ -256,7 +401,7 @@ export function DataManagementCard({
 
         {/* Actions */}
         <div className="relative grid grid-cols-2 gap-4">
-          {/* Export Button */}
+          {/* Export Button - NOWEN 原生格式 */}
           <motion.button
             onClick={handleExport}
             disabled={isExporting}

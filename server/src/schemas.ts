@@ -114,8 +114,8 @@ export const importDataSchema = z.object({
     isPinned: z.boolean().optional(),
     isReadLater: z.boolean().optional(),
     isRead: z.boolean().optional(),
-    createdAt: z.string().optional(),
-    updatedAt: z.string().optional(),
+    createdAt: z.union([z.string(), z.number()]).optional(),
+    updatedAt: z.union([z.string(), z.number()]).optional(),
   })),
   categories: z.array(z.object({
     id: z.string(),
@@ -139,10 +139,12 @@ export function validateBody<T extends z.ZodTypeAny>(schema: T) {
     const result = schema.safeParse(req.body)
     
     if (!result.success) {
-      const errors = result.error.errors.map(err => ({
+      const errors = result.error?.errors?.map(err => ({
         field: err.path.join('.'),
         message: err.message,
-      }))
+      })) || [{ field: 'unknown', message: String(result.error) }]
+      
+      console.error('Validation failed:', JSON.stringify(errors, null, 2))
       
       return res.status(400).json({
         error: '请求参数验证失败',
@@ -166,10 +168,10 @@ export function validateParams<T extends z.ZodTypeAny>(schema: T) {
     const result = schema.safeParse(req.params)
     
     if (!result.success) {
-      const errors = result.error.errors.map(err => ({
+      const errors = result.error?.errors?.map(err => ({
         field: err.path.join('.'),
         message: err.message,
-      }))
+      })) || [{ field: 'unknown', message: String(result.error) }]
       
       return res.status(400).json({
         error: 'URL 参数验证失败',

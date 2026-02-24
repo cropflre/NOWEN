@@ -625,10 +625,28 @@ export async function exportData(): Promise<ExportData> {
   })
 }
 
-export async function importData(data: ExportData['data']): Promise<SuccessResponse> {
-  return request<SuccessResponse>('/api/import', {
+export interface ImportResponse extends SuccessResponse {
+  enriching?: number
+}
+
+export interface EnrichStatus {
+  running: boolean
+  total: number
+  completed: number
+  failed: number
+  current: string
+}
+
+export async function importData(data: ExportData['data']): Promise<ImportResponse> {
+  return request<ImportResponse>('/api/import', {
     method: 'POST',
     body: JSON.stringify(data),
+    requireAuth: true,
+  })
+}
+
+export async function getEnrichStatus(): Promise<EnrichStatus> {
+  return request<EnrichStatus>('/api/import/enrich-status', {
     requireAuth: true,
   })
 }
@@ -643,6 +661,7 @@ export async function factoryReset(): Promise<SuccessResponse> {
 export const dataApi = {
   export: exportData,
   import: importData,
+  getEnrichStatus,
   factoryReset,
 }
 

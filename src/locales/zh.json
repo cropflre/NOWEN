@@ -419,6 +419,8 @@
         "invalid_format": "无效的备份文件格式",
         "no_bookmarks": "备份文件中没有书签数据",
         "json_error": "文件格式错误，请选择有效的 JSON 备份文件",
+        "sunpanel_import_confirm": "检测到 SunPanel 数据（v{{version}}）\n\n- 书签: {{bookmarks}} 个\n- 分类: {{categories}} 个\n- 导出时间: {{time}}\n\n确定要导入吗？注意: 这将覆盖现有的所有数据！",
+        "sunpanel_import_success": "成功从 SunPanel 导入 {{bookmarks}} 个书签和 {{categories}} 个分类",
         "factory_reset": "恢复出厂设置",
         "factory_reset_desc": "清除所有数据并重置为默认状态",
         "reset_confirm_title": "确认恢复出厂设置？",
@@ -433,7 +435,9 @@
         "reset_confirm": "确认重置",
         "resetting": "重置中...",
         "reset_success": "已恢复出厂设置，管理员密码已重置为 admin123",
-        "format_hint": "支持格式: JSON 备份文件 (.json)"
+        "format_hint": "支持格式: NOWEN 备份 (.json) / SunPanel 导出 (.json)",
+        "enriching_start": "正在后台抓取 {{count}} 个书签的图标...",
+        "enriching_done": "图标抓取完成：{{success}}/{{total}} 个成功"
       }
     },
     "login": {

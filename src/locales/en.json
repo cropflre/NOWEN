@@ -419,6 +419,8 @@
         "invalid_format": "Invalid backup file format",
         "no_bookmarks": "No bookmark data in backup file",
         "json_error": "File format error, please select a valid JSON backup file",
+        "sunpanel_import_confirm": "Detected SunPanel data (v{{version}})\n\n- Bookmarks: {{bookmarks}}\n- Categories: {{categories}}\n- Export time: {{time}}\n\nAre you sure you want to import? Warning: This will overwrite all existing data!",
+        "sunpanel_import_success": "Successfully imported {{bookmarks}} bookmarks and {{categories}} categories from SunPanel",
         "factory_reset": "Factory Reset",
         "factory_reset_desc": "Clear all data and reset to default",
         "reset_confirm_title": "Confirm Factory Reset?",
@@ -433,7 +435,9 @@
         "reset_confirm": "Confirm Reset",
         "resetting": "Resetting...",
         "reset_success": "Factory reset complete. Admin password has been reset to admin123",
-        "format_hint": "Supported format: JSON backup file (.json)"
+        "format_hint": "Supported: NOWEN backup (.json) / SunPanel export (.json)",
+        "enriching_start": "Fetching icons for {{count}} bookmarks in background...",
+        "enriching_done": "Icon fetching complete: {{success}}/{{total}} succeeded"
       }
     },
     "login": {

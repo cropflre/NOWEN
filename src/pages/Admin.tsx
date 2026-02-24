@@ -36,7 +36,7 @@ import {
 } from 'lucide-react'
 import { Bookmark, Category, CustomIcon } from '../types/bookmark'
 import { cn, presetIcons } from '../lib/utils'
-import { adminChangePassword, adminChangeUsername, fetchSettings, updateSettings, SiteSettings, WidgetVisibility, importData, fetchQuotes, updateQuotes } from '../lib/api'
+import { adminChangePassword, adminChangeUsername, fetchSettings, updateSettings, SiteSettings, WidgetVisibility, importData, getEnrichStatus, fetchQuotes, updateQuotes } from '../lib/api'
 import { AdminSidebar } from '../components/admin/AdminSidebar'
 import { QuotesCard } from '../components/admin/QuotesCard'
 import { SettingsPanel } from '../components/admin/SettingsPanel'
@@ -1544,9 +1544,34 @@ function AdminContent() {
                   bookmarks={bookmarks}
                   categories={categories}
                   onImport={async (data) => {
-                    await importData(data)
+                    const result = await importData(data)
                     await refreshData()
                     showToast('success', t('admin.settings.data.import_success', { bookmarks: data.bookmarks?.length || 0, categories: data.categories?.length || 0 }))
+
+                    // 如果有需要抓取 metadata 的书签，启动轮询
+                    if (result.enriching && result.enriching > 0) {
+                      showToast('info', t('admin.settings.data.enriching_start', { count: result.enriching }))
+                      
+                      const pollInterval = setInterval(async () => {
+                        try {
+                          const status = await getEnrichStatus()
+                          if (!status.running) {
+                            clearInterval(pollInterval)
+                            await refreshData()
+                            showToast('success', t('admin.settings.data.enriching_done', { 
+                              success: status.completed - status.failed,
+                              total: status.total 
+                            }))
+                          }
+                        } catch {
+                          clearInterval(pollInterval)
+                        }
+                      }, 3000)
+
+                      // 安全超时：最多轮询 5 分钟
+                      setTimeout(() => clearInterval(pollInterval), 300000)
+                    }
+
                     // 导入成功后跳转到首页
                     setTimeout(() => {
                       onBack()
