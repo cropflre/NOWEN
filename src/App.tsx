@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 
 // API
-import { visitsApi } from "./lib/api";
+import { visitsApi, updateSettings } from "./lib/api";
 
 // UI 组件
 import { AuroraBackground } from "./components/ui/aurora-background";
@@ -102,6 +102,7 @@ function App() {
     isLiteMode,
     showWeather,
     showLunar,
+    weatherCity,
     menuVisibility,
     widgetVisibility,
   } = useSiteSettings();
@@ -151,7 +152,18 @@ function App() {
   } = useDragAndDrop({ bookmarks, reorderBookmarks });
 
   // 天气数据
-  const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather(showWeather);
+  const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather(showWeather, weatherCity);
+
+  // 天气城市变更
+  const handleWeatherCityChange = useCallback(async (city: string) => {
+    const newSettings = { ...siteSettings, weatherCity: city };
+    setSiteSettings(newSettings);
+    try {
+      await updateSettings(newSettings);
+    } catch {
+      // 静默失败，本地已生效
+    }
+  }, [siteSettings, setSiteSettings]);
 
   // ========== Dock 配置 ==========
   const toggleLanguage = useCallback(() => {
@@ -423,7 +435,9 @@ function App() {
             showLunar={showLunar}
             weather={weather}
             weatherLoading={weatherLoading}
+            weatherCity={weatherCity}
             onRefreshWeather={refreshWeather}
+            onCityChange={handleWeatherCityChange}
             onOpenSearch={() => setIsSpotlightOpen(true)}
           />
 

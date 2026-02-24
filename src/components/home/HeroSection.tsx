@@ -25,7 +25,9 @@ interface HeroSectionProps {
   showLunar?: boolean;
   weather: WeatherData | null;
   weatherLoading?: boolean;
+  weatherCity?: string;
   onRefreshWeather: () => void;
+  onCityChange?: (city: string) => void;
   onOpenSearch: () => void;
 }
 
@@ -39,7 +41,9 @@ export function HeroSection({
   showLunar,
   weather,
   weatherLoading,
+  weatherCity,
   onRefreshWeather,
+  onCityChange,
   onOpenSearch,
 }: HeroSectionProps) {
   return (
@@ -88,7 +92,7 @@ export function HeroSection({
 
         {/* 天气显示 */}
         {showWeather && weather && (
-          <WeatherDisplay weather={weather} loading={weatherLoading} onRefresh={onRefreshWeather} />
+          <WeatherDisplay weather={weather} loading={weatherLoading} onRefresh={onRefreshWeather} weatherCity={weatherCity} onCityChange={onCityChange} />
         )}
       </motion.div>
 

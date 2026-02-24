@@ -14,7 +14,14 @@
   "weather": {
     "humidity": "Humidity",
     "wind": "Wind",
-    "feels_like": "Feels like"
+    "feels_like": "Feels like",
+    "city_placeholder": "Enter city name...",
+    "click_to_change_city": "Click to change city",
+    "use_location": "Use location",
+    "refresh": "Refresh weather",
+    "seven_day_forecast": "7-Day Forecast",
+    "today": "Today",
+    "precipitation": "Precipitation"
   },
   "sidebar": {
     "all": "All",
@@ -290,6 +297,10 @@
         "weather": "Weather Display",
         "weather_title": "Real-time Weather",
         "weather_desc": "Show weather info on homepage (requires location permission)",
+        "weather_city": "Weather City",
+        "weather_city_desc": "Manually specify a city, leave empty for auto-location",
+        "weather_city_placeholder": "e.g. Beijing, Shanghai, New York...",
+        "weather_use_location": "Auto locate",
         "lunar": "Lunar Calendar",
         "lunar_title": "Lunar Date",
         "lunar_desc": "Show lunar calendar, solar terms, and festivals",

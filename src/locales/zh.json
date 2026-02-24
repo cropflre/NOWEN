@@ -14,7 +14,14 @@
   "weather": {
     "humidity": "湿度",
     "wind": "风速",
-    "feels_like": "体感温度"
+    "feels_like": "体感温度",
+    "city_placeholder": "输入城市名...",
+    "click_to_change_city": "点击切换城市",
+    "use_location": "使用定位",
+    "refresh": "刷新天气",
+    "seven_day_forecast": "7 天预报",
+    "today": "今天",
+    "precipitation": "降水概率"
   },
   "sidebar": {
     "all": "全部",
@@ -290,6 +297,10 @@
         "weather": "天气显示",
         "weather_title": "实时天气",
         "weather_desc": "在首页显示当前位置的天气信息（需要定位权限）",
+        "weather_city": "天气城市",
+        "weather_city_desc": "手动指定城市，留空则自动定位",
+        "weather_city_placeholder": "如：北京、上海、深圳...",
+        "weather_use_location": "自动定位",
         "lunar": "农历显示",
         "lunar_title": "农历日期",
         "lunar_desc": "在日期旁显示农历、节气和传统节日",

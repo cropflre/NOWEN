@@ -468,6 +468,7 @@ export interface SiteSettings {
   enableLiteMode?: boolean // 精简模式开关 - 禅 (Zen)
   enableWeather?: boolean  // 天气显示开关
   enableLunar?: boolean    // 农历显示开关
+  weatherCity?: string     // 手动设置的天气城市名
   footerText?: string      // 底部备案信息
   widgetVisibility?: WidgetVisibility
   menuVisibility?: MenuVisibility  // 菜单项可见性配置
@@ -539,6 +540,7 @@ function parseSettings(raw: Record<string, string>): SiteSettings {
     // 默认开启天气和农历
     enableWeather: raw.enableWeather === undefined ? true : raw.enableWeather === 'true' || raw.enableWeather === '1',
     enableLunar: raw.enableLunar === undefined ? true : raw.enableLunar === 'true' || raw.enableLunar === '1',
+    weatherCity: raw.weatherCity || '',
     footerText: raw.footerText || '',
     widgetVisibility,
     menuVisibility,
@@ -560,6 +562,7 @@ export async function updateSettings(settings: SiteSettings): Promise<SiteSettin
     enableLiteMode: settings.enableLiteMode ? 'true' : 'false',
     enableWeather: settings.enableWeather ? 'true' : 'false',
     enableLunar: settings.enableLunar ? 'true' : 'false',
+    weatherCity: settings.weatherCity ?? '',
     footerText: settings.footerText ?? '',
     widgetVisibility: settings.widgetVisibility ? JSON.stringify(settings.widgetVisibility) : undefined,
     menuVisibility: settings.menuVisibility ? JSON.stringify(settings.menuVisibility) : undefined,

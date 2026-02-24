@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 
 // 天气数据接口
 export interface WeatherData {
@@ -15,6 +15,24 @@ export interface WeatherData {
   sunrise: string           // 日出时间
   sunset: string            // 日落时间
   isDay: boolean            // 是否白天
+  forecast: DailyForecast[] // 7 天预报
+}
+
+// 每日预报
+export interface DailyForecast {
+  date: string              // 日期 YYYY-MM-DD
+  weekday: string           // 星期几
+  weatherCode: number       // WMO 天气代码
+  icon: string              // 天气图标代码
+  description: string       // 天气描述
+  tempMax: number           // 最高温
+  tempMin: number           // 最低温
+  humidity: number          // 平均湿度
+  windSpeed: number         // 最大风速
+  precipitation: number     // 降水量 mm
+  precipProbability: number // 降水概率 %
+  sunrise: string           // 日出时间
+  sunset: string            // 日落时间
 }
 
 // 天气图标映射
@@ -44,31 +62,6 @@ export function getWeatherIcon(iconCode: string): string {
   return weatherIcons[iconCode] || '🌤️'
 }
 
-// 获取天气描述的中文映射
-const weatherDescriptions: Record<string, string> = {
-  'clear sky': '晴',
-  'few clouds': '少云',
-  'scattered clouds': '多云',
-  'broken clouds': '多云',
-  'overcast clouds': '阴',
-  'shower rain': '阵雨',
-  'rain': '雨',
-  'light rain': '小雨',
-  'moderate rain': '中雨',
-  'heavy intensity rain': '大雨',
-  'thunderstorm': '雷暴',
-  'snow': '雪',
-  'light snow': '小雪',
-  'mist': '薄雾',
-  'fog': '雾',
-  'haze': '霾',
-}
-
-function translateDescription(desc: string): string {
-  const lower = desc.toLowerCase()
-  return weatherDescriptions[lower] || desc
-}
-
 // 风向转换
 function getWindDirection(deg: number): string {
   const directions = ['北', '东北', '东', '东南', '南', '西南', '西', '西北']
@@ -82,20 +75,50 @@ function formatTime(timestamp: number): string {
   return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
 }
 
-export function useWeather(enabled: boolean = true) {
+// 获取星期几
+function getWeekday(dateStr: string): string {
+  const date = new Date(dateStr + 'T00:00:00')
+  const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
+  return weekdays[date.getDay()]
+}
+
+// 通过城市名获取经纬度（Open-Meteo Geocoding API，免费无需 Key）
+async function geocodeCity(cityName: string): Promise<{ lat: number; lon: number; name: string } | null> {
+  try {
+    const response = await fetch(
+      `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cityName)}&count=1&language=zh&format=json`
+    )
+    if (!response.ok) return null
+    const data = await response.json()
+    if (data.results && data.results.length > 0) {
+      const r = data.results[0]
+      return { lat: r.latitude, lon: r.longitude, name: r.name || cityName }
+    }
+    return null
+  } catch {
+    return null
+  }
+}
+
+export function useWeather(enabled: boolean = true, cityName: string = '') {
   const [weather, setWeather] = useState<WeatherData | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null)
+  const lastCityRef = useRef(cityName)
 
-  const fetchWeather = useCallback(async (lat: number, lon: number) => {
+  const fetchWeather = useCallback(async (lat: number, lon: number, overrideCityName?: string) => {
     setLoading(true)
     setError(null)
     
     try {
       // 使用 Open-Meteo 免费 API (无需 API Key)
+      // 请求当前天气 + 7 天预报（含日最高/最低温、天气代码、降水等）
       const response = await fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,surface_pressure&daily=sunrise,sunset&timezone=auto`
+        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
+        `&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,surface_pressure` +
+        `&daily=weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,sunrise,sunset,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,relative_humidity_2m_mean` +
+        `&timezone=auto&forecast_days=7`
       )
       
       if (!response.ok) {
@@ -106,18 +129,20 @@ export function useWeather(enabled: boolean = true) {
       const current = data.current
       const daily = data.daily
       
-      // 获取城市名称 (使用 BigDataCloud 免费 API，支持 CORS)
-      let cityName = '当前位置'
-      try {
-        const geoResponse = await fetch(
-          `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=zh`
-        )
-        if (geoResponse.ok) {
-          const geoData = await geoResponse.json()
-          cityName = geoData.city || geoData.locality || geoData.principalSubdivision || '当前位置'
+      // 获取城市名称
+      let displayCity = overrideCityName || '当前位置'
+      if (!overrideCityName) {
+        try {
+          const geoResponse = await fetch(
+            `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=zh`
+          )
+          if (geoResponse.ok) {
+            const geoData = await geoResponse.json()
+            displayCity = geoData.city || geoData.locality || geoData.principalSubdivision || '当前位置'
+          }
+        } catch {
+          // 地理编码失败，使用默认值
         }
-      } catch {
-        // 地理编码失败，使用默认值
       }
       
       // WMO 天气代码转换
@@ -125,6 +150,29 @@ export function useWeather(enabled: boolean = true) {
       const isDay = new Date().getHours() >= 6 && new Date().getHours() < 18
       const iconCode = getWMOIcon(weatherCode, isDay)
       const description = getWMODescription(weatherCode)
+
+      // 构建 7 天预报数据
+      const forecast: DailyForecast[] = []
+      const today = new Date().toISOString().slice(0, 10)
+      for (let i = 0; i < (daily.time?.length || 0); i++) {
+        const dateStr = daily.time[i]
+        const isToday = dateStr === today
+        forecast.push({
+          date: dateStr,
+          weekday: isToday ? '今天' : getWeekday(dateStr),
+          weatherCode: daily.weather_code[i],
+          icon: getWMOIcon(daily.weather_code[i], true),
+          description: getWMODescription(daily.weather_code[i]),
+          tempMax: Math.round(daily.temperature_2m_max[i]),
+          tempMin: Math.round(daily.temperature_2m_min[i]),
+          humidity: Math.round(daily.relative_humidity_2m_mean?.[i] ?? 0),
+          windSpeed: Math.round((daily.wind_speed_10m_max?.[i] ?? 0) * 10) / 10,
+          precipitation: Math.round((daily.precipitation_sum?.[i] ?? 0) * 10) / 10,
+          precipProbability: Math.round(daily.precipitation_probability_max?.[i] ?? 0),
+          sunrise: formatTime(new Date(daily.sunrise[i]).getTime() / 1000),
+          sunset: formatTime(new Date(daily.sunset[i]).getTime() / 1000),
+        })
+      }
       
       const weatherData: WeatherData = {
         temperature: Math.round(current.temperature_2m),
@@ -132,7 +180,7 @@ export function useWeather(enabled: boolean = true) {
         humidity: current.relative_humidity_2m,
         description,
         icon: iconCode,
-        city: cityName,
+        city: displayCity,
         windSpeed: Math.round(current.wind_speed_10m * 10) / 10,
         windDirection: getWindDirection(current.wind_direction_10m),
         visibility: 10, // Open-Meteo 不提供能见度
@@ -140,6 +188,7 @@ export function useWeather(enabled: boolean = true) {
         sunrise: formatTime(new Date(daily.sunrise[0]).getTime() / 1000),
         sunset: formatTime(new Date(daily.sunset[0]).getTime() / 1000),
         isDay,
+        forecast,
       }
       
       setWeather(weatherData)
@@ -151,9 +200,21 @@ export function useWeather(enabled: boolean = true) {
     }
   }, [])
 
-  const refresh = useCallback(() => {
+  const refresh = useCallback(async () => {
     if (!enabled) return
     
+    // 如果有手动设置的城市，用城市名做地理编码
+    if (cityName) {
+      const geo = await geocodeCity(cityName)
+      if (geo) {
+        fetchWeather(geo.lat, geo.lon, geo.name)
+      } else {
+        setError('城市未找到')
+      }
+      return
+    }
+    
+    // 否则使用浏览器定位
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -170,12 +231,17 @@ export function useWeather(enabled: boolean = true) {
       // 不支持定位，使用默认位置
       fetchWeather(39.9042, 116.4074)
     }
-  }, [enabled, fetchWeather])
+  }, [enabled, cityName, fetchWeather])
 
   useEffect(() => {
     if (!enabled) {
       setWeather(null)
       return
+    }
+    
+    // 城市变化时立即刷新
+    if (cityName !== lastCityRef.current) {
+      lastCityRef.current = cityName
     }
     
     // 初始获取
@@ -185,7 +251,7 @@ export function useWeather(enabled: boolean = true) {
     const interval = setInterval(refresh, 30 * 60 * 1000)
     
     return () => clearInterval(interval)
-  }, [enabled, refresh])
+  }, [enabled, cityName, refresh])
 
   return {
     weather,

@@ -52,6 +52,7 @@ export function useSiteSettings() {
   const isLiteMode = siteSettings.enableLiteMode ?? false;
   const showWeather = siteSettings.enableWeather ?? true;
   const showLunar = siteSettings.enableLunar ?? true;
+  const weatherCity = siteSettings.weatherCity || '';
 
   // 菜单可见性
   const menuVisibility = siteSettings.menuVisibility || {
@@ -108,6 +109,7 @@ export function useSiteSettings() {
     isLiteMode,
     showWeather,
     showLunar,
+    weatherCity,
     menuVisibility,
     widgetVisibility,
   };

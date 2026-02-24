@@ -344,6 +344,52 @@ export function SiteSettingsCard({
                   />
                 </button>
               </div>
+
+              {/* 天气城市设置 */}
+              {settings.enableWeather !== false && (
+                <div 
+                  className="px-4 py-3 rounded-xl transition-colors duration-300"
+                  style={{
+                    background: 'var(--color-bg-tertiary)',
+                    border: '1px solid var(--color-glass-border)',
+                  }}
+                >
+                  <p className="text-sm font-medium mb-1" style={{ color: 'var(--color-text-primary)' }}>
+                    {t('admin.settings.site.weather_city')}
+                  </p>
+                  <p className="text-xs mb-2" style={{ color: 'var(--color-text-muted)' }}>
+                    {t('admin.settings.site.weather_city_desc')}
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={settings.weatherCity || ''}
+                      onChange={(e) => onChange({ ...settings, weatherCity: e.target.value })}
+                      placeholder={t('admin.settings.site.weather_city_placeholder')}
+                      className="flex-1 px-3 py-1.5 text-sm rounded-lg outline-none transition-colors"
+                      style={{
+                        background: 'var(--color-bg-secondary)',
+                        color: 'var(--color-text-primary)',
+                        border: '1px solid var(--color-glass-border)',
+                      }}
+                    />
+                    {settings.weatherCity && (
+                      <button
+                        type="button"
+                        onClick={() => onChange({ ...settings, weatherCity: '' })}
+                        className="px-3 py-1.5 text-xs rounded-lg transition-colors hover:opacity-80"
+                        style={{
+                          background: 'var(--color-bg-secondary)',
+                          color: 'var(--color-text-muted)',
+                          border: '1px solid var(--color-glass-border)',
+                        }}
+                      >
+                        {t('admin.settings.site.weather_use_location')}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* 农历显示开关 */}
