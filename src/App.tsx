@@ -56,7 +56,7 @@ import { ForcePasswordChange } from "./components/ForcePasswordChange";
 
 // Hooks
 import { useBookmarkStore } from "./hooks/useBookmarkStore";
-import { useTheme } from "./hooks/useTheme";
+import { useThemeContext } from "./hooks/useTheme";
 import { useTime } from "./hooks/useTime";
 import { useWeather } from "./hooks/useWeather";
 import { useSiteSettings } from "./hooks/useSiteSettings";
@@ -91,7 +91,7 @@ function App() {
   // ========== 自定义 Hooks ==========
   const { getMenuItems } = useBookmarkContextMenu();
   const { greeting, formattedTime, formattedDate, lunarDate } = useTime();
-  const { isDark, toggleDarkMode } = useTheme();
+  const { isDark, toggleDarkMode } = useThemeContext();
   const { t, i18n } = useTranslation();
   const { isInternal } = useNetworkEnv();
 

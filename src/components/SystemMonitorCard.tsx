@@ -4,7 +4,7 @@ import useSWR from 'swr'
 import { Activity, HardDrive, Cpu, Database, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '../lib/utils'
-import { useTheme } from '../hooks/useTheme'
+import { useThemeContext } from '../hooks/useTheme'
 
 // 类型定义
 interface DiskInfo {
@@ -385,8 +385,8 @@ function LiquidOrb({ memUsage: rawMemUsage, isDark = true }: { memUsage: number;
       {/* 百分比显示 */}
       <div className="absolute inset-0 flex items-center justify-center">
         <span className={cn(
-          "text-xs font-mono drop-shadow-lg",
-          isDark ? "text-white/80" : "text-slate-700 font-semibold"
+          "text-sm font-mono font-bold drop-shadow-lg",
+          isDark ? "text-white/90" : "text-slate-700"
         )}>
           <CountUp value={clampedMemUsage} decimals={0} suffix="%" />
         </span>
@@ -739,16 +739,16 @@ function MultiDiskDisplay({ disks, isDark = true }: { disks: DiskInfo[]; isDark?
   if (disks.length === 0) {
     return (
       <div className="space-y-2">
-        <div className={cn(
-          "flex items-center justify-center text-xs gap-1",
-          isDark ? "text-white/60" : "text-slate-500"
+          <div className={cn(
+          "flex items-center justify-center text-xs gap-1 font-medium",
+          isDark ? "text-white/70" : "text-slate-500"
         )}>
           <HardDrive className="w-3 h-3" />
           硬盘
         </div>
         <div className={cn(
           "text-center text-xs py-4",
-          isDark ? "text-white/40" : "text-slate-400"
+          isDark ? "text-white/50" : "text-slate-400"
         )}>
           未检测到磁盘
         </div>
@@ -760,15 +760,15 @@ function MultiDiskDisplay({ disks, isDark = true }: { disks: DiskInfo[]; isDark?
     <div className="space-y-2 relative">
       {/* 标题 */}
       <div className={cn(
-        "flex items-center justify-center text-xs gap-1",
-        isDark ? "text-white/60" : "text-slate-500"
+        "flex items-center justify-center text-xs gap-1 font-medium",
+        isDark ? "text-white/70" : "text-slate-500"
       )}>
         <HardDrive className="w-3 h-3" />
         硬盘
         {disks.length > 1 && (
           <span className={cn(
-            "ml-1 px-1.5 py-0.5 rounded text-[10px]",
-            isDark ? "bg-white/10" : "bg-slate-100"
+            "ml-1 px-1.5 py-0.5 rounded text-[10px] font-bold",
+            isDark ? "bg-white/10 text-white/60" : "bg-slate-100 text-slate-500"
           )}>
             {disks.length}
           </span>
@@ -894,7 +894,7 @@ function MultiDiskDisplay({ disks, isDark = true }: { disks: DiskInfo[]; isDark?
 // 主组件：SystemMonitorCard
 // ============================================
 export function SystemMonitorCard({ className }: { className?: string }) {
-  const { isDark } = useTheme()
+  const { isDark } = useThemeContext()
   const { t } = useTranslation()
   
   const { data, error, isLoading } = useSWR<PulseData>(
@@ -920,10 +920,9 @@ export function SystemMonitorCard({ className }: { className?: string }) {
       "relative overflow-hidden rounded-2xl",
       "backdrop-blur-xl",
       "p-4 h-full min-h-[280px]",
-      // 日间模式：星际指挥中心明亮风格
       isDark 
-        ? "bg-gradient-to-br from-slate-900/80 via-slate-800/50 to-slate-900/80 border border-white/10"
-        : "bg-gradient-to-br from-white/90 via-slate-50/80 to-white/90 border border-slate-200/60 shadow-xl shadow-blue-500/5",
+        ? "bg-gradient-to-br from-slate-900/95 via-slate-800/90 to-slate-900/95 border border-white/10"
+        : "bg-gradient-to-br from-white/95 via-slate-50/90 to-white/95 border border-slate-200/60 shadow-xl shadow-blue-500/5",
       className
     )}>
       {/* 背景装饰 */}
@@ -984,15 +983,15 @@ export function SystemMonitorCard({ className }: { className?: string }) {
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs">
             <span className={cn(
-              "flex items-center gap-1",
-              isDark ? "text-white/60" : "text-slate-500"
+              "flex items-center gap-1 font-medium",
+              isDark ? "text-white/70" : "text-slate-500"
             )}>
               <Activity className="w-3 h-3" />
               CPU
             </span>
             <span className={cn(
-              "font-mono",
-              isDark ? "text-cyan-400" : "text-blue-600 font-semibold"
+              "font-mono font-bold",
+              isDark ? "text-cyan-400" : "text-blue-600"
             )}>
               <CountUp value={stats.cpuLoad} decimals={1} suffix="%" />
             </span>
@@ -1012,8 +1011,8 @@ export function SystemMonitorCard({ className }: { className?: string }) {
           {/* 内存 - 液态球 */}
           <div className="space-y-2">
             <div className={cn(
-              "flex items-center justify-center text-xs gap-1",
-              isDark ? "text-white/60" : "text-slate-500"
+              "flex items-center justify-center text-xs gap-1 font-medium",
+              isDark ? "text-white/70" : "text-slate-500"
             )}>
               <Database className="w-3 h-3" />
               内存
@@ -1028,9 +1027,9 @@ export function SystemMonitorCard({ className }: { className?: string }) {
         {/* 运行时间 */}
         <motion.div 
           className={cn(
-            "flex items-center justify-center gap-2 text-xs pt-2 border-t",
+            "flex items-center justify-center gap-2 text-xs font-medium pt-2 border-t",
             isDark 
-              ? "text-white/50 border-white/5" 
+              ? "text-white/60 border-white/10" 
               : "text-slate-500 border-slate-200/50"
           )}
           initial={{ opacity: 0 }}
@@ -1039,8 +1038,8 @@ export function SystemMonitorCard({ className }: { className?: string }) {
         >
           <span>运行时间:</span>
           <span className={cn(
-            "font-mono",
-            isDark ? "text-white/70" : "text-slate-700 font-medium"
+            "font-mono font-bold",
+            isDark ? "text-white/80" : "text-slate-700"
           )}>{stats.uptime}</span>
         </motion.div>
       </div>

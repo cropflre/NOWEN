@@ -10,7 +10,7 @@ import useSWR from 'swr'
 import { Activity, Thermometer } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '../lib/utils'
-import { useTheme } from '../hooks/useTheme'
+import { useThemeContext } from '../hooks/useTheme'
 
 // ============================================
 // 类型定义
@@ -120,7 +120,7 @@ function MiniTrendChart({
   color,
   gradientId,
   isDark,
-  height = 48,
+  height = 56,
   label,
   currentValue
 }: { 
@@ -134,16 +134,34 @@ function MiniTrendChart({
   currentValue: number
 }) {
   const width = 200
-  const padding = { top: 2, bottom: 2, left: 0, right: 0 }
+  const padding = { top: 4, bottom: 4, left: 0, right: 0 }
   const chartWidth = width - padding.left - padding.right
   const chartHeight = height - padding.top - padding.bottom
 
+  // 警告级别颜色
+  const isWarning = currentValue > 70
+  const isCritical = currentValue > 90
+  const lineColor = isCritical ? '#f43f5e' : isWarning ? '#fbbf24' : color
+
   if (history.length < 2) {
     return (
-      <div style={{ width, height }} className="flex items-center justify-center">
-        <span className={cn("text-[9px] font-mono", isDark ? "text-white/20" : "text-slate-300")}>
-          collecting...
-        </span>
+      <div className="relative">
+        <div className="flex items-center justify-between mb-1 px-1">
+          <span className={cn(
+            "text-xs font-semibold uppercase tracking-wider",
+            isDark ? "text-white/50" : "text-slate-500"
+          )}>
+            {label}
+          </span>
+          <span className="text-xs font-bold font-mono tabular-nums" style={{ color: lineColor }}>
+            --
+          </span>
+        </div>
+        <div style={{ height }} className="flex items-center justify-center rounded-lg">
+          <span className={cn("text-xs font-mono", isDark ? "text-white/25" : "text-slate-400")}>
+            collecting...
+          </span>
+        </div>
       </div>
     )
   }
@@ -166,28 +184,18 @@ function MiniTrendChart({
   // 填充区域路径
   const areaPath = `${linePath} L ${points[points.length - 1].x} ${height} L ${points[0].x} ${height} Z`
 
-  // 警告级别颜色
-  const isWarning = currentValue > 70
-  const isCritical = currentValue > 90
-  const lineColor = isCritical ? '#f43f5e' : isWarning ? '#fbbf24' : color
-
   return (
     <div className="relative">
       {/* 标签 + 数值 */}
-      <div className="flex items-center justify-between mb-0.5 px-0.5">
+      <div className="flex items-center justify-between mb-1 px-1">
         <span className={cn(
-          "text-[9px] font-mono uppercase tracking-wider",
-          isDark ? "text-white/30" : "text-slate-400"
+          "text-xs font-semibold uppercase tracking-wider",
+          isDark ? "text-white/50" : "text-slate-500"
         )}>
           {label}
         </span>
         <span className={cn(
-          "text-[10px] font-mono font-bold tabular-nums",
-          isCritical 
-            ? (isDark ? "text-rose-400" : "text-rose-600") 
-            : isWarning 
-              ? (isDark ? "text-amber-400" : "text-amber-600")
-              : isDark ? `text-[${color}]` : "text-cyan-700"
+          "text-sm font-bold font-mono tabular-nums"
         )} style={{ color: lineColor }}>
           {Math.round(currentValue)}%
         </span>
@@ -196,8 +204,8 @@ function MiniTrendChart({
       <svg width={width} height={height} className="w-full" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
         <defs>
           <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={lineColor} stopOpacity={isDark ? "0.3" : "0.2"} />
-            <stop offset="100%" stopColor={lineColor} stopOpacity="0" />
+            <stop offset="0%" stopColor={lineColor} stopOpacity={isDark ? "0.35" : "0.25"} />
+            <stop offset="100%" stopColor={lineColor} stopOpacity="0.02" />
           </linearGradient>
         </defs>
 
@@ -205,14 +213,14 @@ function MiniTrendChart({
         <line
           x1={padding.left} y1={padding.top + chartHeight * 0.5}
           x2={width - padding.right} y2={padding.top + chartHeight * 0.5}
-          stroke={isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)"}
-          strokeDasharray="3 3"
+          stroke={isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.06)"}
+          strokeDasharray="4 4"
         />
         <line
           x1={padding.left} y1={padding.top + chartHeight * 0.2}
           x2={width - padding.right} y2={padding.top + chartHeight * 0.2}
-          stroke={isDark ? "rgba(244,63,94,0.1)" : "rgba(244,63,94,0.08)"}
-          strokeDasharray="2 4"
+          stroke={isDark ? "rgba(244,63,94,0.12)" : "rgba(244,63,94,0.1)"}
+          strokeDasharray="3 5"
         />
 
         {/* 渐变填充区域 */}
@@ -223,22 +231,22 @@ function MiniTrendChart({
           d={linePath}
           fill="none"
           stroke={lineColor}
-          strokeWidth={1.5}
+          strokeWidth={2}
           strokeLinecap="round"
           strokeLinejoin="round"
-          style={{ filter: isDark ? `drop-shadow(0 0 3px ${lineColor}40)` : 'none' }}
+          style={{ filter: isDark ? `drop-shadow(0 0 4px ${lineColor}50)` : `drop-shadow(0 1px 2px ${lineColor}30)` }}
         />
 
         {/* 当前值端点 */}
         <circle
           cx={points[points.length - 1].x}
           cy={points[points.length - 1].y}
-          r={2.5}
+          r={3}
           fill={lineColor}
           stroke={isDark ? "#0f172a" : "#ffffff"}
-          strokeWidth={1}
+          strokeWidth={1.5}
         >
-          <animate attributeName="r" values="2.5;3.5;2.5" dur="1.5s" repeatCount="indefinite" />
+          <animate attributeName="r" values="3;4;3" dur="1.5s" repeatCount="indefinite" />
         </circle>
       </svg>
     </div>
@@ -317,13 +325,14 @@ function ArcReactor({ load: rawLoad, isMobile = false, isDark = true }: { load: 
       </svg>
       <div className="absolute inset-0 flex items-center justify-center z-20">
         <div className={cn("text-center", isMobile ? "mt-7" : "mt-9")}>
-          <span className={cn("font-bold font-mono transition-colors duration-300", isMobile ? "text-sm" : "text-base",
-            isCool && (isDark ? "text-cyan-400" : "text-cyan-600"),
-            !isCool && !isOverheating && (isDark ? "text-amber-400" : "text-amber-600"),
-            isOverheating && (isDark ? "text-rose-400" : "text-rose-600"))}>
+          <span className={cn("font-bold font-mono transition-colors duration-300", isMobile ? "text-sm" : "text-lg",
+            isCool && (isDark ? "text-cyan-400" : "text-cyan-700"),
+            !isCool && !isOverheating && (isDark ? "text-amber-400" : "text-amber-700"),
+            isOverheating && (isDark ? "text-rose-400" : "text-rose-700"))}
+            style={{ textShadow: isDark ? 'none' : '0 0 8px rgba(0,0,0,0.1)' }}>
             <AnimatedValue value={clampedLoad} />
           </span>
-          <p className={cn("uppercase tracking-wider mt-0.5", isMobile ? "text-[6px]" : "text-[7px]", isDark ? "text-white/40" : "text-slate-500")}>CPU</p>
+          <p className={cn("uppercase tracking-widest font-semibold mt-0.5", isMobile ? "text-[7px]" : "text-[9px]", isDark ? "text-white/50" : "text-slate-600")}>CPU</p>
         </div>
       </div>
     </div>
@@ -386,16 +395,19 @@ function LiquidOrb({
         <circle cx={center} cy={center} r={center - 3} fill="none" stroke={isDark ? "rgba(255,255,255,0.1)" : "rgba(255,255,255,0.5)"} strokeWidth={1} />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center z-20">
-        <span className={cn("font-bold font-mono transition-colors duration-300", isMobile ? "text-sm" : "text-base",
-          hasSwapWarning ? (isDark ? "text-amber-400" : "text-amber-600") : (isDark ? "text-cyan-400" : "text-cyan-700"))}>
+        <span className={cn("font-bold font-mono transition-colors duration-300", isMobile ? "text-sm" : "text-lg",
+          hasSwapWarning ? (isDark ? "text-amber-400" : "text-amber-700") : (isDark ? "text-cyan-400" : "text-cyan-800"))}
+          style={{ textShadow: isDark ? 'none' : '0 0 8px rgba(255,255,255,0.6)' }}>
           <AnimatedValue value={safeMemoryPercent} />
         </span>
-        <p className={cn("uppercase tracking-wider mt-0.5", isMobile ? "text-[5px]" : "text-[7px]", isDark ? "text-white/40" : "text-slate-500")}>MEM</p>
-        <p className={cn("font-mono", isMobile ? "text-[5px]" : "text-[6px]", isDark ? "text-white/30" : "text-slate-400")}>
+        <p className={cn("uppercase tracking-widest font-semibold mt-0.5", isMobile ? "text-[6px]" : "text-[9px]", isDark ? "text-white/50" : "text-slate-600")}
+          style={{ textShadow: isDark ? 'none' : '0 0 4px rgba(255,255,255,0.8)' }}>MEM</p>
+        <p className={cn("font-mono font-medium", isMobile ? "text-[6px]" : "text-[8px]", isDark ? "text-white/40" : "text-slate-500")}
+          style={{ textShadow: isDark ? 'none' : '0 0 4px rgba(255,255,255,0.8)' }}>
           {memoryUsed}/{memoryTotal}
         </p>
         {hasSwapWarning && (
-          <p className={cn("font-mono mt-0.5 animate-pulse", isMobile ? "text-[5px]" : "text-[6px]", isDark ? "text-amber-400/80" : "text-amber-600")}>⚠ Swap</p>
+          <p className={cn("font-mono font-semibold mt-0.5 animate-pulse", isMobile ? "text-[6px]" : "text-[8px]", isDark ? "text-amber-400/80" : "text-amber-700")}>⚠ Swap</p>
         )}
       </div>
     </div>
@@ -406,7 +418,7 @@ function LiquidOrb({
 // 主组件：VitalSignsCard
 // ============================================
 export function VitalSignsCard({ className }: { className?: string }) {
-  const { isDark } = useTheme()
+  const { isDark } = useThemeContext()
   const { t } = useTranslation()
   const historyRef = useRef<HistoryPoint[]>([])
   const [history, setHistory] = useState<HistoryPoint[]>([])
@@ -524,14 +536,14 @@ export function VitalSignsCard({ className }: { className?: string }) {
             <div className={cn("h-px mx-2", isDark ? "bg-cyan-500/10" : "bg-cyan-200/30")} />
 
             {/* 下部：趋势图 */}
-            <div className={cn("grid gap-2", isMobile ? "grid-cols-1" : "grid-cols-2")}>
+            <div className={cn("grid gap-3", isMobile ? "grid-cols-1" : "grid-cols-2")}>
               <MiniTrendChart
                 history={history}
                 dataKey="cpu"
                 color={isDark ? '#22d3ee' : '#0891b2'}
                 gradientId="cpuTrendGrad"
                 isDark={isDark}
-                height={isMobile ? 40 : 48}
+                height={isMobile ? 44 : 56}
                 label="CPU"
                 currentValue={safeNumber(data.cpu?.load, 0)}
               />
@@ -541,7 +553,7 @@ export function VitalSignsCard({ className }: { className?: string }) {
                 color={isDark ? '#a78bfa' : '#7c3aed'}
                 gradientId="memTrendGrad"
                 isDark={isDark}
-                height={isMobile ? 40 : 48}
+                height={isMobile ? 44 : 56}
                 label="MEM"
                 currentValue={safeNumber(data.memory?.usagePercent, 0)}
               />

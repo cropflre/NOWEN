@@ -45,7 +45,7 @@ import { HealthCheckCard } from '../components/admin/HealthCheckCard'
 import { IconRenderer } from '../components/IconRenderer'
 import { IconifyPicker } from '../components/IconifyPicker'
 import { ToastProvider, useToast } from '../components/admin/Toast'
-import { useTheme, ThemeId } from '../hooks/useTheme.tsx'
+import { useThemeContext, ThemeId } from '../hooks/useTheme.tsx'
 import { useNetworkEnv, getBookmarkUrl } from '../hooks/useNetworkEnv'
 import { AdminProvider, useAdmin, useBookmarkActions, useCategoryActions, useIconActions } from '../contexts/AdminContext'
 import { VirtualBookmarkList } from '../components/VirtualBookmarkList'
@@ -211,7 +211,7 @@ function AdminContent() {
   } = useIconActions()
 
   const { showToast } = useToast()
-  const { themeId, isDark, setTheme, toggleDarkMode, autoMode, setAutoMode } = useTheme()
+  const { themeId, isDark, setTheme, toggleDarkMode, autoMode, setAutoMode } = useThemeContext()
   const [activeTab, setActiveTab] = useState<'bookmarks' | 'categories' | 'quotes' | 'icons' | 'analytics' | 'health-check' | 'settings'>('bookmarks')
   const [searchQuery, setSearchQuery] = useState('')
   const [filterCategory, setFilterCategory] = useState<string>('all')

@@ -18,7 +18,7 @@ import {
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '../lib/utils'
-import { useTheme } from '../hooks/useTheme'
+import { useThemeContext } from '../hooks/useTheme'
 
 // ============================================
 // 类型定义
@@ -303,7 +303,7 @@ function PostHeader({ onComplete, isMobile, isDark = true }: { onComplete: () =>
 // 主组件：HardwareIdentityCard
 // ============================================
 export function HardwareIdentityCard({ className }: { className?: string }) {
-  const { isDark } = useTheme()
+  const { isDark } = useThemeContext()
   const { t } = useTranslation()
   
   const { data, error, isLoading } = useSWR<StaticSystemInfo>(

@@ -8,7 +8,7 @@ import useSWR from 'swr'
 import { Wifi, ArrowUp, ArrowDown, Terminal } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '../lib/utils'
-import { useTheme } from '../hooks/useTheme'
+import { useThemeContext } from '../hooks/useTheme'
 
 // ============================================
 // 类型定义
@@ -319,7 +319,7 @@ function IPTerminal({ ip, iface, isDark = true }: { ip: string; iface: string; i
 // 主组件：NetworkTelemetryCard
 // ============================================
 export function NetworkTelemetryCard({ className }: { className?: string }) {
-  const { isDark } = useTheme()
+  const { isDark } = useThemeContext()
   const { t } = useTranslation()
   const [rxHistory, setRxHistory] = useState<number[]>([])
   const [txHistory, setTxHistory] = useState<number[]>([])

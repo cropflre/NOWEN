@@ -12,7 +12,7 @@ import useSWR, { mutate } from 'swr'
 import { Satellite, Play, Square, RotateCcw, Container, Grip, Loader2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '../lib/utils'
-import { useTheme } from '../hooks/useTheme'
+import { useThemeContext } from '../hooks/useTheme'
 import { isDemoMode } from '../lib/api'
 
 // ============================================
@@ -444,7 +444,7 @@ function DockerContainerRow({ container, isDark, isDemo, loadingAction, onAction
 // 主组件：ProcessMatrixCard
 // ============================================
 export function ProcessMatrixCard({ className }: { className?: string }) {
-  const { isDark } = useTheme()
+  const { isDark } = useThemeContext()
   const { t } = useTranslation()
   const isDemo = isDemoMode()
   const [activeTab, setActiveTab] = useState<TabType>('matrix')
