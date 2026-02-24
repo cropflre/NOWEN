@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import { DndContext, closestCenter } from "@dnd-kit/core";
@@ -7,6 +7,8 @@ import {
   Pin,
   ExternalLink,
   Edit2,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 
 // API
@@ -63,6 +65,7 @@ import { useSiteSettings } from "./hooks/useSiteSettings";
 import { useDragAndDrop } from "./hooks/useDragAndDrop";
 import { useAuth } from "./hooks/useAuth";
 import { useNetworkEnv, getBookmarkUrl } from "./hooks/useNetworkEnv";
+import { useLazyRender } from "./hooks/useLazyRender";
 
 // 工具函数和类型
 import { Bookmark } from "./types/bookmark";
@@ -257,19 +260,18 @@ function App() {
     [deleteBookmark, t]
   );
 
-  // ========== 数据分组 ==========
-  const pinnedBookmarks = bookmarks.filter((b) => b.isPinned);
-  // 分类书签：置顶的书签也显示在其所属分类中（置顶优先排序）
-  const bookmarksByCategory = categories.reduce((acc, cat) => {
+  // ========== 数据分组（useMemo 优化，避免每次渲染重新计算） ==========
+  const pinnedBookmarks = useMemo(() => bookmarks.filter((b) => b.isPinned), [bookmarks]);
+
+  const bookmarksByCategory = useMemo(() => categories.reduce((acc, cat) => {
     const categoryBookmarks = bookmarks.filter((b) => b.category === cat.id);
-    // 置顶的排在前面
     acc[cat.id] = categoryBookmarks.sort((a, b) => {
       if (a.isPinned && !b.isPinned) return -1;
       if (!a.isPinned && b.isPinned) return 1;
       return a.orderIndex - b.orderIndex;
     });
     return acc;
-  }, {} as Record<string, Bookmark[]>);
+  }, {} as Record<string, Bookmark[]>), [bookmarks, categories]);
 
   // ========== 页面路由 ==========
   // 后台登录页面
@@ -566,98 +568,21 @@ function App() {
               if (categoryBookmarks.length === 0) return null;
 
               return (
-                <motion.section
+                <CategorySection
                   key={category.id}
-                  className="mb-12 relative group"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 1.2 + catIndex * 0.1 }}
-                  data-category-id={category.id}
-                >
-                  {/* 背景装饰文字 */}
-                  {!isLiteMode && (
-                    <div
-                      className="absolute -top-8 left-0 text-[120px] font-bold pointer-events-none select-none leading-none"
-                      style={{ fontFamily: "Inter, sans-serif", color: "var(--color-text-muted)", opacity: 0.03 }}
-                    >
-                      {category.name}
-                    </div>
-                  )}
-
-                  <div className="flex items-center gap-3 mb-6 relative z-10">
-                    <div
-                      className="w-8 h-8 rounded-lg flex items-center justify-center backdrop-blur-sm"
-                      style={{ backgroundColor: `${category.color}15`, color: category.color }}
-                    >
-                      {(() => {
-                        return <IconRenderer icon={category.icon} className="w-4 h-4" />;
-                      })()}
-                    </div>
-                    <h2 className="text-xl font-medium tracking-wide" style={{ color: "var(--color-text-primary)" }}>
-                      {category.name}
-                    </h2>
-                    <span className="text-sm" style={{ color: "var(--color-text-muted)" }}>
-                      {categoryBookmarks.length}
-                    </span>
-                    <button
-                      onClick={() => {
-                        setEditingCategory(category);
-                        setCategoryModalMode('edit');
-                        setIsCategoryModalOpen(true);
-                      }}
-                      className="ml-2 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-white/10 transition-all"
-                      style={{ color: "var(--color-text-muted)" }}
-                      title="编辑分类"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                  </div>
-
-                  <SortableContext items={categoryBookmarks.map(b => b.id)} strategy={rectSortingStrategy}>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 relative z-10">
-                      {categoryBookmarks.map((bookmark, index) => (
-                        <SortableCard key={bookmark.id} id={bookmark.id}>
-                          <motion.div
-                            className="h-full"
-                            initial={{ opacity: 0, y: isLiteMode ? 10 : 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: index * 0.05 }}
-                          >
-                            <SpotlightCard
-                              className="h-full cursor-pointer"
-                              spotlightColor={isLiteMode ? "transparent" : `${category.color}20`}
-                              onClick={() => { visitsApi.track(bookmark.id).catch(console.error); window.open(getBookmarkUrl(bookmark, isInternal), "_blank") }}
-                              onContextMenu={(e) => handleContextMenu(e, bookmark)}
-                            >
-                              <div className="flex flex-col h-full">
-                                <div
-                                  className="w-10 h-10 rounded-xl flex items-center justify-center mb-4"
-                                  style={{ background: "var(--color-bg-tertiary)" }}
-                                >
-                                  {bookmark.iconUrl ? (
-                                    <img src={bookmark.iconUrl} alt="" className="w-5 h-5 object-contain" />
-                                  ) : bookmark.icon ? (
-                                    <IconRenderer icon={bookmark.icon} className="w-5 h-5" style={{ color: "var(--color-primary)" }} />
-                                  ) : bookmark.favicon ? (
-                                    <img src={bookmark.favicon} alt="" className="w-5 h-5" />
-                                  ) : (
-                                    <ExternalLink className="w-5 h-5" style={{ color: "var(--color-text-muted)" }} />
-                                  )}
-                                </div>
-                                <h3 className="font-medium line-clamp-1 mb-1" style={{ color: "var(--color-text-primary)" }}>
-                                  {bookmark.title}
-                                </h3>
-                                <p className="text-sm line-clamp-2 flex-1" style={{ color: "var(--color-text-muted)" }}>
-                                  {bookmark.description || new URL(bookmark.url).hostname}
-                                </p>
-                              </div>
-                            </SpotlightCard>
-                          </motion.div>
-                        </SortableCard>
-                      ))}
-                    </div>
-                  </SortableContext>
-                </motion.section>
+                  category={category}
+                  categoryBookmarks={categoryBookmarks}
+                  catIndex={catIndex}
+                  isLiteMode={isLiteMode}
+                  isInternal={isInternal}
+                  totalBookmarkCount={bookmarks.length}
+                  onContextMenu={handleContextMenu}
+                  onEditCategory={(cat) => {
+                    setEditingCategory(cat);
+                    setCategoryModalMode('edit');
+                    setIsCategoryModalOpen(true);
+                  }}
+                />
               );
             })}
 
@@ -780,6 +705,239 @@ function App() {
       <ScrollToTop threshold={400} />
     </BackgroundWrapper>
     </>
+  );
+}
+
+// ========== 分类区书签卡片（React.memo 优化） ==========
+const CATEGORY_COLLAPSE_THRESHOLD = 100; // 超过此数量的分类默认折叠多余部分
+const INITIAL_SHOW_COUNT = 8; // 折叠时默认显示数量
+const MAX_ANIMATED_INDEX = 12; // 超过此索引的卡片不再有递增延迟动画
+
+const MemoizedBookmarkItem = React.memo(function MemoizedBookmarkItem({
+  bookmark,
+  index,
+  category,
+  isLiteMode,
+  isInternal,
+  lightweight,
+  onContextMenu,
+}: {
+  bookmark: Bookmark;
+  index: number;
+  category: import("./types/bookmark").Category;
+  isLiteMode: boolean | undefined;
+  isInternal: boolean;
+  lightweight: boolean;
+  onContextMenu: (e: React.MouseEvent, bookmark: Bookmark) => void;
+}) {
+  const animDelay = index < MAX_ANIMATED_INDEX ? index * 0.04 : 0;
+
+  // 轻量模式：跳过 framer-motion 入场动画
+  const card = (
+    <SpotlightCard
+      className="h-full cursor-pointer"
+      spotlightColor={isLiteMode ? "transparent" : `${category.color}20`}
+      lightweight={lightweight}
+      onClick={() => { visitsApi.track(bookmark.id).catch(console.error); window.open(getBookmarkUrl(bookmark, isInternal), "_blank") }}
+      onContextMenu={(e) => onContextMenu(e, bookmark)}
+    >
+      <div className="flex flex-col h-full">
+        <div
+          className="w-10 h-10 rounded-xl flex items-center justify-center mb-4"
+          style={{ background: "var(--color-bg-tertiary)" }}
+        >
+          {bookmark.iconUrl ? (
+            <img src={bookmark.iconUrl} alt="" className="w-5 h-5 object-contain" loading="lazy" />
+          ) : bookmark.icon ? (
+            <IconRenderer icon={bookmark.icon} className="w-5 h-5" style={{ color: "var(--color-primary)" }} />
+          ) : bookmark.favicon ? (
+            <img src={bookmark.favicon} alt="" className="w-5 h-5" loading="lazy" />
+          ) : (
+            <ExternalLink className="w-5 h-5" style={{ color: "var(--color-text-muted)" }} />
+          )}
+        </div>
+        <h3 className="font-medium line-clamp-1 mb-1" style={{ color: "var(--color-text-primary)" }}>
+          {bookmark.title}
+        </h3>
+        <p className="text-sm line-clamp-2 flex-1" style={{ color: "var(--color-text-muted)" }}>
+          {bookmark.description || (() => { try { return new URL(bookmark.url).hostname } catch { return bookmark.url } })()}
+        </p>
+      </div>
+    </SpotlightCard>
+  );
+
+  if (lightweight) {
+    // 轻量模式：不使用 framer-motion 包裹
+    return (
+      <SortableCard id={bookmark.id}>
+        <div className="h-full">{card}</div>
+      </SortableCard>
+    );
+  }
+
+  return (
+    <SortableCard id={bookmark.id}>
+      <motion.div
+        className="h-full"
+        initial={{ opacity: 0, y: isLiteMode ? 5 : 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: animDelay, duration: 0.25 }}
+      >
+        {card}
+      </motion.div>
+    </SortableCard>
+  );
+});
+
+// ========== 分类骨架屏占位 ==========
+function CategorySkeleton({ count, color }: { count: number; color: string }) {
+  const displayCount = Math.min(count, 8);
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 relative z-10">
+      {Array.from({ length: displayCount }).map((_, i) => (
+        <div
+          key={i}
+          className="rounded-2xl p-5 animate-pulse"
+          style={{
+            background: 'var(--color-glass)',
+            border: '1px solid var(--color-glass-border)',
+            minHeight: '120px',
+          }}
+        >
+          <div className="w-10 h-10 rounded-xl mb-4" style={{ background: `${color}15` }} />
+          <div className="h-4 rounded-md mb-2 w-3/4" style={{ background: 'var(--color-bg-tertiary)' }} />
+          <div className="h-3 rounded-md w-1/2" style={{ background: 'var(--color-bg-tertiary)' }} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ========== 分类区组件（支持折叠展开 + 懒渲染） ==========
+function CategorySection({
+  category,
+  categoryBookmarks,
+  catIndex,
+  isLiteMode,
+  isInternal,
+  totalBookmarkCount,
+  onContextMenu,
+  onEditCategory,
+}: {
+  category: import("./types/bookmark").Category;
+  categoryBookmarks: Bookmark[];
+  catIndex: number;
+  isLiteMode: boolean | undefined;
+  isInternal: boolean;
+  totalBookmarkCount: number;
+  onContextMenu: (e: React.MouseEvent, bookmark: Bookmark) => void;
+  onEditCategory: (cat: import("./types/bookmark").Category) => void;
+}) {
+  const { t } = useTranslation();
+  const needsCollapse = categoryBookmarks.length > CATEGORY_COLLAPSE_THRESHOLD;
+  const [isExpanded, setIsExpanded] = useState(!needsCollapse);
+  const visibleBookmarks = isExpanded ? categoryBookmarks : categoryBookmarks.slice(0, INITIAL_SHOW_COUNT);
+  const hiddenCount = categoryBookmarks.length - INITIAL_SHOW_COUNT;
+
+  // 懒渲染：前2个分类立即渲染，后续分类进入视口时才渲染
+  const [lazyRef, shouldRender] = useLazyRender('300px');
+  const isEager = catIndex < 2; // 前2个分类立即渲染，无需等待
+  const doRender = isEager || shouldRender;
+
+  // 轻量模式：总书签超过 50 个时启用，减少 framer-motion 和 spotlight 开销
+  const lightweight = totalBookmarkCount > 50;
+
+  return (
+    <motion.section
+      ref={isEager ? undefined : lazyRef}
+      className="mb-12 relative group"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: Math.min(1.2 + catIndex * 0.1, 1.8) }}
+      data-category-id={category.id}
+    >
+      {/* 背景装饰文字 */}
+      {!isLiteMode && (
+        <div
+          className="absolute -top-8 left-0 text-[120px] font-bold pointer-events-none select-none leading-none"
+          style={{ fontFamily: "Inter, sans-serif", color: "var(--color-text-muted)", opacity: 0.03 }}
+        >
+          {category.name}
+        </div>
+      )}
+
+      <div className="flex items-center gap-3 mb-6 relative z-10">
+        <div
+          className="w-8 h-8 rounded-lg flex items-center justify-center backdrop-blur-sm"
+          style={{ backgroundColor: `${category.color}15`, color: category.color }}
+        >
+          <IconRenderer icon={category.icon} className="w-4 h-4" />
+        </div>
+        <h2 className="text-xl font-medium tracking-wide" style={{ color: "var(--color-text-primary)" }}>
+          {category.name}
+        </h2>
+        <span className="text-sm" style={{ color: "var(--color-text-muted)" }}>
+          {categoryBookmarks.length}
+        </span>
+        <button
+          onClick={() => onEditCategory(category)}
+          className="ml-2 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-white/10 transition-all"
+          style={{ color: "var(--color-text-muted)" }}
+          title="编辑分类"
+        >
+          <Edit2 className="w-4 h-4" />
+        </button>
+      </div>
+
+      <SortableContext items={visibleBookmarks.map(b => b.id)} strategy={rectSortingStrategy}>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 relative z-10">
+          {doRender ? visibleBookmarks.map((bookmark, index) => (
+            <MemoizedBookmarkItem
+              key={bookmark.id}
+              bookmark={bookmark}
+              index={index}
+              category={category}
+              isLiteMode={isLiteMode}
+              isInternal={isInternal}
+              lightweight={lightweight}
+              onContextMenu={onContextMenu}
+            />
+          )) : null}
+        </div>
+      </SortableContext>
+
+      {/* 骨架屏：懒渲染未激活时显示 */}
+      {!doRender && (
+        <CategorySkeleton count={categoryBookmarks.length} color={category.color || '#667eea'} />
+      )}
+
+      {/* 展开/折叠按钮 */}
+      {doRender && needsCollapse && (
+        <div className="flex justify-center mt-4 relative z-10">
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all hover:scale-105 active:scale-95 backdrop-blur-sm"
+            style={{
+              background: 'var(--color-glass)',
+              border: '1px solid var(--color-glass-border)',
+              color: 'var(--color-text-secondary)',
+            }}
+          >
+            {isExpanded ? (
+              <>
+                <ChevronUp className="w-4 h-4" />
+                {t('bookmark.collapse', '收起')}
+              </>
+            ) : (
+              <>
+                <ChevronDown className="w-4 h-4" />
+                {t('bookmark.show_more', '展开更多')} ({hiddenCount})
+              </>
+            )}
+          </button>
+        </div>
+      )}
+    </motion.section>
   );
 }
 

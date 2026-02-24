@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { Bookmark, Category, CustomIcon } from '../types/bookmark'
 import * as api from '../lib/api'
 
@@ -283,25 +283,24 @@ export function useBookmarkStore() {
     }
   }, [])
 
-  // 获取排序后的书签
-  const sortedBookmarks = [...bookmarks].sort((a, b) => {
-    // 置顶优先
+  // 获取排序后的书签（useMemo 避免每次渲染重新排序）
+  const sortedBookmarks = useMemo(() => [...bookmarks].sort((a, b) => {
     if (a.isPinned && !b.isPinned) return -1
     if (!a.isPinned && b.isPinned) return 1
     return a.orderIndex - b.orderIndex
-  })
+  }), [bookmarks])
 
-  // 按分类分组
-  const bookmarksByCategory = categories.reduce((acc, category) => {
+  // 按分类分组（useMemo 避免每次渲染重新计算）
+  const bookmarksByCategory = useMemo(() => categories.reduce((acc, category) => {
     acc[category.id] = sortedBookmarks.filter(b => b.category === category.id)
     return acc
-  }, {} as Record<string, Bookmark[]>)
+  }, {} as Record<string, Bookmark[]>), [sortedBookmarks, categories])
 
   // 未分类的书签
-  const uncategorizedBookmarks = sortedBookmarks.filter(b => !b.category)
+  const uncategorizedBookmarks = useMemo(() => sortedBookmarks.filter(b => !b.category), [sortedBookmarks])
 
   // 稍后阅读的书签
-  const readLaterBookmarks = sortedBookmarks.filter(b => b.isReadLater && !b.isRead)
+  const readLaterBookmarks = useMemo(() => sortedBookmarks.filter(b => b.isReadLater && !b.isRead), [sortedBookmarks])
 
   // 添加自定义图标
   const addCustomIcon = useCallback((icon: Omit<CustomIcon, 'id' | 'createdAt'>) => {

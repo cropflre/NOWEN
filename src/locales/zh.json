@@ -51,6 +51,8 @@
     "visit": "开始阅读",
     "open_in_new_tab": "在新标签页打开",
     "copy_link": "复制链接",
+    "collapse": "收起",
+    "show_more": "展开更多",
     "modal": {
       "analyzing": "智能分析中...",
       "url_placeholder": "粘贴链接，自动获取信息...",
@@ -201,7 +203,8 @@
       "delete": "删除",
       "delete_confirm": "确定删除这个书签？",
       "deleted": "书签已删除",
-      "bookmark_count": "{{count}} 个书签"
+      "bookmark_count": "{{count}} 个书签",
+      "pagination_info": "第 {{start}}-{{end}} 条，共 {{total}} 条"
     },
     "category": {
       "add": "新建分类",

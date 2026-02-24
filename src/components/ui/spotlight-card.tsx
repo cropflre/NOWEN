@@ -7,6 +7,7 @@ interface SpotlightCardProps {
   className?: string
   spotlightColor?: string
   size?: 'sm' | 'md' | 'lg' | 'xl'
+  lightweight?: boolean // 轻量模式：禁用 spotlight/border beam，用纯 CSS hover 代替 framer-motion
   onClick?: () => void
   onContextMenu?: (e: React.MouseEvent) => void
 }
@@ -22,6 +23,7 @@ export function SpotlightCard({
   className,
   spotlightColor = 'rgba(102, 126, 234, 0.15)',
   size = 'md',
+  lightweight = false,
   onClick,
   onContextMenu,
 }: SpotlightCardProps) {
@@ -66,6 +68,30 @@ export function SpotlightCard({
     md: 'p-5',
     lg: 'p-6',
     xl: 'p-8',
+  }
+
+  // 轻量模式：纯 CSS，无 framer-motion，无 spotlight 特效
+  if (lightweight) {
+    return (
+      <div
+        onClick={onClick}
+        onContextMenu={onContextMenu}
+        className={cn(
+          'relative overflow-hidden rounded-2xl backdrop-blur-xl',
+          'transition-all duration-300 hover:-translate-y-1',
+          onClick && 'cursor-pointer active:scale-[0.98]',
+          sizeClasses[size],
+          className
+        )}
+        style={{
+          background: 'var(--color-glass)',
+          border: '1px solid var(--color-glass-border)',
+          boxShadow: 'var(--color-shadow)',
+        }}
+      >
+        <div className="relative z-10">{children}</div>
+      </div>
+    )
   }
 
   return (

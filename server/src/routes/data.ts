@@ -192,17 +192,21 @@ router.post('/import', authMiddleware, validateBody(importDataSchema), (req: Req
     saveDatabase()
 
     // 异步启动 metadata 抓取（不阻塞响应）
-    if (insertedIds.length > 0) {
+    // 超过 50 条书签时跳过图标抓取，避免大量导入时请求过多
+    const shouldEnrich = insertedIds.length > 0 && bookmarks.length <= 50
+    if (shouldEnrich) {
       console.log(`🔍 开始异步抓取 ${insertedIds.length} 个书签的 metadata...`)
       enrichBookmarkMetadata(insertedIds).catch(err => {
         console.error('Metadata 抓取任务异常:', err)
       })
+    } else if (insertedIds.length > 0) {
+      console.log(`⏭️ 导入书签数 ${bookmarks.length} 超过 50，跳过图标抓取`)
     }
     
     res.json({ 
       success: true, 
       message: `成功导入 ${bookmarks.length} 个书签和 ${categories?.length || 0} 个分类`,
-      enriching: insertedIds.length,
+      enriching: shouldEnrich ? insertedIds.length : 0,
     })
   } catch (error) {
     console.error('导入数据失败:', error)
