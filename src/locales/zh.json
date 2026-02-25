@@ -633,13 +633,17 @@
           "drag_title": "拖拽排序",
           "drag_desc": "在首页直接拖拽书签卡片调整顺序，自动保存",
           "monitor_title": "系统监控",
-          "monitor_desc": "实时显示 CPU、内存、磁盘、网络、进程等系统状态（需服务端支持）",
+          "monitor_desc": "实时显示 CPU、内存、磁盘、网络、进程等系统状态，支持迷你胶囊/状态栏/全功能仪表盘三种模式切换",
           "theme_title": "日夜主题",
           "theme_desc": "支持多款深色/浅色主题切换，可设置按时间自动切换",
           "i18n_title": "中英文切换",
           "i18n_desc": "界面完整支持中文和英文双语切换",
           "readlater_title": "稍后阅读",
-          "readlater_desc": "将书签标记为稍后阅读，首页独立展示待读列表"
+          "readlater_desc": "将书签标记为稍后阅读，首页独立展示待读列表",
+          "mobile_dock_title": "移动端导航",
+          "mobile_dock_desc": "可自由拖拽的能量球导航，花瓣式展开菜单，底部实时状态栏，位置持久化记忆",
+          "desktop_dock_title": "桌面端 Dock",
+          "desktop_dock_desc": "macOS 风格浮动 Dock 栏，支持自由拖拽定位、位置记忆、磁性放大（鱼眼）效果"
         },
         "settings": {
           "title": "系统设置",

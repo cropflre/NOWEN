@@ -2,7 +2,7 @@
 
 > A minimalist personal navigation hub combining bookmark management and system monitoring, featuring deep space aesthetics and glassmorphism design, supporting day/night dual modes with complete real-time hardware monitoring capabilities
 
-![Version](https://img.shields.io/badge/version-0.1.8-blue)
+![Version](https://img.shields.io/badge/version-0.1.9-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Node](https://img.shields.io/badge/node-%3E%3D20-brightgreen)
 ![React](https://img.shields.io/badge/React-18.3-61dafb)
@@ -71,8 +71,8 @@
 | **Category Editing**     | Hover to show edit button ✏️ · Edit directly without backend                               |
 | **Quick Add Category**   | Create category while adding bookmark · 10 preset colors · Real-time refresh               |
 | **System Monitoring**    | Engine Room (CPU 57%/RAM 89%/Disk) · Hardware ID · Vital Signs (28°C) · Network · Services |
-| **Dock Status Bar**      | SYSTEM ONLINE · CPU/MEM/Temp/Network speed · Draggable                                     |
-| **Mobile Floating Dock** | Expandable menu · Search/Add/Theme/Apps                                                    |
+| **Dock Status Bar**      | SYSTEM ONLINE · CPU/MEM/Temp/Network speed · Freely draggable · Position memory          |
+| **Mobile Floating Dock** | Freely draggable energy orb · Petal-style expand menu · Bottom status bar · Haptic feedback · Position persistence |
 | **Read Later**           | Hero card display · 3D card effect · List view · Mark as read                              |
 | **Visit Analytics**      | Click tracking · Top ranking · Trend charts · Recent visits · Data clearing               |
 | **Link Health Check**    | Batch check · Dead link detection · Timeout/redirect detection · Response time stats · Delete dead links |
@@ -128,7 +128,8 @@
 - **Network Telemetry Card**: Download/Upload speed, traffic charts, IP address, connection status
 - **Service Hive (Process Matrix Card)**: Docker container status, runtime timer, service health
 - **Dock Mini Monitor**: Desktop bottom SYSTEM ONLINE status bar with CPU/MEM/Temp/Speed
-- **Ticker Status Bar**: Mobile bottom scrolling status bar
+- **Ticker Status Bar**: Mobile bottom scrolling status bar, integrated into draggable energy orb bottom bar
+- **Monitor Tri-Mode**: Mini capsule / Ticker bar / Full dashboard seamless switching, view selection persisted
 - **Widget Visibility Control**: Backend control for each monitor component
 - **Menu Visibility Control** (NEW): Control language/theme toggle buttons visibility
 
@@ -181,8 +182,8 @@
 - **Toast Notifications**: Physics bounce animation
 - **Theme Transition**: Circle expand animation
 - **Day/Night Mode**: Fully adapted dual theme system
-- **Mobile Adaptation**: Responsive design, expandable floating dock, ticker scroll bar
-- **Desktop Optimization**: Floating dock nav, mini monitor widget, draggable menu, sidebar
+- **Mobile Adaptation**: Responsive design, freely draggable energy orb dock, petal-style expand menu, bottom status bar, single-column Bento layout
+- **Desktop Optimization**: Floating dock nav (freely draggable + position memory), mini monitor widget, magnetic magnification effect, sidebar
 - **Lite Mode**: Disable all animations, significantly reduce resource usage
 
 ---
@@ -608,6 +609,38 @@ A: Admin → System Settings → Data Management → Export Backup, or copy `ser
 
 ## 📝 Changelog
 
+### v0.1.9 (2026-02-25)
+
+#### ✨ New Features
+
+- **Mobile Energy Orb Free Dragging**: Mobile floating navigation orb supports free dragging to any screen position
+  - Native drag via Pointer Events with 6px threshold to distinguish drag from click
+  - Position persisted via localStorage, auto-restored on next visit
+  - Blue glow + micro-scale visual feedback during drag
+  - Tap to expand petal-style menu with haptic vibration feedback (`navigator.vibrate`)
+- **Mobile Bottom Status Bar**: New fixed bottom status bar with integrated system monitoring Ticker
+  - Real-time system status (CPU/Memory/Network speed) via `leftSlot` slot
+  - Glassmorphism blur background, iOS safe area support (`safe-area-inset-bottom`)
+  - Energy orb and bottom bar are fully independent
+- **Desktop Dock Free Dragging**: Desktop floating Dock supports dragging to any position
+  - Position persisted via localStorage (key: `desktop-dock-pos`), defaults to bottom center
+  - Glowing border feedback during drag, cursor changes to `grabbing`
+  - macOS-style magnetic magnification effect (fisheye zoom)
+- **Mobile Bento Single Column**: Mobile bookmark grid changed from two columns to single column for better readability
+- **Monitor Tri-Mode Switching**: Mini capsule / Ticker bar / Full dashboard seamless switching
+  - View mode persisted via localStorage
+  - Smooth scale + fade + slide transition animations between modes
+- **Dashboard Light Mode Transparency**: Monitor dashboard background fully transparent in light mode, blending with page
+  - DataBlock sub-card backgrounds synchronized to transparent, border opacity reduced to 30%
+
+#### 🐛 Bug Fixes
+
+- Fixed mobile energy orb tap not expanding menu (removed `preventDefault` interference)
+- Fixed mobile mini mode status bar not centered
+- Optimized progress bar animation performance, switched from Framer Motion to native CSS Transition
+
+---
+
 ### v0.1.8 (2026-02-24)
 
 #### ✨ New Features
@@ -790,8 +823,9 @@ A: Admin → System Settings → Data Management → Export Backup, or copy `ser
 
 - ✨ Real-time hardware monitoring (CPU, RAM, Disk, Network, Processes)
 - ✨ 5 monitor cards (System, Hardware ID, Vital Signs, Network, Process Matrix)
-- ✨ Dock mini monitor (Desktop)
-- ✨ Ticker scroll bar (Mobile)
+- ✨ Dock mini monitor (Desktop, freely draggable + position memory)
+- ✨ Ticker scroll bar (Mobile, integrated into energy orb bottom bar)
+- ✨ Monitor tri-mode switching (mini capsule / ticker / full dashboard)
 - ✨ Widget visibility control
 
 **Theme System**

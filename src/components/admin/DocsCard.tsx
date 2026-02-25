@@ -40,6 +40,8 @@ import {
   Eye,
   EyeOff,
   Sparkles,
+  Smartphone,
+  LayoutDashboard,
   type LucideIcon,
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
@@ -133,6 +135,8 @@ export function DocsCard() {
         { icon: Sun, titleKey: 'admin.docs.sections.frontend.theme_title', descKey: 'admin.docs.sections.frontend.theme_desc' },
         { icon: Languages, titleKey: 'admin.docs.sections.frontend.i18n_title', descKey: 'admin.docs.sections.frontend.i18n_desc' },
         { icon: FileText, titleKey: 'admin.docs.sections.frontend.readlater_title', descKey: 'admin.docs.sections.frontend.readlater_desc' },
+        { icon: Smartphone, titleKey: 'admin.docs.sections.frontend.mobile_dock_title', descKey: 'admin.docs.sections.frontend.mobile_dock_desc' },
+        { icon: LayoutDashboard, titleKey: 'admin.docs.sections.frontend.desktop_dock_title', descKey: 'admin.docs.sections.frontend.desktop_dock_desc' },
       ],
     },
     {

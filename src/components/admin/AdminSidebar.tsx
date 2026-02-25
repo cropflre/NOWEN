@@ -16,7 +16,7 @@ import {
   HeartPulse,
   BookOpen
 } from 'lucide-react'
-import { MobileFloatingDock } from '../ui/mobile-floating-dock'
+
 
 type TabType = 'bookmarks' | 'categories' | 'quotes' | 'icons' | 'analytics' | 'health-check' | 'docs' | 'settings'
 
@@ -545,21 +545,7 @@ export function AdminSidebar({
         )}
       </AnimatePresence>
 
-      {/* ========================================
-         VIBE CODING: Mobile Floating Dock
-         替换原本死板的底部栏，改为可展开悬浮坞
-         放置在右下角拇指热区，节省屏幕空间
-         ======================================== */}
-      <MobileFloatingDock
-        className="md:hidden"
-        items={navItems.map(item => ({
-          id: item.id,
-          label: t(item.fullLabelKey),
-          icon: item.icon,
-          onClick: () => onTabChange(item.id),
-          isActive: activeTab === item.id,
-        }))}
-      />
+      {/* 后台页面不展示移动端能量球导航 */}
     </>
   )
 }

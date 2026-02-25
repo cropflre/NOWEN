@@ -633,13 +633,17 @@
           "drag_title": "Drag to Reorder",
           "drag_desc": "Drag bookmark cards directly on homepage to reorder, auto-saved",
           "monitor_title": "System Monitor",
-          "monitor_desc": "Real-time display of CPU, memory, disk, network, process stats (requires server support)",
+          "monitor_desc": "Real-time display of CPU, memory, disk, network, process stats. Supports mini capsule / ticker bar / full dashboard tri-mode switching",
           "theme_title": "Light/Dark Theme",
           "theme_desc": "Multiple dark/light themes available, with auto-switch by time of day",
           "i18n_title": "Language Switch",
           "i18n_desc": "Full Chinese and English bilingual interface support",
           "readlater_title": "Read Later",
-          "readlater_desc": "Mark bookmarks as read later, shown in a dedicated section on homepage"
+          "readlater_desc": "Mark bookmarks as read later, shown in a dedicated section on homepage",
+          "mobile_dock_title": "Mobile Navigation",
+          "mobile_dock_desc": "Freely draggable energy orb navigation with petal-style expand menu, bottom real-time status bar, position persistence",
+          "desktop_dock_title": "Desktop Dock",
+          "desktop_dock_desc": "macOS-style floating Dock bar with free drag positioning, position memory, and magnetic magnification (fisheye) effect"
         },
         "settings": {
           "title": "Settings",
