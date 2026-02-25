@@ -614,41 +614,6 @@ function App() {
         </div>
       )}
 
-      {/* 桌面端迷你监控（独立拖拽胶囊 — 由 MonitorWidget 自主管理 fixed 定位） */}
-      {widgetVisibility.dockMiniMonitor !== false && (
-        <div className="hidden md:block">
-          <SystemMonitor initialMode="mini" size="sm" showLoading={false} />
-        </div>
-      )}
-
-      {/* Floating Dock - 桌面端 */}
-      <div className="hidden md:flex fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
-        <FloatingDock
-          items={filteredDockItems.map((item) => ({
-            ...item,
-            onClick: item.href ? undefined : (item.onClick || (() => handleDockClick(item.id))),
-          }))}
-        />
-      </div>
-
-      {/* Mobile Floating Dock */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex flex-col">
-        {widgetVisibility.mobileTicker !== false && (
-          <SystemMonitor initialMode="inline" compact showLoading={false} />
-        )}
-        <MobileFloatingDock
-          items={filteredDockItems
-            .filter((item) => !item.href)
-            .map((item) => ({
-              id: item.id,
-              label: item.title,
-              icon: item.IconComponent,
-              onClick: item.onClick || (() => handleDockClick(item.id)),
-              isActive: item.id === "home",
-            }))}
-        />
-      </div>
-
       {/* Modals */}
       <SpotlightSearch
         isOpen={isSpotlightOpen}
@@ -714,6 +679,45 @@ function App() {
 
       <ScrollToTop threshold={400} />
     </BackgroundWrapper>
+
+    {/* 以下组件放在 BackgroundWrapper 外部，避免被其 stacking context 限制 z-index */}
+
+    {/* 桌面端：Dock（自主管理 fixed 定位 + 自由拖拽） */}
+    <div className="hidden md:block">
+      <FloatingDock
+        items={filteredDockItems.map((item) => ({
+          ...item,
+          onClick: item.href ? undefined : (item.onClick || (() => handleDockClick(item.id))),
+        }))}
+      />
+    </div>
+
+    {/* 桌面端迷你监控 — 固定位置 */}
+    {widgetVisibility.dockMiniMonitor !== false && (
+      <div className="hidden md:flex fixed bottom-6 left-1/2 -translate-x-1/2 z-40">
+        <SystemMonitor initialMode="mini" size="sm" showLoading={false} />
+      </div>
+    )}
+
+    {/* 移动端：底部固定栏（状态栏 + 能量球） */}
+    <div className="md:hidden">
+      <MobileFloatingDock
+        items={filteredDockItems
+          .filter((item) => !item.href)
+          .map((item) => ({
+            id: item.id,
+            label: item.title,
+            icon: item.IconComponent,
+            onClick: item.onClick || (() => handleDockClick(item.id)),
+            isActive: item.id === "home",
+          }))}
+        leftSlot={
+          widgetVisibility.mobileTicker !== false
+            ? <SystemMonitor initialMode="inline" compact showLoading={false} />
+            : undefined
+        }
+      />
+    </div>
     </>
   );
 }

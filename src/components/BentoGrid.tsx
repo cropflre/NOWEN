@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { DndContext, closestCenter, DragEndEvent } from '@dnd-kit/core'
-import { SortableContext, rectSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable'
+import { DndContext, closestCenter, DragEndEvent, PointerSensor, TouchSensor, KeyboardSensor, useSensor, useSensors } from '@dnd-kit/core'
+import { SortableContext, rectSortingStrategy, useSortable, arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { ChevronRight, Plus, Edit3 } from 'lucide-react'
 import { HeroCard } from './HeroCard'
@@ -40,6 +40,7 @@ function SortableBentoCard({ bookmark, ...props }: { bookmark: Bookmark } & Omit
     transition,
     opacity: isDragging ? 0.5 : 1,
     zIndex: isDragging ? 100 : 'auto',
+    touchAction: 'manipulation' as const,
   }
 
   return (
@@ -64,6 +65,19 @@ export function BentoGrid({
   onAddNew,
 }: BentoGridProps) {
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null)
+
+  // 拖拽传感器（桌面 + 移动端触摸 + 键盘）
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 8 },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 250, tolerance: 5 },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  )
 
   // 获取稍后阅读的第一个书签作为 Hero
   const readLaterBookmarks = bookmarks.filter(b => b.isReadLater && !b.isRead)
@@ -139,7 +153,7 @@ export function BentoGrid({
   }
 
   return (
-    <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
       <div className="space-y-12">
         {/* Hero Card - 稍后阅读 */}
         <section>

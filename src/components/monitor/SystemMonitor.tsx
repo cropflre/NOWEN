@@ -3,12 +3,12 @@
  * 根据 viewMode 状态动态切换不同形态的"外骨骼"
  * 
  * 三种形态：
- * - mini: 迷你型 (The Orb Widget) - 可拖拽胶囊
- * - inline: 一行展示型 (The Telemetry Stream) - 可拖拽状态栏
- * - default: 默认型 (The Command Deck) - 可拖拽仪表盘
+ * - mini: 迷你型 (The Orb Widget) - 固定胶囊
+ * - inline: 一行展示型 (The Telemetry Stream) - 固定状态栏
+ * - default: 默认型 (The Command Deck) - 固定仪表盘
  */
-import { useState, useEffect, useCallback, useRef } from 'react'
-import { motion, AnimatePresence, useMotionValue } from 'framer-motion'
+import { useState, useEffect, useCallback } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '../../lib/utils'
 import { useSystemVital, type SystemVitalData } from '../../hooks/useSystemVital'
 import { MonitorWidget } from './MonitorWidget'
@@ -54,121 +54,6 @@ const variants = {
 const transition = {
   duration: 0.3,
   ease: [0.4, 0, 0.2, 1],
-}
-
-// ============================================
-// 可拖拽面板包装器（inline / default 模式用）
-// ============================================
-
-const PANEL_POS_KEY = 'desktop-monitor-panel-pos'
-
-function loadPanelPos(): { x: number; y: number } {
-  try {
-    const s = localStorage.getItem(PANEL_POS_KEY)
-    if (s) {
-      const { x, y } = JSON.parse(s)
-      return { x: Number(x) || 0, y: Number(y) || 0 }
-    }
-  } catch { /* */ }
-  return { x: 0, y: 0 }
-}
-
-function DraggablePanel({
-  children,
-  className,
-  mode,
-}: {
-  children: React.ReactNode
-  className?: string
-  mode: 'inline' | 'default'
-}) {
-  const [isDragging, setIsDragging] = useState(false)
-  const [isDark, setIsDark] = useState(true)
-  const initPos = useRef(loadPanelPos())
-  const dragX = useMotionValue(initPos.current.x)
-  const dragY = useMotionValue(initPos.current.y)
-
-  useEffect(() => {
-    const obs = new MutationObserver(() =>
-      setIsDark(document.documentElement.classList.contains('dark'))
-    )
-    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] })
-    setIsDark(document.documentElement.classList.contains('dark'))
-    return () => obs.disconnect()
-  }, [])
-
-  // 入场动画
-  useEffect(() => {
-    const p = initPos.current
-    dragX.set(p.x)
-    dragY.set(p.y + 30)
-    const t = setTimeout(() => {
-      const sy = dragY.get()
-      const ty = p.y
-      const st = performance.now()
-      const dur = 300
-      function anim(now: number) {
-        const prog = Math.min((now - st) / dur, 1)
-        const eased = 1 - Math.pow(1 - prog, 3)
-        dragY.set(sy + (ty - sy) * eased)
-        if (prog < 1) requestAnimationFrame(anim)
-      }
-      requestAnimationFrame(anim)
-    }, 100)
-    return () => clearTimeout(t)
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
-  const savePos = useCallback((x: number, y: number) => {
-    try { localStorage.setItem(PANEL_POS_KEY, JSON.stringify({ x, y })) } catch { /* */ }
-  }, [])
-
-  const handleDragEnd = useCallback(() => {
-    setTimeout(() => setIsDragging(false), 80)
-    savePos(dragX.get(), dragY.get())
-  }, [dragX, dragY, savePos])
-
-  const isWide = mode === 'inline'
-
-  return (
-    <motion.div
-      className={cn(
-        "select-none touch-none rounded-2xl overflow-hidden",
-        isDragging ? 'cursor-grabbing' : 'cursor-grab',
-        className
-      )}
-      style={{
-        x: dragX,
-        y: dragY,
-        boxShadow: isDragging
-          ? (isDark
-            ? '0 0 24px rgba(34, 211, 238, 0.2), 0 8px 32px rgba(0,0,0,0.4)'
-            : '0 0 24px rgba(59, 130, 246, 0.15), 0 8px 32px rgba(0,0,0,0.1)')
-          : (isDark
-            ? '0 4px 20px rgba(0,0,0,0.4)'
-            : '0 4px 16px rgba(0,0,0,0.08)'),
-        border: isDragging
-          ? `1.5px solid ${isDark ? 'rgba(34, 211, 238, 0.4)' : 'rgba(59, 130, 246, 0.3)'}`
-          : `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
-        transition: 'box-shadow 0.2s, border 0.2s',
-        width: isWide ? 'min(90vw, 680px)' : 'min(90vw, 420px)',
-      }}
-      drag
-      dragMomentum={false}
-      dragElastic={0.08}
-      dragConstraints={{
-        top: -window.innerHeight + 80,
-        bottom: 20,
-        left: -window.innerWidth / 2 + 80,
-        right: window.innerWidth / 2 - 80,
-      }}
-      onDragStart={() => setIsDragging(true)}
-      onDragEnd={handleDragEnd}
-      initial={false}
-      whileDrag={{ scale: 1.02 }}
-    >
-      {children}
-    </motion.div>
-  )
 }
 
 // ============================================
@@ -284,7 +169,6 @@ export function SystemMonitor({
   // 切换视图模式的回调函数
   const handleSwitchMode = useCallback((newMode: MonitorViewMode) => {
     setViewMode(newMode)
-    // 保存到 localStorage
     if (typeof window !== 'undefined') {
       localStorage.setItem(storageKey, newMode)
     }
@@ -309,7 +193,7 @@ export function SystemMonitor({
 
   return (
     <AnimatePresence mode="wait">
-      {/* Mini 模式：MonitorWidget 自带 fixed 定位 + 拖拽，不包裹额外 motion.div 避免 transform 冲突 */}
+      {/* Mini 模式：固定胶囊 */}
       {viewMode === 'mini' && (
         <MonitorWidget 
           key="mini"
@@ -322,7 +206,7 @@ export function SystemMonitor({
         />
       )}
 
-      {/* Inline 模式：可拖拽状态栏 */}
+      {/* Inline 模式：固定状态栏 */}
       {viewMode === 'inline' && (
         <motion.div
           key="inline"
@@ -333,23 +217,21 @@ export function SystemMonitor({
           transition={transition}
           className={className}
         >
-          <DraggablePanel mode="inline">
-            <MonitorTicker 
-              cpu={data.cpu}
-              mem={data.mem}
-              temp={data.temp}
-              net={data.net}
-              disk={data.disk}
-              containers={data.containers}
-              status={data.status}
-              compact={compact}
-              onSwitchMode={handleSwitchMode}
-            />
-          </DraggablePanel>
+          <MonitorTicker 
+            cpu={data.cpu}
+            mem={data.mem}
+            temp={data.temp}
+            net={data.net}
+            disk={data.disk}
+            containers={data.containers}
+            status={data.status}
+            compact={compact}
+            onSwitchMode={handleSwitchMode}
+          />
         </motion.div>
       )}
 
-      {/* Default 模式：可拖拽仪表盘 */}
+      {/* Default 模式：固定仪表盘 */}
       {viewMode === 'default' && (
         <motion.div
           key="default"
@@ -360,19 +242,17 @@ export function SystemMonitor({
           transition={transition}
           className={className}
         >
-          <DraggablePanel mode="default">
-            <MonitorDashboard 
-              cpu={data.cpu}
-              mem={data.mem}
-              temp={data.temp}
-              net={data.net}
-              disk={data.disk}
-              containers={data.containers}
-              uptime={data.uptime}
-              status={data.status}
-              onSwitchMode={handleSwitchMode}
-            />
-          </DraggablePanel>
+          <MonitorDashboard 
+            cpu={data.cpu}
+            mem={data.mem}
+            temp={data.temp}
+            net={data.net}
+            disk={data.disk}
+            containers={data.containers}
+            uptime={data.uptime}
+            status={data.status}
+            onSwitchMode={handleSwitchMode}
+          />
         </motion.div>
       )}
     </AnimatePresence>

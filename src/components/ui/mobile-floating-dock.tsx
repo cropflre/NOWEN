@@ -1,10 +1,10 @@
 /**
- * Mobile Floating Dock - 移动端可展开悬浮坞
- * Vibe: 花瓣式展开，收起时只是右下角的一个小能量球
- * 特性：可拖拽、支持日间/夜间模式
+ * Mobile Floating Dock - 移动端
+ * 底部固定状态栏 + 独立可自由拖拽的能量球
+ * 花瓣式展开菜单，支持日间/夜间模式
  */
-import { useState, useRef, useEffect } from "react";
-import { motion, AnimatePresence, useDragControls, PanInfo } from "framer-motion";
+import { useState, useRef, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { cn } from "../../lib/utils";
 
@@ -22,55 +22,76 @@ interface DockItem {
 interface MobileFloatingDockProps {
   items: DockItem[];
   className?: string;
+  /** 底部栏插槽，用于放置状态栏等 */
+  leftSlot?: React.ReactNode;
 }
 
 // 液态动画配置
 const LIQUID_SPRING = {
-  // 展开/收起 - 像花瓣绽放
   expand: { type: "spring" as const, stiffness: 300, damping: 25 },
-  // 单个项目入场 - 错落有致
   item: { type: "spring" as const, stiffness: 400, damping: 28 },
-  // 背景模糊层
   backdrop: { duration: 0.3 },
 };
 
-// 存储位置的 key
-const POSITION_STORAGE_KEY = 'mobile-dock-position';
+// 能量球位置持久化
+const MOBILE_DOCK_POS_KEY = "mobile-dock-pos";
+const DRAG_THRESHOLD = 6;
+
+function defaultMobilePos(): { x: number; y: number } {
+  return {
+    x: window.innerWidth - 36,
+    y: window.innerHeight - 100,
+  };
+}
+
+function loadMobilePos(): { x: number; y: number } {
+  try {
+    const s = localStorage.getItem(MOBILE_DOCK_POS_KEY);
+    if (s) {
+      const { x, y } = JSON.parse(s);
+      const px = Number(x),
+        py = Number(y);
+      if (
+        px > 28 &&
+        px < window.innerWidth - 28 &&
+        py > 28 &&
+        py < window.innerHeight - 28
+      ) {
+        return { x: px, y: py };
+      }
+    }
+  } catch {
+    /* */
+  }
+  return defaultMobilePos();
+}
 
 export function MobileFloatingDock({
   items,
   className,
+  leftSlot,
 }: MobileFloatingDockProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const containerRef = useRef<HTMLDivElement>(null);
-  const dragControls = useDragControls();
+  const orbRef = useRef<HTMLDivElement>(null);
 
-  // 从 localStorage 恢复位置
-  useEffect(() => {
+  // 拖拽位置
+  const posRef = useRef(loadMobilePos());
+  const [pos, setPos] = useState(posRef.current);
+  const dragStartMouse = useRef({ x: 0, y: 0 });
+  const dragStartPos = useRef({ x: 0, y: 0 });
+  const hasMoved = useRef(false);
+
+  const savePos = useCallback((x: number, y: number) => {
+    posRef.current = { x, y };
     try {
-      const saved = localStorage.getItem(POSITION_STORAGE_KEY);
-      if (saved) {
-        const { x, y } = JSON.parse(saved);
-        setPosition({ x, y });
-      }
-    } catch (e) {
-      // 忽略解析错误
+      localStorage.setItem(MOBILE_DOCK_POS_KEY, JSON.stringify({ x, y }));
+    } catch {
+      /* */
     }
   }, []);
 
-  // 保存位置到 localStorage
-  const savePosition = (x: number, y: number) => {
-    try {
-      localStorage.setItem(POSITION_STORAGE_KEY, JSON.stringify({ x, y }));
-    } catch (e) {
-      // 忽略存储错误
-    }
-  };
-
   const handleItemClick = (item: DockItem) => {
-    // 触觉反馈 (如果支持)
     if ("vibrate" in navigator) {
       navigator.vibrate(10);
     }
@@ -78,28 +99,67 @@ export function MobileFloatingDock({
     setIsExpanded(false);
   };
 
-  const toggleDock = () => {
-    // 如果正在拖拽，不触发点击
-    if (isDragging) return;
-    
-    // 触觉反馈
+  const toggleDock = useCallback(() => {
     if ("vibrate" in navigator) {
       navigator.vibrate(5);
     }
-    setIsExpanded(!isExpanded);
-  };
+    setIsExpanded((prev) => !prev);
+  }, []);
 
-  // 拖拽结束处理
-  const handleDragEnd = (_: any, info: PanInfo) => {
-    // 短暂延迟后重置拖拽状态，避免触发点击
-    setTimeout(() => setIsDragging(false), 100);
-    
-    // 计算新位置并保存
-    const newX = position.x + info.offset.x;
-    const newY = position.y + info.offset.y;
-    setPosition({ x: newX, y: newY });
-    savePosition(newX, newY);
-  };
+  // 拖拽事件
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    hasMoved.current = false;
+    dragStartMouse.current = { x: e.clientX, y: e.clientY };
+    dragStartPos.current = { ...posRef.current };
+    orbRef.current?.setPointerCapture(e.pointerId);
+  }, []);
+
+  const handlePointerMove = useCallback(
+    (e: React.PointerEvent) => {
+      if (!orbRef.current?.hasPointerCapture(e.pointerId)) return;
+
+      const dx = e.clientX - dragStartMouse.current.x;
+      const dy = e.clientY - dragStartMouse.current.y;
+
+      if (
+        !hasMoved.current &&
+        Math.abs(dx) < DRAG_THRESHOLD &&
+        Math.abs(dy) < DRAG_THRESHOLD
+      ) {
+        return;
+      }
+
+      hasMoved.current = true;
+      if (!isDragging) setIsDragging(true);
+
+      const nx = Math.max(
+        28,
+        Math.min(window.innerWidth - 28, dragStartPos.current.x + dx)
+      );
+      const ny = Math.max(
+        28,
+        Math.min(window.innerHeight - 28, dragStartPos.current.y + dy)
+      );
+      posRef.current = { x: nx, y: ny };
+      setPos({ x: nx, y: ny });
+    },
+    [isDragging]
+  );
+
+  const handlePointerUp = useCallback(
+    (e: React.PointerEvent) => {
+      orbRef.current?.releasePointerCapture(e.pointerId);
+      if (hasMoved.current) {
+        // 拖拽结束 — 保存位置，不触发点击
+        savePos(posRef.current.x, posRef.current.y);
+        setTimeout(() => setIsDragging(false), 50);
+      } else {
+        // 没有移动 — 当作点击，展开/收起菜单
+        toggleDock();
+      }
+    },
+    [savePos, toggleDock]
+  );
 
   return (
     <>
@@ -117,25 +177,36 @@ export function MobileFloatingDock({
         )}
       </AnimatePresence>
 
-      {/* 悬浮坞容器 - 可拖拽 */}
-      <motion.div 
-        ref={containerRef}
-        className={cn("fixed bottom-6 right-6 z-50 touch-none", className)}
-        drag
-        dragControls={dragControls}
-        dragMomentum={false}
-        dragElastic={0.1}
-        dragConstraints={{
-          top: -window.innerHeight + 100,
-          bottom: 0,
-          left: -window.innerWidth + 80,
-          right: 0,
+      {/* 底部固定状态栏 */}
+      {leftSlot && (
+        <div
+          className={cn(
+            "fixed bottom-0 left-0 right-0 z-50",
+            "flex items-center justify-center px-3 py-2",
+            "bg-white/90 dark:bg-black/80",
+            "backdrop-blur-xl",
+            "border-t border-slate-200/60 dark:border-white/10",
+            "safe-area-bottom",
+            className
+          )}
+          style={{ paddingBottom: "max(8px, env(safe-area-inset-bottom))" }}
+        >
+          <div className="min-w-0 overflow-hidden">{leftSlot}</div>
+        </div>
+      )}
+
+      {/* 独立悬浮能量球 - 自由拖拽 */}
+      <div
+        ref={orbRef}
+        className="fixed z-[60] touch-none"
+        style={{
+          left: pos.x,
+          top: pos.y,
+          transform: "translate(-50%, -50%)",
         }}
-        onDragStart={() => setIsDragging(true)}
-        onDragEnd={handleDragEnd}
-        initial={position}
-        animate={{ x: position.x, y: position.y }}
-        whileDrag={{ scale: 1.05 }}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
       >
         {/* 展开的菜单项 - 花瓣式布局 */}
         <AnimatePresence>
@@ -144,7 +215,7 @@ export function MobileFloatingDock({
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute bottom-16 right-0 flex flex-col-reverse gap-3 items-end"
+              className="absolute bottom-14 right-0 flex flex-col-reverse gap-3 items-end"
             >
               {items.map((item, index) => (
                 <motion.button
@@ -171,14 +242,11 @@ export function MobileFloatingDock({
                   onClick={() => handleItemClick(item)}
                   className={cn(
                     "flex items-center gap-3 px-4 py-3 rounded-2xl",
-                    // 日间模式
                     "bg-white/95 border-slate-200/80",
-                    // 夜间模式
                     "dark:bg-black/80 dark:border-white/10",
-                    // 通用
                     "backdrop-blur-xl border",
-                    // 激活态
-                    item.isActive && "border-blue-400/50 dark:border-cyan-400/30",
+                    item.isActive &&
+                      "border-blue-400/50 dark:border-cyan-400/30",
                     "active:scale-95 transition-transform"
                   )}
                   style={{
@@ -187,19 +255,16 @@ export function MobileFloatingDock({
                       : "0 4px 20px rgba(0, 0, 0, 0.15)",
                   }}
                 >
-                  {/* 标签 */}
                   <span
                     className={cn(
                       "text-sm font-medium whitespace-nowrap",
-                      item.isActive 
-                        ? "text-slate-800 dark:text-white/95" 
+                      item.isActive
+                        ? "text-slate-800 dark:text-white/95"
                         : "text-slate-600 dark:text-white/70"
                     )}
                   >
                     {item.label}
                   </span>
-
-                  {/* 图标 */}
                   <div
                     className={cn(
                       "w-10 h-10 rounded-xl flex items-center justify-center",
@@ -217,8 +282,6 @@ export function MobileFloatingDock({
                       )}
                     />
                   </div>
-
-                  {/* 选中态能量指示条 */}
                   {item.isActive && (
                     <motion.div
                       layoutId="mobileDockIndicator"
@@ -236,30 +299,29 @@ export function MobileFloatingDock({
 
         {/* 主按钮 - 能量球 */}
         <motion.button
-          onClick={toggleDock}
           animate={{
             rotate: isExpanded ? 180 : 0,
-            scale: isExpanded ? 0.9 : 1,
+            scale: isDragging ? 1.1 : isExpanded ? 0.9 : 1,
           }}
           transition={LIQUID_SPRING.expand}
           className={cn(
-            "relative w-14 h-14 rounded-full",
+            "relative w-12 h-12 rounded-full",
             "flex items-center justify-center",
-            // 日间模式
             "bg-white/95 border-slate-200/80",
             "shadow-lg shadow-slate-200/50",
-            // 夜间模式
             "dark:bg-black/80 dark:border-white/10",
             "dark:shadow-lg dark:shadow-black/40",
-            // 通用
             "backdrop-blur-xl border",
-            "active:scale-90 transition-transform",
-            // 拖拽时显示
-            isDragging && "ring-2 ring-blue-400/50 dark:ring-cyan-400/50"
+            isDragging ? "cursor-grabbing" : ""
           )}
           style={{
-            boxShadow: isExpanded
-              ? "0 0 30px rgba(59, 130, 246, 0.4)"
+            boxShadow: isDragging
+              ? "0 0 30px rgba(59, 130, 246, 0.5), 0 0 60px rgba(59, 130, 246, 0.2)"
+              : isExpanded
+                ? "0 0 30px rgba(59, 130, 246, 0.4)"
+                : undefined,
+            borderColor: isDragging
+              ? "rgba(59, 130, 246, 0.5)"
               : undefined,
           }}
           aria-label={isExpanded ? "关闭导航" : "打开导航"}
@@ -271,7 +333,7 @@ export function MobileFloatingDock({
             animate={{
               boxShadow: [
                 "0 0 0 0 rgba(59, 130, 246, 0)",
-                "0 0 0 8px rgba(59, 130, 246, 0.1)",
+                "0 0 0 6px rgba(59, 130, 246, 0.1)",
                 "0 0 0 0 rgba(59, 130, 246, 0)",
               ],
             }}
@@ -292,7 +354,7 @@ export function MobileFloatingDock({
                 exit={{ opacity: 0, rotate: 90 }}
                 transition={{ duration: 0.15 }}
               >
-                <X className="w-6 h-6 text-blue-500 dark:text-cyan-400" />
+                <X className="w-5 h-5 text-blue-500 dark:text-cyan-400" />
               </motion.div>
             ) : (
               <motion.div
@@ -302,7 +364,7 @@ export function MobileFloatingDock({
                 exit={{ opacity: 0, rotate: -90 }}
                 transition={{ duration: 0.15 }}
               >
-                <Menu className="w-6 h-6 text-slate-600 dark:text-white/80" />
+                <Menu className="w-5 h-5 text-slate-600 dark:text-white/80" />
               </motion.div>
             )}
           </AnimatePresence>
@@ -310,7 +372,7 @@ export function MobileFloatingDock({
           {/* 活跃项指示点 */}
           {!isExpanded && items.some((item) => item.isActive) && (
             <motion.div
-              className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 dark:from-cyan-400 dark:to-indigo-500"
+              className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 dark:from-cyan-400 dark:to-indigo-500"
               style={{
                 boxShadow: "0 0 8px rgba(59, 130, 246, 0.6)",
               }}
@@ -325,7 +387,7 @@ export function MobileFloatingDock({
             />
           )}
         </motion.button>
-      </motion.div>
+      </div>
     </>
   );
 }

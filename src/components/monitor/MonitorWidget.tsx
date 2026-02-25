@@ -1,8 +1,8 @@
 /**
  * MonitorWidget - 桌面端迷你监控胶囊
- * 紧凑胶囊式设计，独立可拖拽，悬停展开详情
+ * 紧凑胶囊式设计，固定位置，悬停展开详情
  */
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '../../lib/utils'
 import { Maximize2, GripVertical, Cpu, MemoryStick, Thermometer } from 'lucide-react'
@@ -28,33 +28,6 @@ const statusColors = {
   healthy: '#22c55e',
   warning: '#f59e0b',
   critical: '#ef4444',
-}
-
-// ============================================
-// 位置持久化（绝对 px 坐标，默认底部居中）
-// ============================================
-const POSITION_KEY = 'desktop-monitor-widget-pos'
-
-function defaultPos(): { x: number; y: number } {
-  return {
-    x: Math.round(window.innerWidth / 2),
-    y: window.innerHeight - 100, // dock 上方
-  }
-}
-
-function loadPos(): { x: number; y: number } {
-  try {
-    const s = localStorage.getItem(POSITION_KEY)
-    if (s) {
-      const { x, y } = JSON.parse(s)
-      const px = Number(x), py = Number(y)
-      // 校验坐标是否在可视区域内
-      if (px > 0 && px < window.innerWidth && py > 0 && py < window.innerHeight) {
-        return { x: px, y: py }
-      }
-    }
-  } catch { /* */ }
-  return defaultPos()
 }
 
 // ============================================
@@ -103,16 +76,8 @@ export function MonitorWidget({
   cpu, mem, temp, status, className, onSwitchMode,
 }: MonitorWidgetProps) {
   const [isHovered, setIsHovered] = useState(false)
-  const [isDragging, setIsDragging] = useState(false)
   const [isDark, setIsDark] = useState(true)
-  const lastTapRef = useRef(0)
   const widgetRef = useRef<HTMLDivElement>(null)
-
-  // 拖拽状态（绝对坐标）
-  const posRef = useRef(loadPos())
-  const [pos, setPos] = useState(posRef.current)
-  const dragStartPos = useRef({ x: 0, y: 0 })
-  const dragStartMouse = useRef({ x: 0, y: 0 })
 
   // 主题监听
   useEffect(() => {
@@ -131,50 +96,6 @@ export function MonitorWidget({
     return () => clearTimeout(t)
   }, [])
 
-  const savePos = useCallback((x: number, y: number) => {
-    posRef.current = { x, y }
-    try { localStorage.setItem(POSITION_KEY, JSON.stringify({ x, y })) } catch { /* */ }
-  }, [])
-
-  // 原生 pointer 事件拖拽
-  const handlePointerDown = useCallback((e: React.PointerEvent) => {
-    e.preventDefault()
-    setIsDragging(true)
-    dragStartPos.current = { ...posRef.current }
-    dragStartMouse.current = { x: e.clientX, y: e.clientY }
-    widgetRef.current?.setPointerCapture(e.pointerId)
-  }, [])
-
-  const handlePointerMove = useCallback((e: React.PointerEvent) => {
-    if (!isDragging) return
-    const dx = e.clientX - dragStartMouse.current.x
-    const dy = e.clientY - dragStartMouse.current.y
-    const nx = Math.max(40, Math.min(window.innerWidth - 40, dragStartPos.current.x + dx))
-    const ny = Math.max(30, Math.min(window.innerHeight - 30, dragStartPos.current.y + dy))
-    posRef.current = { x: nx, y: ny }
-    setPos({ x: nx, y: ny })
-  }, [isDragging])
-
-  const handlePointerUp = useCallback((e: React.PointerEvent) => {
-    if (!isDragging) return
-    const dx = Math.abs(e.clientX - dragStartMouse.current.x)
-    const dy = Math.abs(e.clientY - dragStartMouse.current.y)
-    const wasDrag = dx > 3 || dy > 3
-
-    savePos(posRef.current.x, posRef.current.y)
-    // 延迟清除防止误触
-    setTimeout(() => setIsDragging(false), 50)
-
-    // 如果没有实际拖动则视为点击/双击
-    if (!wasDrag) {
-      const now = Date.now()
-      if (now - lastTapRef.current < 300) {
-        onSwitchMode?.('default')
-      }
-      lastTapRef.current = now
-    }
-  }, [isDragging, savePos, onSwitchMode])
-
   const cpuColor = getColor(cpu)
   const memColor = getColor(mem)
   const sColor = statusColors[status]
@@ -183,20 +104,10 @@ export function MonitorWidget({
     <div
       ref={widgetRef}
       className={cn(
-        "fixed z-[60] select-none touch-none",
-        isDragging ? 'cursor-grabbing' : 'cursor-grab',
+        "select-none transition-opacity duration-300",
         entered ? 'opacity-100' : 'opacity-0',
         className
       )}
-      style={{
-        left: pos.x,
-        top: pos.y,
-        transform: 'translate(-50%, -50%)',
-        transition: isDragging ? 'none' : 'opacity 0.3s ease, top 0.15s ease',
-      }}
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -208,18 +119,12 @@ export function MonitorWidget({
             : 'rgba(255, 255, 255, 0.8)',
           backdropFilter: 'blur(20px) saturate(180%)',
           WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-          border: isDragging
-            ? `1.5px solid ${isDark ? 'rgba(34, 211, 238, 0.5)' : 'rgba(59, 130, 246, 0.4)'}`
-            : `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
-          boxShadow: isDragging
-            ? (isDark ? '0 0 16px rgba(34, 211, 238, 0.25)' : '0 4px 16px rgba(59, 130, 246, 0.2)')
-            : (isDark ? '0 2px 12px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.08)'),
+          border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
+          boxShadow: isDark ? '0 2px 12px rgba(0,0,0,0.3)' : '0 2px 8px rgba(0,0,0,0.08)',
           padding: '6px 10px',
           gap: '8px',
         }}
-        animate={{
-          scale: isDragging ? 1.06 : isHovered ? 1.03 : 1,
-        }}
+        animate={{ scale: isHovered ? 1.03 : 1 }}
         transition={{ duration: 0.15 }}
       >
         {/* 状态灯 */}
@@ -290,7 +195,7 @@ export function MonitorWidget({
 
         {/* Hover 操作区 */}
         <AnimatePresence>
-          {isHovered && !isDragging && onSwitchMode && (
+          {isHovered && onSwitchMode && (
             <motion.div
               className="flex items-center gap-0.5 flex-shrink-0 overflow-hidden"
               initial={{ opacity: 0, width: 0 }}

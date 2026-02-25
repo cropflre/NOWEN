@@ -2,6 +2,7 @@ import { useState, useCallback, useRef } from 'react';
 import {
   KeyboardSensor,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   DragEndEvent,
@@ -27,11 +28,17 @@ export function useDragAndDrop({ bookmarks, reorderBookmarks }: UseDragAndDropOp
   const [activeId, setActiveId] = useState<string | null>(null);
   const activeBookmark = activeId ? bookmarks.find(b => b.id === activeId) : null;
 
-  // 拖拽传感器配置
+  // 拖拽传感器配置（桌面 Pointer + 移动端 Touch + 键盘无障碍）
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
         distance: 8,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 250,
+        tolerance: 5,
       },
     }),
     useSensor(KeyboardSensor, {

@@ -36,6 +36,7 @@ export function SortableCard({ id, children, className }: SortableCardProps) {
     cursor: isDragging ? 'grabbing' : 'grab',
     position: 'relative',
     height: '100%',
+    touchAction: 'manipulation',
   };
 
   return (

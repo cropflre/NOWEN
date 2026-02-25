@@ -121,7 +121,7 @@ function DataBlock({
   trend?: 'up' | 'down'
 }) {
   return (
-    <div className="flex items-center gap-3 p-2 rounded-lg bg-slate-100/80 dark:bg-white/[0.02] border border-slate-200/80 dark:border-white/5">
+    <div className="flex items-center gap-3 p-2 rounded-lg bg-transparent dark:bg-white/[0.02] border border-slate-200/30 dark:border-white/5">
       <div className="p-2 rounded-lg bg-blue-500/10 dark:bg-cyan-500/10">
         <Icon className="w-4 h-4 text-blue-500 dark:text-cyan-400" />
       </div>
@@ -167,13 +167,13 @@ export function MonitorDashboard({
   return (
     <div className={cn(
       "relative p-4 rounded-2xl overflow-hidden",
-      // 日间模式
-      "bg-white/90 border-slate-200/80 shadow-lg shadow-slate-200/50",
+      // 日间模式 - 透明
+      "bg-transparent border-slate-200/40 shadow-none",
       // 夜间模式
       "dark:bg-gradient-to-br dark:from-slate-950/95 dark:via-slate-900/90 dark:to-slate-950/95",
       "dark:border-cyan-500/10 dark:shadow-none",
       // 通用
-      "border backdrop-blur-xl",
+      "border backdrop-blur-sm",
       className
     )}>
       {/* 背景网格 - 仅夜间模式 */}
