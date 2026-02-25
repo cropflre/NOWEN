@@ -13,7 +13,8 @@ import {
   Layers,
   RotateCcw,
   AlertTriangle,
-  Globe
+  Globe,
+  FileCode
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { Bookmark, Category } from '../../types/bookmark'
@@ -138,6 +139,87 @@ function convertSunPanelData(sunPanel: SunPanelData): ExportData['data'] {
   }
 }
 
+// 生成 Netscape Bookmark File 格式的 HTML（兼容所有主流浏览器导入）
+function generateBookmarkHTML(
+  bookmarks: Bookmark[],
+  categories: Category[],
+  siteName: string
+): string {
+  const now = Math.floor(Date.now() / 1000)
+  const categoryMap = new Map<string, Category>()
+  categories.forEach(c => categoryMap.set(c.id, c))
+
+  // 按分类分组
+  const grouped = new Map<string, Bookmark[]>()
+  const uncategorized: Bookmark[] = []
+
+  bookmarks.forEach(b => {
+    if (b.category && categoryMap.has(b.category)) {
+      if (!grouped.has(b.category)) grouped.set(b.category, [])
+      grouped.get(b.category)!.push(b)
+    } else {
+      uncategorized.push(b)
+    }
+  })
+
+  // 对分类按 orderIndex 排序
+  const sortedCategories = [...categories].sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
+
+  function escapeHTML(str: string): string {
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+  }
+
+  function renderBookmark(b: Bookmark): string {
+    const addDate = b.createdAt ? Math.floor(b.createdAt / 1000) : now
+    const iconAttr = b.favicon && b.favicon.startsWith('data:')
+      ? ` ICON="${escapeHTML(b.favicon)}"`
+      : b.iconUrl
+        ? ` ICON="${escapeHTML(b.iconUrl)}"`
+        : ''
+    return `        <DT><A HREF="${escapeHTML(b.url)}" ADD_DATE="${addDate}"${iconAttr}>${escapeHTML(b.title || b.url)}</A>`
+  }
+
+  let html = `<!DOCTYPE NETSCAPE-Bookmark-file-1>
+<!-- This is an automatically generated file.
+     It will be read and overwritten.
+     DO NOT EDIT! -->
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
+<TITLE>Bookmarks</TITLE>
+<H1>Bookmarks</H1>
+<DL><p>
+    <DT><H3 ADD_DATE="${now}" LAST_MODIFIED="${now}" PERSONAL_TOOLBAR_FOLDER="true">${escapeHTML(siteName || 'NOWEN Bookmarks')}</H3>
+    <DL><p>\n`
+
+  // 输出各分类
+  for (const cat of sortedCategories) {
+    const items = grouped.get(cat.id)
+    if (!items || items.length === 0) continue
+
+    const sorted = [...items].sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
+    html += `        <DT><H3 ADD_DATE="${now}" LAST_MODIFIED="${now}">${escapeHTML(cat.name)}</H3>\n`
+    html += `        <DL><p>\n`
+    for (const b of sorted) {
+      html += renderBookmark(b) + '\n'
+    }
+    html += `        </DL><p>\n`
+  }
+
+  // 输出未分类书签
+  if (uncategorized.length > 0) {
+    const sorted = [...uncategorized].sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
+    for (const b of sorted) {
+      html += renderBookmark(b) + '\n'
+    }
+  }
+
+  html += `    </DL><p>\n</DL><p>\n`
+  return html
+}
+
 interface DataManagementCardProps {
   bookmarks: Bookmark[]
   categories: Category[]
@@ -155,6 +237,7 @@ export function DataManagementCard({
 }: DataManagementCardProps) {
   const { t, i18n } = useTranslation()
   const [isExporting, setIsExporting] = useState(false)
+  const [isExportingHTML, setIsExportingHTML] = useState(false)
   const [isImporting, setIsImporting] = useState(false)
   const [isResetting, setIsResetting] = useState(false)
   const [showResetConfirm, setShowResetConfirm] = useState(false)
@@ -202,6 +285,35 @@ export function DataManagementCard({
       setError(err.message || t('admin.settings.data.export_error'))
     } finally {
       setIsExporting(false)
+    }
+  }
+
+  // 导出 HTML 书签文件（兼容各大浏览器导入）
+  const handleExportHTML = async () => {
+    setIsExportingHTML(true)
+    setError(null)
+    setSuccess(null)
+
+    try {
+      const html = generateBookmarkHTML(bookmarks, categories, settings?.siteTitle || 'NOWEN')
+
+      const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
+      const url = URL.createObjectURL(blob)
+      
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `bookmarks-${new Date().toISOString().split('T')[0]}.html`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+
+      setSuccess(t('admin.settings.data.export_html_success'))
+      setTimeout(() => setSuccess(null), 3000)
+    } catch (err: any) {
+      setError(err.message || t('admin.settings.data.export_error'))
+    } finally {
+      setIsExportingHTML(false)
     }
   }
 
@@ -517,8 +629,8 @@ export function DataManagementCard({
         </div>
 
         {/* Actions */}
-        <div className="relative grid grid-cols-3 gap-3">
-          {/* Export Button */}
+        <div className="relative grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {/* Export JSON Button */}
           <motion.button
             onClick={handleExport}
             disabled={isExporting}
@@ -546,6 +658,37 @@ export function DataManagementCard({
             <div className="text-center">
               <p className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>{t('admin.settings.data.export')}</p>
               <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>{t('admin.settings.data.export_desc')}</p>
+            </div>
+          </motion.button>
+
+          {/* Export HTML Button */}
+          <motion.button
+            onClick={handleExportHTML}
+            disabled={isExportingHTML}
+            whileHover={{ scale: isExportingHTML ? 1 : 1.02 }}
+            whileTap={{ scale: isExportingHTML ? 1 : 0.98 }}
+            className={cn(
+              'flex flex-col items-center gap-2 p-4 rounded-xl',
+              'bg-gradient-to-br from-amber-500/10 to-orange-500/10',
+              'border border-amber-500/20 hover:border-amber-500/40',
+              'transition-all duration-300',
+              'disabled:opacity-50 disabled:cursor-not-allowed'
+            )}
+          >
+            <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center">
+              {isExportingHTML ? (
+                <motion.span
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                  className="w-5 h-5 border-2 border-amber-400/30 border-t-amber-400 rounded-full"
+                />
+              ) : (
+                <FileCode className="w-5 h-5 text-amber-500" />
+              )}
+            </div>
+            <div className="text-center">
+              <p className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>{t('admin.settings.data.export_html')}</p>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>{t('admin.settings.data.export_html_desc')}</p>
             </div>
           </motion.button>
 
@@ -862,6 +1005,10 @@ export function DataManagementCard({
           <div className="flex items-center gap-2 mt-1 ml-6" style={{ color: 'var(--color-text-muted)' }}>
             <Globe className="w-3.5 h-3.5" />
             <span className="text-xs">{t('admin.settings.data.browser_format_hint')}</span>
+          </div>
+          <div className="flex items-center gap-2 mt-1 ml-6" style={{ color: 'var(--color-text-muted)' }}>
+            <FileCode className="w-3.5 h-3.5" />
+            <span className="text-xs">{t('admin.settings.data.export_html_hint')}</span>
           </div>
         </div>
 
