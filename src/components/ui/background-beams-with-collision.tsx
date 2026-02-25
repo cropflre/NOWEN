@@ -7,13 +7,15 @@ export const BackgroundBeamsWithCollision = ({
   children,
   className,
   isDark = true,
+  isMobile = false,
 }: {
   children?: React.ReactNode
   className?: string
   containerClassName?: string
   isDark?: boolean
+  isMobile?: boolean
 }) => {
-  const beams = [
+  const allBeams = [
     { initialX: 10, translateX: 10, duration: 7, repeatDelay: 3, delay: 2 },
     { initialX: 600, translateX: 600, duration: 3, repeatDelay: 3, delay: 4 },
     { initialX: 100, translateX: 100, duration: 7, repeatDelay: 7, className: "h-6" },
@@ -25,6 +27,9 @@ export const BackgroundBeamsWithCollision = ({
     { initialX: 1400, translateX: 1400, duration: 5, repeatDelay: 6, className: "h-8" },
     { initialX: 300, translateX: 300, duration: 9, repeatDelay: 4, delay: 3, className: "h-16" },
   ]
+
+  // 移动端只保留 4 条光束，减少 GPU 压力
+  const beams = isMobile ? allBeams.slice(0, 4) : allBeams
 
   const beamGradient = isDark
     ? "linear-gradient(to top, var(--color-glow), var(--color-glow-secondary), transparent)"
@@ -70,7 +75,7 @@ export const BackgroundBeamsWithCollision = ({
           beamOptions={beam}
           beamGradient={beamGradient}
           beamShadow={beamShadow}
-          onCollision={addExplosion}
+          onCollision={isMobile ? undefined : addExplosion}
         />
       ))}
 
@@ -190,7 +195,9 @@ const BeamEffect = React.memo(({
   const hasFiredRef = useRef(false)
 
   // 每帧检测光束位置，到达容器底部时触发爆炸
+  // 无 onCollision 回调时（移动端）跳过 DOM 查询
   useAnimationFrame(() => {
+    if (!onCollision) return
     const el = beamRef.current
     if (!el || !el.parentElement) return
 
