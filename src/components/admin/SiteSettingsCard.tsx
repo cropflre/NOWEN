@@ -16,7 +16,8 @@ import {
   Moon,
   Languages,
   SunMoon,
-  FileText
+  FileText,
+  LayoutGrid,
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { SiteSettings } from '../../lib/api'
@@ -562,6 +563,71 @@ export function SiteSettingsCard({
               <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
                 {t('admin.settings.site.footer_text_hint')}
               </p>
+            </div>
+
+            {/* 分类书签折叠 */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--color-text-muted)' }}>
+                <LayoutGrid className="w-4 h-4" />
+                {t('admin.settings.site.category_collapse')}
+              </label>
+              <div 
+                className="px-4 py-3 rounded-xl space-y-3"
+                style={{
+                  background: 'var(--color-bg-tertiary)',
+                  border: '1px solid var(--color-glass-border)',
+                }}
+              >
+                <div>
+                  <p className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>
+                    {t('admin.settings.site.category_collapse_title')}
+                  </p>
+                  <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                    {t('admin.settings.site.category_collapse_desc')}
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 space-y-1">
+                    <label className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                      {t('admin.settings.site.category_collapse_threshold')}
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      max={999}
+                      value={settings.categoryCollapseThreshold ?? 0}
+                      onChange={e => onChange({ ...settings, categoryCollapseThreshold: Math.max(0, parseInt(e.target.value) || 0) })}
+                      className="w-full px-3 py-1.5 text-sm rounded-lg outline-none transition-colors"
+                      style={{
+                        background: 'var(--color-bg-secondary)',
+                        color: 'var(--color-text-primary)',
+                        border: '1px solid var(--color-glass-border)',
+                      }}
+                    />
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    <label className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                      {t('admin.settings.site.category_collapse_show_count')}
+                    </label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={999}
+                      value={settings.categoryInitialShowCount ?? 8}
+                      onChange={e => onChange({ ...settings, categoryInitialShowCount: Math.max(1, parseInt(e.target.value) || 8) })}
+                      className="w-full px-3 py-1.5 text-sm rounded-lg outline-none transition-colors"
+                      style={{
+                        background: 'var(--color-bg-secondary)',
+                        color: 'var(--color-text-primary)',
+                        border: '1px solid var(--color-glass-border)',
+                      }}
+                    />
+                  </div>
+                </div>
+                <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                  {t('admin.settings.site.category_collapse_hint')}
+                </p>
+              </div>
             </div>
           </div>
 

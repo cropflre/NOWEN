@@ -1,4 +1,5 @@
-import { useState, useMemo, useEffect, useCallback } from 'react'
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
+import { useVirtualizer } from '@tanstack/react-virtual'
 import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -28,6 +29,8 @@ import {
   BookMarked,
   Check,
   FolderPlus,
+  FolderInput,
+  ImageDown,
   Palette,
   ChevronDown,
   ChevronLeft,
@@ -38,7 +41,8 @@ import {
 } from 'lucide-react'
 import { Bookmark, Category, CustomIcon } from '../types/bookmark'
 import { cn, presetIcons } from '../lib/utils'
-import { adminChangePassword, adminChangeUsername, fetchSettings, updateSettings, SiteSettings, WidgetVisibility, importData, getEnrichStatus, fetchQuotes, updateQuotes } from '../lib/api'
+import { adminChangePassword, adminChangeUsername, fetchSettings, updateSettings, SiteSettings, WidgetVisibility, importData, getEnrichStatus, enrichBatch, fetchQuotes, updateQuotes } from '../lib/api'
+import type { EnrichMode } from '../lib/api'
 import { AdminSidebar } from '../components/admin/AdminSidebar'
 import { QuotesCard } from '../components/admin/QuotesCard'
 import { SettingsPanel } from '../components/admin/SettingsPanel'
@@ -53,7 +57,13 @@ import { AdminProvider, useAdmin, useBookmarkActions, useCategoryActions, useIco
 import { IconManager } from '../components/IconManager'
 
 // 分页配置
-const PAGE_SIZE = 20
+const PAGE_SIZE_OPTIONS = [20, 50, 100, 200, 500] as const
+const DEFAULT_PAGE_SIZE = 20
+// 虚拟滚动配置
+const VIRTUAL_SCROLL_THRESHOLD = 50 // 超过此行数启用虚拟滚动
+const ROW_HEIGHT_DESKTOP = 60 // 桌面端每行高度
+const ROW_HEIGHT_MOBILE = 160 // 移动端每行高度
+const TABLE_MAX_HEIGHT = 'calc(100vh - 320px)' // 固定高度
 
 // Props 简化为仅外部必需的回调
 export interface AdminProps {
@@ -217,6 +227,7 @@ function AdminContent() {
   const [searchQuery, setSearchQuery] = useState('')
   const [filterCategory, setFilterCategory] = useState<string>('all')
   const [currentPage, setCurrentPage] = useState(1)
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [showCategoryForm, setShowCategoryForm] = useState(false)
   const [editingCategory, setEditingCategory] = useState<Category | null>(null)
@@ -349,17 +360,28 @@ function AdminContent() {
   }, [bookmarks, searchQuery, filterCategory])
 
   // 分页计算
-  const totalPages = Math.max(1, Math.ceil(filteredBookmarks.length / PAGE_SIZE))
+  const totalPages = Math.max(1, Math.ceil(filteredBookmarks.length / pageSize))
   const safePage = Math.min(currentPage, totalPages)
   const paginatedBookmarks = useMemo(() => {
-    const start = (safePage - 1) * PAGE_SIZE
-    return filteredBookmarks.slice(start, start + PAGE_SIZE)
-  }, [filteredBookmarks, safePage])
+    const start = (safePage - 1) * pageSize
+    return filteredBookmarks.slice(start, start + pageSize)
+  }, [filteredBookmarks, safePage, pageSize])
 
   // 搜索/筛选变更时重置页码
   useEffect(() => {
     setCurrentPage(1)
-  }, [searchQuery, filterCategory])
+  }, [searchQuery, filterCategory, pageSize])
+
+  // 虚拟滚动
+  const tableBodyRef = useRef<HTMLDivElement>(null)
+  const useVirtual = paginatedBookmarks.length > VIRTUAL_SCROLL_THRESHOLD
+  const virtualizer = useVirtualizer({
+    count: paginatedBookmarks.length,
+    getScrollElement: () => tableBodyRef.current,
+    estimateSize: () => ROW_HEIGHT_DESKTOP,
+    overscan: 10,
+    enabled: useVirtual,
+  })
 
   // 选择操作
   const toggleSelect = (id: string) => {
@@ -385,6 +407,59 @@ function AdminContent() {
       selectedIds.forEach(id => onDeleteBookmark(id))
       setSelectedIds(new Set())
       showToast('success', t('admin.bookmark.deleted_count', { count: selectedIds.size }))
+    }
+  }
+
+  const moveSelectedToCategory = (categoryId: string) => {
+    const count = selectedIds.size
+    const categoryValue = categoryId === '__uncategorized__' ? undefined : categoryId
+    selectedIds.forEach(id => onUpdateBookmark(id, { category: categoryValue }))
+    setSelectedIds(new Set())
+    const categoryName = categoryId === '__uncategorized__'
+      ? t('admin.bookmark.uncategorized')
+      : categories.find(c => c.id === categoryId)?.name || ''
+    showToast('success', t('admin.bookmark.batch_moved', { count, category: categoryName }))
+  }
+
+  // 批量抓取
+  const [isEnriching, setIsEnriching] = useState(false)
+  const enrichSelected = async (mode: EnrichMode) => {
+    const ids = Array.from(selectedIds)
+
+    setIsEnriching(true)
+    try {
+      const result = await enrichBatch(ids, mode)
+      if (result.enriching && result.enriching > 0) {
+        showToast('info', t('admin.bookmark.batch_enrich_start', { count: result.enriching }))
+        setSelectedIds(new Set())
+
+        // 轮询进度
+        const pollInterval = setInterval(async () => {
+          try {
+            const status = await getEnrichStatus()
+            if (!status.running) {
+              clearInterval(pollInterval)
+              setIsEnriching(false)
+              await refreshData()
+              showToast('success', t('admin.bookmark.batch_enrich_done', {
+                success: status.completed - status.failed,
+                total: status.total,
+              }))
+            }
+          } catch {
+            clearInterval(pollInterval)
+            setIsEnriching(false)
+          }
+        }, 2000)
+        // 安全超时 5 分钟
+        setTimeout(() => { clearInterval(pollInterval); setIsEnriching(false) }, 300000)
+      } else {
+        showToast('info', t('admin.bookmark.batch_enrich_none'))
+        setIsEnriching(false)
+      }
+    } catch (err: any) {
+      showToast('error', err.message || t('admin.bookmark.batch_enrich_error'))
+      setIsEnriching(false)
     }
   }
 
@@ -703,7 +778,7 @@ function AdminContent() {
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
-                      className="flex items-center gap-4 mb-4 p-4 rounded-xl"
+                      className="flex flex-wrap items-center gap-3 mb-4 p-4 rounded-xl"
                       style={{
                         background: 'color-mix(in srgb, var(--color-primary) 10%, transparent)',
                         border: '1px solid color-mix(in srgb, var(--color-primary) 20%, transparent)',
@@ -713,6 +788,62 @@ function AdminContent() {
                         {t('admin.bookmark.selected')} <span style={{ color: 'var(--color-primary)' }} className="font-medium">{selectedIds.size}</span> {t('admin.bookmark.items')}
                       </span>
                       <div className="flex-1" />
+                      {/* 批量移动到分类 */}
+                      <div className="flex items-center gap-2">
+                        <FolderInput className="w-4 h-4" style={{ color: 'var(--color-primary)' }} />
+                        <select
+                          defaultValue=""
+                          onChange={e => {
+                            if (e.target.value) {
+                              moveSelectedToCategory(e.target.value)
+                              e.target.value = ''
+                            }
+                          }}
+                          className="appearance-none px-3 py-2 rounded-lg text-sm focus:outline-none cursor-pointer transition-colors"
+                          style={{
+                            background: 'color-mix(in srgb, var(--color-primary) 15%, transparent)',
+                            border: '1px solid color-mix(in srgb, var(--color-primary) 30%, transparent)',
+                            color: 'var(--color-text-secondary)',
+                          }}
+                        >
+                          <option value="" disabled style={{ background: 'var(--color-bg-secondary)' }}>{t('admin.bookmark.batch_move_to')}</option>
+                          <option value="__uncategorized__" style={{ background: 'var(--color-bg-secondary)' }}>{t('admin.bookmark.uncategorized')}</option>
+                          {categories.map(cat => (
+                            <option key={cat.id} value={cat.id} style={{ background: 'var(--color-bg-secondary)' }}>{cat.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                      {/* 批量抓取 - 下拉选项 */}
+                      <div className="flex items-center gap-2">
+                        <ImageDown className={cn('w-4 h-4', isEnriching && 'animate-pulse')} style={{ color: 'var(--color-primary)' }} />
+                        <select
+                          defaultValue=""
+                          disabled={isEnriching}
+                          onChange={e => {
+                            if (e.target.value) {
+                              enrichSelected(e.target.value as EnrichMode)
+                              e.target.value = ''
+                            }
+                          }}
+                          className={cn(
+                            'appearance-none px-3 py-2 rounded-lg text-sm focus:outline-none cursor-pointer transition-colors',
+                            isEnriching && 'opacity-60 cursor-not-allowed'
+                          )}
+                          style={{
+                            background: 'color-mix(in srgb, var(--color-primary) 15%, transparent)',
+                            border: '1px solid color-mix(in srgb, var(--color-primary) 30%, transparent)',
+                            color: 'var(--color-text-secondary)',
+                          }}
+                        >
+                          <option value="" disabled style={{ background: 'var(--color-bg-secondary)' }}>
+                            {isEnriching ? t('admin.bookmark.batch_enrich_loading') : t('admin.bookmark.batch_enrich')}
+                          </option>
+                          <option value="metadata" style={{ background: 'var(--color-bg-secondary)' }}>{t('admin.bookmark.batch_enrich_metadata')}</option>
+                          <option value="icon" style={{ background: 'var(--color-bg-secondary)' }}>{t('admin.bookmark.batch_enrich_icon')}</option>
+                          <option value="all" style={{ background: 'var(--color-bg-secondary)' }}>{t('admin.bookmark.batch_enrich_all')}</option>
+                        </select>
+                      </div>
+                      {/* 批量删除 */}
                       <motion.button
                         onClick={deleteSelected}
                         whileHover={{ scale: 1.02 }}
@@ -811,7 +942,14 @@ function AdminContent() {
                   </div>
 
                   {/* Table Body */}
-                  <div style={{ borderColor: 'var(--color-border-light)' }} className="divide-y divide-[var(--color-border-light)]">
+                  <div 
+                    ref={tableBodyRef}
+                    className="overflow-y-auto"
+                    style={{ 
+                      maxHeight: useVirtual ? TABLE_MAX_HEIGHT : undefined,
+                      borderColor: 'var(--color-border-light)',
+                    }}
+                  >
                     {paginatedBookmarks.length === 0 ? (
                       <div className="px-4 py-16 text-center">
                         <Sparkles className="w-12 h-12 mx-auto mb-4" style={{ color: 'var(--color-text-muted)', opacity: 0.3 }} />
@@ -819,160 +957,172 @@ function AdminContent() {
                           {searchQuery || filterCategory !== 'all' ? t('admin.bookmark.no_match') : t('admin.bookmark.empty')}
                         </p>
                       </div>
-                    ) : (
-                      paginatedBookmarks.map((bookmark, index) => (
-                        <motion.div
-                          key={bookmark.id}
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ delay: index * 0.02 }}
-                          className="transition-colors group hover:bg-[var(--color-glass-hover)]"
-                        >
-                          {/* 桌面端布局 */}
-                          <div className="hidden sm:grid grid-cols-[auto_2fr_1fr_auto_auto] gap-4 px-5 py-4 items-center">
-                            {/* Checkbox */}
-                            <button
-                              onClick={() => toggleSelect(bookmark.id)}
-                              className={cn(
-                                'w-5 h-5 rounded border flex items-center justify-center transition-all',
-                                selectedIds.has(bookmark.id) ? 'text-white' : ''
-                              )}
+                    ) : useVirtual ? (
+                      /* 虚拟滚动模式 */
+                      <div
+                        style={{
+                          height: `${virtualizer.getTotalSize()}px`,
+                          width: '100%',
+                          position: 'relative',
+                        }}
+                      >
+                        {virtualizer.getVirtualItems().map(virtualRow => {
+                          const bookmark = paginatedBookmarks[virtualRow.index]
+                          return (
+                            <div
+                              key={bookmark.id}
+                              data-index={virtualRow.index}
+                              ref={virtualizer.measureElement}
                               style={{
-                                background: selectedIds.has(bookmark.id) ? 'var(--color-primary)' : 'transparent',
-                                borderColor: selectedIds.has(bookmark.id) ? 'var(--color-primary)' : 'var(--color-border)',
+                                position: 'absolute',
+                                top: 0,
+                                left: 0,
+                                width: '100%',
+                                transform: `translateY(${virtualRow.start}px)`,
+                                borderBottom: '1px solid var(--color-border-light)',
                               }}
+                              className="transition-colors group hover:bg-[var(--color-glass-hover)]"
                             >
-                              {selectedIds.has(bookmark.id) && <Check className="w-3 h-3" />}
-                            </button>
-
-                            {/* Bookmark Info */}
-                            <div className="flex items-center gap-3 min-w-0">
-                              <div 
-                                className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-                                style={{
-                                  background: 'var(--color-bg-tertiary)',
-                                  border: '1px solid var(--color-glass-border)',
-                                }}
-                              >
-                                {bookmark.iconUrl ? (
-                                  <img src={bookmark.iconUrl} alt="" className="w-5 h-5 rounded object-contain" />
-                                ) : bookmark.icon ? (
-                                  <IconRenderer icon={bookmark.icon} className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />
-                                ) : bookmark.favicon ? (
-                                  <img src={bookmark.favicon} alt="" className="w-5 h-5 rounded" />
-                                ) : (
-                                  <ExternalLink className="w-4 h-4" style={{ color: 'var(--color-text-muted)' }} />
-                                )}
-                              </div>
-                              <div className="min-w-0">
-                                <div className="text-sm font-medium truncate" style={{ color: 'var(--color-text-primary)' }}>
-                                  {bookmark.title}
+                              {/* 桌面端布局 */}
+                              <div className="hidden sm:grid grid-cols-[auto_2fr_1fr_auto_auto] gap-4 px-5 py-4 items-center">
+                                <button
+                                  onClick={() => toggleSelect(bookmark.id)}
+                                  className={cn(
+                                    'w-5 h-5 rounded border flex items-center justify-center transition-all',
+                                    selectedIds.has(bookmark.id) ? 'text-white' : ''
+                                  )}
+                                  style={{
+                                    background: selectedIds.has(bookmark.id) ? 'var(--color-primary)' : 'transparent',
+                                    borderColor: selectedIds.has(bookmark.id) ? 'var(--color-primary)' : 'var(--color-border)',
+                                  }}
+                                >
+                                  {selectedIds.has(bookmark.id) && <Check className="w-3 h-3" />}
+                                </button>
+                                <div className="flex items-center gap-3 min-w-0">
+                                  <div 
+                                    className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                                    style={{
+                                      background: 'var(--color-bg-tertiary)',
+                                      border: '1px solid var(--color-glass-border)',
+                                    }}
+                                  >
+                                    {bookmark.iconUrl ? (
+                                      <img src={bookmark.iconUrl} alt="" className="w-5 h-5 rounded object-contain" />
+                                    ) : bookmark.icon ? (
+                                      <IconRenderer icon={bookmark.icon} className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />
+                                    ) : bookmark.favicon ? (
+                                      <img src={bookmark.favicon} alt="" className="w-5 h-5 rounded" />
+                                    ) : (
+                                      <ExternalLink className="w-4 h-4" style={{ color: 'var(--color-text-muted)' }} />
+                                    )}
+                                  </div>
+                                  <div className="min-w-0">
+                                    <div className="text-sm font-medium truncate" style={{ color: 'var(--color-text-primary)' }}>{bookmark.title}</div>
+                                    <div className="text-xs truncate" style={{ color: 'var(--color-text-muted)' }}>
+                                      {(() => { try { return new URL(bookmark.url).hostname } catch { return bookmark.url } })()}
+                                    </div>
+                                  </div>
                                 </div>
-                                <div className="text-xs truncate" style={{ color: 'var(--color-text-muted)' }}>
-                                  {(() => {
-                                    try {
-                                      return new URL(bookmark.url).hostname
-                                    } catch {
-                                      return bookmark.url
-                                    }
-                                  })()}
+                                <div>
+                                  <select
+                                    value={bookmark.category || ''}
+                                    onChange={e => onUpdateBookmark(bookmark.id, { category: e.target.value || undefined })}
+                                    className="appearance-none px-3 py-1.5 rounded-lg text-xs focus:outline-none cursor-pointer transition-colors"
+                                    style={{
+                                      background: 'var(--color-bg-tertiary)',
+                                      border: '1px solid var(--color-glass-border)',
+                                      color: 'var(--color-text-secondary)',
+                                    }}
+                                  >
+                                    <option value="" style={{ background: 'var(--color-bg-secondary)' }}>{t('admin.bookmark.uncategorized')}</option>
+                                    {categories.map(cat => (
+                                      <option key={cat.id} value={cat.id} style={{ background: 'var(--color-bg-secondary)' }}>{cat.name}</option>
+                                    ))}
+                                  </select>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <button
+                                    onClick={() => onTogglePin(bookmark.id)}
+                                    className={cn('p-1.5 rounded-lg transition-all', bookmark.isPinned ? 'bg-yellow-500/20 text-yellow-400' : 'hover:bg-[var(--color-glass-hover)]')}
+                                    style={{ color: bookmark.isPinned ? undefined : 'var(--color-text-muted)' }}
+                                    title={t('admin.bookmark.pinned')}
+                                  >
+                                    <Pin className="w-3.5 h-3.5" />
+                                  </button>
+                                  <button
+                                    onClick={() => onToggleReadLater(bookmark.id)}
+                                    className={cn('p-1.5 rounded-lg transition-all', bookmark.isReadLater ? 'bg-orange-500/20 text-orange-400' : 'hover:bg-[var(--color-glass-hover)]')}
+                                    style={{ color: bookmark.isReadLater ? undefined : 'var(--color-text-muted)' }}
+                                    title={t('bookmark.read_later')}
+                                  >
+                                    <BookMarked className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <button onClick={() => window.open(getBookmarkUrl(bookmark, isInternal), '_blank')} className="p-1.5 rounded-lg hover:bg-[var(--color-glass-hover)] transition-all" style={{ color: 'var(--color-text-muted)' }} title={t('admin.bookmark.open_link')}><ExternalLink className="w-3.5 h-3.5" /></button>
+                                  <button onClick={() => onEditBookmark(bookmark)} className="p-1.5 rounded-lg hover:bg-[var(--color-glass-hover)] transition-all" style={{ color: 'var(--color-text-muted)' }} title={t('admin.bookmark.edit')}><Edit2 className="w-3.5 h-3.5" /></button>
+                                  <button onClick={() => { if (confirm(t('admin.bookmark.delete_confirm'))) { onDeleteBookmark(bookmark.id); showToast('success', t('admin.bookmark.deleted')) } }} className="p-1.5 rounded-lg hover:text-red-400 hover:bg-red-500/10 transition-all" style={{ color: 'var(--color-text-muted)' }} title={t('admin.bookmark.delete')}><Trash2 className="w-3.5 h-3.5" /></button>
+                                </div>
+                              </div>
+                              {/* 移动端卡片布局 */}
+                              <div className="sm:hidden p-4">
+                                <div className="flex items-start gap-3">
+                                  <button
+                                    onClick={() => toggleSelect(bookmark.id)}
+                                    className={cn('w-5 h-5 rounded border flex items-center justify-center transition-all flex-shrink-0 mt-1', selectedIds.has(bookmark.id) ? 'text-white' : '')}
+                                    style={{ background: selectedIds.has(bookmark.id) ? 'var(--color-primary)' : 'transparent', borderColor: selectedIds.has(bookmark.id) ? 'var(--color-primary)' : 'var(--color-border)' }}
+                                  >
+                                    {selectedIds.has(bookmark.id) && <Check className="w-3 h-3" />}
+                                  </button>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'var(--color-bg-tertiary)', border: '1px solid var(--color-glass-border)' }}>
+                                        {bookmark.iconUrl ? <img src={bookmark.iconUrl} alt="" className="w-4 h-4 rounded object-contain" /> : bookmark.icon ? <IconRenderer icon={bookmark.icon} className="w-4 h-4" style={{ color: 'var(--color-primary)' }} /> : bookmark.favicon ? <img src={bookmark.favicon} alt="" className="w-4 h-4 rounded" /> : <ExternalLink className="w-3.5 h-3.5" style={{ color: 'var(--color-text-muted)' }} />}
+                                      </div>
+                                      <div className="min-w-0 flex-1">
+                                        <div className="text-sm font-medium truncate" style={{ color: 'var(--color-text-primary)' }}>{bookmark.title}</div>
+                                        <div className="text-xs truncate" style={{ color: 'var(--color-text-muted)' }}>{(() => { try { return new URL(bookmark.url).hostname } catch { return bookmark.url } })()}</div>
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-2 mb-3">
+                                      <select value={bookmark.category || ''} onChange={e => onUpdateBookmark(bookmark.id, { category: e.target.value || undefined })} className="appearance-none px-2 py-1 rounded text-xs focus:outline-none cursor-pointer flex-1" style={{ background: 'var(--color-bg-tertiary)', border: '1px solid var(--color-glass-border)', color: 'var(--color-text-secondary)' }}>
+                                        <option value="" style={{ background: 'var(--color-bg-secondary)' }}>{t('admin.bookmark.uncategorized')}</option>
+                                        {categories.map(cat => (<option key={cat.id} value={cat.id} style={{ background: 'var(--color-bg-secondary)' }}>{cat.name}</option>))}
+                                      </select>
+                                      {bookmark.isPinned && <span className="px-2 py-0.5 rounded text-xs bg-yellow-500/20 text-yellow-400">{t('admin.bookmark.pinned')}</span>}
+                                      {bookmark.isReadLater && <span className="px-2 py-0.5 rounded text-xs bg-orange-500/20 text-orange-400">{t('admin.bookmark.read_later_short')}</span>}
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      <button onClick={() => onTogglePin(bookmark.id)} className={cn('p-2 rounded-lg transition-all', bookmark.isPinned ? 'bg-yellow-500/20 text-yellow-400' : 'bg-[var(--color-bg-tertiary)]')} style={{ color: bookmark.isPinned ? undefined : 'var(--color-text-muted)' }}><Pin className="w-4 h-4" /></button>
+                                      <button onClick={() => onToggleReadLater(bookmark.id)} className={cn('p-2 rounded-lg transition-all', bookmark.isReadLater ? 'bg-orange-500/20 text-orange-400' : 'bg-[var(--color-bg-tertiary)]')} style={{ color: bookmark.isReadLater ? undefined : 'var(--color-text-muted)' }}><BookMarked className="w-4 h-4" /></button>
+                                      <button onClick={() => window.open(getBookmarkUrl(bookmark, isInternal), '_blank')} className="p-2 rounded-lg bg-[var(--color-bg-tertiary)] transition-all" style={{ color: 'var(--color-text-muted)' }}><ExternalLink className="w-4 h-4" /></button>
+                                      <button onClick={() => onEditBookmark(bookmark)} className="p-2 rounded-lg bg-[var(--color-bg-tertiary)] transition-all" style={{ color: 'var(--color-text-muted)' }}><Edit2 className="w-4 h-4" /></button>
+                                      <button onClick={() => { if (confirm(t('admin.bookmark.delete_confirm'))) { onDeleteBookmark(bookmark.id); showToast('success', t('admin.bookmark.deleted')) } }} className="p-2 rounded-lg bg-[var(--color-bg-tertiary)] hover:text-red-400 hover:bg-red-500/10 transition-all" style={{ color: 'var(--color-text-muted)' }}><Trash2 className="w-4 h-4" /></button>
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
                             </div>
-
-                            {/* Category */}
-                            <div>
-                              <select
-                                value={bookmark.category || ''}
-                                onChange={e => onUpdateBookmark(bookmark.id, { 
-                                  category: e.target.value || undefined 
-                                })}
-                                className="appearance-none px-3 py-1.5 rounded-lg text-xs focus:outline-none cursor-pointer transition-colors"
-                                style={{
-                                  background: 'var(--color-bg-tertiary)',
-                                  border: '1px solid var(--color-glass-border)',
-                                  color: 'var(--color-text-secondary)',
-                                }}
-                              >
-                                <option value="" style={{ background: 'var(--color-bg-secondary)' }}>{t('admin.bookmark.uncategorized')}</option>
-                                {categories.map(cat => (
-                                  <option key={cat.id} value={cat.id} style={{ background: 'var(--color-bg-secondary)' }}>{cat.name}</option>
-                                ))}
-                              </select>
-                            </div>
-
-                            {/* Status */}
-                            <div className="flex items-center gap-1">
-                              <button
-                                onClick={() => onTogglePin(bookmark.id)}
-                                className={cn(
-                                  'p-1.5 rounded-lg transition-all',
-                                  bookmark.isPinned 
-                                    ? 'bg-yellow-500/20 text-yellow-400' 
-                                    : 'hover:bg-[var(--color-glass-hover)]'
-                                )}
-                                style={{ color: bookmark.isPinned ? undefined : 'var(--color-text-muted)' }}
-                                title={t('admin.bookmark.pinned')}
-                              >
-                                <Pin className="w-3.5 h-3.5" />
-                              </button>
-                              <button
-                                onClick={() => onToggleReadLater(bookmark.id)}
-                                className={cn(
-                                  'p-1.5 rounded-lg transition-all',
-                                  bookmark.isReadLater 
-                                    ? 'bg-orange-500/20 text-orange-400' 
-                                    : 'hover:bg-[var(--color-glass-hover)]'
-                                )}
-                                style={{ color: bookmark.isReadLater ? undefined : 'var(--color-text-muted)' }}
-                                title={t('bookmark.read_later')}
-                              >
-                                <BookMarked className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-
-                            {/* Actions */}
-                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button
-                                onClick={() => window.open(getBookmarkUrl(bookmark, isInternal), '_blank')}
-                                className="p-1.5 rounded-lg hover:bg-[var(--color-glass-hover)] transition-all"
-                                style={{ color: 'var(--color-text-muted)' }}
-                                title={t('admin.bookmark.open_link')}
-                              >
-                                <ExternalLink className="w-3.5 h-3.5" />
-                              </button>
-                              <button
-                                onClick={() => onEditBookmark(bookmark)}
-                                className="p-1.5 rounded-lg hover:bg-[var(--color-glass-hover)] transition-all"
-                                style={{ color: 'var(--color-text-muted)' }}
-                                title={t('admin.bookmark.edit')}
-                              >
-                                <Edit2 className="w-3.5 h-3.5" />
-                              </button>
-                              <button
-                                onClick={() => {
-                                  if (confirm(t('admin.bookmark.delete_confirm'))) {
-                                    onDeleteBookmark(bookmark.id)
-                                    showToast('success', t('admin.bookmark.deleted'))
-                                  }
-                                }}
-                                className="p-1.5 rounded-lg hover:text-red-400 hover:bg-red-500/10 transition-all"
-                                style={{ color: 'var(--color-text-muted)' }}
-                                title={t('admin.bookmark.delete')}
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          </div>
-
-                          {/* 移动端卡片布局 */}
-                          <div className="sm:hidden p-4">
-                            <div className="flex items-start gap-3">
-                              {/* Checkbox */}
+                          )
+                        })}
+                      </div>
+                    ) : (
+                      /* 普通模式（≤50条） */
+                      <div className="divide-y divide-[var(--color-border-light)]">
+                        {paginatedBookmarks.map((bookmark, index) => (
+                          <motion.div
+                            key={bookmark.id}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: index * 0.02 }}
+                            className="transition-colors group hover:bg-[var(--color-glass-hover)]"
+                          >
+                            {/* 桌面端布局 */}
+                            <div className="hidden sm:grid grid-cols-[auto_2fr_1fr_auto_auto] gap-4 px-5 py-4 items-center">
                               <button
                                 onClick={() => toggleSelect(bookmark.id)}
                                 className={cn(
-                                  'w-5 h-5 rounded border flex items-center justify-center transition-all flex-shrink-0 mt-1',
+                                  'w-5 h-5 rounded border flex items-center justify-center transition-all',
                                   selectedIds.has(bookmark.id) ? 'text-white' : ''
                                 )}
                                 style={{
@@ -982,221 +1132,359 @@ function AdminContent() {
                               >
                                 {selectedIds.has(bookmark.id) && <Check className="w-3 h-3" />}
                               </button>
-
-                              {/* Content */}
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <div 
-                                    className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-                                    style={{
-                                      background: 'var(--color-bg-tertiary)',
-                                      border: '1px solid var(--color-glass-border)',
-                                    }}
-                                  >
-                                    {bookmark.iconUrl ? (
-                                      <img src={bookmark.iconUrl} alt="" className="w-4 h-4 rounded object-contain" />
-                                    ) : bookmark.icon ? (
-                                      <IconRenderer icon={bookmark.icon} className="w-4 h-4" style={{ color: 'var(--color-primary)' }} />
-                                    ) : bookmark.favicon ? (
-                                      <img src={bookmark.favicon} alt="" className="w-4 h-4 rounded" />
-                                    ) : (
-                                      <ExternalLink className="w-3.5 h-3.5" style={{ color: 'var(--color-text-muted)' }} />
-                                    )}
+                              <div className="flex items-center gap-3 min-w-0">
+                                <div 
+                                  className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+                                  style={{
+                                    background: 'var(--color-bg-tertiary)',
+                                    border: '1px solid var(--color-glass-border)',
+                                  }}
+                                >
+                                  {bookmark.iconUrl ? (
+                                    <img src={bookmark.iconUrl} alt="" className="w-5 h-5 rounded object-contain" />
+                                  ) : bookmark.icon ? (
+                                    <IconRenderer icon={bookmark.icon} className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />
+                                  ) : bookmark.favicon ? (
+                                    <img src={bookmark.favicon} alt="" className="w-5 h-5 rounded" />
+                                  ) : (
+                                    <ExternalLink className="w-4 h-4" style={{ color: 'var(--color-text-muted)' }} />
+                                  )}
+                                </div>
+                                <div className="min-w-0">
+                                  <div className="text-sm font-medium truncate" style={{ color: 'var(--color-text-primary)' }}>
+                                    {bookmark.title}
                                   </div>
-                                  <div className="min-w-0 flex-1">
-                                    <div className="text-sm font-medium truncate" style={{ color: 'var(--color-text-primary)' }}>
-                                      {bookmark.title}
-                                    </div>
-                                    <div className="text-xs truncate" style={{ color: 'var(--color-text-muted)' }}>
-                                      {(() => {
-                                        try {
-                                          return new URL(bookmark.url).hostname
-                                        } catch {
-                                          return bookmark.url
-                                        }
-                                      })()}
-                                    </div>
+                                  <div className="text-xs truncate" style={{ color: 'var(--color-text-muted)' }}>
+                                    {(() => {
+                                      try {
+                                        return new URL(bookmark.url).hostname
+                                      } catch {
+                                        return bookmark.url
+                                      }
+                                    })()}
                                   </div>
                                 </div>
-
-                                {/* 分类和状态 */}
-                                <div className="flex items-center gap-2 mb-3">
-                                  <select
-                                    value={bookmark.category || ''}
-                                    onChange={e => onUpdateBookmark(bookmark.id, { 
-                                      category: e.target.value || undefined 
-                                    })}
-                                    className="appearance-none px-2 py-1 rounded text-xs focus:outline-none cursor-pointer flex-1"
-                                    style={{
-                                      background: 'var(--color-bg-tertiary)',
-                                      border: '1px solid var(--color-glass-border)',
-                                      color: 'var(--color-text-secondary)',
-                                    }}
-                                  >
-                                    <option value="" style={{ background: 'var(--color-bg-secondary)' }}>{t('admin.bookmark.uncategorized')}</option>
+                              </div>
+                              <div>
+                                <select
+                                  value={bookmark.category || ''}
+                                  onChange={e => onUpdateBookmark(bookmark.id, { 
+                                    category: e.target.value || undefined 
+                                  })}
+                                  className="appearance-none px-3 py-1.5 rounded-lg text-xs focus:outline-none cursor-pointer transition-colors"
+                                  style={{
+                                    background: 'var(--color-bg-tertiary)',
+                                    border: '1px solid var(--color-glass-border)',
+                                    color: 'var(--color-text-secondary)',
+                                  }}
+                                >
+                                  <option value="" style={{ background: 'var(--color-bg-secondary)' }}>{t('admin.bookmark.uncategorized')}</option>
                                   {categories.map(cat => (
                                     <option key={cat.id} value={cat.id} style={{ background: 'var(--color-bg-secondary)' }}>{cat.name}</option>
                                   ))}
                                 </select>
-
-                                  {bookmark.isPinned && (
-                                    <span className="px-2 py-0.5 rounded text-xs bg-yellow-500/20 text-yellow-400">{t('admin.bookmark.pinned')}</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <button
+                                  onClick={() => onTogglePin(bookmark.id)}
+                                  className={cn(
+                                    'p-1.5 rounded-lg transition-all',
+                                    bookmark.isPinned 
+                                      ? 'bg-yellow-500/20 text-yellow-400' 
+                                      : 'hover:bg-[var(--color-glass-hover)]'
                                   )}
-                                  {bookmark.isReadLater && (
-                                    <span className="px-2 py-0.5 rounded text-xs bg-orange-500/20 text-orange-400">{t('admin.bookmark.read_later_short')}</span>
+                                  style={{ color: bookmark.isPinned ? undefined : 'var(--color-text-muted)' }}
+                                  title={t('admin.bookmark.pinned')}
+                                >
+                                  <Pin className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => onToggleReadLater(bookmark.id)}
+                                  className={cn(
+                                    'p-1.5 rounded-lg transition-all',
+                                    bookmark.isReadLater 
+                                      ? 'bg-orange-500/20 text-orange-400' 
+                                      : 'hover:bg-[var(--color-glass-hover)]'
                                   )}
-                                </div>
+                                  style={{ color: bookmark.isReadLater ? undefined : 'var(--color-text-muted)' }}
+                                  title={t('bookmark.read_later')}
+                                >
+                                  <BookMarked className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                              <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button
+                                  onClick={() => window.open(getBookmarkUrl(bookmark, isInternal), '_blank')}
+                                  className="p-1.5 rounded-lg hover:bg-[var(--color-glass-hover)] transition-all"
+                                  style={{ color: 'var(--color-text-muted)' }}
+                                  title={t('admin.bookmark.open_link')}
+                                >
+                                  <ExternalLink className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => onEditBookmark(bookmark)}
+                                  className="p-1.5 rounded-lg hover:bg-[var(--color-glass-hover)] transition-all"
+                                  style={{ color: 'var(--color-text-muted)' }}
+                                  title={t('admin.bookmark.edit')}
+                                >
+                                  <Edit2 className="w-3.5 h-3.5" />
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    if (confirm(t('admin.bookmark.delete_confirm'))) {
+                                      onDeleteBookmark(bookmark.id)
+                                      showToast('success', t('admin.bookmark.deleted'))
+                                    }
+                                  }}
+                                  className="p-1.5 rounded-lg hover:text-red-400 hover:bg-red-500/10 transition-all"
+                                  style={{ color: 'var(--color-text-muted)' }}
+                                  title={t('admin.bookmark.delete')}
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
 
-                                {/* 操作按钮 */}
-                                <div className="flex items-center gap-2">
-                                  <button
-                                    onClick={() => onTogglePin(bookmark.id)}
-                                    className={cn(
-                                      'p-2 rounded-lg transition-all',
-                                      bookmark.isPinned 
-                                        ? 'bg-yellow-500/20 text-yellow-400' 
-                                        : 'bg-[var(--color-bg-tertiary)]'
+                            {/* 移动端卡片布局 */}
+                            <div className="sm:hidden p-4">
+                              <div className="flex items-start gap-3">
+                                <button
+                                  onClick={() => toggleSelect(bookmark.id)}
+                                  className={cn(
+                                    'w-5 h-5 rounded border flex items-center justify-center transition-all flex-shrink-0 mt-1',
+                                    selectedIds.has(bookmark.id) ? 'text-white' : ''
+                                  )}
+                                  style={{
+                                    background: selectedIds.has(bookmark.id) ? 'var(--color-primary)' : 'transparent',
+                                    borderColor: selectedIds.has(bookmark.id) ? 'var(--color-primary)' : 'var(--color-border)',
+                                  }}
+                                >
+                                  {selectedIds.has(bookmark.id) && <Check className="w-3 h-3" />}
+                                </button>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <div 
+                                      className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                                      style={{
+                                        background: 'var(--color-bg-tertiary)',
+                                        border: '1px solid var(--color-glass-border)',
+                                      }}
+                                    >
+                                      {bookmark.iconUrl ? (
+                                        <img src={bookmark.iconUrl} alt="" className="w-4 h-4 rounded object-contain" />
+                                      ) : bookmark.icon ? (
+                                        <IconRenderer icon={bookmark.icon} className="w-4 h-4" style={{ color: 'var(--color-primary)' }} />
+                                      ) : bookmark.favicon ? (
+                                        <img src={bookmark.favicon} alt="" className="w-4 h-4 rounded" />
+                                      ) : (
+                                        <ExternalLink className="w-3.5 h-3.5" style={{ color: 'var(--color-text-muted)' }} />
+                                      )}
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                      <div className="text-sm font-medium truncate" style={{ color: 'var(--color-text-primary)' }}>
+                                        {bookmark.title}
+                                      </div>
+                                      <div className="text-xs truncate" style={{ color: 'var(--color-text-muted)' }}>
+                                        {(() => {
+                                          try {
+                                            return new URL(bookmark.url).hostname
+                                          } catch {
+                                            return bookmark.url
+                                          }
+                                        })()}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-2 mb-3">
+                                    <select
+                                      value={bookmark.category || ''}
+                                      onChange={e => onUpdateBookmark(bookmark.id, { 
+                                        category: e.target.value || undefined 
+                                      })}
+                                      className="appearance-none px-2 py-1 rounded text-xs focus:outline-none cursor-pointer flex-1"
+                                      style={{
+                                        background: 'var(--color-bg-tertiary)',
+                                        border: '1px solid var(--color-glass-border)',
+                                        color: 'var(--color-text-secondary)',
+                                      }}
+                                    >
+                                      <option value="" style={{ background: 'var(--color-bg-secondary)' }}>{t('admin.bookmark.uncategorized')}</option>
+                                      {categories.map(cat => (
+                                        <option key={cat.id} value={cat.id} style={{ background: 'var(--color-bg-secondary)' }}>{cat.name}</option>
+                                      ))}
+                                    </select>
+                                    {bookmark.isPinned && (
+                                      <span className="px-2 py-0.5 rounded text-xs bg-yellow-500/20 text-yellow-400">{t('admin.bookmark.pinned')}</span>
                                     )}
-                                    style={{ color: bookmark.isPinned ? undefined : 'var(--color-text-muted)' }}
-                                  >
-                                    <Pin className="w-4 h-4" />
-                                  </button>
-                                  <button
-                                    onClick={() => onToggleReadLater(bookmark.id)}
-                                    className={cn(
-                                      'p-2 rounded-lg transition-all',
-                                      bookmark.isReadLater 
-                                        ? 'bg-orange-500/20 text-orange-400' 
-                                        : 'bg-[var(--color-bg-tertiary)]'
+                                    {bookmark.isReadLater && (
+                                      <span className="px-2 py-0.5 rounded text-xs bg-orange-500/20 text-orange-400">{t('admin.bookmark.read_later_short')}</span>
                                     )}
-                                    style={{ color: bookmark.isReadLater ? undefined : 'var(--color-text-muted)' }}
-                                  >
-                                    <BookMarked className="w-4 h-4" />
-                                  </button>
-                                  <button
-                                    onClick={() => window.open(getBookmarkUrl(bookmark, isInternal), '_blank')}
-                                    className="p-2 rounded-lg bg-[var(--color-bg-tertiary)] transition-all"
-                                    style={{ color: 'var(--color-text-muted)' }}
-                                  >
-                                    <ExternalLink className="w-4 h-4" />
-                                  </button>
-                                  <button
-                                    onClick={() => onEditBookmark(bookmark)}
-                                    className="p-2 rounded-lg bg-[var(--color-bg-tertiary)] transition-all"
-                                    style={{ color: 'var(--color-text-muted)' }}
-                                  >
-                                    <Edit2 className="w-4 h-4" />
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      if (confirm(t('admin.bookmark.delete_confirm'))) {
-                                        onDeleteBookmark(bookmark.id)
-                                        showToast('success', t('admin.bookmark.deleted'))
-                                      }
-                                    }}
-                                    className="p-2 rounded-lg bg-[var(--color-bg-tertiary)] hover:text-red-400 hover:bg-red-500/10 transition-all"
-                                    style={{ color: 'var(--color-text-muted)' }}
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </button>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      onClick={() => onTogglePin(bookmark.id)}
+                                      className={cn(
+                                        'p-2 rounded-lg transition-all',
+                                        bookmark.isPinned 
+                                          ? 'bg-yellow-500/20 text-yellow-400' 
+                                          : 'bg-[var(--color-bg-tertiary)]'
+                                      )}
+                                      style={{ color: bookmark.isPinned ? undefined : 'var(--color-text-muted)' }}
+                                    >
+                                      <Pin className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                      onClick={() => onToggleReadLater(bookmark.id)}
+                                      className={cn(
+                                        'p-2 rounded-lg transition-all',
+                                        bookmark.isReadLater 
+                                          ? 'bg-orange-500/20 text-orange-400' 
+                                          : 'bg-[var(--color-bg-tertiary)]'
+                                      )}
+                                      style={{ color: bookmark.isReadLater ? undefined : 'var(--color-text-muted)' }}
+                                    >
+                                      <BookMarked className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                      onClick={() => window.open(getBookmarkUrl(bookmark, isInternal), '_blank')}
+                                      className="p-2 rounded-lg bg-[var(--color-bg-tertiary)] transition-all"
+                                      style={{ color: 'var(--color-text-muted)' }}
+                                    >
+                                      <ExternalLink className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                      onClick={() => onEditBookmark(bookmark)}
+                                      className="p-2 rounded-lg bg-[var(--color-bg-tertiary)] transition-all"
+                                      style={{ color: 'var(--color-text-muted)' }}
+                                    >
+                                      <Edit2 className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                      onClick={() => {
+                                        if (confirm(t('admin.bookmark.delete_confirm'))) {
+                                          onDeleteBookmark(bookmark.id)
+                                          showToast('success', t('admin.bookmark.deleted'))
+                                        }
+                                      }}
+                                      className="p-2 rounded-lg bg-[var(--color-bg-tertiary)] hover:text-red-400 hover:bg-red-500/10 transition-all"
+                                      style={{ color: 'var(--color-text-muted)' }}
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </button>
+                                  </div>
                                 </div>
                               </div>
                             </div>
-                          </div>
-                        </motion.div>
-                      ))
+                          </motion.div>
+                        ))}
+                      </div>
                     )}
                   </div>
 
                   {/* 数字分页 */}
-                  {filteredBookmarks.length > PAGE_SIZE && (
+                  {filteredBookmarks.length > 0 && (
                     <div 
-                      className="flex items-center justify-between px-5 py-3"
+                      className="flex flex-wrap items-center justify-between gap-2 px-5 py-3"
                       style={{
                         background: 'var(--color-bg-tertiary)',
                         borderTop: '1px solid var(--color-glass-border)',
                       }}
                     >
-                      <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                        {t('admin.bookmark.pagination_info', { 
-                          start: (safePage - 1) * PAGE_SIZE + 1, 
-                          end: Math.min(safePage * PAGE_SIZE, filteredBookmarks.length), 
-                          total: filteredBookmarks.length 
-                        })}
-                      </span>
-                      <div className="flex items-center gap-1">
-                        {/* 上一页 */}
-                        <button
-                          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                          disabled={safePage <= 1}
-                          className="p-1.5 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[var(--color-glass-hover)]"
-                          style={{ color: 'var(--color-text-muted)' }}
-                        >
-                          <ChevronLeft className="w-4 h-4" />
-                        </button>
-
-                        {/* 页码按钮 */}
-                        {(() => {
-                          const pages: (number | 'ellipsis')[] = []
-                          if (totalPages <= 7) {
-                            for (let i = 1; i <= totalPages; i++) pages.push(i)
-                          } else {
-                            pages.push(1)
-                            if (safePage > 3) pages.push('ellipsis')
-                            const start = Math.max(2, safePage - 1)
-                            const end = Math.min(totalPages - 1, safePage + 1)
-                            for (let i = start; i <= end; i++) pages.push(i)
-                            if (safePage < totalPages - 2) pages.push('ellipsis')
-                            pages.push(totalPages)
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                          {filteredBookmarks.length > pageSize
+                            ? t('admin.bookmark.pagination_info', { 
+                                start: (safePage - 1) * pageSize + 1, 
+                                end: Math.min(safePage * pageSize, filteredBookmarks.length), 
+                                total: filteredBookmarks.length 
+                              })
+                            : t('admin.stats.total_bookmarks', { count: filteredBookmarks.length })
                           }
-                          return pages.map((p, idx) =>
-                            p === 'ellipsis' ? (
-                              <span key={`e${idx}`} className="px-1 text-xs" style={{ color: 'var(--color-text-muted)' }}>...</span>
-                            ) : (
-                              <button
-                                key={p}
-                                onClick={() => setCurrentPage(p)}
-                                className={cn(
-                                  'min-w-[28px] h-7 rounded-lg text-xs font-medium transition-all',
-                                  safePage === p
-                                    ? 'text-white'
-                                    : 'hover:bg-[var(--color-glass-hover)]'
-                                )}
-                                style={{
-                                  background: safePage === p ? 'var(--color-primary)' : 'transparent',
-                                  color: safePage === p ? '#fff' : 'var(--color-text-secondary)',
-                                }}
-                              >
-                                {p}
-                              </button>
-                            )
-                          )
-                        })()}
-
-                        {/* 下一页 */}
-                        <button
-                          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                          disabled={safePage >= totalPages}
-                          className="p-1.5 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[var(--color-glass-hover)]"
-                          style={{ color: 'var(--color-text-muted)' }}
-                        >
-                          <ChevronRight className="w-4 h-4" />
-                        </button>
+                        </span>
+                        {/* 每页条数选择 */}
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                            {t('admin.bookmark.page_size_label')}
+                          </span>
+                          <select
+                            value={pageSize}
+                            onChange={e => setPageSize(Number(e.target.value))}
+                            className="appearance-none px-2 py-1 rounded-lg text-xs focus:outline-none cursor-pointer transition-colors"
+                            style={{
+                              background: 'var(--color-glass)',
+                              border: '1px solid var(--color-glass-border)',
+                              color: 'var(--color-text-secondary)',
+                            }}
+                          >
+                            {PAGE_SIZE_OPTIONS.map(size => (
+                              <option key={size} value={size} style={{ background: 'var(--color-bg-secondary)' }}>
+                                {size}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                      {totalPages > 1 && (
+                        <div className="flex items-center gap-1">
+                          {/* 上一页 */}
+                          <button
+                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                            disabled={safePage <= 1}
+                            className="p-1.5 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[var(--color-glass-hover)]"
+                            style={{ color: 'var(--color-text-muted)' }}
+                          >
+                            <ChevronLeft className="w-4 h-4" />
+                          </button>
 
-                  {/* Footer with count (单页时显示) */}
-                  {filteredBookmarks.length <= PAGE_SIZE && filteredBookmarks.length > 0 && (
-                    <div 
-                      className="px-5 py-3 text-xs text-center"
-                      style={{
-                        background: 'var(--color-bg-tertiary)',
-                        borderTop: '1px solid var(--color-glass-border)',
-                        color: 'var(--color-text-muted)',
-                      }}
-                    >
-                      {t('admin.stats.total_bookmarks', { count: filteredBookmarks.length })}
+                          {/* 页码按钮 */}
+                          {(() => {
+                            const pages: (number | 'ellipsis')[] = []
+                            if (totalPages <= 7) {
+                              for (let i = 1; i <= totalPages; i++) pages.push(i)
+                            } else {
+                              pages.push(1)
+                              if (safePage > 3) pages.push('ellipsis')
+                              const start = Math.max(2, safePage - 1)
+                              const end = Math.min(totalPages - 1, safePage + 1)
+                              for (let i = start; i <= end; i++) pages.push(i)
+                              if (safePage < totalPages - 2) pages.push('ellipsis')
+                              pages.push(totalPages)
+                            }
+                            return pages.map((p, idx) =>
+                              p === 'ellipsis' ? (
+                                <span key={`e${idx}`} className="px-1 text-xs" style={{ color: 'var(--color-text-muted)' }}>...</span>
+                              ) : (
+                                <button
+                                  key={p}
+                                  onClick={() => setCurrentPage(p)}
+                                  className={cn(
+                                    'min-w-[28px] h-7 rounded-lg text-xs font-medium transition-all',
+                                    safePage === p
+                                      ? 'text-white'
+                                      : 'hover:bg-[var(--color-glass-hover)]'
+                                  )}
+                                  style={{
+                                    background: safePage === p ? 'var(--color-primary)' : 'transparent',
+                                    color: safePage === p ? '#fff' : 'var(--color-text-secondary)',
+                                  }}
+                                >
+                                  {p}
+                                </button>
+                              )
+                            )
+                          })()}
+
+                          {/* 下一页 */}
+                          <button
+                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                            disabled={safePage >= totalPages}
+                            className="p-1.5 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[var(--color-glass-hover)]"
+                            style={{ color: 'var(--color-text-muted)' }}
+                          >
+                            <ChevronRight className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

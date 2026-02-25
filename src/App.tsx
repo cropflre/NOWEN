@@ -108,6 +108,8 @@ function App() {
     weatherCity,
     menuVisibility,
     widgetVisibility,
+    categoryCollapseThreshold,
+    categoryInitialShowCount,
   } = useSiteSettings();
 
   // 认证状态
@@ -576,6 +578,8 @@ function App() {
                   isLiteMode={isLiteMode}
                   isInternal={isInternal}
                   totalBookmarkCount={bookmarks.length}
+                  collapseThreshold={categoryCollapseThreshold}
+                  initialShowCount={categoryInitialShowCount}
                   onContextMenu={handleContextMenu}
                   onEditCategory={(cat) => {
                     setEditingCategory(cat);
@@ -709,8 +713,6 @@ function App() {
 }
 
 // ========== 分类区书签卡片（React.memo 优化） ==========
-const CATEGORY_COLLAPSE_THRESHOLD = 100; // 超过此数量的分类默认折叠多余部分
-const INITIAL_SHOW_COUNT = 8; // 折叠时默认显示数量
 const MAX_ANIMATED_INDEX = 12; // 超过此索引的卡片不再有递增延迟动画
 
 const MemoizedBookmarkItem = React.memo(function MemoizedBookmarkItem({
@@ -821,6 +823,8 @@ function CategorySection({
   isLiteMode,
   isInternal,
   totalBookmarkCount,
+  collapseThreshold,
+  initialShowCount,
   onContextMenu,
   onEditCategory,
 }: {
@@ -830,14 +834,17 @@ function CategorySection({
   isLiteMode: boolean | undefined;
   isInternal: boolean;
   totalBookmarkCount: number;
+  collapseThreshold: number;
+  initialShowCount: number;
   onContextMenu: (e: React.MouseEvent, bookmark: Bookmark) => void;
   onEditCategory: (cat: import("./types/bookmark").Category) => void;
 }) {
   const { t } = useTranslation();
-  const needsCollapse = categoryBookmarks.length > CATEGORY_COLLAPSE_THRESHOLD;
+  const needsCollapse = collapseThreshold > 0 && categoryBookmarks.length > collapseThreshold;
   const [isExpanded, setIsExpanded] = useState(!needsCollapse);
-  const visibleBookmarks = isExpanded ? categoryBookmarks : categoryBookmarks.slice(0, INITIAL_SHOW_COUNT);
-  const hiddenCount = categoryBookmarks.length - INITIAL_SHOW_COUNT;
+  const showCount = initialShowCount || 8;
+  const visibleBookmarks = isExpanded ? categoryBookmarks : categoryBookmarks.slice(0, showCount);
+  const hiddenCount = categoryBookmarks.length - showCount;
 
   // 懒渲染：前2个分类立即渲染，后续分类进入视口时才渲染
   const [lazyRef, shouldRender] = useLazyRender('300px');

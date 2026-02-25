@@ -10,6 +10,8 @@ export const defaultSiteSettings: SiteSettings = {
   enableLiteMode: false,
   enableWeather: true,
   enableLunar: true,
+  categoryCollapseThreshold: 0,
+  categoryInitialShowCount: 8,
   widgetVisibility: {
     systemMonitor: false,
     hardwareIdentity: false,
@@ -53,6 +55,10 @@ export function useSiteSettings() {
   const showWeather = siteSettings.enableWeather ?? true;
   const showLunar = siteSettings.enableLunar ?? true;
   const weatherCity = siteSettings.weatherCity || '';
+
+  // 分类折叠配置
+  const categoryCollapseThreshold = siteSettings.categoryCollapseThreshold ?? 0;
+  const categoryInitialShowCount = siteSettings.categoryInitialShowCount ?? 8;
 
   // 菜单可见性
   const menuVisibility = siteSettings.menuVisibility || {
@@ -112,5 +118,7 @@ export function useSiteSettings() {
     weatherCity,
     menuVisibility,
     widgetVisibility,
+    categoryCollapseThreshold,
+    categoryInitialShowCount,
   };
 }

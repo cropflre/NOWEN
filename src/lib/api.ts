@@ -470,6 +470,8 @@ export interface SiteSettings {
   enableLunar?: boolean    // 农历显示开关
   weatherCity?: string     // 手动设置的天气城市名
   footerText?: string      // 底部备案信息
+  categoryCollapseThreshold?: number  // 分类书签折叠阈值（0=不折叠）
+  categoryInitialShowCount?: number   // 折叠时默认显示数量
   widgetVisibility?: WidgetVisibility
   menuVisibility?: MenuVisibility  // 菜单项可见性配置
   wallpaper?: WallpaperSettings    // 壁纸设置
@@ -542,6 +544,9 @@ function parseSettings(raw: Record<string, string>): SiteSettings {
     enableLunar: raw.enableLunar === undefined ? true : raw.enableLunar === 'true' || raw.enableLunar === '1',
     weatherCity: raw.weatherCity || '',
     footerText: raw.footerText || '',
+    // 分类折叠：默认 0（不折叠）
+    categoryCollapseThreshold: raw.categoryCollapseThreshold ? parseInt(raw.categoryCollapseThreshold, 10) : 0,
+    categoryInitialShowCount: raw.categoryInitialShowCount ? parseInt(raw.categoryInitialShowCount, 10) : 8,
     widgetVisibility,
     menuVisibility,
     wallpaper,
@@ -564,6 +569,8 @@ export async function updateSettings(settings: SiteSettings): Promise<SiteSettin
     enableLunar: settings.enableLunar ? 'true' : 'false',
     weatherCity: settings.weatherCity ?? '',
     footerText: settings.footerText ?? '',
+    categoryCollapseThreshold: String(settings.categoryCollapseThreshold ?? 0),
+    categoryInitialShowCount: String(settings.categoryInitialShowCount ?? 8),
     widgetVisibility: settings.widgetVisibility ? JSON.stringify(settings.widgetVisibility) : undefined,
     menuVisibility: settings.menuVisibility ? JSON.stringify(settings.menuVisibility) : undefined,
     wallpaper: settings.wallpaper ? JSON.stringify(settings.wallpaper) : undefined,
@@ -654,6 +661,16 @@ export async function getEnrichStatus(): Promise<EnrichStatus> {
   })
 }
 
+export type EnrichMode = 'icon' | 'metadata' | 'all'
+
+export async function enrichBatch(ids: string[], mode: EnrichMode = 'icon'): Promise<ImportResponse> {
+  return request<ImportResponse>('/api/import/enrich-batch', {
+    method: 'POST',
+    body: JSON.stringify({ ids, mode }),
+    requireAuth: true,
+  })
+}
+
 export async function factoryReset(): Promise<SuccessResponse> {
   return request<SuccessResponse>('/api/factory-reset', {
     method: 'POST',
@@ -665,6 +682,7 @@ export const dataApi = {
   export: exportData,
   import: importData,
   getEnrichStatus,
+  enrichBatch,
   factoryReset,
 }
 

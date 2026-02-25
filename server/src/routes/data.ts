@@ -16,8 +16,11 @@ let enrichStatus: {
   current: string
 } = { running: false, total: 0, completed: 0, failed: 0, current: '' }
 
-// 异步抓取缺少 favicon 的书签 metadata
-async function enrichBookmarkMetadata(bookmarkIds: string[]) {
+// 抓取模式
+type EnrichMode = 'icon' | 'metadata' | 'all'
+
+// 异步抓取书签 metadata
+async function enrichBookmarkMetadata(bookmarkIds: string[], mode: EnrichMode = 'icon') {
   if (bookmarkIds.length === 0) return
 
   enrichStatus = { running: true, total: bookmarkIds.length, completed: 0, failed: 0, current: '' }
@@ -31,7 +34,7 @@ async function enrichBookmarkMetadata(bookmarkIds: string[]) {
       const id = bookmarkIds[i]
 
       try {
-        const bookmark = queryOne('SELECT id, url, title, favicon FROM bookmarks WHERE id = ?', [id]) as any
+        const bookmark = queryOne('SELECT id, url, title, description, favicon FROM bookmarks WHERE id = ?', [id]) as any
         if (!bookmark) continue
 
         enrichStatus.current = bookmark.title || bookmark.url
@@ -39,17 +42,31 @@ async function enrichBookmarkMetadata(bookmarkIds: string[]) {
         const meta = await parseMetadata(bookmark.url)
         const db = getDatabase()
         
-        // 更新 favicon 和可能缺失的 ogImage
         const updates: string[] = []
         const values: any[] = []
 
-        if (meta.favicon && !bookmark.favicon) {
-          updates.push('favicon = ?')
-          values.push(meta.favicon)
+        // 元数据模式或全部模式：更新 title 和 description
+        if (mode === 'metadata' || mode === 'all') {
+          if (meta.title && meta.title !== bookmark.title) {
+            updates.push('title = ?')
+            values.push(meta.title)
+          }
+          if (meta.description) {
+            updates.push('description = ?')
+            values.push(meta.description)
+          }
         }
-        if (meta.ogImage) {
-          updates.push('ogImage = ?')
-          values.push(meta.ogImage)
+
+        // 图标模式或全部模式：更新 favicon 和 ogImage
+        if (mode === 'icon' || mode === 'all') {
+          if (meta.favicon && !bookmark.favicon) {
+            updates.push('favicon = ?')
+            values.push(meta.favicon)
+          }
+          if (meta.ogImage) {
+            updates.push('ogImage = ?')
+            values.push(meta.ogImage)
+          }
         }
 
         if (updates.length > 0) {
@@ -217,6 +234,50 @@ router.post('/import', authMiddleware, validateBody(importDataSchema), (req: Req
 // 查询 metadata 抓取进度
 router.get('/import/enrich-status', authMiddleware, (req: Request, res: Response) => {
   res.json(enrichStatus)
+})
+
+// 按 ID 列表批量抓取（支持 mode: icon / metadata / all）
+router.post('/import/enrich-batch', authMiddleware, (req: Request, res: Response) => {
+  try {
+    const { ids, mode = 'icon' } = req.body as { ids: string[]; mode?: EnrichMode }
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: '请提供书签 ID 列表' })
+    }
+
+    if (enrichStatus.running) {
+      return res.status(409).json({ error: '已有抓取任务进行中，请稍后再试' })
+    }
+
+    let targetIds: string[]
+
+    if (mode === 'icon') {
+      // 仅图标模式：过滤出缺少图标的书签
+      targetIds = ids.filter(id => {
+        const b = queryOne('SELECT id, favicon, iconUrl FROM bookmarks WHERE id = ?', [id]) as any
+        return b && !b.favicon && !b.iconUrl
+      })
+    } else {
+      // 元数据/全部模式：所有选中的书签都处理
+      targetIds = ids.filter(id => {
+        const b = queryOne('SELECT id FROM bookmarks WHERE id = ?', [id]) as any
+        return !!b
+      })
+    }
+
+    if (targetIds.length === 0) {
+      return res.json({ success: true, enriching: 0, message: '没有需要处理的书签' })
+    }
+
+    console.log(`🔍 批量抓取 ${targetIds.length} 个书签 (模式: ${mode})...`)
+    enrichBookmarkMetadata(targetIds, mode).catch(err => {
+      console.error('批量抓取异常:', err)
+    })
+
+    res.json({ success: true, enriching: targetIds.length })
+  } catch (error) {
+    console.error('批量抓取失败:', error)
+    res.status(500).json({ error: '批量抓取失败' })
+  }
 })
 
 // 恢复出厂设置
