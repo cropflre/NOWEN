@@ -156,14 +156,16 @@ export function MonitorTicker({
       "bg-white/70 dark:bg-slate-950/60",
       "backdrop-blur-xl",
       // 边框效果 - 适配主题
-      "border-y",
+      "border",
       "border-slate-200/80 dark:border-white/[0.08]",
+      // 圆角
+      "rounded-2xl",
       // 顶部高光 - 适配主题
       "shadow-[inset_0_1px_0_0_rgba(255,255,255,0.8)] dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]",
       // 字体和交互
       "font-mono text-xs",
       "text-slate-500 dark:text-white/60",
-      "select-none overflow-hidden w-full",
+      "select-none overflow-hidden",
       className
     )}>
       {/* ===== 左侧：状态指示 ===== */}

@@ -37,7 +37,6 @@ export function FloatingDock({ items, leftItems, className }: FloatingDockProps)
   const [isDragging, setIsDragging] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  // 用 MotionValue 管理拖拽偏移，不受 React 重渲染影响
   const initPos = useRef(loadSavedPosition())
   const dragX = useMotionValue(initPos.current.x)
   const dragY = useMotionValue(initPos.current.y)
@@ -54,7 +53,7 @@ export function FloatingDock({ items, leftItems, className }: FloatingDockProps)
     return () => observer.disconnect()
   }, [])
 
-  // 入场动画：从底部滑入
+  // 入场动画
   useEffect(() => {
     const pos = initPos.current
     dragX.set(pos.x)
@@ -84,7 +83,6 @@ export function FloatingDock({ items, leftItems, className }: FloatingDockProps)
     } catch (e) { /* ignore */ }
   }, [])
 
-  // drag 结束后 framer-motion 已更新 motionValue，直接读取保存
   const handleDragEnd = useCallback(() => {
     setTimeout(() => setIsDragging(false), 100)
     savePosition(dragX.get(), dragY.get())
@@ -100,7 +98,6 @@ export function FloatingDock({ items, leftItems, className }: FloatingDockProps)
         className
       )}
       style={{
-        // MotionValue 控制偏移，拖拽时直接修改，不会被重渲染重置
         x: dragX,
         y: dragY,
         background: isDark ? 'var(--color-glass)' : 'var(--color-glass)',

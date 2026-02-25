@@ -614,11 +614,15 @@ function App() {
         </div>
       )}
 
-      {/* Floating Dock - 桌面端 */}
-      <div className="hidden md:flex fixed bottom-6 left-1/2 -translate-x-1/2 items-end gap-4 z-50">
-        {widgetVisibility.dockMiniMonitor !== false && (
+      {/* 桌面端迷你监控（独立拖拽胶囊） */}
+      {widgetVisibility.dockMiniMonitor !== false && (
+        <div className="hidden md:block fixed bottom-20 left-1/2 -translate-x-1/2 z-50">
           <SystemMonitor initialMode="mini" size="sm" showLoading={false} />
-        )}
+        </div>
+      )}
+
+      {/* Floating Dock - 桌面端 */}
+      <div className="hidden md:flex fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
         <FloatingDock
           items={filteredDockItems.map((item) => ({
             ...item,
