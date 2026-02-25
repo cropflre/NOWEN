@@ -118,7 +118,7 @@ async function checkUrl(url: string): Promise<{
   }
 }
 
-// POST /api/health-check - 批量检查书签健康状态
+// POST /api/health-check - 批量检查书签健康状态（SSE 流式返回进度）
 // body: { bookmarkIds?: string[] } - 为空则检查全部
 router.post('/', async (req, res) => {
   try {
@@ -134,17 +134,30 @@ router.post('/', async (req, res) => {
     } else {
       bookmarks = queryAll('SELECT id, url, title, favicon, icon, iconUrl, category FROM bookmarks ORDER BY orderIndex ASC')
     }
+
+    // 设置 SSE 头
+    res.setHeader('Content-Type', 'text/event-stream')
+    res.setHeader('Cache-Control', 'no-cache')
+    res.setHeader('Connection', 'keep-alive')
+    res.setHeader('X-Accel-Buffering', 'no')
+    res.flushHeaders()
+
+    const total = bookmarks.length
+    const results: HealthCheckResult[] = []
+    let completed = 0
+
+    // 发送初始进度
+    res.write(`data: ${JSON.stringify({ type: 'start', total })}\n\n`)
     
     // 并发检查，但限制并发数为 5
     const CONCURRENCY = 5
-    const results: HealthCheckResult[] = []
     
     for (let i = 0; i < bookmarks.length; i += CONCURRENCY) {
       const batch = bookmarks.slice(i, i + CONCURRENCY)
       const batchResults = await Promise.all(
         batch.map(async (bookmark) => {
           const check = await checkUrl(bookmark.url)
-          return {
+          const result = {
             bookmarkId: bookmark.id,
             url: bookmark.url,
             title: bookmark.title,
@@ -154,9 +167,14 @@ router.post('/', async (req, res) => {
             category: bookmark.category || undefined,
             ...check,
           } as HealthCheckResult
+          return result
         })
       )
       results.push(...batchResults)
+      completed += batchResults.length
+
+      // 发送进度更新
+      res.write(`data: ${JSON.stringify({ type: 'progress', current: completed, total })}\n\n`)
     }
     
     // 统计摘要
@@ -171,10 +189,18 @@ router.post('/', async (req, res) => {
         : 0,
     }
     
-    res.json({ results, summary })
+    // 发送最终结果
+    res.write(`data: ${JSON.stringify({ type: 'done', results, summary })}\n\n`)
+    res.end()
   } catch (error) {
     console.error('健康检查失败:', error)
-    res.status(500).json({ error: '健康检查失败' })
+    // SSE 错误处理
+    try {
+      res.write(`data: ${JSON.stringify({ type: 'error', error: '健康检查失败' })}\n\n`)
+      res.end()
+    } catch {
+      res.status(500).json({ error: '健康检查失败' })
+    }
   }
 })
 

@@ -21,6 +21,7 @@ import { cn } from '../../lib/utils'
 import {
   HealthCheckResult,
   HealthCheckSummary,
+  HealthCheckProgress,
   healthCheckApi,
 } from '../../lib/api'
 
@@ -49,9 +50,12 @@ export function HealthCheckCard({ onShowToast, onDeleteBookmark }: HealthCheckCa
     setResults([])
     setSummary(null)
     setFilter('all')
+    setProgress({ current: 0, total: 0 })
 
     try {
-      const response = await healthCheckApi.check()
+      const response = await healthCheckApi.check(undefined, (p: HealthCheckProgress) => {
+        setProgress({ current: p.current, total: p.total })
+      })
       setResults(response.results)
       setSummary(response.summary)
       setProgress({ current: response.summary.total, total: response.summary.total })
@@ -170,6 +174,8 @@ export function HealthCheckCard({ onShowToast, onDeleteBookmark }: HealthCheckCa
 
   // 检测中状态
   if (checking) {
+    const percent = progress.total > 0 ? Math.round((progress.current / progress.total) * 100) : 0
+
     return (
       <div className="space-y-6">
         {/* 头部 */}
@@ -183,8 +189,8 @@ export function HealthCheckCard({ onShowToast, onDeleteBookmark }: HealthCheckCa
           </div>
         </div>
 
-        {/* 检测动画 */}
-        <div className="flex flex-col items-center justify-center py-20 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10">
+        {/* 检测动画 + 进度条 */}
+        <div className="flex flex-col items-center justify-center py-16 rounded-2xl bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10">
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
@@ -195,9 +201,25 @@ export function HealthCheckCard({ onShowToast, onDeleteBookmark }: HealthCheckCa
           <p className="text-lg font-medium text-gray-900 dark:text-white mb-2">
             {t('admin.healthCheck.checking')}
           </p>
-          <p className="text-sm text-gray-500 dark:text-white/50">
+          <p className="text-sm text-gray-500 dark:text-white/50 mb-6">
             {t('admin.healthCheck.checking_desc')}
           </p>
+
+          {/* 进度条 */}
+          <div className="w-full max-w-md px-6 space-y-2">
+            <div className="flex items-center justify-between text-xs text-gray-500 dark:text-white/50">
+              <span>{progress.total > 0 ? t('admin.healthCheck.progress_text', { current: progress.current, total: progress.total }) : t('admin.healthCheck.progress_preparing')}</span>
+              <span>{percent}%</span>
+            </div>
+            <div className="h-2.5 rounded-full bg-gray-200 dark:bg-white/10 overflow-hidden">
+              <motion.div
+                className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-500"
+                initial={{ width: 0 }}
+                animate={{ width: `${percent}%` }}
+                transition={{ duration: 0.3, ease: 'easeOut' }}
+              />
+            </div>
+          </div>
         </div>
       </div>
     )

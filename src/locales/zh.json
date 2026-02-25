@@ -198,6 +198,17 @@
       "batch_enrich_done": "抓取完成：{{success}}/{{total}} 成功",
       "batch_enrich_none": "没有需要处理的书签",
       "batch_enrich_error": "抓取失败",
+      "detect_duplicates": "检测重复",
+      "detect_same_domain": "检测同域名",
+      "detect_duplicates_title": "重复书签检测",
+      "detect_same_domain_title": "同域名书签检测",
+      "detect_groups": "{{count}} 组",
+      "detect_selected": "已勾选 {{count}} 个待删除",
+      "detect_delete": "删除选中 ({{count}})",
+      "detect_no_duplicates": "未检测到重复书签",
+      "detect_no_same_domain": "未检测到同域名书签",
+      "detect_keep_one": "每组只保留一项",
+      "detect_keep_one_confirm": "将删除 {{count}} 个重复书签（每组保留最早创建的一个），确定继续？",
       "no_match": "没有匹配的书签",
       "empty": "暂无书签",
       "table": {
@@ -232,7 +243,15 @@
       "deleted": "分类已删除",
       "reordered": "分类排序已更新",
       "delete_confirm": "确定删除分类 \"{{name}}\" 吗？该分类下的书签将变为未分类。",
-      "empty": "暂无分类，点击上方按钮创建"
+      "empty": "暂无分类，点击上方按钮创建",
+      "search": "搜索分类...",
+      "no_match": "没有匹配的分类",
+      "table_icon": "图标",
+      "table_name": "分类名称",
+      "table_count": "书签数",
+      "table_sort": "排序",
+      "batch_delete_confirm": "确定要删除选中的 {{count}} 个分类吗？这些分类下的书签将变为未分类。",
+      "batch_deleted": "已删除 {{count}} 个分类"
     },
     "quotes": {
       "title": "名言管理",
@@ -560,7 +579,9 @@
       "deleted_dead": "已删除 {{count}} 个失效书签",
       "delete_error": "删除失败",
       "delete_confirm_title": "删除失效书签",
-      "delete_confirm_message": "确定要删除 {{count}} 个失效（异常/超时）书签吗？此操作不可撤销。"
+      "delete_confirm_message": "确定要删除 {{count}} 个失效（异常/超时）书签吗？此操作不可撤销。",
+      "progress_text": "已检测 {{current}} / {{total}} 个链接",
+      "progress_preparing": "正在准备检测..."
     }
   }
 }

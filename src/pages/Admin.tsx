@@ -38,6 +38,9 @@ import {
   GripVertical,
   Sparkles,
   X,
+  ScanSearch,
+  Globe,
+  Copy,
 } from 'lucide-react'
 import { Bookmark, Category, CustomIcon } from '../types/bookmark'
 import { cn, presetIcons } from '../lib/utils'
@@ -178,6 +181,129 @@ function SortableCategoryItem({ category, bookmarkCount, onEdit, onDelete, t }: 
   )
 }
 
+// 分类表格行组件（支持拖拽 + 选择）
+interface CategoryTableRowProps {
+  category: Category
+  bookmarkCount: number
+  isSelected: boolean
+  onToggleSelect: () => void
+  onEdit: () => void
+  onDelete: () => void
+  t: (key: string, options?: Record<string, unknown>) => string
+}
+
+function CategoryTableRow({ category, bookmarkCount, isSelected, onToggleSelect, onEdit, onDelete, t }: CategoryTableRowProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: category.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 10 : undefined,
+  }
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className={cn(
+        'transition-all group',
+        isDragging ? 'opacity-50' : '',
+        isSelected && 'bg-[color-mix(in_srgb,var(--color-primary)_8%,transparent)]'
+      )}
+      {...attributes}
+    >
+      {/* Desktop Row */}
+      <div className={cn(
+        'hidden sm:grid grid-cols-[auto_auto_1fr_auto_auto_auto] gap-4 items-center px-5 py-3',
+        !isDragging && 'hover:bg-[var(--color-glass-hover)]'
+      )}>
+        <button
+          onClick={onToggleSelect}
+          className={cn(
+            'w-5 h-5 rounded border flex items-center justify-center transition-all',
+            isSelected ? 'text-white' : ''
+          )}
+          style={{
+            background: isSelected ? 'var(--color-primary)' : 'transparent',
+            borderColor: isSelected ? 'var(--color-primary)' : 'var(--color-border)',
+          }}
+        >
+          {isSelected && <Check className="w-3 h-3" />}
+        </button>
+        <div 
+          className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+          style={{ backgroundColor: (category.color || '#3b82f6') + '20', color: category.color || '#3b82f6' }}
+        >
+          <IconRenderer icon={category.icon} className="w-4 h-4" />
+        </div>
+        <span className="font-medium text-sm truncate" style={{ color: 'var(--color-text-primary)' }}>
+          {category.name}
+        </span>
+        <span className="text-xs px-2 py-1 rounded-md" style={{ background: 'var(--color-bg-tertiary)', color: 'var(--color-text-muted)' }}>
+          {bookmarkCount}
+        </span>
+        <div 
+          {...listeners}
+          style={{ color: 'var(--color-text-muted)' }} 
+          className="cursor-grab active:cursor-grabbing touch-none p-1 rounded-lg hover:bg-[var(--color-glass-hover)]"
+        >
+          <GripVertical className="w-4 h-4" />
+        </div>
+        <div className="flex items-center gap-1 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+          <button onClick={onEdit} className="p-2 rounded-lg hover:bg-[var(--color-glass-hover)] transition-all" style={{ color: 'var(--color-text-muted)' }} title={t('admin.bookmark.edit')}>
+            <Edit2 className="w-4 h-4" />
+          </button>
+          <button onClick={onDelete} className="p-2 rounded-lg hover:text-red-400 hover:bg-red-500/10 transition-all" style={{ color: 'var(--color-text-muted)' }} title={t('admin.bookmark.delete')}>
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile Card */}
+      <div className={cn('sm:hidden flex items-center gap-3 p-3', !isDragging && 'hover:bg-[var(--color-glass-hover)]')}>
+        <button
+          onClick={onToggleSelect}
+          className={cn('w-5 h-5 rounded border flex items-center justify-center transition-all flex-shrink-0', isSelected ? 'text-white' : '')}
+          style={{
+            background: isSelected ? 'var(--color-primary)' : 'transparent',
+            borderColor: isSelected ? 'var(--color-primary)' : 'var(--color-border)',
+          }}
+        >
+          {isSelected && <Check className="w-3 h-3" />}
+        </button>
+        <div {...listeners} style={{ color: 'var(--color-text-muted)' }} className="cursor-grab active:cursor-grabbing touch-none">
+          <GripVertical className="w-4 h-4" />
+        </div>
+        <div 
+          className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+          style={{ backgroundColor: (category.color || '#3b82f6') + '20', color: category.color || '#3b82f6' }}
+        >
+          <IconRenderer icon={category.icon} className="w-4 h-4" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <span className="font-medium text-sm truncate block" style={{ color: 'var(--color-text-primary)' }}>{category.name}</span>
+          <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>{t('admin.bookmark.bookmark_count', { count: bookmarkCount })}</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <button onClick={onEdit} className="p-2 rounded-lg hover:bg-[var(--color-glass-hover)] transition-all" style={{ color: 'var(--color-text-muted)' }}>
+            <Edit2 className="w-4 h-4" />
+          </button>
+          <button onClick={onDelete} className="p-2 rounded-lg hover:text-red-400 hover:bg-red-500/10 transition-all" style={{ color: 'var(--color-text-muted)' }}>
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // 预设颜色
 const presetColors = [
   '#3b82f6', '#8b5cf6', '#ec4899', '#f97316', '#eab308',
@@ -237,6 +363,12 @@ function AdminContent() {
   const [showIconPicker, setShowIconPicker] = useState(false)
   const [adminIconTab, setAdminIconTab] = useState<'preset' | 'iconify'>('preset')
 
+  // 分类管理 - 搜索、分页、批量选择
+  const [catSearchQuery, setCatSearchQuery] = useState('')
+  const [catCurrentPage, setCatCurrentPage] = useState(1)
+  const [catPageSize, setCatPageSize] = useState(DEFAULT_PAGE_SIZE)
+  const [catSelectedIds, setCatSelectedIds] = useState<Set<string>>(new Set())
+
   // 分类拖拽排序
   const categorySensors = useSensors(
     useSensor(PointerSensor, {
@@ -262,7 +394,48 @@ function AdminContent() {
       showToast('success', t('admin.category.reordered'))
     }
   }, [categories, onReorderCategories, showToast, t])
-  
+
+  // 分类筛选 & 分页
+  const filteredCategories = useMemo(() => {
+    if (!catSearchQuery) return categories
+    const q = catSearchQuery.toLowerCase()
+    return categories.filter(c => c.name.toLowerCase().includes(q))
+  }, [categories, catSearchQuery])
+
+  const catTotalPages = Math.max(1, Math.ceil(filteredCategories.length / catPageSize))
+  const catSafePage = Math.min(catCurrentPage, catTotalPages)
+  const paginatedCategories = useMemo(() => {
+    const start = (catSafePage - 1) * catPageSize
+    return filteredCategories.slice(start, start + catPageSize)
+  }, [filteredCategories, catSafePage, catPageSize])
+
+  // 分类批量操作
+  const toggleCatSelect = (id: string) => {
+    setCatSelectedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const catSelectAll = () => {
+    if (catSelectedIds.size === filteredCategories.length && filteredCategories.length > 0) {
+      setCatSelectedIds(new Set())
+    } else {
+      setCatSelectedIds(new Set(filteredCategories.map(c => c.id)))
+    }
+  }
+
+  const deleteCatSelected = () => {
+    if (catSelectedIds.size === 0) return
+    if (confirm(t('admin.category.batch_delete_confirm', { count: catSelectedIds.size }))) {
+      catSelectedIds.forEach(id => onDeleteCategory(id))
+      showToast('success', t('admin.category.batch_deleted', { count: catSelectedIds.size }))
+      setCatSelectedIds(new Set())
+    }
+  }
+
   // 密码修改状态
   const [isChangingPassword, setIsChangingPassword] = useState(false)
   const [passwordError, setPasswordError] = useState('')
@@ -460,6 +633,100 @@ function AdminContent() {
     } catch (err: any) {
       showToast('error', err.message || t('admin.bookmark.batch_enrich_error'))
       setIsEnriching(false)
+    }
+  }
+
+  // ========== 重复/域名检测 ==========
+  type DetectResult = { type: 'duplicate' | 'same-domain'; key: string; bookmarks: Bookmark[] }
+  const [detectResults, setDetectResults] = useState<DetectResult[]>([])
+  const [showDetectModal, setShowDetectModal] = useState(false)
+  const [detectMode, setDetectMode] = useState<'duplicate' | 'same-domain'>('duplicate')
+  const [detectDeleteIds, setDetectDeleteIds] = useState<Set<string>>(new Set())
+
+  const detectDuplicates = () => {
+    const urlMap = new Map<string, Bookmark[]>()
+    bookmarks.forEach(b => {
+      // 归一化 URL：去掉协议、尾部斜杠、www前缀
+      const normalized = b.url.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/+$/, '').toLowerCase()
+      if (!urlMap.has(normalized)) urlMap.set(normalized, [])
+      urlMap.get(normalized)!.push(b)
+    })
+    const results: DetectResult[] = []
+    urlMap.forEach((items, key) => {
+      if (items.length > 1) results.push({ type: 'duplicate', key, bookmarks: items })
+    })
+    setDetectResults(results)
+    setDetectMode('duplicate')
+    setDetectDeleteIds(new Set())
+    if (results.length === 0) {
+      showToast('success', t('admin.bookmark.detect_no_duplicates'))
+    } else {
+      setShowDetectModal(true)
+    }
+  }
+
+  const detectSameDomain = () => {
+    const domainMap = new Map<string, Bookmark[]>()
+    bookmarks.forEach(b => {
+      try {
+        const hostname = new URL(b.url).hostname.replace(/^www\./, '').toLowerCase()
+        if (!domainMap.has(hostname)) domainMap.set(hostname, [])
+        domainMap.get(hostname)!.push(b)
+      } catch { /* skip invalid URLs */ }
+    })
+    const results: DetectResult[] = []
+    domainMap.forEach((items, key) => {
+      if (items.length > 1) results.push({ type: 'same-domain', key, bookmarks: items })
+    })
+    // 按数量降序
+    results.sort((a, b) => b.bookmarks.length - a.bookmarks.length)
+    setDetectResults(results)
+    setDetectMode('same-domain')
+    setDetectDeleteIds(new Set())
+    if (results.length === 0) {
+      showToast('success', t('admin.bookmark.detect_no_same_domain'))
+    } else {
+      setShowDetectModal(true)
+    }
+  }
+
+  const toggleDetectDelete = (id: string) => {
+    setDetectDeleteIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const handleDetectDelete = () => {
+    if (detectDeleteIds.size === 0) return
+    if (confirm(t('admin.bookmark.batch_delete_confirm', { count: detectDeleteIds.size }))) {
+      detectDeleteIds.forEach(id => onDeleteBookmark(id))
+      showToast('success', t('admin.bookmark.deleted_count', { count: detectDeleteIds.size }))
+      setDetectResults(prev =>
+        prev.map(r => ({ ...r, bookmarks: r.bookmarks.filter(b => !detectDeleteIds.has(b.id)) }))
+          .filter(r => r.bookmarks.length > 1)
+      )
+      setDetectDeleteIds(new Set())
+    }
+  }
+
+  // 每组只保留第一项，其余全部删除
+  const handleDetectKeepOne = () => {
+    const toDelete = new Set<string>()
+    detectResults.forEach(group => {
+      // 保留第一个（按 createdAt 最早），删除其余
+      const sorted = [...group.bookmarks].sort((a, b) => a.createdAt - b.createdAt)
+      sorted.slice(1).forEach(b => toDelete.add(b.id))
+    })
+    if (toDelete.size === 0) return
+    if (confirm(t('admin.bookmark.detect_keep_one_confirm', { count: toDelete.size }))) {
+      toDelete.forEach(id => onDeleteBookmark(id))
+      showToast('success', t('admin.bookmark.deleted_count', { count: toDelete.size }))
+      setDetectResults([])
+      setDetectDeleteIds(new Set())
+      setShowDetectModal(false)
     }
   }
 
@@ -768,6 +1035,40 @@ function AdminContent() {
                       ))}
                     </select>
                     <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none" style={{ color: 'var(--color-text-muted)' }} />
+                  </div>
+
+                  {/* 检测按钮 */}
+                  <div className="flex items-center gap-2">
+                    <motion.button
+                      onClick={detectDuplicates}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="flex items-center gap-2 px-3 py-3 rounded-xl text-sm font-medium transition-colors backdrop-blur-sm"
+                      style={{
+                        background: 'var(--color-glass)',
+                        border: '1px solid var(--color-glass-border)',
+                        color: 'var(--color-text-secondary)',
+                      }}
+                      title={t('admin.bookmark.detect_duplicates')}
+                    >
+                      <Copy className="w-4 h-4" />
+                      <span className="hidden lg:inline">{t('admin.bookmark.detect_duplicates')}</span>
+                    </motion.button>
+                    <motion.button
+                      onClick={detectSameDomain}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="flex items-center gap-2 px-3 py-3 rounded-xl text-sm font-medium transition-colors backdrop-blur-sm"
+                      style={{
+                        background: 'var(--color-glass)',
+                        border: '1px solid var(--color-glass-border)',
+                        color: 'var(--color-text-secondary)',
+                      }}
+                      title={t('admin.bookmark.detect_same_domain')}
+                    >
+                      <Globe className="w-4 h-4" />
+                      <span className="hidden lg:inline">{t('admin.bookmark.detect_same_domain')}</span>
+                    </motion.button>
                   </div>
                 </div>
 
@@ -1488,6 +1789,138 @@ function AdminContent() {
                     </div>
                   )}
                 </div>
+
+                {/* 检测结果弹窗 */}
+                <AnimatePresence>
+                  {showDetectModal && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+                      onClick={() => setShowDetectModal(false)}
+                    >
+                      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+                      <motion.div
+                        initial={{ scale: 0.95, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0.95, opacity: 0 }}
+                        onClick={e => e.stopPropagation()}
+                        className="relative w-full max-w-3xl max-h-[80vh] rounded-2xl overflow-hidden flex flex-col"
+                        style={{
+                          background: 'var(--color-bg-secondary)',
+                          border: '1px solid var(--color-glass-border)',
+                        }}
+                      >
+                        {/* Header */}
+                        <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: 'var(--color-glass-border)' }}>
+                          <div className="flex items-center gap-3">
+                            {detectMode === 'duplicate' ? <Copy className="w-5 h-5" style={{ color: 'var(--color-primary)' }} /> : <Globe className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />}
+                            <h3 className="text-lg font-semibold" style={{ color: 'var(--color-text-primary)' }}>
+                              {detectMode === 'duplicate' ? t('admin.bookmark.detect_duplicates_title') : t('admin.bookmark.detect_same_domain_title')}
+                            </h3>
+                            <span className="text-sm px-2 py-0.5 rounded-full" style={{ background: 'color-mix(in srgb, var(--color-primary) 15%, transparent)', color: 'var(--color-primary)' }}>
+                              {t('admin.bookmark.detect_groups', { count: detectResults.length })}
+                            </span>
+                          </div>
+                          <button onClick={() => setShowDetectModal(false)} className="p-2 rounded-lg hover:bg-white/10 transition-colors" style={{ color: 'var(--color-text-muted)' }}>
+                            <X className="w-5 h-5" />
+                          </button>
+                        </div>
+
+                        {/* Body */}
+                        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+                          {detectResults.map((group, gi) => (
+                            <div key={gi} className="rounded-xl overflow-hidden" style={{ background: 'var(--color-glass)', border: '1px solid var(--color-glass-border)' }}>
+                              <div className="px-4 py-2.5 flex items-center gap-2" style={{ background: 'color-mix(in srgb, var(--color-primary) 8%, transparent)' }}>
+                                <ScanSearch className="w-4 h-4" style={{ color: 'var(--color-primary)' }} />
+                                <span className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>{group.key}</span>
+                                <span className="text-xs px-1.5 py-0.5 rounded-md" style={{ background: 'color-mix(in srgb, var(--color-primary) 15%, transparent)', color: 'var(--color-primary)' }}>
+                                  {group.bookmarks.length}
+                                </span>
+                              </div>
+                              <div className="divide-y" style={{ borderColor: 'var(--color-glass-border)' }}>
+                                {group.bookmarks.map(b => (
+                                  <label
+                                    key={b.id}
+                                    className="flex items-center gap-3 px-4 py-2.5 cursor-pointer hover:bg-white/5 transition-colors"
+                                  >
+                                    <input
+                                      type="checkbox"
+                                      checked={detectDeleteIds.has(b.id)}
+                                      onChange={() => toggleDetectDelete(b.id)}
+                                      className="w-4 h-4 rounded accent-red-500 cursor-pointer"
+                                    />
+                                    <div className="flex-1 min-w-0">
+                                      <div className="text-sm font-medium truncate" style={{ color: 'var(--color-text-primary)' }}>
+                                        {b.title || b.url}
+                                      </div>
+                                      <div className="text-xs truncate" style={{ color: 'var(--color-text-muted)' }}>
+                                        {b.url}
+                                      </div>
+                                    </div>
+                                    <span className="text-xs whitespace-nowrap" style={{ color: 'var(--color-text-muted)' }}>
+                                      {categories.find(c => c.id === b.category)?.name || t('admin.bookmark.uncategorized')}
+                                    </span>
+                                  </label>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Footer */}
+                        <div className="flex items-center justify-between px-6 py-4 border-t" style={{ borderColor: 'var(--color-glass-border)' }}>
+                          <span className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+                            {t('admin.bookmark.detect_selected', { count: detectDeleteIds.size })}
+                          </span>
+                          <div className="flex items-center gap-3">
+                            <button
+                              onClick={() => setShowDetectModal(false)}
+                              className="px-4 py-2 rounded-lg text-sm transition-colors"
+                              style={{ color: 'var(--color-text-secondary)' }}
+                            >
+                              {t('common.close')}
+                            </button>
+                            {detectMode === 'duplicate' && detectResults.length > 0 && (
+                              <motion.button
+                                onClick={handleDetectKeepOne}
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                                style={{
+                                  background: 'color-mix(in srgb, var(--color-primary) 15%, transparent)',
+                                  color: 'var(--color-primary)',
+                                }}
+                              >
+                                <Check className="w-4 h-4" />
+                                {t('admin.bookmark.detect_keep_one')}
+                              </motion.button>
+                            )}
+                            <motion.button
+                              onClick={handleDetectDelete}
+                              disabled={detectDeleteIds.size === 0}
+                              whileHover={{ scale: detectDeleteIds.size > 0 ? 1.02 : 1 }}
+                              whileTap={{ scale: detectDeleteIds.size > 0 ? 0.98 : 1 }}
+                              className={cn(
+                                'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors',
+                                detectDeleteIds.size === 0 ? 'opacity-40 cursor-not-allowed' : ''
+                              )}
+                              style={{
+                                background: detectDeleteIds.size > 0 ? 'rgb(239 68 68 / 0.2)' : 'rgb(239 68 68 / 0.1)',
+                                color: detectDeleteIds.size > 0 ? 'rgb(248 113 113)' : 'rgb(248 113 113 / 0.5)',
+                              }}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              {t('admin.bookmark.detect_delete', { count: detectDeleteIds.size })}
+                            </motion.button>
+                          </div>
+                        </div>
+                      </motion.div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
               </motion.div>
             )}
 
@@ -1499,8 +1932,24 @@ function AdminContent() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
               >
-                {/* Add Category Button */}
-                <div className="mb-6">
+                {/* Toolbar */}
+                <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                  {/* Search */}
+                  <div className="relative flex-1">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--color-text-muted)' }} />
+                    <input
+                      type="text"
+                      placeholder={t('admin.category.search')}
+                      value={catSearchQuery}
+                      onChange={e => { setCatSearchQuery(e.target.value); setCatCurrentPage(1) }}
+                      className="w-full pl-11 pr-4 py-3 rounded-xl backdrop-blur-sm focus:outline-none transition-all duration-300"
+                      style={{
+                        background: 'var(--color-glass)',
+                        border: '1px solid var(--color-glass-border)',
+                        color: 'var(--color-text-primary)',
+                      }}
+                    />
+                  </div>
                   <motion.button
                     onClick={() => setShowCategoryForm(true)}
                     whileHover={{ scale: 1.01 }}
@@ -1516,6 +1965,36 @@ function AdminContent() {
                     {t('admin.category.add')}
                   </motion.button>
                 </div>
+
+                {/* Batch Actions */}
+                <AnimatePresence>
+                  {catSelectedIds.size > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="flex flex-wrap items-center gap-3 mb-4 p-4 rounded-xl"
+                      style={{
+                        background: 'color-mix(in srgb, var(--color-primary) 10%, transparent)',
+                        border: '1px solid color-mix(in srgb, var(--color-primary) 20%, transparent)',
+                      }}
+                    >
+                      <span className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+                        {t('admin.bookmark.selected')} <span style={{ color: 'var(--color-primary)' }} className="font-medium">{catSelectedIds.size}</span> {t('admin.bookmark.items')}
+                      </span>
+                      <div className="flex-1" />
+                      <motion.button
+                        onClick={deleteCatSelected}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500/20 text-red-400 text-sm font-medium hover:bg-red-500/30 transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        {t('admin.bookmark.batch_delete')}
+                      </motion.button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 {/* Category Modal */}
                 <AnimatePresence>
@@ -1563,7 +2042,6 @@ function AdminContent() {
                         <div className="p-6 space-y-5">
                           {/* 图标和名称 */}
                           <div className="flex gap-4 items-start">
-                            {/* 图标选择按钮 */}
                             <button
                               onClick={() => setShowIconPicker(!showIconPicker)}
                               className="flex items-center justify-center w-14 h-14 rounded-xl transition-all hover:scale-105 flex-shrink-0"
@@ -1615,7 +2093,6 @@ function AdminContent() {
                                     border: '1px solid var(--color-glass-border)',
                                   }}
                                 >
-                                  {/* Tab 切换 */}
                                   <div className="flex gap-1 mb-3 p-1 rounded-lg" style={{ background: 'var(--color-bg-secondary)' }}>
                                     <button
                                       onClick={() => setAdminIconTab('preset')}
@@ -1739,51 +2216,212 @@ function AdminContent() {
                   )}
                 </AnimatePresence>
 
-                {/* Categories List - 支持拖拽排序 */}
-                <DndContext
-                  sensors={categorySensors}
-                  collisionDetection={closestCenter}
-                  onDragEnd={handleCategoryDragEnd}
+                {/* Categories Table */}
+                <div 
+                  className="rounded-2xl overflow-hidden backdrop-blur-sm"
+                  style={{
+                    background: 'var(--color-glass)',
+                    border: '1px solid var(--color-glass-border)',
+                  }}
                 >
-                  <div className="space-y-2">
-                    {categories.length === 0 ? (
-                      <div 
-                        className="text-center py-12 md:py-16 rounded-2xl"
+                  {/* Table Header */}
+                  <div 
+                    className="hidden sm:grid grid-cols-[auto_auto_1fr_auto_auto_auto] gap-4 px-5 py-4 text-sm font-medium"
+                    style={{
+                      background: 'var(--color-bg-tertiary)',
+                      borderBottom: '1px solid var(--color-glass-border)',
+                      color: 'var(--color-text-muted)',
+                    }}
+                  >
+                    <button
+                      onClick={catSelectAll}
+                      className={cn(
+                        'w-5 h-5 rounded border flex items-center justify-center transition-all',
+                        catSelectedIds.size === filteredCategories.length && filteredCategories.length > 0 ? 'text-white' : ''
+                      )}
+                      style={{
+                        background: catSelectedIds.size === filteredCategories.length && filteredCategories.length > 0 ? 'var(--color-primary)' : 'transparent',
+                        borderColor: catSelectedIds.size === filteredCategories.length && filteredCategories.length > 0 ? 'var(--color-primary)' : 'var(--color-border)',
+                      }}
+                    >
+                      {catSelectedIds.size === filteredCategories.length && filteredCategories.length > 0 && <Check className="w-3 h-3" />}
+                    </button>
+                    <span>{t('admin.category.table_icon')}</span>
+                    <span>{t('admin.category.table_name')}</span>
+                    <span>{t('admin.category.table_count')}</span>
+                    <span>{t('admin.category.table_sort')}</span>
+                    <span>{t('admin.bookmark.table.actions')}</span>
+                  </div>
+
+                  {/* Mobile Header */}
+                  <div 
+                    className="sm:hidden flex items-center justify-between px-4 py-3"
+                    style={{
+                      background: 'var(--color-bg-tertiary)',
+                      borderBottom: '1px solid var(--color-glass-border)',
+                    }}
+                  >
+                    <button
+                      onClick={catSelectAll}
+                      className="flex items-center gap-2 text-sm"
+                      style={{ color: 'var(--color-text-muted)' }}
+                    >
+                      <div
+                        className={cn(
+                          'w-5 h-5 rounded border flex items-center justify-center transition-all',
+                          catSelectedIds.size === filteredCategories.length && filteredCategories.length > 0 ? 'text-white' : ''
+                        )}
                         style={{
-                          background: 'var(--color-glass)',
-                          border: '1px solid var(--color-glass-border)',
+                          background: catSelectedIds.size === filteredCategories.length && filteredCategories.length > 0 ? 'var(--color-primary)' : 'transparent',
+                          borderColor: catSelectedIds.size === filteredCategories.length && filteredCategories.length > 0 ? 'var(--color-primary)' : 'var(--color-border)',
                         }}
                       >
-                        <FolderPlus className="w-10 h-10 md:w-12 md:h-12 mx-auto mb-4" style={{ color: 'var(--color-text-muted)', opacity: 0.3 }} />
-                        <p style={{ color: 'var(--color-text-muted)' }}>{t('admin.category.empty')}</p>
+                        {catSelectedIds.size === filteredCategories.length && filteredCategories.length > 0 && <Check className="w-3 h-3" />}
                       </div>
-                    ) : (
-                      <SortableContext
-                        items={categories.map(c => c.id)}
-                        strategy={verticalListSortingStrategy}
-                      >
-                        {categories.map((category) => {
-                          const count = bookmarks.filter(b => b.category === category.id).length
-                          return (
-                            <SortableCategoryItem
-                              key={category.id}
-                              category={category}
-                              bookmarkCount={count}
-                              onEdit={() => startEditCategory(category)}
-                              onDelete={() => {
-                                if (confirm(t('admin.category.delete_confirm', { name: category.name }))) {
-                                  onDeleteCategory(category.id)
-                                  showToast('success', t('admin.category.deleted'))
-                                }
-                              }}
-                              t={t}
-                            />
-                          )
-                        })}
-                      </SortableContext>
-                    )}
+                      {t('admin.bookmark.select_all')}
+                    </button>
+                    <span className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+                      {filteredCategories.length} {t('admin.bookmark.items')}
+                    </span>
                   </div>
-                </DndContext>
+
+                  {/* Table Body */}
+                  <DndContext
+                    sensors={categorySensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleCategoryDragEnd}
+                  >
+                    <SortableContext items={paginatedCategories.map(c => c.id)} strategy={verticalListSortingStrategy}>
+                      {paginatedCategories.length === 0 ? (
+                        <div className="text-center py-12 md:py-16">
+                          <FolderPlus className="w-10 h-10 md:w-12 md:h-12 mx-auto mb-4" style={{ color: 'var(--color-text-muted)', opacity: 0.3 }} />
+                          <p style={{ color: 'var(--color-text-muted)' }}>
+                            {catSearchQuery ? t('admin.category.no_match') : t('admin.category.empty')}
+                          </p>
+                        </div>
+                      ) : paginatedCategories.map((category) => {
+                        const count = bookmarks.filter(b => b.category === category.id).length
+                        const isSelected = catSelectedIds.has(category.id)
+                        return (
+                          <CategoryTableRow
+                            key={category.id}
+                            category={category}
+                            bookmarkCount={count}
+                            isSelected={isSelected}
+                            onToggleSelect={() => toggleCatSelect(category.id)}
+                            onEdit={() => startEditCategory(category)}
+                            onDelete={() => {
+                              if (confirm(t('admin.category.delete_confirm', { name: category.name }))) {
+                                onDeleteCategory(category.id)
+                                showToast('success', t('admin.category.deleted'))
+                              }
+                            }}
+                            t={t}
+                          />
+                        )
+                      })}
+                    </SortableContext>
+                  </DndContext>
+
+                  {/* Pagination */}
+                  {filteredCategories.length > 0 && (
+                    <div 
+                      className="flex flex-wrap items-center justify-between gap-2 px-5 py-3"
+                      style={{
+                        background: 'var(--color-bg-tertiary)',
+                        borderTop: '1px solid var(--color-glass-border)',
+                      }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                          {filteredCategories.length > catPageSize
+                            ? t('admin.bookmark.pagination_info', { 
+                                start: (catSafePage - 1) * catPageSize + 1, 
+                                end: Math.min(catSafePage * catPageSize, filteredCategories.length), 
+                                total: filteredCategories.length 
+                              })
+                            : t('admin.stats.total_categories', { count: filteredCategories.length })
+                          }
+                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                            {t('admin.bookmark.page_size_label')}
+                          </span>
+                          <select
+                            value={catPageSize}
+                            onChange={e => { setCatPageSize(Number(e.target.value)); setCatCurrentPage(1) }}
+                            className="appearance-none px-2 py-1 rounded-lg text-xs focus:outline-none cursor-pointer transition-colors"
+                            style={{
+                              background: 'var(--color-glass)',
+                              border: '1px solid var(--color-glass-border)',
+                              color: 'var(--color-text-secondary)',
+                            }}
+                          >
+                            {PAGE_SIZE_OPTIONS.map(size => (
+                              <option key={size} value={size} style={{ background: 'var(--color-bg-secondary)' }}>
+                                {size}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                      {catTotalPages > 1 && (
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => setCatCurrentPage(p => Math.max(1, p - 1))}
+                            disabled={catSafePage <= 1}
+                            className="p-1.5 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[var(--color-glass-hover)]"
+                            style={{ color: 'var(--color-text-muted)' }}
+                          >
+                            <ChevronLeft className="w-4 h-4" />
+                          </button>
+                          {(() => {
+                            const pages: (number | 'ellipsis')[] = []
+                            if (catTotalPages <= 7) {
+                              for (let i = 1; i <= catTotalPages; i++) pages.push(i)
+                            } else {
+                              pages.push(1)
+                              if (catSafePage > 3) pages.push('ellipsis')
+                              const start = Math.max(2, catSafePage - 1)
+                              const end = Math.min(catTotalPages - 1, catSafePage + 1)
+                              for (let i = start; i <= end; i++) pages.push(i)
+                              if (catSafePage < catTotalPages - 2) pages.push('ellipsis')
+                              pages.push(catTotalPages)
+                            }
+                            return pages.map((p, idx) =>
+                              p === 'ellipsis' ? (
+                                <span key={`e${idx}`} className="px-1 text-xs" style={{ color: 'var(--color-text-muted)' }}>...</span>
+                              ) : (
+                                <button
+                                  key={p}
+                                  onClick={() => setCatCurrentPage(p)}
+                                  className={cn(
+                                    'min-w-[28px] h-7 rounded-lg text-xs font-medium transition-all',
+                                    catSafePage === p ? 'text-white' : 'hover:bg-[var(--color-glass-hover)]'
+                                  )}
+                                  style={{
+                                    background: catSafePage === p ? 'var(--color-primary)' : 'transparent',
+                                    color: catSafePage === p ? '#fff' : 'var(--color-text-secondary)',
+                                  }}
+                                >
+                                  {p}
+                                </button>
+                              )
+                            )
+                          })()}
+                          <button
+                            onClick={() => setCatCurrentPage(p => Math.min(catTotalPages, p + 1))}
+                            disabled={catSafePage >= catTotalPages}
+                            className="p-1.5 rounded-lg transition-all disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[var(--color-glass-hover)]"
+                            style={{ color: 'var(--color-text-muted)' }}
+                          >
+                            <ChevronRight className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
 
                 {/* Uncategorized Info */}
                 {bookmarks.filter(b => !b.category).length > 0 && (

@@ -852,13 +852,72 @@ export interface HealthCheckResponse {
   summary: HealthCheckSummary
 }
 
-export async function checkBookmarksHealth(bookmarkIds?: string[]): Promise<HealthCheckResponse> {
-  return request<HealthCheckResponse>('/api/health-check', {
+export interface HealthCheckProgress {
+  current: number
+  total: number
+}
+
+export async function checkBookmarksHealth(
+  bookmarkIds?: string[],
+  onProgress?: (progress: HealthCheckProgress) => void
+): Promise<HealthCheckResponse> {
+  const token = localStorage.getItem('admin_token')
+  const res = await fetch(`${API_BASE}/api/health-check`, {
     method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
     body: JSON.stringify({ bookmarkIds }),
-    requireAuth: true,
-    timeout: 300000, // 5 分钟超时（批量检查耗时）
   })
+
+  if (!res.ok) {
+    if (res.status === 401) {
+      localStorage.removeItem('admin_authenticated')
+      localStorage.removeItem('admin_login_time')
+      localStorage.removeItem('admin_token')
+      localStorage.removeItem('admin_username')
+      localStorage.removeItem('admin_require_password_change')
+    }
+    throw new ApiError(res.status, getHttpErrorMessage(res.status))
+  }
+
+  const reader = res.body?.getReader()
+  if (!reader) throw new Error('ReadableStream not supported')
+
+  const decoder = new TextDecoder()
+  let buffer = ''
+  let finalResult: HealthCheckResponse | null = null
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+
+    buffer += decoder.decode(value, { stream: true })
+    const lines = buffer.split('\n')
+    buffer = lines.pop() || ''
+
+    for (const line of lines) {
+      if (!line.startsWith('data: ')) continue
+      try {
+        const data = JSON.parse(line.slice(6))
+        if (data.type === 'start') {
+          onProgress?.({ current: 0, total: data.total })
+        } else if (data.type === 'progress') {
+          onProgress?.({ current: data.current, total: data.total })
+        } else if (data.type === 'done') {
+          finalResult = { results: data.results, summary: data.summary }
+        } else if (data.type === 'error') {
+          throw new Error(data.error)
+        }
+      } catch (e) {
+        if (e instanceof Error && e.message !== 'Unexpected end of JSON input') throw e
+      }
+    }
+  }
+
+  if (!finalResult) throw new Error('Health check returned no results')
+  return finalResult
 }
 
 export const healthCheckApi = {

@@ -840,11 +840,13 @@ function CategorySection({
   onEditCategory: (cat: import("./types/bookmark").Category) => void;
 }) {
   const { t } = useTranslation();
+  const PAGE_SIZE = 100; // 每次点击加载更多的数量
+  const baseShowCount = initialShowCount || 8;
   const needsCollapse = collapseThreshold > 0 && categoryBookmarks.length > collapseThreshold;
-  const [isExpanded, setIsExpanded] = useState(!needsCollapse);
-  const showCount = initialShowCount || 8;
-  const visibleBookmarks = isExpanded ? categoryBookmarks : categoryBookmarks.slice(0, showCount);
-  const hiddenCount = categoryBookmarks.length - showCount;
+  const [displayCount, setDisplayCount] = useState(needsCollapse ? baseShowCount : categoryBookmarks.length);
+  const isFullyExpanded = displayCount >= categoryBookmarks.length;
+  const visibleBookmarks = isFullyExpanded ? categoryBookmarks : categoryBookmarks.slice(0, displayCount);
+  const hiddenCount = categoryBookmarks.length - displayCount;
 
   // 懒渲染：前2个分类立即渲染，后续分类进入视口时才渲染
   const [lazyRef, shouldRender] = useLazyRender('300px');
@@ -919,10 +921,10 @@ function CategorySection({
       )}
 
       {/* 展开/折叠按钮 */}
-      {doRender && needsCollapse && (
+      {doRender && needsCollapse && !isFullyExpanded && (
         <div className="flex justify-center mt-4 relative z-10">
           <button
-            onClick={() => setIsExpanded(!isExpanded)}
+            onClick={() => setDisplayCount(prev => Math.min(prev + PAGE_SIZE, categoryBookmarks.length))}
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all hover:scale-105 active:scale-95 backdrop-blur-sm"
             style={{
               background: 'var(--color-glass)',
@@ -930,17 +932,24 @@ function CategorySection({
               color: 'var(--color-text-secondary)',
             }}
           >
-            {isExpanded ? (
-              <>
-                <ChevronUp className="w-4 h-4" />
-                {t('bookmark.collapse', '收起')}
-              </>
-            ) : (
-              <>
-                <ChevronDown className="w-4 h-4" />
-                {t('bookmark.show_more', '展开更多')} ({hiddenCount})
-              </>
-            )}
+            <ChevronDown className="w-4 h-4" />
+            {t('bookmark.show_more', '展开更多')} ({hiddenCount})
+          </button>
+        </div>
+      )}
+      {doRender && needsCollapse && isFullyExpanded && displayCount !== baseShowCount && (
+        <div className="flex justify-center mt-4 relative z-10">
+          <button
+            onClick={() => setDisplayCount(baseShowCount)}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all hover:scale-105 active:scale-95 backdrop-blur-sm"
+            style={{
+              background: 'var(--color-glass)',
+              border: '1px solid var(--color-glass-border)',
+              color: 'var(--color-text-secondary)',
+            }}
+          >
+            <ChevronUp className="w-4 h-4" />
+            {t('bookmark.collapse', '收起')}
           </button>
         </div>
       )}

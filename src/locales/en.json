@@ -198,6 +198,17 @@
       "batch_enrich_done": "Fetch complete: {{success}}/{{total}} successful",
       "batch_enrich_none": "No bookmarks to process",
       "batch_enrich_error": "Fetch failed",
+      "detect_duplicates": "Detect Duplicates",
+      "detect_same_domain": "Detect Same Domain",
+      "detect_duplicates_title": "Duplicate Bookmark Detection",
+      "detect_same_domain_title": "Same Domain Bookmark Detection",
+      "detect_groups": "{{count}} groups",
+      "detect_selected": "{{count}} selected for deletion",
+      "detect_delete": "Delete Selected ({{count}})",
+      "detect_no_duplicates": "No duplicate bookmarks found",
+      "detect_no_same_domain": "No same-domain bookmarks found",
+      "detect_keep_one": "Keep One Per Group",
+      "detect_keep_one_confirm": "This will delete {{count}} duplicate bookmarks (keeping the earliest created one per group). Continue?",
       "no_match": "No matching bookmarks",
       "empty": "No bookmarks yet",
       "table": {
@@ -232,7 +243,15 @@
       "deleted": "Category deleted",
       "reordered": "Category order updated",
       "delete_confirm": "Are you sure you want to delete category \"{{name}}\"? Bookmarks in this category will become uncategorized.",
-      "empty": "No categories yet, click the button above to create one"
+      "empty": "No categories yet, click the button above to create one",
+      "search": "Search categories...",
+      "no_match": "No matching categories",
+      "table_icon": "Icon",
+      "table_name": "Name",
+      "table_count": "Bookmarks",
+      "table_sort": "Sort",
+      "batch_delete_confirm": "Are you sure you want to delete {{count}} categories? Bookmarks in these categories will become uncategorized.",
+      "batch_deleted": "Deleted {{count}} categories"
     },
     "quotes": {
       "title": "Quote Management",
@@ -560,7 +579,9 @@
       "deleted_dead": "Deleted {{count}} dead bookmarks",
       "delete_error": "Delete failed",
       "delete_confirm_title": "Delete Dead Links",
-      "delete_confirm_message": "Are you sure you want to delete {{count}} dead (error/timeout) bookmarks? This action cannot be undone."
+      "delete_confirm_message": "Are you sure you want to delete {{count}} dead (error/timeout) bookmarks? This action cannot be undone.",
+      "progress_text": "Checked {{current}} / {{total}} links",
+      "progress_preparing": "Preparing to check..."
     }
   }
 }
