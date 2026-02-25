@@ -1,5 +1,5 @@
-import { useRef, useState, useEffect } from 'react'
-import { motion, AnimatePresence, useMotionValue, useSpring, useTransform, useDragControls, PanInfo } from 'framer-motion'
+import { useRef, useState, useEffect, useCallback } from 'react'
+import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'framer-motion'
 import { cn } from '../../lib/utils'
 
 interface DockItemType {
@@ -16,83 +16,98 @@ interface FloatingDockProps {
   className?: string
 }
 
-// 存储位置的 key
 const DESKTOP_DOCK_POSITION_KEY = 'desktop-dock-position'
 
+function loadSavedPosition(): { x: number; y: number } {
+  try {
+    const saved = localStorage.getItem(DESKTOP_DOCK_POSITION_KEY)
+    if (saved) {
+      const { x, y } = JSON.parse(saved)
+      return { x: Number(x) || 0, y: Number(y) || 0 }
+    }
+  } catch (e) {
+    // ignore
+  }
+  return { x: 0, y: 0 }
+}
+
 export function FloatingDock({ items, leftItems, className }: FloatingDockProps) {
-  const mouseX = useMotionValue(Infinity)
+  const hoverMouseX = useMotionValue(Infinity)
   const [isDark, setIsDark] = useState(true)
   const [isDragging, setIsDragging] = useState(false)
-  const [position, setPosition] = useState({ x: 0, y: 0 })
-  const dragControls = useDragControls()
   const containerRef = useRef<HTMLDivElement>(null)
 
-  // 监听主题变化
+  // 用 MotionValue 管理拖拽偏移，不受 React 重渲染影响
+  const initPos = useRef(loadSavedPosition())
+  const dragX = useMotionValue(initPos.current.x)
+  const dragY = useMotionValue(initPos.current.y)
+
   useEffect(() => {
     const observer = new MutationObserver(() => {
       setIsDark(document.documentElement.classList.contains('dark'))
     })
-    
     observer.observe(document.documentElement, {
       attributes: true,
       attributeFilter: ['class'],
     })
-
     setIsDark(document.documentElement.classList.contains('dark'))
-
     return () => observer.disconnect()
   }, [])
 
-  // 从 localStorage 恢复位置
+  // 入场动画：从底部滑入
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem(DESKTOP_DOCK_POSITION_KEY)
-      if (saved) {
-        const { x, y } = JSON.parse(saved)
-        setPosition({ x, y })
-      }
-    } catch (e) {
-      // 忽略解析错误
-    }
-  }, [])
+    const pos = initPos.current
+    dragX.set(pos.x)
+    dragY.set(pos.y + 80)
 
-  // 保存位置到 localStorage
-  const savePosition = (x: number, y: number) => {
+    const delay = pos.x === 0 && pos.y === 0 ? 500 : 0
+    const timer = setTimeout(() => {
+      const startY = dragY.get()
+      const targetY = pos.y
+      const startTime = performance.now()
+      const duration = 500
+
+      function anim(now: number) {
+        const t = Math.min((now - startTime) / duration, 1)
+        const eased = 1 - Math.pow(1 - t, 3)
+        dragY.set(startY + (targetY - startY) * eased)
+        if (t < 1) requestAnimationFrame(anim)
+      }
+      requestAnimationFrame(anim)
+    }, delay)
+    return () => clearTimeout(timer)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const savePosition = useCallback((x: number, y: number) => {
     try {
       localStorage.setItem(DESKTOP_DOCK_POSITION_KEY, JSON.stringify({ x, y }))
-    } catch (e) {
-      // 忽略存储错误
-    }
-  }
+    } catch (e) { /* ignore */ }
+  }, [])
 
-  // 拖拽结束处理
-  const handleDragEnd = (_: any, info: PanInfo) => {
-    // 短暂延迟后重置拖拽状态
+  // drag 结束后 framer-motion 已更新 motionValue，直接读取保存
+  const handleDragEnd = useCallback(() => {
     setTimeout(() => setIsDragging(false), 100)
-    
-    // 计算新位置并保存
-    const newX = position.x + info.offset.x
-    const newY = position.y + info.offset.y
-    setPosition({ x: newX, y: newY })
-    savePosition(newX, newY)
-  }
+    savePosition(dragX.get(), dragY.get())
+  }, [dragX, dragY, savePosition])
 
   return (
     <motion.div
       ref={containerRef}
       className={cn(
-        'fixed bottom-6 left-1/2 z-50 touch-none',
-        'flex items-end gap-2 px-4 py-3 rounded-2xl',
+        'flex items-end gap-2 px-4 py-3 rounded-2xl touch-none',
         isDragging && 'cursor-grabbing',
         !isDragging && 'cursor-grab',
         className
       )}
       style={{
+        // MotionValue 控制偏移，拖拽时直接修改，不会被重渲染重置
+        x: dragX,
+        y: dragY,
         background: isDark ? 'var(--color-glass)' : 'var(--color-glass)',
         backdropFilter: 'blur(24px) saturate(180%)',
         WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-        border: isDragging 
-          ? `2px solid ${isDark ? 'rgba(34, 211, 238, 0.5)' : 'rgba(59, 130, 246, 0.5)'}` 
+        border: isDragging
+          ? `2px solid ${isDark ? 'rgba(34, 211, 238, 0.5)' : 'rgba(59, 130, 246, 0.5)'}`
           : '1px solid var(--color-glass-border)',
         boxShadow: isDragging
           ? (isDark ? '0 0 20px rgba(34, 211, 238, 0.3)' : '0 0 20px rgba(59, 130, 246, 0.3)')
@@ -100,7 +115,6 @@ export function FloatingDock({ items, leftItems, className }: FloatingDockProps)
         transition: 'border 0.2s, box-shadow 0.2s',
       }}
       drag
-      dragControls={dragControls}
       dragMomentum={false}
       dragElastic={0.1}
       dragConstraints={{
@@ -111,42 +125,29 @@ export function FloatingDock({ items, leftItems, className }: FloatingDockProps)
       }}
       onDragStart={() => {
         setIsDragging(true)
-        mouseX.set(Infinity) // 拖拽时禁用放大效果
+        hoverMouseX.set(Infinity)
       }}
       onDragEnd={handleDragEnd}
       onMouseMove={(e) => {
-        if (!isDragging) mouseX.set(e.pageX)
+        if (!isDragging) hoverMouseX.set(e.pageX)
       }}
-      onMouseLeave={() => mouseX.set(Infinity)}
-      initial={{ y: 100, opacity: 0, x: '-50%' }}
-      animate={{ 
-        y: position.y, 
-        opacity: 1, 
-        x: `calc(-50% + ${position.x}px)` 
-      }}
-      transition={{ 
-        delay: position.x === 0 && position.y === 0 ? 0.5 : 0, 
-        type: 'spring', 
-        stiffness: 200, 
-        damping: 20 
-      }}
+      onMouseLeave={() => hoverMouseX.set(Infinity)}
+      initial={false}
       whileDrag={{ scale: 1.02 }}
     >
-      {/* Left Items */}
       {leftItems && leftItems.length > 0 && (
         <>
           {leftItems.map((item) => (
-            <DockItem key={item.id} mouseX={mouseX} isDark={isDark} {...item} />
+            <DockItem key={item.id} mouseX={hoverMouseX} isDark={isDark} {...item} />
           ))}
-          <div 
-            className="w-px h-8 mx-1" 
+          <div
+            className="w-px h-8 mx-1"
             style={{ background: 'var(--color-glass-border)' }}
           />
         </>
       )}
-      {/* Main Items */}
       {items.map((item) => (
-        <DockItem key={item.id} mouseX={mouseX} isDark={isDark} {...item} />
+        <DockItem key={item.id} mouseX={hoverMouseX} isDark={isDark} {...item} />
       ))}
     </motion.div>
   )
@@ -193,7 +194,6 @@ function DockItem({ title, icon, href, onClick, mouseX, isDark }: DockItemProps)
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* Tooltip */}
       <AnimatePresence>
         {isHovered && (
           <motion.div
@@ -211,7 +211,7 @@ function DockItem({ title, icon, href, onClick, mouseX, isDark }: DockItemProps)
             <span className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>
               {title}
             </span>
-            <div 
+            <div
               className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 rotate-45"
               style={{
                 background: 'var(--color-bg-secondary)',
@@ -223,13 +223,12 @@ function DockItem({ title, icon, href, onClick, mouseX, isDark }: DockItemProps)
         )}
       </AnimatePresence>
 
-      {/* Icon Button - 主题自适应样式 */}
       <motion.button
         onClick={handleClick}
         className="w-full h-full rounded-xl flex items-center justify-center cursor-pointer overflow-hidden"
         style={{
-          background: isHovered 
-            ? 'var(--color-glass-hover)' 
+          background: isHovered
+            ? 'var(--color-glass-hover)'
             : 'var(--color-glass)',
           border: `1px solid ${isHovered ? 'var(--color-primary)' : 'var(--color-glass-border)'}`,
           color: isHovered ? 'var(--color-primary)' : 'var(--color-text-secondary)',
@@ -246,33 +245,26 @@ function DockItem({ title, icon, href, onClick, mouseX, isDark }: DockItemProps)
         </motion.div>
       </motion.button>
 
-      {/* 夜间模式：发光效果 */}
       {isDark && (
         <motion.div
           className="absolute inset-0 rounded-xl pointer-events-none"
-          style={{
-            boxShadow: `0 0 25px var(--color-glow)`,
-          }}
+          style={{ boxShadow: `0 0 25px var(--color-glow)` }}
           animate={{ opacity: isHovered ? 0.8 : 0 }}
           transition={{ duration: 0.2 }}
         />
       )}
 
-      {/* 日间模式：悬浮阴影 */}
       {!isDark && (
         <motion.div
           className="absolute inset-0 rounded-xl pointer-events-none"
-          animate={{ 
-            boxShadow: isHovered 
-              ? 'var(--color-shadow-hover)' 
-              : 'none',
+          animate={{
+            boxShadow: isHovered ? 'var(--color-shadow-hover)' : 'none',
             y: isHovered ? -2 : 0,
           }}
           transition={{ duration: 0.2 }}
         />
       )}
 
-      {/* 夜间模式：边框流光效果 */}
       {isDark && isHovered && (
         <motion.div
           className="absolute inset-0 rounded-xl pointer-events-none"

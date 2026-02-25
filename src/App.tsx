@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
-import { DndContext, closestCenter } from "@dnd-kit/core";
+import { DndContext, closestCorners } from "@dnd-kit/core";
 import { SortableContext, rectSortingStrategy } from "@dnd-kit/sortable";
 import {
   Pin,
@@ -154,6 +154,8 @@ function App() {
     sensors,
     handleDragStart,
     handleDragEnd,
+    handleDragCancel,
+    measuringConfig,
   } = useDragAndDrop({ bookmarks, reorderBookmarks });
 
   // 天气数据
@@ -564,7 +566,7 @@ function App() {
           )}
 
           {/* Category Sections - 支持拖拽排序 */}
-          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+          <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragCancel={handleDragCancel} measuring={measuringConfig}>
             {categories.map((category, catIndex) => {
               const categoryBookmarks = bookmarksByCategory[category.id] || [];
               if (categoryBookmarks.length === 0) return null;

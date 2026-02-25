@@ -165,6 +165,8 @@
       "analytics_full": "Visit Analytics",
       "health_check": "Health",
       "health_check_full": "Link Check",
+      "docs": "Docs",
+      "docs_full": "Documentation",
       "settings": "Settings",
       "settings_full": "System Settings"
     },
@@ -175,6 +177,7 @@
       "total_icons": "{{count}} icons",
       "view_analytics": "View visit data and trends",
       "check_health": "Check bookmark link health",
+      "view_docs": "View platform features & guide",
       "manage_config": "Manage your website configuration"
     },
     "bookmark": {
@@ -549,6 +552,107 @@
       "clear_confirm_message": "Are you sure you want to clear all visit records? This action cannot be undone.",
       "clear_success": "Visit records cleared",
       "clear_error": "Failed to clear visit records"
+    },
+    "docs": {
+      "title": "Documentation",
+      "description": "Explore all platform features and usage guide",
+      "feature_count": "features",
+      "tech_stack": "Tech Stack",
+      "tips_title": "💡 Quick Tips",
+      "tip_1": "Right-click a bookmark card on the homepage for quick edit, delete, pin actions",
+      "tip_2": "Drag bookmark cards to reorder, drag categories to adjust display order",
+      "tip_3": "Import bookmarks from Chrome / Edge / Firefox browser exports",
+      "tip_4": "Regularly run Link Check to clean up dead bookmarks and keep your nav tidy",
+      "sections": {
+        "bookmarks": {
+          "title": "Bookmarks",
+          "add_title": "Add Bookmark",
+          "add_desc": "Paste a URL to auto-fetch title, description, and favicon. Supports category assignment and internal URLs",
+          "search_title": "Search & Filter",
+          "search_desc": "Search by title, URL, or description keywords, and filter by category",
+          "sort_title": "Drag to Reorder",
+          "sort_desc": "Drag bookmark cards to reorder on both homepage and admin panel",
+          "batch_title": "Batch Operations",
+          "batch_desc": "Select multiple bookmarks for batch delete or move to category",
+          "enrich_title": "Batch Fetch",
+          "enrich_desc": "Batch fetch bookmark metadata (title/description) and favicons, with option to only fetch missing items",
+          "detect_title": "Duplicate / Same Domain Detection",
+          "detect_desc": "Detect duplicate URLs and same-domain bookmarks with one click. Select to delete or keep only one per group",
+          "internal_title": "Internal URL",
+          "internal_desc": "Set an internal/LAN URL for bookmarks to auto-switch when on the local network",
+          "context_title": "Context Menu",
+          "context_desc": "Right-click bookmark cards on homepage for quick actions (edit, delete, pin, read later, etc.)"
+        },
+        "categories": {
+          "title": "Categories",
+          "manage_title": "Create & Edit",
+          "manage_desc": "Create categories with name, icon, and color. Supports table view and batch deletion",
+          "drag_title": "Drag to Reorder",
+          "drag_desc": "Use drag handles to adjust category display order",
+          "style_title": "Custom Style",
+          "style_desc": "Each category supports custom icons (Lucide presets, Iconify search, custom upload) and colors",
+          "collapse_title": "Auto Collapse",
+          "collapse_desc": "Auto-collapse categories exceeding threshold. Click to expand more, preventing long pages"
+        },
+        "quotes": {
+          "title": "Quotes",
+          "manage_title": "Custom Quotes",
+          "manage_desc": "Add, edit, delete quotes displayed on homepage. Format: content — author《source》",
+          "default_title": "System Default Quotes",
+          "default_desc": "Toggle built-in quote library. When enabled, mixed with custom quotes"
+        },
+        "icons": {
+          "title": "Icons",
+          "custom_title": "Custom Icons",
+          "custom_desc": "Upload local images or enter URL to add custom icons. Supports PNG/JPG/SVG/WebP",
+          "iconify_title": "Online Icon Search",
+          "iconify_desc": "Integrated with Iconify library for searching tens of thousands of open-source icons"
+        },
+        "analytics": {
+          "title": "Analytics",
+          "visit_title": "Data Overview",
+          "visit_desc": "View total visits, today's visits, weekly visits, visited bookmark count and more",
+          "top_title": "Top / Recent Visits",
+          "top_desc": "View popular bookmark rankings and recent visits by time period (all/year/month/week/day)"
+        },
+        "health": {
+          "title": "Link Check",
+          "check_title": "Batch Health Check",
+          "check_desc": "Check accessibility of all bookmark links with real-time progress, status codes, and response times",
+          "dead_title": "Clean Dead Links",
+          "dead_desc": "One-click delete all error/timeout bookmarks to keep your collection clean"
+        },
+        "frontend": {
+          "title": "Frontend Features",
+          "search_title": "Global Search",
+          "search_desc": "Open search box with keyboard shortcut, supports fuzzy search across all bookmarks",
+          "drag_title": "Drag to Reorder",
+          "drag_desc": "Drag bookmark cards directly on homepage to reorder, auto-saved",
+          "monitor_title": "System Monitor",
+          "monitor_desc": "Real-time display of CPU, memory, disk, network, process stats (requires server support)",
+          "theme_title": "Light/Dark Theme",
+          "theme_desc": "Multiple dark/light themes available, with auto-switch by time of day",
+          "i18n_title": "Language Switch",
+          "i18n_desc": "Full Chinese and English bilingual interface support",
+          "readlater_title": "Read Later",
+          "readlater_desc": "Mark bookmarks as read later, shown in a dedicated section on homepage"
+        },
+        "settings": {
+          "title": "Settings",
+          "site_title": "Site Configuration",
+          "site_desc": "Customize site title, icon, beam animation, lite mode, weather, lunar calendar, etc.",
+          "theme_title": "Theme Colors",
+          "theme_desc": "Choose interface color scheme with light/dark mode and auto-switch support",
+          "wallpaper_title": "Wallpaper",
+          "wallpaper_desc": "Upload or enter URL for background wallpaper with adjustable blur and overlay opacity",
+          "widget_title": "Widget Display",
+          "widget_desc": "Control visibility of system monitor, hardware info, network telemetry widgets on homepage",
+          "security_title": "Security",
+          "security_desc": "Change admin username and password to protect backend access",
+          "data_title": "Data Management",
+          "data_desc": "Export/import JSON backups, import browser bookmarks (Chrome/Edge/Firefox), factory reset"
+        }
+      }
     },
     "healthCheck": {
       "title": "Link Health Check",

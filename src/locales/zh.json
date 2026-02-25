@@ -165,6 +165,8 @@
       "analytics_full": "访问统计",
       "health_check": "健康",
       "health_check_full": "链接检查",
+      "docs": "文档",
+      "docs_full": "说明文档",
       "settings": "设置",
       "settings_full": "系统设置"
     },
@@ -175,6 +177,7 @@
       "total_icons": "共 {{count}} 个图标",
       "view_analytics": "查看访问数据与趋势",
       "check_health": "检测书签链接健康状态",
+      "view_docs": "查看平台功能说明",
       "manage_config": "管理您的网站配置"
     },
     "bookmark": {
@@ -549,6 +552,107 @@
       "clear_confirm_message": "确定要清除所有访问记录吗？此操作不可撤销。",
       "clear_success": "访问记录已清除",
       "clear_error": "清除访问记录失败"
+    },
+    "docs": {
+      "title": "说明文档",
+      "description": "了解平台全部功能与使用方法",
+      "feature_count": "项功能",
+      "tech_stack": "技术栈",
+      "tips_title": "💡 快捷提示",
+      "tip_1": "首页右键点击书签卡片可快速编辑、删除、置顶",
+      "tip_2": "拖拽书签卡片可自定义排序，拖拽分类可调整显示顺序",
+      "tip_3": "支持从 Chrome / Edge / Firefox 导入浏览器书签",
+      "tip_4": "定期使用「链接检查」清理失效书签，保持导航整洁",
+      "sections": {
+        "bookmarks": {
+          "title": "书签管理",
+          "add_title": "添加书签",
+          "add_desc": "粘贴链接自动抓取标题、描述、图标等元数据，支持设置分类和内网地址",
+          "search_title": "搜索与筛选",
+          "search_desc": "支持按标题、URL、描述关键词搜索，并可按分类筛选",
+          "sort_title": "拖拽排序",
+          "sort_desc": "在首页和管理后台均可拖拽书签卡片调整顺序",
+          "batch_title": "批量操作",
+          "batch_desc": "批量选中书签进行删除、移动分类等操作",
+          "enrich_title": "批量抓取",
+          "enrich_desc": "批量抓取书签元数据（标题/描述）和网站图标，支持仅抓缺失项",
+          "detect_title": "重复 / 同域名检测",
+          "detect_desc": "一键检测重复 URL 和同域名书签，支持勾选删除或每组只保留一项",
+          "internal_title": "内网地址",
+          "internal_desc": "支持为书签设置内网链接，在局域网环境下自动切换使用",
+          "context_title": "右键菜单",
+          "context_desc": "首页书签卡片支持右键弹出快捷操作（编辑、删除、置顶、稍后读等）"
+        },
+        "categories": {
+          "title": "分类管理",
+          "manage_title": "新建与编辑",
+          "manage_desc": "创建分类并设置名称、图标、颜色，支持表格化管理和批量删除",
+          "drag_title": "拖拽排序",
+          "drag_desc": "通过拖拽手柄调整分类的显示顺序",
+          "style_title": "自定义样式",
+          "style_desc": "每个分类可设置独立图标（支持 Lucide 预设、Iconify 搜索、自定义上传）和颜色",
+          "collapse_title": "自动折叠",
+          "collapse_desc": "当分类书签数量超过阈值时自动折叠，每次点击展开更多，避免页面过长"
+        },
+        "quotes": {
+          "title": "名言管理",
+          "manage_title": "自定义名言",
+          "manage_desc": "添加、编辑、删除首页展示的名言语录，格式：内容 —— 作者《出处》",
+          "default_title": "系统默认名言",
+          "default_desc": "可开关系统内置名言库，开启后与自定义名言混合展示"
+        },
+        "icons": {
+          "title": "图标管理",
+          "custom_title": "自定义图标",
+          "custom_desc": "上传本地图片或输入 URL 添加自定义图标，支持 PNG/JPG/SVG/WebP",
+          "iconify_title": "在线图标搜索",
+          "iconify_desc": "接入 Iconify 图标库，可搜索数万个开源图标直接使用"
+        },
+        "analytics": {
+          "title": "访问统计",
+          "visit_title": "数据概览",
+          "visit_desc": "查看总访问量、今日访问、本周访问、已访问书签数等统计指标",
+          "top_title": "热门 / 最近访问",
+          "top_desc": "按时间维度（全部/年/月/周/日）查看热门书签排行和最近访问记录"
+        },
+        "health": {
+          "title": "链接检查",
+          "check_title": "批量健康检查",
+          "check_desc": "逐一检测所有书签链接的可访问性，显示实时进度、状态码和响应时间",
+          "dead_title": "清理死链",
+          "dead_desc": "一键删除所有异常/超时的失效书签，保持书签库整洁"
+        },
+        "frontend": {
+          "title": "前台功能",
+          "search_title": "全局搜索",
+          "search_desc": "快捷键呼出搜索框，支持模糊搜索全部书签",
+          "drag_title": "拖拽排序",
+          "drag_desc": "在首页直接拖拽书签卡片调整顺序，自动保存",
+          "monitor_title": "系统监控",
+          "monitor_desc": "实时显示 CPU、内存、磁盘、网络、进程等系统状态（需服务端支持）",
+          "theme_title": "日夜主题",
+          "theme_desc": "支持多款深色/浅色主题切换，可设置按时间自动切换",
+          "i18n_title": "中英文切换",
+          "i18n_desc": "界面完整支持中文和英文双语切换",
+          "readlater_title": "稍后阅读",
+          "readlater_desc": "将书签标记为稍后阅读，首页独立展示待读列表"
+        },
+        "settings": {
+          "title": "系统设置",
+          "site_title": "站点配置",
+          "site_desc": "自定义站点标题、图标、光束动画、精简模式、天气、农历等",
+          "theme_title": "主题配色",
+          "theme_desc": "选择界面主题配色方案，支持日间/夜间模式和自动切换",
+          "wallpaper_title": "壁纸设置",
+          "wallpaper_desc": "上传或填入 URL 设置背景壁纸，可调节模糊度和遮罩透明度",
+          "widget_title": "仪表显示",
+          "widget_desc": "控制首页系统监控、硬件信息、网络遥测等仪表组件的显示/隐藏",
+          "security_title": "安全设置",
+          "security_desc": "修改管理员用户名和密码，保护后台安全",
+          "data_title": "数据管理",
+          "data_desc": "导出/导入 JSON 备份，导入浏览器书签（Chrome/Edge/Firefox），恢复出厂设置"
+        }
+      }
     },
     "healthCheck": {
       "title": "链接健康检查",

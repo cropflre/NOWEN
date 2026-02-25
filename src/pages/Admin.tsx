@@ -51,6 +51,7 @@ import { QuotesCard } from '../components/admin/QuotesCard'
 import { SettingsPanel } from '../components/admin/SettingsPanel'
 import { AnalyticsCard } from '../components/admin/AnalyticsCard'
 import { HealthCheckCard } from '../components/admin/HealthCheckCard'
+import { DocsCard } from '../components/admin/DocsCard'
 import { IconRenderer } from '../components/IconRenderer'
 import { IconifyPicker } from '../components/IconifyPicker'
 import { ToastProvider, useToast } from '../components/admin/Toast'
@@ -349,7 +350,7 @@ function AdminContent() {
 
   const { showToast } = useToast()
   const { themeId, isDark, setTheme, toggleDarkMode, autoMode, setAutoMode } = useThemeContext()
-  const [activeTab, setActiveTab] = useState<'bookmarks' | 'categories' | 'quotes' | 'icons' | 'analytics' | 'health-check' | 'settings'>('bookmarks')
+  const [activeTab, setActiveTab] = useState<'bookmarks' | 'categories' | 'quotes' | 'icons' | 'analytics' | 'health-check' | 'docs' | 'settings'>('bookmarks')
   const [searchQuery, setSearchQuery] = useState('')
   const [filterCategory, setFilterCategory] = useState<string>('all')
   const [currentPage, setCurrentPage] = useState(1)
@@ -912,6 +913,7 @@ function AdminContent() {
     icons: t('admin.nav.icons_full'),
     analytics: t('admin.nav.analytics_full'),
     'health-check': t('admin.nav.health_check_full'),
+    docs: t('admin.nav.docs_full'),
     settings: t('admin.nav.settings_full'),
   }
 
@@ -966,6 +968,7 @@ function AdminContent() {
                 {activeTab === 'icons' && t('admin.stats.total_icons', { count: customIcons.length })}
                 {activeTab === 'analytics' && t('admin.stats.view_analytics')}
                 {activeTab === 'health-check' && t('admin.stats.check_health')}
+                {activeTab === 'docs' && t('admin.stats.view_docs')}
                 {activeTab === 'settings' && t('admin.stats.manage_config')}
               </p>
             </div>
@@ -2504,6 +2507,19 @@ function AdminContent() {
                 className="max-w-5xl"
               >
                 <HealthCheckCard onShowToast={showToast} onDeleteBookmark={onDeleteBookmark} />
+              </motion.div>
+            )}
+
+            {/* Docs Tab */}
+            {activeTab === 'docs' && (
+              <motion.div
+                key="docs"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="max-w-5xl"
+              >
+                <DocsCard />
               </motion.div>
             )}
 

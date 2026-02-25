@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import {
   KeyboardSensor,
   PointerSensor,
@@ -6,6 +6,7 @@ import {
   useSensors,
   DragEndEvent,
   DragStartEvent,
+  MeasuringStrategy,
 } from '@dnd-kit/core';
 import { arrayMove, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { Bookmark } from '../types/bookmark';
@@ -15,6 +16,13 @@ interface UseDragAndDropOptions {
   reorderBookmarks: (newOrder: Bookmark[]) => void;
 }
 
+// DndContext measuring 配置：优化网格拖拽测量频率
+export const measuringConfig = {
+  droppable: {
+    strategy: MeasuringStrategy.Always,
+  },
+};
+
 export function useDragAndDrop({ bookmarks, reorderBookmarks }: UseDragAndDropOptions) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const activeBookmark = activeId ? bookmarks.find(b => b.id === activeId) : null;
@@ -23,7 +31,7 @@ export function useDragAndDrop({ bookmarks, reorderBookmarks }: UseDragAndDropOp
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8, // 拖动 8px 后激活
+        distance: 8,
       },
     }),
     useSensor(KeyboardSensor, {
@@ -34,7 +42,6 @@ export function useDragAndDrop({ bookmarks, reorderBookmarks }: UseDragAndDropOp
   // 拖拽开始
   const handleDragStart = useCallback((event: DragStartEvent) => {
     setActiveId(event.active.id as string);
-    // VIBE CODING: 触觉反馈
     if (typeof navigator !== 'undefined' && navigator.vibrate) {
       navigator.vibrate(10);
     }
@@ -53,7 +60,6 @@ export function useDragAndDrop({ bookmarks, reorderBookmarks }: UseDragAndDropOp
         const newOrder = arrayMove(bookmarks, oldIndex, newIndex);
         reorderBookmarks(newOrder);
 
-        // VIBE CODING: 落地触觉反馈
         if (typeof navigator !== 'undefined' && navigator.vibrate) {
           navigator.vibrate([5, 30, 5]);
         }
@@ -61,11 +67,18 @@ export function useDragAndDrop({ bookmarks, reorderBookmarks }: UseDragAndDropOp
     }
   }, [bookmarks, reorderBookmarks]);
 
+  // 拖拽取消
+  const handleDragCancel = useCallback(() => {
+    setActiveId(null);
+  }, []);
+
   return {
     activeId,
     activeBookmark,
     sensors,
     handleDragStart,
     handleDragEnd,
+    handleDragCancel,
+    measuringConfig,
   };
 }
