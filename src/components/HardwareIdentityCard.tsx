@@ -14,7 +14,9 @@ import {
   Monitor,
   Server,
   Terminal,
-  Scan
+  Scan,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '../lib/utils'
@@ -302,10 +304,23 @@ function PostHeader({ onComplete, isMobile, isDark = true }: { onComplete: () =>
 // ============================================
 // 主组件：HardwareIdentityCard
 // ============================================
+const HW_COLLAPSE_KEY = 'nowen-card-collapse-hardware'
+
 export function HardwareIdentityCard({ className }: { className?: string }) {
   const { isDark } = useThemeContext()
   const { t } = useTranslation()
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    try { return localStorage.getItem(HW_COLLAPSE_KEY) === '1' } catch { return false }
+  })
   
+  const toggleCollapse = useCallback(() => {
+    setIsCollapsed(prev => {
+      const next = !prev
+      try { localStorage.setItem(HW_COLLAPSE_KEY, next ? '1' : '0') } catch { /* */ }
+      return next
+    })
+  }, [])
+
   const { data, error, isLoading } = useSWR<StaticSystemInfo>(
     '/api/system/static',
     fetcher,
@@ -402,9 +417,8 @@ export function HardwareIdentityCard({ className }: { className?: string }) {
     <div className={cn(
       "relative overflow-hidden rounded-2xl",
       "backdrop-blur-xl",
-      "h-full",
+      isCollapsed ? "h-auto" : "h-full",
       isMobile ? "p-3" : "p-4",
-      // 日间模式：蓝图风格明亮版
       isDark 
         ? "bg-gradient-to-br from-slate-950/95 via-slate-900/90 to-slate-950/95 border border-cyan-500/10"
         : "bg-gradient-to-br from-slate-50/95 via-white/90 to-slate-50/95 border border-blue-200/50 shadow-xl shadow-blue-500/5",
@@ -445,7 +459,7 @@ export function HardwareIdentityCard({ className }: { className?: string }) {
       
       {/* 标题栏 */}
       <div className={cn(
-        "relative z-10 flex items-center gap-1.5 mb-2",
+        "relative z-10 flex items-center gap-1.5",
         isMobile ? "mb-1.5" : "mb-2"
       )}>
         <div className={cn(
@@ -467,8 +481,43 @@ export function HardwareIdentityCard({ className }: { className?: string }) {
         )}>
           {isMobile ? '/硬件档案' : '/sys/hardware/identity'}
         </span>
+
+        {/* Mini 摘要（收缩时显示） */}
+        {isCollapsed && data && (
+          <div className="flex items-center gap-2 ml-2 flex-1 min-w-0 overflow-hidden">
+            <span className={cn("text-[10px] font-mono truncate", isDark ? "text-cyan-400/70" : "text-blue-600/70")}>
+              {data.cpu?.brand?.split(' ').slice(0, 3).join(' ') || ''}
+            </span>
+            <span className={cn("text-[10px] font-mono", isDark ? "text-white/30" : "text-slate-400")}>|</span>
+            <span className={cn("text-[10px] font-mono", isDark ? "text-green-400/70" : "text-green-600/70")}>
+              {data.memory?.total || ''}
+            </span>
+          </div>
+        )}
+
+        {/* 折叠切换 */}
+        <button
+          onClick={toggleCollapse}
+          className={cn(
+            "ml-auto p-0.5 rounded-md transition-colors z-20",
+            isDark ? "hover:bg-white/10 text-white/40 hover:text-white/70" : "hover:bg-slate-100 text-slate-400 hover:text-slate-600"
+          )}
+          title={isCollapsed ? '展开' : '收缩'}
+        >
+          {isCollapsed ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
+        </button>
       </div>
 
+      {/* 主内容区 - 可折叠 */}
+      <AnimatePresence initial={false}>
+        {!isCollapsed && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+            className="overflow-hidden"
+          >
       {/* 主内容区 */}
       <div className="relative z-10">
         {/* 加载状态 */}
@@ -531,8 +580,12 @@ export function HardwareIdentityCard({ className }: { className?: string }) {
           </div>
         )}
       </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* 底部状态栏 */}
+      {!isCollapsed && (
       <div className={cn(
         "absolute left-3 right-3 flex items-center justify-between",
         isMobile ? "bottom-1.5" : "bottom-2 left-4 right-4"
@@ -561,6 +614,7 @@ export function HardwareIdentityCard({ className }: { className?: string }) {
           </span>
         </div>
       </div>
+      )}
     </div>
   )
 }

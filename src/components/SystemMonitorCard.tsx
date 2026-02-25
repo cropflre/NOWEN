@@ -1,7 +1,7 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence, useSpring, useTransform } from 'framer-motion'
 import useSWR from 'swr'
-import { Activity, HardDrive, Cpu, Database, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Activity, HardDrive, Cpu, Database, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '../lib/utils'
 import { useThemeContext } from '../hooks/useTheme'
@@ -893,21 +893,33 @@ function MultiDiskDisplay({ disks, isDark = true }: { disks: DiskInfo[]; isDark?
 // ============================================
 // 主组件：SystemMonitorCard
 // ============================================
+const SMC_COLLAPSE_KEY = 'nowen-card-collapse-engine'
+
 export function SystemMonitorCard({ className }: { className?: string }) {
   const { isDark } = useThemeContext()
   const { t } = useTranslation()
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    try { return localStorage.getItem(SMC_COLLAPSE_KEY) === '1' } catch { return false }
+  })
   
+  const toggleCollapse = useCallback(() => {
+    setIsCollapsed(prev => {
+      const next = !prev
+      try { localStorage.setItem(SMC_COLLAPSE_KEY, next ? '1' : '0') } catch { /* */ }
+      return next
+    })
+  }, [])
+
   const { data, error, isLoading } = useSWR<PulseData>(
     '/api/system/pulse',
     fetcher,
     {
-      refreshInterval: 3000, // 每 3 秒轮询
+      refreshInterval: 3000,
       revalidateOnFocus: false,
       dedupingInterval: 2000
     }
   )
 
-  // 默认值
   const stats = useMemo(() => ({
     cpuLoad: data?.cpu?.usage ?? 0,
     memUsage: data?.memory?.usedPercent ?? 0,
@@ -919,7 +931,8 @@ export function SystemMonitorCard({ className }: { className?: string }) {
     <div className={cn(
       "relative overflow-hidden rounded-2xl",
       "backdrop-blur-xl",
-      "p-4 h-full min-h-[280px]",
+      "p-4",
+      isCollapsed ? "h-auto" : "h-full min-h-[280px]",
       isDark 
         ? "bg-gradient-to-br from-slate-900/95 via-slate-800/90 to-slate-900/95 border border-white/10"
         : "bg-gradient-to-br from-white/95 via-slate-50/90 to-white/95 border border-slate-200/60 shadow-xl shadow-blue-500/5",
@@ -955,7 +968,7 @@ export function SystemMonitorCard({ className }: { className?: string }) {
       </div>
 
       {/* 标题栏 */}
-      <div className="relative z-10 flex items-center gap-2 mb-4">
+      <div className="relative z-10 flex items-center gap-2 mb-2">
         <div className="animate-spin-slow">
           <Cpu className={cn(
             "w-4 h-4",
@@ -967,18 +980,56 @@ export function SystemMonitorCard({ className }: { className?: string }) {
           isDark ? "text-white/80" : "text-slate-700"
         )}>{t('monitor.engine_room')}</span>
         
-        {/* 状态指示灯 */}
-        <div
-          className="ml-auto w-2 h-2 rounded-full animate-pulse"
-          style={{
-            backgroundColor: error ? '#ef4444' : isLoading ? '#f59e0b' : '#22c55e',
-            boxShadow: isDark ? undefined : `0 0 6px ${error ? '#ef4444' : isLoading ? '#f59e0b' : '#22c55e'}50`
-          }}
-        />
+        {/* Mini 摘要（收缩时显示） */}
+        {isCollapsed && (
+          <div className="flex items-center gap-3 ml-2">
+            <span className={cn(
+              "text-xs font-mono font-bold tabular-nums",
+              stats.cpuLoad > 80 ? "text-red-500" : stats.cpuLoad > 50 ? "text-amber-500" : isDark ? "text-cyan-400" : "text-blue-600"
+            )}>CPU {stats.cpuLoad.toFixed(0)}%</span>
+            <span className={cn(
+              "text-xs font-mono font-bold tabular-nums",
+              stats.memUsage > 80 ? "text-red-500" : stats.memUsage > 50 ? "text-amber-500" : isDark ? "text-purple-400" : "text-purple-600"
+            )}>MEM {stats.memUsage.toFixed(0)}%</span>
+            <span className={cn("text-[10px] font-mono", isDark ? "text-white/40" : "text-slate-400")}>{stats.uptime}</span>
+          </div>
+        )}
+
+        <div className="ml-auto flex items-center gap-2">
+          {/* 状态指示灯 */}
+          <div
+            className="w-2 h-2 rounded-full animate-pulse"
+            style={{
+              backgroundColor: error ? '#ef4444' : isLoading ? '#f59e0b' : '#22c55e',
+              boxShadow: isDark ? undefined : `0 0 6px ${error ? '#ef4444' : isLoading ? '#f59e0b' : '#22c55e'}50`
+            }}
+          />
+          {/* 折叠切换 */}
+          <button
+            onClick={toggleCollapse}
+            className={cn(
+              "p-0.5 rounded-md transition-colors",
+              isDark ? "hover:bg-white/10 text-white/40 hover:text-white/70" : "hover:bg-slate-100 text-slate-400 hover:text-slate-600"
+            )}
+            title={isCollapsed ? '展开' : '收缩'}
+          >
+            {isCollapsed ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
+          </button>
+        </div>
       </div>
 
-      {/* 主内容区 */}
-      <div className="relative z-10 space-y-4">
+      {/* 主内容区 - 可折叠 */}
+      <AnimatePresence initial={false}>
+        {!isCollapsed && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+            className="overflow-hidden"
+          >
+      {/* 主内容 */}
+      <div className="relative z-10 space-y-4 mt-2">
         {/* CPU 心电图 */}
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs">
@@ -1043,6 +1094,9 @@ export function SystemMonitorCard({ className }: { className?: string }) {
           )}>{stats.uptime}</span>
         </motion.div>
       </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* 加载遮罩 */}
       <AnimatePresence>

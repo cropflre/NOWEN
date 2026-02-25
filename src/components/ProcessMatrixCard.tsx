@@ -9,7 +9,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import useSWR, { mutate } from 'swr'
-import { Satellite, Play, Square, RotateCcw, Container, Grip, Loader2 } from 'lucide-react'
+import { Satellite, Play, Square, RotateCcw, Container, Grip, Loader2, ChevronDown, ChevronUp } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '../lib/utils'
 import { useThemeContext } from '../hooks/useTheme'
@@ -443,12 +443,25 @@ function DockerContainerRow({ container, isDark, isDemo, loadingAction, onAction
 // ============================================
 // 主组件：ProcessMatrixCard
 // ============================================
+const PM_COLLAPSE_KEY = 'nowen-card-collapse-process'
+
 export function ProcessMatrixCard({ className }: { className?: string }) {
   const { isDark } = useThemeContext()
   const { t } = useTranslation()
   const isDemo = isDemoMode()
   const [activeTab, setActiveTab] = useState<TabType>('matrix')
   const [actionLoading, setActionLoading] = useState<Record<string, string | null>>({})
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    try { return localStorage.getItem(PM_COLLAPSE_KEY) === '1' } catch { return false }
+  })
+  
+  const toggleCollapse = useCallback(() => {
+    setIsCollapsed(prev => {
+      const next = !prev
+      try { localStorage.setItem(PM_COLLAPSE_KEY, next ? '1' : '0') } catch { /* */ }
+      return next
+    })
+  }, [])
   
   // 获取 Docker 容器列表
   const { data: containers, error: containerError, isLoading: containerLoading } = useSWR<DockerContainer[]>(
@@ -512,7 +525,8 @@ export function ProcessMatrixCard({ className }: { className?: string }) {
     <div className={cn(
       "relative rounded-2xl overflow-hidden",
       "backdrop-blur-xl",
-      "p-3 sm:p-4 h-full min-w-0",
+      "p-3 sm:p-4 min-w-0",
+      isCollapsed ? "h-auto" : "h-full",
       isDark 
         ? "bg-gradient-to-br from-gray-950 via-gray-900 to-black border border-green-500/20"
         : "bg-gradient-to-br from-emerald-50/95 via-white/90 to-emerald-50/95 border border-emerald-200/50 shadow-xl shadow-emerald-500/5",
@@ -579,10 +593,22 @@ export function ProcessMatrixCard({ className }: { className?: string }) {
               )} />
               <span className={isDark ? "text-red-400/70" : "text-red-500"}>{stats.stopped}</span>
             </div>
+            {/* 折叠切换 */}
+            <button
+              onClick={toggleCollapse}
+              className={cn(
+                "p-0.5 rounded-md transition-colors ml-1",
+                isDark ? "hover:bg-white/10 text-white/40 hover:text-white/70" : "hover:bg-slate-100 text-slate-400 hover:text-slate-600"
+              )}
+              title={isCollapsed ? '展开' : '收缩'}
+            >
+              {isCollapsed ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
+            </button>
           </div>
         </div>
 
-        {/* 第二行：Tab 切换 */}
+        {/* 第二行：Tab 切换（仅展开时显示） */}
+        {!isCollapsed && (
         <div className={cn(
           "flex items-center rounded-lg border p-0.5 gap-0.5",
           isDark ? "border-green-500/15 bg-black/20" : "border-emerald-200/40 bg-emerald-50/40"
@@ -607,9 +633,19 @@ export function ProcessMatrixCard({ className }: { className?: string }) {
             </button>
           ))}
         </div>
+        )}
       </div>
 
-      {/* 主内容区 */}
+      {/* 主内容区 - 可折叠 */}
+      <AnimatePresence initial={false}>
+        {!isCollapsed && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+            className="overflow-hidden"
+          >
       <div className="relative z-10">
         {/* 加载状态 */}
         {containerLoading && !containers && (
@@ -736,6 +772,9 @@ export function ProcessMatrixCard({ className }: { className?: string }) {
           )}
         </AnimatePresence>
       </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* 边框发光效果 */}
       <div 

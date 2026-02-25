@@ -3,9 +3,9 @@
  * 视觉风格：心电图监视器 (ECG Monitor)
  * 功能：实时显示网络流量走势图 + IP 地址终端显示
  */
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import useSWR from 'swr'
-import { Wifi, ArrowUp, ArrowDown, Terminal } from 'lucide-react'
+import { Wifi, ArrowUp, ArrowDown, Terminal, ChevronDown, ChevronUp } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '../lib/utils'
 import { useThemeContext } from '../hooks/useTheme'
@@ -318,12 +318,27 @@ function IPTerminal({ ip, iface, isDark = true }: { ip: string; iface: string; i
 // ============================================
 // 主组件：NetworkTelemetryCard
 // ============================================
+import { motion, AnimatePresence } from 'framer-motion'
+
+const NET_COLLAPSE_KEY = 'nowen-card-collapse-network'
+
 export function NetworkTelemetryCard({ className }: { className?: string }) {
   const { isDark } = useThemeContext()
   const { t } = useTranslation()
   const [rxHistory, setRxHistory] = useState<number[]>([])
   const [txHistory, setTxHistory] = useState<number[]>([])
   const maxPoints = 60
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    try { return localStorage.getItem(NET_COLLAPSE_KEY) === '1' } catch { return false }
+  })
+  
+  const toggleCollapse = useCallback(() => {
+    setIsCollapsed(prev => {
+      const next = !prev
+      try { localStorage.setItem(NET_COLLAPSE_KEY, next ? '1' : '0') } catch { /* */ }
+      return next
+    })
+  }, [])
 
   const { data, error, isLoading } = useSWR<DynamicSystemInfo>(
     '/api/system/dynamic',
@@ -382,8 +397,8 @@ export function NetworkTelemetryCard({ className }: { className?: string }) {
     <div className={cn(
       "relative rounded-2xl",
       "backdrop-blur-xl",
-      "p-3 sm:p-4 h-full min-w-0",
-      // 日间模式：星际指挥中心明亮风格
+      "p-3 sm:p-4 min-w-0",
+      isCollapsed ? "h-auto" : "h-full",
       isDark 
         ? "bg-gradient-to-br from-slate-900/95 via-slate-800/80 to-slate-900/95 border border-purple-500/20"
         : "bg-gradient-to-br from-white/95 via-slate-50/90 to-white/95 border border-purple-200/50 shadow-xl shadow-purple-500/5",
@@ -444,6 +459,18 @@ export function NetworkTelemetryCard({ className }: { className?: string }) {
         )}>
           {t('monitor.network_telemetry')}
         </span>
+
+        {/* Mini 摘要（收缩时显示） */}
+        {isCollapsed && (
+          <div className="flex items-center gap-2 ml-1">
+            <span className={cn("text-[10px] font-mono flex items-center gap-0.5", isDark ? "text-cyan-400" : "text-cyan-600")}>
+              <ArrowDown className="w-2.5 h-2.5" />{currentRx}
+            </span>
+            <span className={cn("text-[10px] font-mono flex items-center gap-0.5", isDark ? "text-purple-400" : "text-purple-600")}>
+              <ArrowUp className="w-2.5 h-2.5" />{currentTx}
+            </span>
+          </div>
+        )}
         
         {/* 在线状态 */}
         <div className="ml-auto flex items-center gap-1.5">
@@ -461,8 +488,30 @@ export function NetworkTelemetryCard({ className }: { className?: string }) {
           )}>
             {primaryNetwork?.operstate === 'up' ? 'ONLINE' : 'OFFLINE'}
           </span>
+          {/* 折叠切换 */}
+          <button
+            onClick={toggleCollapse}
+            className={cn(
+              "p-0.5 rounded-md transition-colors",
+              isDark ? "hover:bg-white/10 text-white/40 hover:text-white/70" : "hover:bg-slate-100 text-slate-400 hover:text-slate-600"
+            )}
+            title={isCollapsed ? '展开' : '收缩'}
+          >
+            {isCollapsed ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
+          </button>
         </div>
       </div>
+
+      {/* 主内容 - 可折叠 */}
+      <AnimatePresence initial={false}>
+        {!isCollapsed && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+            className="overflow-hidden"
+          >
 
       {/* 主内容 */}
       <div className="relative z-10">
@@ -591,6 +640,9 @@ export function NetworkTelemetryCard({ className }: { className?: string }) {
           </div>
         )}
       </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* 底部装饰线 */}
       <div

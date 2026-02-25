@@ -1,1 +1,1 @@
-export { queryAll, queryOne, run, booleanize } from './database.js'
+export { queryAll, queryOne, run, runBatch, booleanize } from './database.js'

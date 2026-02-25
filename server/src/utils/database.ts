@@ -23,11 +23,27 @@ export function queryOne(sql: string, params: any[] = []) {
   return results[0] || null
 }
 
-// 执行 SQL（增删改）
+// 执行 SQL（增删改）— 每次执行后写磁盘
 export function run(sql: string, params: any[] = []) {
   const db = getDatabase()
   db.run(sql, params)
   saveDatabase()
+}
+
+// 批量执行 SQL（事务包裹，只写一次磁盘）
+export function runBatch(statements: Array<{ sql: string; params?: any[] }>) {
+  const db = getDatabase()
+  db.run('BEGIN TRANSACTION')
+  try {
+    for (const stmt of statements) {
+      db.run(stmt.sql, stmt.params || [])
+    }
+    db.run('COMMIT')
+    saveDatabase()
+  } catch (err) {
+    db.run('ROLLBACK')
+    throw err
+  }
 }
 
 // 将布尔字段转换

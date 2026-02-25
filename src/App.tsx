@@ -614,9 +614,9 @@ function App() {
         </div>
       )}
 
-      {/* 桌面端迷你监控（独立拖拽胶囊） */}
+      {/* 桌面端迷你监控（独立拖拽胶囊 — 由 MonitorWidget 自主管理 fixed 定位） */}
       {widgetVisibility.dockMiniMonitor !== false && (
-        <div className="hidden md:block fixed bottom-20 left-1/2 -translate-x-1/2 z-50">
+        <div className="hidden md:block">
           <SystemMonitor initialMode="mini" size="sm" showLoading={false} />
         </div>
       )}

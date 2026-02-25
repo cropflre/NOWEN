@@ -309,26 +309,17 @@ export function SystemMonitor({
 
   return (
     <AnimatePresence mode="wait">
-      {/* Mini 模式：可拖拽胶囊（MonitorWidget 自带拖拽） */}
+      {/* Mini 模式：MonitorWidget 自带 fixed 定位 + 拖拽，不包裹额外 motion.div 避免 transform 冲突 */}
       {viewMode === 'mini' && (
-        <motion.div
+        <MonitorWidget 
           key="mini"
-          variants={variants}
-          initial="initial"
-          animate="animate"
-          exit="exit"
-          transition={transition}
-          className={className}
-        >
-          <MonitorWidget 
-            cpu={data.cpu}
-            mem={data.mem}
-            temp={data.temp}
-            status={data.status}
-            size={size}
-            onSwitchMode={handleSwitchMode}
-          />
-        </motion.div>
+          cpu={data.cpu}
+          mem={data.mem}
+          temp={data.temp}
+          status={data.status}
+          size={size}
+          onSwitchMode={handleSwitchMode}
+        />
       )}
 
       {/* Inline 模式：可拖拽状态栏 */}

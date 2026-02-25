@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { generateId } from '../db.js'
-import { queryAll, queryOne, run } from '../utils/index.js'
+import { queryAll, queryOne, run, runBatch } from '../utils/index.js'
 import {
   validateBody,
   validateParams,
@@ -54,10 +54,15 @@ router.patch('/reorder', (req, res) => {
       return res.status(400).json({ error: '无效的请求数据' })
     }
     
-    for (const item of items) {
-      if (item.id && typeof item.orderIndex === 'number') {
-        run('UPDATE categories SET orderIndex = ? WHERE id = ?', [item.orderIndex, item.id])
-      }
+    const statements = items
+      .filter((item: any) => item.id && typeof item.orderIndex === 'number')
+      .map((item: any) => ({
+        sql: 'UPDATE categories SET orderIndex = ? WHERE id = ?',
+        params: [item.orderIndex, item.id],
+      }))
+    
+    if (statements.length > 0) {
+      runBatch(statements)
     }
     
     res.json({ success: true })

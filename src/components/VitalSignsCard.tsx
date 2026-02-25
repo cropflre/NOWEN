@@ -5,9 +5,9 @@
  * 功能：实时显示 CPU 负载和内存使用 + 历史趋势
  */
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { motion, useSpring, useTransform } from 'framer-motion'
+import { motion, AnimatePresence, useSpring, useTransform } from 'framer-motion'
 import useSWR from 'swr'
-import { Activity, Thermometer } from 'lucide-react'
+import { Activity, Thermometer, ChevronDown, ChevronUp } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '../lib/utils'
 import { useThemeContext } from '../hooks/useTheme'
@@ -417,11 +417,24 @@ function LiquidOrb({
 // ============================================
 // 主组件：VitalSignsCard
 // ============================================
+const VS_COLLAPSE_KEY = 'nowen-card-collapse-vital'
+
 export function VitalSignsCard({ className }: { className?: string }) {
   const { isDark } = useThemeContext()
   const { t } = useTranslation()
   const historyRef = useRef<HistoryPoint[]>([])
   const [history, setHistory] = useState<HistoryPoint[]>([])
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    try { return localStorage.getItem(VS_COLLAPSE_KEY) === '1' } catch { return false }
+  })
+  
+  const toggleCollapse = useCallback(() => {
+    setIsCollapsed(prev => {
+      const next = !prev
+      try { localStorage.setItem(VS_COLLAPSE_KEY, next ? '1' : '0') } catch { /* */ }
+      return next
+    })
+  }, [])
   
   const { data, error, isLoading } = useSWR<DynamicSystemInfo>(
     '/api/system/dynamic',
@@ -455,7 +468,8 @@ export function VitalSignsCard({ className }: { className?: string }) {
 
   return (
     <div className={cn(
-      "relative rounded-2xl backdrop-blur-xl p-3 sm:p-4 h-full min-w-0",
+      "relative rounded-2xl backdrop-blur-xl p-3 sm:p-4 min-w-0",
+      isCollapsed ? "h-auto" : "h-full",
       isDark 
         ? "bg-gradient-to-br from-slate-900/95 via-slate-800/80 to-slate-900/95 border border-cyan-500/20"
         : "bg-gradient-to-br from-white/95 via-slate-50/90 to-white/95 border border-cyan-200/50 shadow-xl shadow-cyan-500/5",
@@ -488,14 +502,49 @@ export function VitalSignsCard({ className }: { className?: string }) {
             <span>{Math.round(data.cpu.temperature)}°C</span>
           </div>
         )}
+
+        {/* Mini 摘要（收缩时显示） */}
+        {isCollapsed && data && (
+          <div className="flex items-center gap-3 ml-1">
+            <span className={cn(
+              "text-xs font-mono font-bold tabular-nums",
+              (data.cpu?.load ?? 0) > 80 ? "text-red-500" : (data.cpu?.load ?? 0) > 50 ? "text-amber-500" : isDark ? "text-cyan-400" : "text-cyan-600"
+            )}>CPU {(data.cpu?.load ?? 0).toFixed(0)}%</span>
+            <span className={cn(
+              "text-xs font-mono font-bold tabular-nums",
+              (data.memory?.usagePercent ?? 0) > 80 ? "text-red-500" : (data.memory?.usagePercent ?? 0) > 50 ? "text-amber-500" : isDark ? "text-purple-400" : "text-purple-600"
+            )}>MEM {(data.memory?.usagePercent ?? 0).toFixed(0)}%</span>
+          </div>
+        )}
         
         <div className="ml-auto flex items-center gap-1.5">
           <motion.div className={cn("w-1.5 h-1.5 rounded-full", isDark ? "bg-green-400" : "bg-green-500")}
             animate={{ scale: [1, 1.3, 1], opacity: [0.7, 1, 0.7] }} transition={{ duration: 1.5, repeat: Infinity }} />
           <span className={cn("text-[10px] font-mono", isDark ? "text-white/40" : "text-slate-400")}>LIVE</span>
+          {/* 折叠切换 */}
+          <button
+            onClick={toggleCollapse}
+            className={cn(
+              "p-0.5 rounded-md transition-colors",
+              isDark ? "hover:bg-white/10 text-white/40 hover:text-white/70" : "hover:bg-slate-100 text-slate-400 hover:text-slate-600"
+            )}
+            title={isCollapsed ? '展开' : '收缩'}
+          >
+            {isCollapsed ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
+          </button>
         </div>
       </div>
 
+      {/* 主内容 - 可折叠 */}
+      <AnimatePresence initial={false}>
+        {!isCollapsed && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+            className="overflow-hidden"
+          >
       {/* 主内容 */}
       <div className="relative z-10">
         {isLoading && !data && (
@@ -561,6 +610,9 @@ export function VitalSignsCard({ className }: { className?: string }) {
           </div>
         )}
       </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* 底部装饰 */}
       <div className={cn("absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent to-transparent animate-pulse",

@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express'
 import { generateId } from '../db.js'
-import { queryAll, queryOne, run, booleanize } from '../utils/index.js'
+import { queryAll, queryOne, run, runBatch, booleanize } from '../utils/index.js'
 import {
   validateBody,
   validateParams,
@@ -137,9 +137,10 @@ router.patch('/reorder', validateBody(reorderBookmarksSchema), (req, res) => {
   try {
     const { items } = req.body
     
-    for (const item of items) {
-      run('UPDATE bookmarks SET orderIndex = ? WHERE id = ?', [item.orderIndex, item.id])
-    }
+    runBatch(items.map((item: { id: string; orderIndex: number }) => ({
+      sql: 'UPDATE bookmarks SET orderIndex = ? WHERE id = ?',
+      params: [item.orderIndex, item.id],
+    })))
     
     res.json({ success: true })
   } catch (error) {
