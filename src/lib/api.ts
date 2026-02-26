@@ -245,14 +245,14 @@ export async function createBookmark(data: CreateBookmarkParams): Promise<Bookma
 }
 
 export async function updateBookmark(id: string, data: UpdateBookmarkParams): Promise<Bookmark> {
-  return request<Bookmark>(`/api/bookmarks/${id}`, {
+  return request<Bookmark>(`/api/bookmarks/${encodeURIComponent(id)}`, {
     method: 'PATCH',
     body: JSON.stringify(data),
   })
 }
 
 export async function deleteBookmark(id: string): Promise<void> {
-  return request<void>(`/api/bookmarks/${id}`, {
+  return request<void>(`/api/bookmarks/${encodeURIComponent(id)}`, {
     method: 'DELETE',
   })
 }
@@ -278,14 +278,14 @@ export async function createCategory(data: CreateCategoryParams): Promise<Catego
 }
 
 export async function updateCategory(id: string, data: UpdateCategoryParams): Promise<Category> {
-  return request<Category>(`/api/categories/${id}`, {
+  return request<Category>(`/api/categories/${encodeURIComponent(id)}`, {
     method: 'PATCH',
     body: JSON.stringify(data),
   })
 }
 
 export async function deleteCategory(id: string): Promise<void> {
-  return request<void>(`/api/categories/${id}`, {
+  return request<void>(`/api/categories/${encodeURIComponent(id)}`, {
     method: 'DELETE',
   })
 }
