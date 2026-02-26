@@ -1100,19 +1100,22 @@ server {
 | ------ | -------------------------- | ---- | ------------ |
 | GET    | `/api/bookmarks`           | ❌   | 获取所有书签 |
 | GET    | `/api/bookmarks/paginated` | ❌   | 分页获取书签 |
-| POST   | `/api/bookmarks`           | ❌   | 创建书签     |
-| PATCH  | `/api/bookmarks/:id`       | ❌   | 更新书签     |
-| DELETE | `/api/bookmarks/:id`       | ❌   | 删除书签     |
-| PATCH  | `/api/bookmarks/reorder`   | ❌   | 重排序书签   |
+| POST   | `/api/bookmarks`           | ✅   | 创建书签     |
+| PATCH  | `/api/bookmarks/:id`       | ✅   | 更新书签     |
+| DELETE | `/api/bookmarks/:id`       | ✅   | 删除书签     |
+| PATCH  | `/api/bookmarks/reorder`   | ✅   | 重排序书签   |
+| PATCH  | `/api/bookmarks/tags/rename` | ✅ | 重命名标签   |
+| DELETE | `/api/bookmarks/tags/:name`  | ✅ | 删除标签     |
 
 ### 分类 API
 
-| 方法   | 路径                  | 认证 | 说明         |
-| ------ | --------------------- | ---- | ------------ |
-| GET    | `/api/categories`     | ❌   | 获取所有分类 |
-| POST   | `/api/categories`     | ❌   | 创建分类     |
-| PATCH  | `/api/categories/:id` | ❌   | 更新分类     |
-| DELETE | `/api/categories/:id` | ❌   | 删除分类     |
+| 方法   | 路径                     | 认证 | 说明         |
+| ------ | ------------------------ | ---- | ------------ |
+| GET    | `/api/categories`        | ❌   | 获取所有分类 |
+| POST   | `/api/categories`        | ✅   | 创建分类     |
+| PATCH  | `/api/categories/:id`    | ✅   | 更新分类     |
+| DELETE | `/api/categories/:id`    | ✅   | 删除分类     |
+| PATCH  | `/api/categories/reorder`| ✅   | 重排序分类   |
 
 ### 名言 API
 
@@ -1434,6 +1437,26 @@ docker-compose up -d
   - 分类区域和置顶区域卡片均展示标签
   - 最多显示 3 个标签，超出显示 +N
 
+#### 🔒 安全增强
+
+- **书签/分类 API 认证保护**：所有写操作（POST/PATCH/DELETE）均需登录认证
+  - 后端 10 个路由添加 authMiddleware（书签 6 个 + 分类 4 个）
+  - 前端 10 个 API 函数添加 requireAuth，GET 读取接口保持公开
+- **前端权限控制**：未登录用户仅可浏览，写操作入口全部隐藏
+  - 隐藏 Dock「添加书签」和「AI 助手」按钮
+  - 隐藏分类标题旁的编辑按钮（铅笔图标）
+  - 隐藏空状态页「添加第一个书签」按钮
+  - 禁用 Ctrl+N（新增书签）和 Ctrl+J（AI 助手）快捷键
+  - 禁止未登录用户拖拽排序书签
+
+#### 🐛 Bug 修复
+
+- 修复 AI 智能标签存储格式不一致导致显示为 `#["Google"]` 的问题
+- 修复导入备份时 tags 字段类型校验失败（兼容 string 和 array 两种格式）
+- 修复导出 HTML 再导入时所有书签归到站点名分类的问题（跳过 PERSONAL_TOOLBAR_FOLDER 层级）
+- 修复新增书签成功后页面未刷新的问题（保存后自动调用 refreshData）
+- 修复 DndContext sensors 数组大小变化导致 React 警告的问题
+
 ### v0.1.9 (2026-02-25)
 
 #### ✨ 新功能
@@ -1636,6 +1659,8 @@ docker-compose up -d
 - 后台管理页面增加二次登录验证
 - 强制密码修改页面增加登录状态检查
 - 未登录用户无法进入后台管理区域
+- 书签/分类写操作 API 均需登录认证
+- 未登录时隐藏添加书签、编辑分类、AI 助手等操作入口
 
 #### 🐛 Bug 修复
 

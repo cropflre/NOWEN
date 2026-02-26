@@ -613,19 +613,22 @@ A: Ensure `privileged: true` is set and `/sys` is mounted. Temperature node path
 | ------ | -------------------------- | ---- | ----------------------- |
 | GET    | `/api/bookmarks`           | ❌   | Get all bookmarks       |
 | GET    | `/api/bookmarks/paginated` | ❌   | Get paginated bookmarks |
-| POST   | `/api/bookmarks`           | ❌   | Create bookmark         |
-| PATCH  | `/api/bookmarks/:id`       | ❌   | Update bookmark         |
-| DELETE | `/api/bookmarks/:id`       | ❌   | Delete bookmark         |
-| PATCH  | `/api/bookmarks/reorder`   | ❌   | Reorder bookmarks       |
+| POST   | `/api/bookmarks`           | ✅   | Create bookmark         |
+| PATCH  | `/api/bookmarks/:id`       | ✅   | Update bookmark         |
+| DELETE | `/api/bookmarks/:id`       | ✅   | Delete bookmark         |
+| PATCH  | `/api/bookmarks/reorder`   | ✅   | Reorder bookmarks       |
+| PATCH  | `/api/bookmarks/tags/rename` | ✅ | Rename tag              |
+| DELETE | `/api/bookmarks/tags/:name`  | ✅ | Delete tag              |
 
 ### Categories API
 
-| Method | Path                  | Auth | Description        |
-| ------ | --------------------- | ---- | ------------------ |
-| GET    | `/api/categories`     | ❌   | Get all categories |
-| POST   | `/api/categories`     | ❌   | Create category    |
-| PATCH  | `/api/categories/:id` | ❌   | Update category    |
-| DELETE | `/api/categories/:id` | ❌   | Delete category    |
+| Method | Path                     | Auth | Description        |
+| ------ | ------------------------ | ---- | ------------------ |
+| GET    | `/api/categories`        | ❌   | Get all categories |
+| POST   | `/api/categories`        | ✅   | Create category    |
+| PATCH  | `/api/categories/:id`    | ✅   | Update category    |
+| DELETE | `/api/categories/:id`    | ✅   | Delete category    |
+| PATCH  | `/api/categories/reorder`| ✅   | Reorder categories |
 
 ### Admin API
 
@@ -761,6 +764,26 @@ A: Admin → System Settings → Data Management → Export Backup, or copy `ser
   - 8 soft color variations based on tag name hash (blue/green/amber/red/violet/pink/cyan/lime)
   - Tags shown on both category and pinned bookmark cards
   - Shows up to 3 tags with +N overflow indicator
+
+#### 🔒 Security Enhancements
+
+- **Bookmark/Category API Authentication**: All write operations (POST/PATCH/DELETE) now require login
+  - 10 backend routes protected with authMiddleware (6 bookmark + 4 category)
+  - 10 frontend API functions added requireAuth, GET endpoints remain public
+- **Frontend Permission Control**: Unauthenticated users can only browse, all write entry points hidden
+  - Hide Dock "Add Bookmark" and "AI Assistant" buttons
+  - Hide category title edit button (pencil icon)
+  - Hide empty state "Add First Bookmark" button
+  - Disable Ctrl+N (add bookmark) and Ctrl+J (AI assistant) shortcuts
+  - Disable bookmark drag-and-drop sorting for unauthenticated users
+
+#### 🐛 Bug Fixes
+
+- Fixed AI smart tags storage format inconsistency causing display as `#["Google"]`
+- Fixed import backup tags field type validation failure (compatible with both string and array formats)
+- Fixed HTML export then import putting all bookmarks under site name category (skip PERSONAL_TOOLBAR_FOLDER level)
+- Fixed page not refreshing after successfully adding a bookmark (auto-call refreshData after save)
+- Fixed DndContext sensors array size change causing React warning
 
 ### v0.1.9 (2026-02-25)
 
@@ -947,6 +970,8 @@ A: Admin → System Settings → Data Management → Export Backup, or copy `ser
 
 - Admin page secondary login verification
 - Force password change page login state check
+- Bookmark/category write API endpoints require authentication
+- Hide add bookmark, edit category, and AI assistant entry points when not logged in
 
 #### 🐛 Bug Fixes
 
