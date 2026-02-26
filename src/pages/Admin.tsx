@@ -38,6 +38,7 @@ import {
   ChevronRight,
   GripVertical,
   Sparkles,
+  Wand2,
   X,
   ScanSearch,
   Globe,
@@ -649,6 +650,7 @@ function AdminContent() {
   // AI 状态检查
   const [aiConfigured, setAiConfigured] = useState<boolean | null>(null)
   const [isAiTagging, setIsAiTagging] = useState(false)
+  const [isAiClassifying, setIsAiClassifying] = useState(false)
 
   useEffect(() => {
     aiApi.status().then(s => setAiConfigured(s.configured)).catch(() => setAiConfigured(false))
@@ -692,6 +694,54 @@ function AdminContent() {
     } catch (err: any) {
       showToast('error', err.message || t('admin.bookmark.batch_ai_tags_error'))
       setIsAiTagging(false)
+    }
+  }
+
+  // 批量 AI 智能分类
+  const batchAiClassify = async () => {
+    const ids = Array.from(selectedIds)
+    if (ids.length === 0 || !aiConfigured) return
+
+    setIsAiClassifying(true)
+    try {
+      const result = await aiApi.batchClassify(ids)
+      if (result.processing > 0) {
+        showToast('info', t('admin.bookmark.batch_ai_classify_start', { count: result.processing }))
+        setSelectedIds(new Set())
+
+        const pollInterval = setInterval(async () => {
+          try {
+            const status = await aiApi.batchClassifyStatus()
+            if (!status.running) {
+              clearInterval(pollInterval)
+              setIsAiClassifying(false)
+              await refreshData()
+              const msg = status.newCategories.length > 0
+                ? t('admin.bookmark.batch_ai_classify_done_with_new', {
+                    success: status.completed - status.failed,
+                    total: status.total,
+                    newCount: status.newCategories.length,
+                    newNames: status.newCategories.join('、'),
+                  })
+                : t('admin.bookmark.batch_ai_classify_done', {
+                    success: status.completed - status.failed,
+                    total: status.total,
+                  })
+              showToast('success', msg)
+            }
+          } catch {
+            clearInterval(pollInterval)
+            setIsAiClassifying(false)
+          }
+        }, 2000)
+        setTimeout(() => { clearInterval(pollInterval); setIsAiClassifying(false) }, 300000)
+      } else {
+        showToast('info', t('admin.bookmark.batch_enrich_none'))
+        setIsAiClassifying(false)
+      }
+    } catch (err: any) {
+      showToast('error', err.message || t('admin.bookmark.batch_ai_classify_error'))
+      setIsAiClassifying(false)
     }
   }
 
@@ -1239,6 +1289,46 @@ function AdminContent() {
                         {/* AI 未配置时 hover 提示 */}
                         {!aiConfigured && (
                           <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 rounded-lg text-xs whitespace-nowrap opacity-0 group-hover/ai:opacity-100 transition-opacity pointer-events-none z-10"
+                            style={{
+                              background: 'var(--color-bg-secondary)',
+                              border: '1px solid var(--color-glass-border)',
+                              color: 'var(--color-text-secondary)',
+                              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                            }}
+                          >
+                            {t('admin.bookmark.batch_ai_tags_need_config')}
+                          </div>
+                        )}
+                      </div>
+                      {/* AI 智能分类 */}
+                      <div className="relative group/aiclassify">
+                        <motion.button
+                          onClick={batchAiClassify}
+                          disabled={!aiConfigured || isAiClassifying}
+                          whileHover={aiConfigured ? { scale: 1.02 } : {}}
+                          whileTap={aiConfigured ? { scale: 0.98 } : {}}
+                          className={cn(
+                            'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors',
+                            aiConfigured
+                              ? 'text-blue-400 hover:bg-blue-500/20'
+                              : 'opacity-40 cursor-not-allowed'
+                          )}
+                          style={{
+                            background: aiConfigured
+                              ? 'color-mix(in srgb, rgb(59,130,246) 15%, transparent)'
+                              : 'color-mix(in srgb, var(--color-text-muted) 10%, transparent)',
+                            border: aiConfigured
+                              ? '1px solid color-mix(in srgb, rgb(59,130,246) 30%, transparent)'
+                              : '1px solid color-mix(in srgb, var(--color-text-muted) 20%, transparent)',
+                          }}
+                        >
+                          <Wand2 className={cn('w-4 h-4', isAiClassifying && 'animate-pulse')} />
+                          <span className="hidden lg:inline">
+                            {isAiClassifying ? t('admin.bookmark.batch_ai_classify_loading') : t('admin.bookmark.batch_ai_classify')}
+                          </span>
+                        </motion.button>
+                        {!aiConfigured && (
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 rounded-lg text-xs whitespace-nowrap opacity-0 group-hover/aiclassify:opacity-100 transition-opacity pointer-events-none z-10"
                             style={{
                               background: 'var(--color-bg-secondary)',
                               border: '1px solid var(--color-glass-border)',

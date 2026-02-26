@@ -469,6 +469,28 @@ export async function getAiBatchTagsStatus(): Promise<AiBatchTagsStatus> {
   return request<AiBatchTagsStatus>('/api/ai/batch-tags-status', { requireAuth: true })
 }
 
+// AI 批量智能分类
+export interface AiBatchClassifyStatus {
+  running: boolean
+  total: number
+  completed: number
+  failed: number
+  current: string
+  newCategories: string[]
+}
+
+export async function aiBatchClassify(ids: string[]): Promise<{ success: boolean; processing: number }> {
+  return request<{ success: boolean; processing: number }>('/api/ai/batch-classify', {
+    method: 'POST',
+    body: JSON.stringify({ ids }),
+    requireAuth: true,
+  })
+}
+
+export async function getAiBatchClassifyStatus(): Promise<AiBatchClassifyStatus> {
+  return request<AiBatchClassifyStatus>('/api/ai/batch-classify-status', { requireAuth: true })
+}
+
 export const aiApi = {
   status: getAiStatus,
   categorize: aiCategorize,
@@ -478,6 +500,8 @@ export const aiApi = {
   chat: aiChat,
   batchTags: aiBatchTags,
   batchTagsStatus: getAiBatchTagsStatus,
+  batchClassify: aiBatchClassify,
+  batchClassifyStatus: getAiBatchClassifyStatus,
 } as const
 
 // ========== 演示模式判断 ==========

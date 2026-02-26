@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import crypto from 'crypto'
 import { z } from 'zod'
 import { validateBody } from '../schemas.js'
 import { aiCategorize, aiChat, aiTestConnection, isAiConfigured, getAiFullStatus } from '../services/ai.js'
@@ -212,6 +213,153 @@ router.post('/batch-tags', authMiddleware, async (req, res) => {
 // GET /api/ai/batch-tags-status - 查询批量 AI 标签进度
 router.get('/batch-tags-status', authMiddleware, (_req, res) => {
   res.json(batchTagsStatus)
+})
+
+// POST /api/ai/batch-classify - 批量 AI 智能分类（异步处理）
+const batchClassifyStatus = {
+  running: false,
+  total: 0,
+  completed: 0,
+  failed: 0,
+  current: '',
+  newCategories: [] as string[],
+}
+
+router.post('/batch-classify', authMiddleware, async (req, res) => {
+  if (!isAiConfigured()) {
+    return res.status(503).json({ error: 'AI 服务未配置。请在后台设置中配置 AI 参数。' })
+  }
+
+  const { ids } = req.body as { ids: string[] }
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return res.status(400).json({ error: '请提供书签 ID 列表' })
+  }
+
+  if (batchClassifyStatus.running) {
+    return res.status(409).json({ error: '已有 AI 分类任务进行中，请稍后再试' })
+  }
+
+  const targetBookmarks = ids
+    .map(id => queryOne('SELECT id, url, title, description, tags, category FROM bookmarks WHERE id = ?', [id]) as any)
+    .filter(Boolean)
+
+  if (targetBookmarks.length === 0) {
+    return res.json({ success: true, processing: 0 })
+  }
+
+  batchClassifyStatus.running = true
+  batchClassifyStatus.total = targetBookmarks.length
+  batchClassifyStatus.completed = 0
+  batchClassifyStatus.failed = 0
+  batchClassifyStatus.current = ''
+  batchClassifyStatus.newCategories = []
+
+  const categories = queryAll('SELECT id, name FROM categories ORDER BY orderIndex ASC')
+  const existingCategories = categories.map((c: any) => c.name)
+  const categoryMap = new Map<string, string>(categories.map((c: any) => [c.name, c.id]))
+
+  ;(async () => {
+    const CONCURRENCY = 2
+    let index = 0
+    const db = getDatabase()
+
+    async function processNext() {
+      while (index < targetBookmarks.length) {
+        const i = index++
+        const bm = targetBookmarks[i]
+        batchClassifyStatus.current = bm.title || bm.url
+
+        try {
+          const result = await aiCategorize({
+            url: bm.url,
+            title: bm.title,
+            description: bm.description || undefined,
+            existingCategories: [...existingCategories, ...batchClassifyStatus.newCategories],
+          })
+
+          let categoryId: string | null = null
+          const now = new Date().toISOString()
+
+          if (result.isNewCategory) {
+            // 检查是否在本批次中已创建
+            if (categoryMap.has(result.category)) {
+              categoryId = categoryMap.get(result.category)!
+            } else {
+              // 创建新分类
+              const newId = crypto.randomUUID()
+              const maxOrder = queryOne('SELECT MAX(orderIndex) as m FROM categories') as any
+              const orderIndex = (maxOrder?.m ?? -1) + 1
+              db.run(
+                'INSERT INTO categories (id, name, orderIndex) VALUES (?, ?, ?)',
+                [newId, result.category, orderIndex]
+              )
+              categoryId = newId
+              categoryMap.set(result.category, newId)
+              existingCategories.push(result.category)
+              batchClassifyStatus.newCategories.push(result.category)
+            }
+          } else {
+            categoryId = categoryMap.get(result.category) || null
+          }
+
+          if (categoryId) {
+            db.run(
+              'UPDATE bookmarks SET category = ?, updatedAt = ? WHERE id = ?',
+              [categoryId, now, bm.id]
+            )
+          }
+
+          // 同时更新标签和描述（与 batch-tags 一致）
+          if (result.tags && result.tags.length > 0) {
+            let existingTags: string[] = []
+            if (bm.tags) {
+              try {
+                const parsed = JSON.parse(bm.tags)
+                existingTags = Array.isArray(parsed) ? parsed : []
+              } catch {
+                existingTags = bm.tags.split(',').map((t: string) => t.trim()).filter(Boolean)
+              }
+            }
+            const merged = [...new Set([...existingTags, ...result.tags])]
+            db.run(
+              'UPDATE bookmarks SET tags = ?, updatedAt = ? WHERE id = ?',
+              [merged.filter(Boolean).join(','), now, bm.id]
+            )
+          }
+
+          if (!bm.description && result.summary) {
+            db.run('UPDATE bookmarks SET description = ? WHERE id = ?', [result.summary, bm.id])
+          }
+
+          batchClassifyStatus.completed++
+        } catch (err: any) {
+          console.warn(`AI 分类失败 [${bm.id}]:`, err?.message || err)
+          batchClassifyStatus.completed++
+          batchClassifyStatus.failed++
+        }
+      }
+    }
+
+    const workers = Array.from(
+      { length: Math.min(CONCURRENCY, targetBookmarks.length) },
+      () => processNext()
+    )
+    await Promise.all(workers)
+
+    try { saveDatabase() } catch {}
+    console.log(`✅ AI 批量分类完成: ${batchClassifyStatus.completed - batchClassifyStatus.failed}/${batchClassifyStatus.total} 成功, 新增分类: ${batchClassifyStatus.newCategories.length}`)
+    batchClassifyStatus.running = false
+  })().catch(err => {
+    console.error('AI 批量分类异常:', err)
+    batchClassifyStatus.running = false
+  })
+
+  res.json({ success: true, processing: targetBookmarks.length })
+})
+
+// GET /api/ai/batch-classify-status - 查询批量 AI 分类进度
+router.get('/batch-classify-status', authMiddleware, (_req, res) => {
+  res.json(batchClassifyStatus)
 })
 
 // GET /api/ai/config - 获取 AI 配置（隐藏 API Key）
