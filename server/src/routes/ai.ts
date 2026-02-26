@@ -2,7 +2,7 @@ import { Router } from 'express'
 import crypto from 'crypto'
 import { z } from 'zod'
 import { validateBody } from '../schemas.js'
-import { aiCategorize, aiChat, aiTestConnection, isAiConfigured, getAiFullStatus } from '../services/ai.js'
+import { aiCategorize, aiEnrichMetadata, aiChat, aiTestConnection, isAiConfigured, getAiFullStatus } from '../services/ai.js'
 import { queryAll, queryOne, run } from '../utils/index.js'
 import { getDatabase, saveDatabase } from '../db.js'
 import { authMiddleware } from '../middleware/index.js'
@@ -360,6 +360,137 @@ router.post('/batch-classify', authMiddleware, async (req, res) => {
 // GET /api/ai/batch-classify-status - 查询批量 AI 分类进度
 router.get('/batch-classify-status', authMiddleware, (_req, res) => {
   res.json(batchClassifyStatus)
+})
+
+// POST /api/ai/batch-enrich - 批量 AI 智能元数据优化（异步处理）
+const batchEnrichStatus = {
+  running: false,
+  total: 0,
+  completed: 0,
+  failed: 0,
+  current: '',
+}
+
+router.post('/batch-enrich', authMiddleware, async (req, res) => {
+  if (!isAiConfigured()) {
+    return res.status(503).json({ error: 'AI 服务未配置。请在后台设置中配置 AI 参数。' })
+  }
+
+  const { ids, lang } = req.body as { ids: string[]; lang?: string }
+  if (!Array.isArray(ids) || ids.length === 0) {
+    return res.status(400).json({ error: '请提供书签 ID 列表' })
+  }
+
+  if (batchEnrichStatus.running) {
+    return res.status(409).json({ error: '已有 AI 元数据任务进行中，请稍后再试' })
+  }
+
+  const targetBookmarks = ids
+    .map(id => queryOne('SELECT id, url, title, description, icon, tags FROM bookmarks WHERE id = ?', [id]) as any)
+    .filter(Boolean)
+
+  if (targetBookmarks.length === 0) {
+    return res.json({ success: true, processing: 0 })
+  }
+
+  batchEnrichStatus.running = true
+  batchEnrichStatus.total = targetBookmarks.length
+  batchEnrichStatus.completed = 0
+  batchEnrichStatus.failed = 0
+  batchEnrichStatus.current = ''
+
+  ;(async () => {
+    const CONCURRENCY = 2
+    let index = 0
+    const db = getDatabase()
+
+    async function processNext() {
+      while (index < targetBookmarks.length) {
+        const i = index++
+        const bm = targetBookmarks[i]
+        batchEnrichStatus.current = bm.title || bm.url
+
+        try {
+          const result = await aiEnrichMetadata({
+            url: bm.url,
+            title: bm.title,
+            description: bm.description || undefined,
+            lang,
+          })
+
+          const now = new Date().toISOString()
+          const updates: string[] = []
+          const values: any[] = []
+
+          if (result.title && result.title !== bm.title) {
+            updates.push('title = ?')
+            values.push(result.title)
+          }
+
+          if (result.description) {
+            updates.push('description = ?')
+            values.push(result.description)
+          }
+
+          if (result.iconName && result.iconName.includes(':')) {
+            updates.push('icon = ?')
+            values.push(result.iconName)
+          }
+
+          // 合并标签
+          if (result.tags && result.tags.length > 0) {
+            let existingTags: string[] = []
+            if (bm.tags) {
+              try {
+                const parsed = JSON.parse(bm.tags)
+                existingTags = Array.isArray(parsed) ? parsed : []
+              } catch {
+                existingTags = bm.tags.split(',').map((t: string) => t.trim()).filter(Boolean)
+              }
+            }
+            const merged = [...new Set([...existingTags, ...result.tags])]
+            updates.push('tags = ?')
+            values.push(merged.filter(Boolean).join(','))
+          }
+
+          if (updates.length > 0) {
+            updates.push('updatedAt = ?')
+            values.push(now, bm.id)
+            db.run(
+              `UPDATE bookmarks SET ${updates.join(', ')} WHERE id = ?`,
+              values
+            )
+          }
+
+          batchEnrichStatus.completed++
+        } catch (err: any) {
+          console.warn(`AI 元数据优化失败 [${bm.id}]:`, err?.message || err)
+          batchEnrichStatus.completed++
+          batchEnrichStatus.failed++
+        }
+      }
+    }
+
+    const workers = Array.from(
+      { length: Math.min(CONCURRENCY, targetBookmarks.length) },
+      () => processNext()
+    )
+    await Promise.all(workers)
+
+    try { saveDatabase() } catch {}
+    console.log(`✅ AI 批量元数据优化完成: ${batchEnrichStatus.completed - batchEnrichStatus.failed}/${batchEnrichStatus.total} 成功`)
+    batchEnrichStatus.running = false
+  })().catch(err => {
+    console.error('AI 批量元数据优化异常:', err)
+    batchEnrichStatus.running = false
+  })
+
+  res.json({ success: true, processing: targetBookmarks.length })
+})
+
+// GET /api/ai/batch-enrich-status - 查询批量 AI 元数据优化进度
+router.get('/batch-enrich-status', authMiddleware, (_req, res) => {
+  res.json(batchEnrichStatus)
 })
 
 // GET /api/ai/config - 获取 AI 配置（隐藏 API Key）

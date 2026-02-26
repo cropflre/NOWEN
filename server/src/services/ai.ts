@@ -31,6 +31,20 @@ interface AiCategorizeResponse {
   confidence: number
 }
 
+interface AiEnrichRequest {
+  url: string
+  title: string
+  description?: string
+  lang?: string
+}
+
+interface AiEnrichResponse {
+  title: string
+  description: string
+  iconName: string
+  tags: string[]
+}
+
 export interface AiChatRequest {
   message: string
   lang?: string
@@ -120,6 +134,25 @@ function buildCategorizePrompt(req: AiCategorizeRequest): string {
 3. "tags": 推荐3-5个相关标签，每个标签2-4个字，用于描述网站内容。
 4. "summary": 用一句话（不超过80字）精炼描述这个网站的核心价值，语言使用${lang}。
 5. "confidence": 0-1之间的数字，表示分类建议的置信度。
+
+只返回纯 JSON，不要包含 markdown 代码块或其他文本。`
+}
+
+function buildEnrichPrompt(req: AiEnrichRequest): string {
+  const lang = req.lang?.startsWith('zh') ? '中文' : 'English'
+
+  return `你是一个智能书签元数据优化助手。根据以下网站信息，帮用户优化书签的标题、描述，推荐相关标签，并推荐一个合适的 Iconify 图标。
+
+网站信息：
+- URL: ${req.url}
+- 当前标题: ${req.title}
+- 当前描述: ${req.description || '(无)'}
+
+请返回一个 JSON 对象，包含以下字段：
+1. "title": 优化后的网站标题，语言使用${lang}。要求简洁精确，保留品牌名，去除多余的SEO后缀（如 " - 官网"、" | Home"），2-30个字。如果原标题已经很好则翻译为${lang}并保持简洁。
+2. "description": 用一句话（不超过100字）精炼描述这个网站的核心功能和价值，语言使用${lang}。
+3. "tags": 推荐3-5个相关标签，每个标签2-4个字，用于描述网站内容，语言使用${lang}。
+4. "iconName": 推荐一个最能代表这个网站类型/功能的 Iconify 图标名称。格式为 "prefix:name"，例如 "mdi:github"、"simple-icons:react"、"lucide:code"、"ri:twitter-x-fill"。优先使用 simple-icons（品牌图标）、mdi（Material Design Icons）、lucide 这几个图标集。如果是知名品牌/产品，优先使用其品牌图标（simple-icons集）。
 
 只返回纯 JSON，不要包含 markdown 代码块或其他文本。`
 }
@@ -341,6 +374,25 @@ function parseAiResponse(raw: string): AiCategorizeResponse {
   }
 }
 
+function parseAiEnrichResponse(raw: string): AiEnrichResponse {
+  let cleaned = raw.trim()
+  if (cleaned.startsWith('```')) {
+    cleaned = cleaned.replace(/^```(?:json)?\s*/, '').replace(/```\s*$/, '')
+  }
+
+  try {
+    const parsed = JSON.parse(cleaned)
+    return {
+      title: String(parsed.title || '').slice(0, 200),
+      description: String(parsed.description || '').slice(0, 500),
+      iconName: String(parsed.iconName || '').slice(0, 100),
+      tags: Array.isArray(parsed.tags) ? parsed.tags.map((t: any) => String(t).slice(0, 20)).slice(0, 5) : [],
+    }
+  } catch {
+    throw new Error('AI 返回格式异常，无法解析')
+  }
+}
+
 // ========== 公开 API ==========
 
 // AI 智能分类
@@ -348,6 +400,13 @@ export async function aiCategorize(req: AiCategorizeRequest): Promise<AiCategori
   const prompt = buildCategorizePrompt(req)
   const rawResponse = await callAi(prompt, 'You are a helpful assistant that categorizes bookmarks. Always respond in valid JSON format only.')
   return parseAiResponse(rawResponse)
+}
+
+// AI 智能元数据优化
+export async function aiEnrichMetadata(req: AiEnrichRequest): Promise<AiEnrichResponse> {
+  const prompt = buildEnrichPrompt(req)
+  const rawResponse = await callAi(prompt, 'You are a helpful assistant that optimizes bookmark metadata. Always respond in valid JSON format only.')
+  return parseAiEnrichResponse(rawResponse)
 }
 
 // AI 对话（智能助理）

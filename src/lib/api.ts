@@ -491,6 +491,27 @@ export async function getAiBatchClassifyStatus(): Promise<AiBatchClassifyStatus>
   return request<AiBatchClassifyStatus>('/api/ai/batch-classify-status', { requireAuth: true })
 }
 
+// AI 批量智能元数据优化
+export interface AiBatchEnrichStatus {
+  running: boolean
+  total: number
+  completed: number
+  failed: number
+  current: string
+}
+
+export async function aiBatchEnrich(ids: string[], lang?: string): Promise<{ success: boolean; processing: number }> {
+  return request<{ success: boolean; processing: number }>('/api/ai/batch-enrich', {
+    method: 'POST',
+    body: JSON.stringify({ ids, lang }),
+    requireAuth: true,
+  })
+}
+
+export async function getAiBatchEnrichStatus(): Promise<AiBatchEnrichStatus> {
+  return request<AiBatchEnrichStatus>('/api/ai/batch-enrich-status', { requireAuth: true })
+}
+
 export const aiApi = {
   status: getAiStatus,
   categorize: aiCategorize,
@@ -502,6 +523,8 @@ export const aiApi = {
   batchTagsStatus: getAiBatchTagsStatus,
   batchClassify: aiBatchClassify,
   batchClassifyStatus: getAiBatchClassifyStatus,
+  batchEnrich: aiBatchEnrich,
+  batchEnrichStatus: getAiBatchEnrichStatus,
 } as const
 
 // ========== 演示模式判断 ==========
