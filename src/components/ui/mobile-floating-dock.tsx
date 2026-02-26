@@ -204,6 +204,9 @@ export function MobileFloatingDock({
           <div className="flex-1 min-w-0 mr-3 overflow-hidden">{leftSlot}</div>
         )}
 
+        {/* 占位：无 leftSlot 时推能量球到右侧 */}
+        {!leftSlot && <div className="flex-1" />}
+
         {/* 右侧：能量球按钮 */}
         <div className="relative flex-shrink-0">
           <motion.button
