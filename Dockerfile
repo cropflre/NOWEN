@@ -1,6 +1,7 @@
 # NOWEN - 高颜值 Bento 风格个人导航页
 # 支持书签管理、分类管理、名言管理、自定义图标
 # GitHub: https://github.com/cropflre/NOWEN
+# 支持多架构: linux/amd64, linux/arm64 (RK3588/RK3576/RK3566 等)
 
 # Build stage for frontend
 FROM node:20-alpine AS frontend-builder
@@ -23,12 +24,15 @@ LABEL org.opencontainers.image.licenses="MIT"
 
 WORKDIR /app
 
-# Install nginx and docker-cli (for container management via docker.sock)
-RUN apk add --no-cache nginx docker-cli
+# Install nginx, docker-cli, and build tools for native modules (ARM64 needs python3/make/g++)
+RUN apk add --no-cache nginx docker-cli python3 make g++
 
 # Install production dependencies for backend
 COPY server/package*.json ./server/
 RUN cd server && npm install --omit=dev
+
+# Remove build tools to reduce image size
+RUN apk del python3 make g++
 
 # Install tsx globally
 RUN npm install -g tsx
@@ -53,6 +57,7 @@ EXPOSE 3000 3001
 COPY <<EOF /app/start.sh
 #!/bin/sh
 echo "=== NOWEN Starting ==="
+echo "Architecture: $(uname -m)"
 echo "Starting backend on port 3001..."
 cd /app/server && tsx src/index.ts &
 sleep 2

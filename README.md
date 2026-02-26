@@ -2,13 +2,14 @@
 
 > 一个集书签管理、系统监控于一体的极简主义个人导航站，采用深空美学与玻璃态设计风格，支持日间/夜间双模式，提供完整的硬件实时监控能力
 
-![Version](https://img.shields.io/badge/version-0.1.9-blue)
+![Version](https://img.shields.io/badge/version-0.2.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Node](https://img.shields.io/badge/node-%3E%3D20-brightgreen)
 ![React](https://img.shields.io/badge/React-18.3-61dafb)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178c6)
 ![Docker](https://img.shields.io/badge/Docker-Ready-2496ED)
 ![Docker Hub](https://img.shields.io/badge/Docker%20Hub-cropflre%2Fnowen-blue)
+![ARM64](https://img.shields.io/badge/ARM64-Supported-orange)
 
 ## 🌐 在线演示 | Live Demo
 
@@ -80,6 +81,7 @@
 | **底部备案信息**   | 系统设置配置备案文本 · 支持 HTML 渲染 · 首页底部展示                                      |
 | **壁纸背景**       | 自定义背景壁纸 · 上传/拖拽/URL/Picsum/Bing壁纸 · 模糊度和遮罩可调 · 光束效果叠加          |
 | **数据管理**       | 导入/导出 JSON · 恢复出厂设置 · 导入成功自动返回首页 · 兼容 SunPanel 数据导入 · 导入后自动抓取图标（≤50条） |
+| **ARM64 支持**     | 多架构 Docker 镜像 · RK3588/RK3576/RK3566 开发板 · Apple Silicon · 一键构建脚本                           |
 
 ---
 
@@ -98,6 +100,7 @@
   - [飞牛 OS 安装](#方式五飞牛-os-fnos-安装)
   - [威联通 QNAP 安装](#方式六威联通-qnap-nas-安装)
   - [极空间 NAS 安装](#方式七极空间-nas-安装)
+  - [ARM64 开发板安装](#方式八arm64-开发板安装rk3588rk3576rk3566-等)
 - [API 接口](#-api-接口)
 - [快捷键](#️-快捷键)
 - [常见问题](#-常见问题)
@@ -250,12 +253,12 @@
 
 ### 部署
 
-| 技术               | 用途               |
-| ------------------ | ------------------ |
-| **Docker**         | 容器化             |
-| **Docker Compose** | 编排               |
-| **GitHub Actions** | CI/CD 自动构建推送 |
-| **Nginx**          | 反向代理           |
+| 技术               | 用途                          |
+| ------------------ | ----------------------------- |
+| **Docker**         | 容器化（支持 amd64 + arm64） |
+| **Docker Compose** | 编排                          |
+| **GitHub Actions** | CI/CD 自动构建推送            |
+| **Nginx**          | 反向代理                      |
 
 ---
 
@@ -357,8 +360,9 @@ NOWEN/
 ├── .github/
 │   └── workflows/
 │       └── docker-publish.yml        # GitHub Actions 自动构建
-├── Dockerfile                        # Docker 镜像配置
+├── Dockerfile                        # Docker 镜像配置（支持多架构）
 ├── docker-compose.yml                # Docker 编排配置
+├── build-multiarch.sh                # 多架构构建脚本（amd64 + arm64）
 ├── nginx.conf                        # Nginx 配置
 ├── vite.config.ts                    # Vite 配置
 ├── tailwind.config.js                # Tailwind 配置
@@ -868,6 +872,138 @@ docker-compose up -d --build
 
 ---
 
+### 方式八：ARM64 开发板安装（RK3588/RK3576/RK3566 等）
+
+> 适用于瑞芯微 RK3588、RK3576、RK3566 等 ARM64 架构开发板/单板计算机，以及 Apple Silicon (M1/M2/M3) 设备
+
+#### 📋 前置要求
+
+- ARM64 架构设备（`aarch64`），运行 Linux 系统（Ubuntu/Debian/Armbian 等）
+- 已安装 Docker 和 Docker Compose
+
+```bash
+# 验证架构
+uname -m
+# 应输出: aarch64
+
+# 安装 Docker（如果尚未安装）
+curl -fsSL https://get.docker.com | sh
+sudo usermod -aG docker $USER
+```
+
+#### 🔧 安装步骤
+
+**方法 A：使用 Docker Hub 镜像（推荐）**
+
+```bash
+# 拉取镜像（Docker 会自动拉取 arm64 版本）
+docker pull cropflre/nowen:latest
+
+# 创建项目目录
+mkdir -p ~/nowen && cd ~/nowen
+
+# 创建 docker-compose.yml
+cat > docker-compose.yml << 'EOF'
+services:
+  nowen:
+    image: cropflre/nowen:latest
+    container_name: nowen
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+    volumes:
+      - ./server/data:/app/server/data
+      # 系统监控挂载（可选，推荐开启以发挥 ARM 设备监控能力）
+      - /:/host:ro
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - NODE_ENV=production
+      - SI_FILESYSTEM_DISK_PREFIX=/host
+      - PROC_PATH=/host/proc
+      - SYS_PATH=/host/sys
+      - FS_PATH=/host
+    privileged: true
+EOF
+
+# 启动
+docker compose up -d
+
+# 查看日志
+docker compose logs -f
+```
+
+**方法 B：在 ARM64 设备上本地构建**
+
+```bash
+# 克隆项目
+git clone https://github.com/cropflre/NOWEN.git
+cd NOWEN
+
+# 直接构建并启动（Docker 会自动为当前 arm64 架构构建）
+docker compose up -d --build
+
+# 查看日志确认架构
+docker compose logs | grep "Architecture"
+# 应输出: Architecture: aarch64
+```
+
+**方法 C：跨平台构建 ARM64 镜像（在 x86 电脑上构建）**
+
+如果你想在 x86 电脑上构建 ARM64 镜像，然后传输到 ARM 设备：
+
+```bash
+# 克隆项目
+git clone https://github.com/cropflre/NOWEN.git
+cd NOWEN
+
+# 使用多架构构建脚本
+chmod +x build-multiarch.sh
+
+# 构建并推送到 Docker Hub（需要先 docker login）
+./build-multiarch.sh --tag yourrepo/nowen
+
+# 或仅构建当前架构并加载到本地
+./build-multiarch.sh --load
+```
+
+**第四步：访问应用**
+
+- 访问地址：`http://开发板IP地址:3000`
+
+#### 🔧 ARM64 性能优化建议
+
+| 设备 | 建议 |
+| --- | --- |
+| **RK3588**（8核/8GB+） | 全功能运行，可开启所有监控组件 |
+| **RK3576**（8核/4GB+） | 建议开启精简模式，关闭流星特效 |
+| **RK3566**（4核/2GB+） | 建议开启精简模式，关闭部分监控卡片 |
+
+> 💡 **提示**：在后台管理 → 站点设置 中开启「精简模式」可大幅降低 CPU/GPU 占用，非常适合 ARM 设备。
+
+#### ❓ ARM64 常见问题
+
+**Q: `docker pull` 报错 `no matching manifest for linux/arm64`？**
+
+A: 说明镜像尚未发布 ARM64 版本，请使用方法 B 在设备上本地构建。
+
+**Q: 构建时 `npm install` 非常慢？**
+
+A: ARM64 设备编译原生模块较慢是正常的，RK3588 约需 3-5 分钟，RK3566 约需 8-15 分钟。可以使用国内 npm 镜像加速：
+
+```bash
+# 在 Dockerfile 的 npm install 之前添加
+RUN npm config set registry https://registry.npmmirror.com
+```
+
+**Q: 系统监控读不到 CPU 温度？**
+
+A: 确保使用了 `privileged: true` 且挂载了 `/sys` 目录。部分开发板的温度节点路径不同，`systeminformation` 会自动适配大部分 ARM SoC。
+
+---
+
 ## 🔧 Docker 部署通用配置
 
 ### 端口映射说明
@@ -1093,9 +1229,11 @@ server {
 ### 5. **容器化部署**
 
 - Docker 一键部署
+- 多架构支持：linux/amd64 + linux/arm64（RK3588/RK3576/RK3566 等）
 - GitHub Actions 自动构建推送
 - Docker Hub 官方镜像：`cropflre/nowen`
 - 支持群晖、绿联、飞牛、威联通、极空间等 NAS
+- 支持 ARM64 开发板和 Apple Silicon 设备
 
 ---
 
@@ -1276,6 +1414,25 @@ docker-compose up -d
 ---
 
 ## 📝 更新日志
+
+### v0.2.0 (2026-02-26)
+
+#### ✨ 新功能
+
+- **ARM64 多架构支持**：Docker 镜像同时支持 linux/amd64 和 linux/arm64
+  - 适配瑞芯微 RK3588、RK3576、RK3566 等 ARM64 开发板
+  - 支持 Apple Silicon (M1/M2/M3) 设备
+  - Dockerfile 自动安装 ARM64 原生模块编译工具链（python3/make/g++），构建完成后自动清理
+  - 新增 `build-multiarch.sh` 多架构一键构建脚本
+  - 启动时打印当前 CPU 架构，便于确认运行环境
+- **AI 智能标签**：添加书签时自动调用 AI 生成适配标签
+  - URL 分析完成后自动触发 AI 魔法（无需手动点击）
+  - 自动填充标签 + 分类 + 优化描述
+  - 新增 AI 设置面板、标签管理面板
+- **书签标签展示**：书签卡片上展示彩色标签药丸
+  - 基于标签名哈希生成 8 种柔和彩色（蓝/绿/橙/红/紫/粉/青/黄绿）
+  - 分类区域和置顶区域卡片均展示标签
+  - 最多显示 3 个标签，超出显示 +N
 
 ### v0.1.9 (2026-02-25)
 
@@ -1545,10 +1702,11 @@ docker-compose up -d
 
 **部署支持**
 
-- ✨ Docker 容器化部署
+- ✨ Docker 容器化部署（amd64 + arm64 多架构）
 - ✨ GitHub Actions CI/CD 自动构建
 - ✨ Docker Hub 官方镜像
 - ✨ 支持各类 NAS 平台
+- ✨ 支持 ARM64 开发板（RK3588/RK3576/RK3566）
 
 ---
 

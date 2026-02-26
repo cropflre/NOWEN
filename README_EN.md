@@ -2,13 +2,14 @@
 
 > A minimalist personal navigation hub combining bookmark management and system monitoring, featuring deep space aesthetics and glassmorphism design, supporting day/night dual modes with complete real-time hardware monitoring capabilities
 
-![Version](https://img.shields.io/badge/version-0.1.9-blue)
+![Version](https://img.shields.io/badge/version-0.2.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Node](https://img.shields.io/badge/node-%3E%3D20-brightgreen)
 ![React](https://img.shields.io/badge/React-18.3-61dafb)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178c6)
 ![Docker](https://img.shields.io/badge/Docker-Ready-2496ED)
 ![Docker Hub](https://img.shields.io/badge/Docker%20Hub-cropflre%2Fnowen-blue)
+![ARM64](https://img.shields.io/badge/ARM64-Supported-orange)
 
 ## 🌐 Live Demo
 
@@ -80,6 +81,7 @@
 | **Footer Filing Info**   | Configure footer text in settings · HTML rendering support · Homepage bottom display                   |
 | **Wallpaper**            | Custom background wallpaper · Upload/Drag/URL/Picsum/Bing · Adjustable blur and overlay · Beam effects layered |
 | **Data Management**      | Import/Export JSON · Factory reset · Auto redirect to home after import · SunPanel data import compatible · Auto-fetch icons after import (≤50 bookmarks) |
+| **ARM64 Support**        | Multi-arch Docker images · RK3588/RK3576/RK3566 SBCs · Apple Silicon · One-click build script |
 
 ---
 
@@ -98,6 +100,7 @@
   - [fnOS](#option-5-fnos)
   - [QNAP NAS](#option-6-qnap-nas)
   - [Extreme Space NAS](#option-7-extreme-space-nas)
+  - [ARM64 SBC](#option-8-arm64-sbc-rk3588rk3576rk3566)
 - [API Reference](#-api-reference)
 - [Keyboard Shortcuts](#️-keyboard-shortcuts)
 - [FAQ](#-faq)
@@ -250,12 +253,12 @@ Supports **8 carefully designed theme colors**, each with 20+ CSS variables:
 
 ### Deployment
 
-| Tech               | Purpose          |
-| ------------------ | ---------------- |
-| **Docker**         | Containerization |
-| **Docker Compose** | Orchestration    |
-| **GitHub Actions** | CI/CD Auto Build |
-| **Nginx**          | Reverse Proxy    |
+| Tech               | Purpose                         |
+| ------------------ | ------------------------------- |
+| **Docker**         | Containerization (amd64+arm64)  |
+| **Docker Compose** | Orchestration                   |
+| **GitHub Actions** | CI/CD Auto Build                |
+| **Nginx**          | Reverse Proxy                   |
 
 ---
 
@@ -285,8 +288,9 @@ NOWEN/
 │   │   ├── middleware/               # Middleware
 │   │   └── utils/                    # Utilities
 │   └── data/                         # Database
-├── Dockerfile                        # Docker Config
+├── Dockerfile                        # Docker Config (Multi-arch)
 ├── docker-compose.yml                # Docker Compose
+├── build-multiarch.sh                # Multi-arch build script (amd64+arm64)
 └── package.json                      # Dependencies
 ```
 
@@ -471,6 +475,136 @@ Access: `http://NAS_IP:3000`
 
 ---
 
+### Option 8: ARM64 SBC (RK3588/RK3576/RK3566)
+
+> For Rockchip RK3588, RK3576, RK3566 and other ARM64 single-board computers, as well as Apple Silicon (M1/M2/M3) devices
+
+#### Prerequisites
+
+- ARM64 architecture device (`aarch64`) running Linux (Ubuntu/Debian/Armbian, etc.)
+- Docker and Docker Compose installed
+
+```bash
+# Verify architecture
+uname -m
+# Should output: aarch64
+
+# Install Docker (if not already installed)
+curl -fsSL https://get.docker.com | sh
+sudo usermod -aG docker $USER
+```
+
+#### Installation Steps
+
+**Method A: Using Docker Hub Image (Recommended)**
+
+```bash
+# Pull image (Docker will automatically pull the arm64 version)
+docker pull cropflre/nowen:latest
+
+# Create project directory
+mkdir -p ~/nowen && cd ~/nowen
+
+# Create docker-compose.yml
+cat > docker-compose.yml << 'EOF'
+services:
+  nowen:
+    image: cropflre/nowen:latest
+    container_name: nowen
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+      - "3001:3001"
+    volumes:
+      - ./server/data:/app/server/data
+      # System monitoring mounts (optional, recommended for ARM device monitoring)
+      - /:/host:ro
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - NODE_ENV=production
+      - SI_FILESYSTEM_DISK_PREFIX=/host
+      - PROC_PATH=/host/proc
+      - SYS_PATH=/host/sys
+      - FS_PATH=/host
+    privileged: true
+EOF
+
+# Start
+docker compose up -d
+
+# View logs
+docker compose logs -f
+```
+
+**Method B: Build Locally on ARM64 Device**
+
+```bash
+# Clone project
+git clone https://github.com/cropflre/NOWEN.git
+cd NOWEN
+
+# Build and start (Docker will automatically build for current arm64 architecture)
+docker compose up -d --build
+
+# Verify architecture in logs
+docker compose logs | grep "Architecture"
+# Should output: Architecture: aarch64
+```
+
+**Method C: Cross-Platform Build (Build ARM64 Image on x86 PC)**
+
+If you want to build ARM64 images on an x86 computer and transfer to ARM devices:
+
+```bash
+# Clone project
+git clone https://github.com/cropflre/NOWEN.git
+cd NOWEN
+
+# Use multi-arch build script
+chmod +x build-multiarch.sh
+
+# Build and push to Docker Hub (requires docker login first)
+./build-multiarch.sh --tag yourrepo/nowen
+
+# Or build for current architecture only and load locally
+./build-multiarch.sh --load
+```
+
+**Access:** `http://DEVICE_IP:3000`
+
+#### ARM64 Performance Tips
+
+| Device | Recommendation |
+| --- | --- |
+| **RK3588** (8-core/8GB+) | Full features, all monitoring components enabled |
+| **RK3576** (8-core/4GB+) | Enable Lite Mode, disable meteor effects |
+| **RK3566** (4-core/2GB+) | Enable Lite Mode, disable some monitoring cards |
+
+> 💡 **Tip**: Enable "Lite Mode" in Admin → Site Settings to significantly reduce CPU/GPU usage, ideal for ARM devices.
+
+#### ARM64 FAQ
+
+**Q: `docker pull` shows `no matching manifest for linux/arm64`?**
+
+A: The ARM64 image version may not be published yet. Use Method B to build locally on the device.
+
+**Q: `npm install` is very slow during build?**
+
+A: ARM64 native module compilation is slower than x86. RK3588 takes about 3-5 minutes, RK3566 about 8-15 minutes. Use a China npm mirror for acceleration:
+
+```bash
+# Add before npm install in Dockerfile
+RUN npm config set registry https://registry.npmmirror.com
+```
+
+**Q: System monitoring can't read CPU temperature?**
+
+A: Ensure `privileged: true` is set and `/sys` is mounted. Temperature node paths vary between SBCs, but `systeminformation` auto-adapts for most ARM SoCs.
+
+---
+
 ## 📡 API Reference
 
 ### Bookmarks API
@@ -608,6 +742,25 @@ A: Admin → System Settings → Data Management → Export Backup, or copy `ser
 ---
 
 ## 📝 Changelog
+
+### v0.2.0 (2026-02-26)
+
+#### ✨ New Features
+
+- **ARM64 Multi-Architecture Support**: Docker images now support both linux/amd64 and linux/arm64
+  - Compatible with Rockchip RK3588, RK3576, RK3566 ARM64 SBCs
+  - Supports Apple Silicon (M1/M2/M3) devices
+  - Dockerfile auto-installs ARM64 native module build toolchain (python3/make/g++), auto-cleaned after build
+  - New `build-multiarch.sh` multi-arch one-click build script
+  - Prints CPU architecture on startup for environment verification
+- **AI Smart Tags**: Automatically generate matching tags when adding bookmarks via AI
+  - Auto-triggers AI magic after URL analysis completes (no manual click needed)
+  - Auto-fills tags + category + optimized description
+  - New AI settings panel and tag management panel
+- **Bookmark Tag Display**: Colorful tag pills displayed on bookmark cards
+  - 8 soft color variations based on tag name hash (blue/green/amber/red/violet/pink/cyan/lime)
+  - Tags shown on both category and pinned bookmark cards
+  - Shows up to 3 tags with +N overflow indicator
 
 ### v0.1.9 (2026-02-25)
 
@@ -856,10 +1009,11 @@ A: Admin → System Settings → Data Management → Export Backup, or copy `ser
 
 **Deployment**
 
-- ✨ Docker containerization
+- ✨ Docker containerization (amd64 + arm64 multi-arch)
 - ✨ GitHub Actions CI/CD
 - ✨ Docker Hub official image
 - ✨ Multi-NAS platform support
+- ✨ ARM64 SBC support (RK3588/RK3576/RK3566)
 
 ---
 
