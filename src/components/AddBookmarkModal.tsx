@@ -3,11 +3,12 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X, Plus, Loader2, Check, AlertCircle, Sparkles, BookmarkPlus, ChevronDown, Settings, Link2, Image, FolderPlus, Search, Network } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Bookmark, Category, CustomIcon } from '../types/bookmark'
-import { metadataApi, categoryApi } from '../lib/api'
+import { metadataApi, categoryApi, aiApi, bookmarkApi } from '../lib/api'
 import { cn } from '../lib/utils'
 import { presetIcons } from '../lib/icons'
 import { IconifyPicker } from './IconifyPicker'
 import { IconRenderer } from './IconRenderer'
+import { TagInput } from './ui/TagInput'
 
 interface AddBookmarkModalProps {
   isOpen: boolean
@@ -65,6 +66,16 @@ export function AddBookmarkModal({
   const [newCategoryName, setNewCategoryName] = useState('')
   const [isAddingCategory, setIsAddingCategory] = useState(false)
   const [addCategoryError, setAddCategoryError] = useState('')
+
+  // AI 魔法分类状态
+  const [isAiProcessing, setIsAiProcessing] = useState(false)
+  const [aiConfigured, setAiConfigured] = useState<boolean | null>(null)
+  const [aiTags, setAiTags] = useState<string[]>([])
+  const [aiApplied, setAiApplied] = useState(false)
+
+  // 标签状态
+  const [tags, setTags] = useState<string[]>([])
+  const [tagSuggestions, setTagSuggestions] = useState<string[]>([])
   
   // 预设颜色
   const categoryColors = [
@@ -87,6 +98,7 @@ export function AddBookmarkModal({
       setInternalUrl(editBookmark.internalUrl || '')
       setShowInternalUrl(!!editBookmark.internalUrl)
       setIsReadLater(editBookmark.isReadLater || false)
+      setTags(editBookmark.tags || [])
       setHasAnalyzed(true)
       // 判断使用哪个 tab
       if (editBookmark.iconUrl) {
@@ -106,6 +118,14 @@ export function AddBookmarkModal({
   useEffect(() => {
     if (isOpen && !editBookmark) {
       setTimeout(() => inputRef.current?.focus(), 100)
+    }
+    // 检查 AI 配置状态
+    if (isOpen && aiConfigured === null) {
+      aiApi.status().then(s => setAiConfigured(s.configured)).catch(() => setAiConfigured(false))
+    }
+    // 加载标签建议
+    if (isOpen && tagSuggestions.length === 0) {
+      bookmarkApi.tags().then(setTagSuggestions).catch(() => {})
     }
   }, [isOpen, editBookmark])
 
@@ -127,6 +147,8 @@ export function AddBookmarkModal({
       setError('')
       setHasAnalyzed(false)
       setShowIconPicker(false)
+      setAiTags([])
+      setAiApplied(false)
     }
   }, [isOpen])
 
@@ -140,6 +162,9 @@ export function AddBookmarkModal({
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
+
+  // 标记是否需要在 analyzeUrl 完成后自动触发 AI
+  const pendingAutoAiRef = useRef(false)
 
   // 智能抓取元数据
   const analyzeUrl = async (inputUrl: string) => {
@@ -165,6 +190,10 @@ export function AddBookmarkModal({
       setDescription(metadata.description || '')
       setFavicon(metadata.favicon || '')
       setHasAnalyzed(true)
+      // 标记需要自动触发 AI（非编辑模式）
+      if (!editBookmark) {
+        pendingAutoAiRef.current = true
+      }
     } catch (err) {
       console.error('抓取失败:', err)
       // 使用默认值
@@ -174,6 +203,10 @@ export function AddBookmarkModal({
         setTitle(domain.charAt(0).toUpperCase() + domain.slice(1).split('.')[0])
         setFavicon(`https://www.google.com/s2/favicons?domain=${urlObj.hostname}&sz=64`)
         setHasAnalyzed(true)
+        // 标记需要自动触发 AI（非编辑模式）
+        if (!editBookmark) {
+          pendingAutoAiRef.current = true
+        }
         // 震动提示
         setShake(true)
         setTimeout(() => setShake(false), 500)
@@ -184,6 +217,14 @@ export function AddBookmarkModal({
       setIsAnalyzing(false)
     }
   }
+
+  // analyzeUrl 完成后自动触发 AI 魔法标签
+  useEffect(() => {
+    if (pendingAutoAiRef.current && hasAnalyzed && !isAnalyzing && aiConfigured && title && url && !editBookmark && !isAiProcessing && !aiApplied) {
+      pendingAutoAiRef.current = false
+      handleAiCategorize()
+    }
+  }, [hasAnalyzed, isAnalyzing, aiConfigured, title])
 
   // 监听粘贴事件
   const handlePaste = (e: React.ClipboardEvent) => {
@@ -196,6 +237,57 @@ export function AddBookmarkModal({
   const handleUrlBlur = () => {
     if (url && !hasAnalyzed) {
       analyzeUrl(url)
+    }
+  }
+
+  // AI 魔法分类
+  const handleAiCategorize = async () => {
+    if (!url || !title || isAiProcessing) return
+
+    setIsAiProcessing(true)
+    setError('')
+
+    try {
+      const result = await aiApi.categorize({
+        url,
+        title,
+        description: description || undefined,
+        lang: i18n.language,
+      })
+
+      if (result.error) {
+        throw new Error(result.error)
+      }
+
+      // 自动填充分类
+      if (result.categoryId) {
+        setCategory(result.categoryId)
+      } else if (result.isNewCategory && result.category) {
+        // AI 建议的是新分类，暂时不自动创建，只显示建议名称
+        // 在分类下拉框旁边提示
+        setCategory('')
+      }
+
+      // 优化描述
+      if (result.summary && result.summary.length > 0) {
+        setDescription(result.summary)
+      }
+
+      // 设置标签（同时应用到实际 tags 和展示用的 aiTags）
+      if (result.tags && result.tags.length > 0) {
+        setAiTags(result.tags)
+        setTags(prev => {
+          const merged = new Set([...prev, ...result.tags])
+          return [...merged]
+        })
+      }
+
+      setAiApplied(true)
+    } catch (err: any) {
+      console.error('AI 分类失败:', err)
+      setError(err?.message || t('bookmark.modal.ai_error'))
+    } finally {
+      setIsAiProcessing(false)
     }
   }
 
@@ -216,6 +308,7 @@ export function AddBookmarkModal({
       icon: icon || undefined,
       iconUrl: iconUrl || undefined,
       category: category || undefined,
+      tags: tags.length > 0 ? tags : undefined,
       isReadLater,
     })
 
@@ -418,6 +511,128 @@ export function AddBookmarkModal({
                   />
                 )}
               </div>
+
+              {/* AI 魔法分类按钮 */}
+              <AnimatePresence>
+                {aiConfigured && hasAnalyzed && !editBookmark && !isAnalyzing && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -8, height: 0 }}
+                    animate={{ opacity: 1, y: 0, height: 'auto' }}
+                    exit={{ opacity: 0, y: -8, height: 0 }}
+                    transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+                  >
+                    <motion.button
+                      type="button"
+                      onClick={handleAiCategorize}
+                      disabled={isAiProcessing || !title}
+                      className={cn(
+                        'w-full px-4 py-3 rounded-xl',
+                        'border transition-all',
+                        'flex items-center justify-center gap-2',
+                        'text-sm font-medium',
+                        'disabled:opacity-50 disabled:cursor-not-allowed',
+                        aiApplied
+                          ? 'border-emerald-500/30'
+                          : 'border-purple-500/30 hover:border-purple-400/50'
+                      )}
+                      style={{
+                        background: aiApplied
+                          ? 'linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(6,182,212,0.1) 100%)'
+                          : 'linear-gradient(135deg, rgba(147,51,234,0.1) 0%, rgba(6,182,212,0.1) 100%)',
+                      }}
+                      whileHover={{ scale: 1.01 }}
+                      whileTap={{ scale: 0.99 }}
+                    >
+                      {isAiProcessing ? (
+                        <>
+                          <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+                          >
+                            <Sparkles className="w-4 h-4" style={{ color: 'rgb(168,85,247)' }} />
+                          </motion.div>
+                          <span style={{ 
+                            background: 'linear-gradient(90deg, rgb(168,85,247), rgb(6,182,212))',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
+                          }}>
+                            {t('bookmark.modal.ai_thinking')}
+                          </span>
+                          <motion.span
+                            animate={{ opacity: [1, 0.3, 1] }}
+                            transition={{ duration: 1.5, repeat: Infinity }}
+                            style={{ color: 'rgb(168,85,247)' }}
+                          >
+                            ...
+                          </motion.span>
+                        </>
+                      ) : aiApplied ? (
+                        <>
+                          <Check className="w-4 h-4" style={{ color: 'rgb(16,185,129)' }} />
+                          <span style={{ color: 'rgb(16,185,129)' }}>
+                            {t('bookmark.modal.ai_applied')}
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-4 h-4" style={{ color: 'rgb(168,85,247)' }} />
+                          <span style={{ 
+                            background: 'linear-gradient(90deg, rgb(168,85,247), rgb(6,182,212))',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent',
+                          }}>
+                            {t('bookmark.modal.ai_magic')}
+                          </span>
+                        </>
+                      )}
+                    </motion.button>
+
+                    {/* AI 推荐标签展示 */}
+                    <AnimatePresence>
+                      {aiTags.length > 0 && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -5 }}
+                          className="flex flex-wrap gap-1.5 mt-2"
+                        >
+                          {aiTags.map((tag, i) => (
+                            <motion.span
+                              key={tag}
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              transition={{ delay: i * 0.08 }}
+                              className="px-2.5 py-1 rounded-full text-xs"
+                              style={{
+                                background: 'linear-gradient(135deg, rgba(147,51,234,0.15) 0%, rgba(6,182,212,0.15) 100%)',
+                                color: 'var(--text-secondary)',
+                                border: '1px solid rgba(147,51,234,0.2)',
+                              }}
+                            >
+                              #{tag}
+                            </motion.span>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* 标签输入 */}
+              {hasAnalyzed && (
+                <div>
+                  <label className="block text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>
+                    {t('bookmark.modal.tags')}
+                  </label>
+                  <TagInput
+                    tags={tags}
+                    onChange={setTags}
+                    suggestions={tagSuggestions}
+                    placeholder={t('bookmark.modal.tags_placeholder')}
+                  />
+                </div>
+              )}
 
               {/* 图标选择 */}
               <div ref={iconPickerRef} className="relative z-20">

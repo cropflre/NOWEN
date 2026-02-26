@@ -20,6 +20,7 @@ export const defaultSiteSettings: SiteSettings = {
     processMatrix: false,
     dockMiniMonitor: false,
     mobileTicker: false,
+    aiAssistant: true,
   },
   menuVisibility: {
     languageToggle: true,
@@ -44,6 +45,7 @@ const hiddenWidgetVisibility = {
   processMatrix: false,
   dockMiniMonitor: false,
   mobileTicker: false,
+  aiAssistant: true,
 };
 
 export function useSiteSettings() {

@@ -53,6 +53,7 @@ import { SettingsPanel } from '../components/admin/SettingsPanel'
 import { AnalyticsCard } from '../components/admin/AnalyticsCard'
 import { HealthCheckCard } from '../components/admin/HealthCheckCard'
 import { DocsCard } from '../components/admin/DocsCard'
+import { TagsManageCard } from '../components/admin/TagsManageCard'
 import { IconRenderer } from '../components/IconRenderer'
 import { IconifyPicker } from '../components/IconifyPicker'
 import { ToastProvider, useToast } from '../components/admin/Toast'
@@ -351,7 +352,7 @@ function AdminContent() {
 
   const { showToast } = useToast()
   const { themeId, isDark, setTheme, toggleDarkMode, autoMode, setAutoMode } = useThemeContext()
-  const [activeTab, setActiveTab] = useState<'bookmarks' | 'categories' | 'quotes' | 'icons' | 'analytics' | 'health-check' | 'docs' | 'settings'>('bookmarks')
+  const [activeTab, setActiveTab] = useState<'bookmarks' | 'categories' | 'tags' | 'quotes' | 'icons' | 'analytics' | 'health-check' | 'docs' | 'settings'>('bookmarks')
   const [searchQuery, setSearchQuery] = useState('')
   const [filterCategory, setFilterCategory] = useState<string>('all')
   const [currentPage, setCurrentPage] = useState(1)
@@ -916,6 +917,7 @@ function AdminContent() {
   const tabTitles = {
     bookmarks: t('admin.nav.bookmarks_full'),
     categories: t('admin.nav.categories_full'),
+    tags: t('admin.nav.tags_full'),
     quotes: t('admin.nav.quotes_full'),
     icons: t('admin.nav.icons_full'),
     analytics: t('admin.nav.analytics_full'),
@@ -971,6 +973,7 @@ function AdminContent() {
               <p className="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>
                 {activeTab === 'bookmarks' && t('admin.stats.total_bookmarks', { count: bookmarks.length })}
                 {activeTab === 'categories' && t('admin.stats.total_categories', { count: categories.length })}
+                {activeTab === 'tags' && t('admin.stats.manage_tags')}
                 {activeTab === 'quotes' && t('admin.stats.total_quotes', { count: quotes.length })}
                 {activeTab === 'icons' && t('admin.stats.total_icons', { count: customIcons.length })}
                 {activeTab === 'analytics' && t('admin.stats.view_analytics')}
@@ -2451,6 +2454,19 @@ function AdminContent() {
                     </div>
                   </div>
                 )}
+              </motion.div>
+            )}
+
+            {/* Tags Tab */}
+            {activeTab === 'tags' && (
+              <motion.div
+                key="tags"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="max-w-4xl"
+              >
+                <TagsManageCard onShowToast={showToast} />
               </motion.div>
             )}
 

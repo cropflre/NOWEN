@@ -7,7 +7,8 @@ import {
   Shield, 
   Database,
   Gauge,
-  Image
+  Image,
+  Sparkles
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { SiteSettingsCard } from './SiteSettingsCard'
@@ -16,12 +17,13 @@ import { SecurityCard } from './SecurityCard'
 import { DataManagementCard } from './DataManagementCard'
 import { WidgetSettingsCard } from './WidgetSettingsCard'
 import { WallpaperSettingsCard } from './WallpaperSettingsCard'
+import { AiSettingsCard } from './AiSettingsCard'
 import { SiteSettings, WidgetVisibility } from '../../lib/api'
 import { Bookmark, Category } from '../../types/bookmark'
 import { ThemeId } from '../../hooks/useTheme.tsx'
 
 // 设置子标签页类型
-type SettingsTab = 'site' | 'theme' | 'wallpaper' | 'widget' | 'security' | 'data'
+type SettingsTab = 'site' | 'theme' | 'wallpaper' | 'widget' | 'security' | 'data' | 'ai'
 
 interface SettingsTabItem {
   id: SettingsTab
@@ -80,6 +82,14 @@ const settingsTabs: SettingsTabItem[] = [
     descKey: 'admin.settings.tabs.data_desc',
     gradient: 'from-emerald-500/20 to-teal-500/20',
     iconBg: 'from-emerald-500/20 to-teal-600/20'
+  },
+  { 
+    id: 'ai', 
+    labelKey: 'admin.settings.tabs.ai', 
+    icon: Sparkles, 
+    descKey: 'admin.settings.tabs.ai_desc',
+    gradient: 'from-purple-500/20 to-cyan-500/20',
+    iconBg: 'from-purple-500/20 to-cyan-600/20'
   },
 ]
 
@@ -192,7 +202,7 @@ export function SettingsPanel({
         }}
       >
         {/* 标签页按钮网格 - 响应式 */}
-        <div className="grid grid-cols-2 lg:grid-cols-6 gap-2">
+        <div className="grid grid-cols-2 lg:grid-cols-7 gap-2">
           {settingsTabs.map((tab) => {
             const Icon = tab.icon
             const isActive = activeSettingsTab === tab.id
@@ -377,6 +387,11 @@ export function SettingsPanel({
               onImport={onImport}
               onFactoryReset={onFactoryReset}
             />
+          )}
+
+          {/* AI 设置 */}
+          {activeSettingsTab === 'ai' && (
+            <AiSettingsCard />
           )}
         </motion.div>
       </AnimatePresence>

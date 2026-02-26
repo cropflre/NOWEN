@@ -80,7 +80,13 @@
       "required_error": "请填写 URL 和标题",
       "internal_url": "内网链接（可选）",
       "internal_url_placeholder": "输入内网访问地址，如 http://192.168.1.100:8080",
-      "internal_url_hint": "设置后，在内网环境下会自动使用此链接打开"
+      "internal_url_hint": "设置后，在内网环境下会自动使用此链接打开",
+      "ai_magic": "AI 魔法分类",
+      "ai_thinking": "AI 思考中",
+      "ai_applied": "AI 已填充",
+      "ai_error": "AI 分类失败，请稍后重试",
+      "tags": "标签",
+      "tags_placeholder": "输入标签后按 Enter，逗号分隔..."
     }
   },
   "category": {
@@ -110,6 +116,7 @@
   "dock": {
     "home": "首页",
     "search": "搜索",
+    "ai": "AI 助手",
     "add": "添加",
     "theme_light": "切换日间模式",
     "theme_dark": "切换夜间模式",
@@ -157,6 +164,8 @@
       "bookmarks_full": "书签管理",
       "categories": "分类",
       "categories_full": "分类管理",
+      "tags": "标签",
+      "tags_full": "标签管理",
       "quotes": "名言",
       "quotes_full": "名言管理",
       "icons": "图标",
@@ -178,7 +187,8 @@
       "view_analytics": "查看访问数据与趋势",
       "check_health": "检测书签链接健康状态",
       "view_docs": "查看平台功能说明",
-      "manage_config": "管理您的网站配置"
+      "manage_config": "管理您的网站配置",
+      "manage_tags": "管理和整理书签标签"
     },
     "bookmark": {
       "add": "添加书签",
@@ -256,6 +266,30 @@
       "batch_delete_confirm": "确定要删除选中的 {{count}} 个分类吗？这些分类下的书签将变为未分类。",
       "batch_deleted": "已删除 {{count}} 个分类"
     },
+    "tags": {
+      "total_tags": "标签总数",
+      "total_usage": "使用次数",
+      "avg_usage": "平均使用",
+      "search": "搜索标签...",
+      "loading": "加载中...",
+      "empty": "暂无标签",
+      "no_results": "未找到匹配标签",
+      "col_name": "标签名称",
+      "col_count": "使用次数",
+      "col_actions": "操作",
+      "rename": "重命名",
+      "merge": "合并到...",
+      "merge_placeholder": "输入目标标签名...",
+      "renamed": "已将「{{old}}」重命名为「{{new}}」，影响 {{count}} 个书签",
+      "rename_error": "重命名失败",
+      "merged": "已将「{{source}}」合并到「{{target}}」，影响 {{count}} 个书签",
+      "merge_error": "合并失败",
+      "deleted": "已删除标签「{{name}}」，影响 {{count}} 个书签",
+      "delete_error": "删除失败",
+      "delete_confirm": "确定删除？",
+      "load_error": "加载标签失败",
+      "hint": "标签数据来源于书签。重命名会修改所有使用该标签的书签，合并会将源标签改为目标标签（自动去重），删除会从所有书签中移除该标签。"
+    },
     "quotes": {
       "title": "名言管理",
       "count": "共 {{count}} 条自定义名言",
@@ -313,7 +347,9 @@
         "security": "安全设置",
         "security_desc": "密码管理、账户安全",
         "data": "数据管理",
-        "data_desc": "导入导出、恢复备份"
+        "data_desc": "导入导出、恢复备份",
+        "ai": "AI 智能",
+        "ai_desc": "AI 模型配置"
       },
       "site": {
         "title": "站点配置",
@@ -395,6 +431,8 @@
         "dock_mini_desc": "桌面端 Dock 旁边的迷你监控球",
         "mobile_ticker": "移动端状态栏",
         "mobile_ticker_desc": "移动端底部 Dock 上方的状态指示条",
+        "ai_assistant": "AI 助手",
+        "ai_assistant_desc": "Dock 栏 AI 助手入口及快捷键（⌘J）",
         "hint": "💡 提示：隐藏仪表可以减少首页数据请求，提升加载速度。修改后需保存才能生效。",
         "save": "保存配置",
         "saving": "保存中...",
@@ -509,6 +547,23 @@
         "import_mode_overwrite_desc": "清空现有数据，用浏览器书签替换",
         "enriching_start": "正在后台抓取 {{count}} 个书签的图标...",
         "enriching_done": "图标抓取完成：{{success}}/{{total}} 个成功"
+      },
+      "ai": {
+        "title": "AI 智能配置",
+        "subtitle": "配置 AI 模型以启用智能分类和 AI 助手",
+        "configured": "已配置",
+        "not_configured": "未配置",
+        "provider": "AI 服务商",
+        "select_provider": "选择 AI 服务商...",
+        "model": "模型名称",
+        "optional": "可选",
+        "api_base_hint": "留空使用官方地址，也可填入代理/中转地址",
+        "save": "保存配置",
+        "saved": "已保存",
+        "save_error": "保存失败",
+        "test": "测试连接",
+        "test_error": "测试失败",
+        "clear": "清除"
       }
     },
     "login": {
@@ -695,5 +750,18 @@
       "progress_text": "已检测 {{current}} / {{total}} 个链接",
       "progress_preparing": "正在准备检测..."
     }
+  },
+  "ai_assistant": {
+    "subtitle": "智能书签助手",
+    "placeholder": "问我任何关于你书签的问题...",
+    "welcome": "你好，我是 NOWEN AI",
+    "welcome_hint": "我可以帮你搜索书签、推荐网站、或者回答任何问题。试试问我吧！",
+    "not_configured": "AI 未配置",
+    "not_configured_hint": "请先在后台「设置 → AI 智能」中配置 AI 模型",
+    "error": "AI 响应失败，请稍后重试",
+    "quick_1": "帮我找开发工具相关的书签",
+    "quick_2": "推荐一些学习资源",
+    "quick_3": "总结一下我的书签库",
+    "clear_history": "清空对话"
   }
 }

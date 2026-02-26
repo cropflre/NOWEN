@@ -9,6 +9,23 @@ import { IconRenderer } from './IconRenderer'
 import { visitsApi } from '../lib/api'
 import { useNetworkEnv, getBookmarkUrl } from '../hooks/useNetworkEnv'
 
+// 标签颜色：基于名称哈希生成柔和的彩色药丸
+const TAG_COLORS = [
+  { bg: 'rgba(59,130,246,0.12)',  text: 'rgb(96,165,250)',  border: 'rgba(59,130,246,0.25)' },   // blue
+  { bg: 'rgba(16,185,129,0.12)',  text: 'rgb(52,211,153)',  border: 'rgba(16,185,129,0.25)' },   // emerald
+  { bg: 'rgba(245,158,11,0.12)',  text: 'rgb(251,191,36)',  border: 'rgba(245,158,11,0.25)' },   // amber
+  { bg: 'rgba(239,68,68,0.12)',   text: 'rgb(248,113,113)', border: 'rgba(239,68,68,0.25)' },    // red
+  { bg: 'rgba(139,92,246,0.12)',  text: 'rgb(167,139,250)', border: 'rgba(139,92,246,0.25)' },   // violet
+  { bg: 'rgba(236,72,153,0.12)',  text: 'rgb(244,114,182)', border: 'rgba(236,72,153,0.25)' },   // pink
+  { bg: 'rgba(6,182,212,0.12)',   text: 'rgb(34,211,238)',  border: 'rgba(6,182,212,0.25)' },    // cyan
+  { bg: 'rgba(132,204,22,0.12)',  text: 'rgb(163,230,53)',  border: 'rgba(132,204,22,0.25)' },   // lime
+]
+function getTagColor(name: string) {
+  let hash = 0
+  for (let i = 0; i < name.length; i++) hash = ((hash << 5) - hash + name.charCodeAt(i)) | 0
+  return TAG_COLORS[Math.abs(hash) % TAG_COLORS.length]
+}
+
 interface BookmarkCardProps {
   bookmark: Bookmark
   onEdit?: (bookmark: Bookmark) => void
@@ -366,9 +383,42 @@ export function BookmarkCard({
                 document.body
               )}
             </div>
+            {/* 标签展示 */}
+            {bookmark.tags && bookmark.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-1.5">
+                {bookmark.tags.slice(0, 3).map(tag => {
+                  const color = getTagColor(tag)
+                  return (
+                    <span
+                      key={tag}
+                      className="px-1.5 py-0.5 rounded-md text-[10px] leading-tight font-medium truncate max-w-[80px]"
+                      style={{
+                        background: color.bg,
+                        color: color.text,
+                        border: `1px solid ${color.border}`,
+                      }}
+                      title={tag}
+                    >
+                      #{tag}
+                    </span>
+                  )
+                })}
+                {bookmark.tags.length > 3 && (
+                  <span
+                    className="px-1.5 py-0.5 rounded-md text-[10px] leading-tight font-medium"
+                    style={{ 
+                      color: 'var(--text-muted)',
+                      background: 'var(--color-bg-tertiary, rgba(255,255,255,0.05))',
+                    }}
+                  >
+                    +{bookmark.tags.length - 3}
+                  </span>
+                )}
+              </div>
+            )}
             {/* 域名固定在底部 */}
             <p 
-              className="text-xs truncate mt-auto pt-2"
+              className="text-xs truncate mt-auto pt-1.5"
               style={{ color: 'var(--text-muted)' }}
             >
               {new URL(bookmark.url).hostname}

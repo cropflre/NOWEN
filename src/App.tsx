@@ -21,6 +21,7 @@ import { SpotlightCard } from "./components/ui/spotlight-card";
 import { FloatingDock } from "./components/ui/floating-dock";
 import { MobileFloatingDock } from "./components/ui/mobile-floating-dock";
 import { SpotlightSearch } from "./components/ui/spotlight-search";
+import { AiAssistant } from "./components/ui/ai-assistant";
 import { Meteors } from "./components/ui/effects";
 import { BreathingDot } from "./components/ui/advanced-effects";
 import { ScrollToTop } from "./components/ui/scroll-to-top";
@@ -73,9 +74,27 @@ import { IconRenderer } from "./components/IconRenderer";
 import { handleQuotesChange } from "./data/quotes";
 import { createDockItems, filterDockItems } from "./config/dockItems";
 
+// 标签颜色：基于名称哈希生成柔和的彩色药丸
+const TAG_COLORS = [
+  { bg: 'rgba(59,130,246,0.12)',  text: 'rgb(96,165,250)',  border: 'rgba(59,130,246,0.25)' },
+  { bg: 'rgba(16,185,129,0.12)',  text: 'rgb(52,211,153)',  border: 'rgba(16,185,129,0.25)' },
+  { bg: 'rgba(245,158,11,0.12)',  text: 'rgb(251,191,36)',  border: 'rgba(245,158,11,0.25)' },
+  { bg: 'rgba(239,68,68,0.12)',   text: 'rgb(248,113,113)', border: 'rgba(239,68,68,0.25)' },
+  { bg: 'rgba(139,92,246,0.12)',  text: 'rgb(167,139,250)', border: 'rgba(139,92,246,0.25)' },
+  { bg: 'rgba(236,72,153,0.12)',  text: 'rgb(244,114,182)', border: 'rgba(236,72,153,0.25)' },
+  { bg: 'rgba(6,182,212,0.12)',   text: 'rgb(34,211,238)',  border: 'rgba(6,182,212,0.25)' },
+  { bg: 'rgba(132,204,22,0.12)',  text: 'rgb(163,230,53)',  border: 'rgba(132,204,22,0.25)' },
+]
+function getTagColor(name: string) {
+  let hash = 0
+  for (let i = 0; i < name.length; i++) hash = ((hash << 5) - hash + name.charCodeAt(i)) | 0
+  return TAG_COLORS[Math.abs(hash) % TAG_COLORS.length]
+}
+
 function App() {
   // ========== 状态管理 ==========
   const [isSpotlightOpen, setIsSpotlightOpen] = useState(false);
+  const [isAiAssistantOpen, setIsAiAssistantOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isIconManagerOpen, setIsIconManagerOpen] = useState(false);
   const [editingBookmark, setEditingBookmark] = useState<Bookmark | null>(null);
@@ -179,7 +198,7 @@ function App() {
   }, [i18n]);
 
   const dockItems = createDockItems(isDark, toggleDarkMode, t, toggleLanguage);
-  const filteredDockItems = filterDockItems(dockItems, menuVisibility);
+  const filteredDockItems = filterDockItems(dockItems, menuVisibility, widgetVisibility);
 
   // ========== 全局快捷键 ==========
   useEffect(() => {
@@ -191,6 +210,12 @@ function App() {
       if ((e.metaKey || e.ctrlKey) && e.key === "n") {
         e.preventDefault();
         setIsAddModalOpen(true);
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === "j") {
+        e.preventDefault();
+        if (widgetVisibility.aiAssistant !== false) {
+          setIsAiAssistantOpen(prev => !prev);
+        }
       }
     };
 
@@ -206,6 +231,11 @@ function App() {
         break;
       case "search":
         setIsSpotlightOpen(true);
+        break;
+      case "ai":
+        if (widgetVisibility.aiAssistant !== false) {
+          setIsAiAssistantOpen(true);
+        }
         break;
       case "add":
         setIsAddModalOpen(true);
@@ -622,6 +652,13 @@ function App() {
         onAddBookmark={handleAddFromSpotlight}
       />
 
+      {widgetVisibility.aiAssistant !== false && (
+        <AiAssistant
+          isOpen={isAiAssistantOpen}
+          onClose={() => setIsAiAssistantOpen(false)}
+        />
+      )}
+
       <AddBookmarkModal
         isOpen={isAddModalOpen}
         onClose={() => {
@@ -774,6 +811,38 @@ const MemoizedBookmarkItem = React.memo(function MemoizedBookmarkItem({
         <p className="text-sm line-clamp-2 flex-1" style={{ color: "var(--color-text-muted)" }}>
           {bookmark.description || (() => { try { return new URL(bookmark.url).hostname } catch { return bookmark.url } })()}
         </p>
+        {bookmark.tags && bookmark.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-2">
+            {bookmark.tags.slice(0, 3).map(tag => {
+              const color = getTagColor(tag)
+              return (
+                <span
+                  key={tag}
+                  className="px-1.5 py-0.5 rounded-md text-[10px] leading-tight font-medium truncate max-w-[80px]"
+                  style={{
+                    background: color.bg,
+                    color: color.text,
+                    border: `1px solid ${color.border}`,
+                  }}
+                  title={tag}
+                >
+                  #{tag}
+                </span>
+              )
+            })}
+            {bookmark.tags.length > 3 && (
+              <span
+                className="px-1.5 py-0.5 rounded-md text-[10px] leading-tight font-medium"
+                style={{ 
+                  color: 'var(--color-text-muted)',
+                  background: 'var(--color-bg-tertiary)',
+                }}
+              >
+                +{bookmark.tags.length - 3}
+              </span>
+            )}
+          </div>
+        )}
       </div>
     </SpotlightCard>
   );

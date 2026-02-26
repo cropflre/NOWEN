@@ -7,6 +7,7 @@ import {
   Moon,
   LayoutDashboard,
   Github,
+  Sparkles,
 } from "lucide-react";
 import { TFunction } from "i18next";
 
@@ -37,6 +38,12 @@ export const createDockItems = (
     title: t("dock.search"),
     icon: <Search className="w-5 h-5" />,
     IconComponent: Search,
+  },
+  {
+    id: "ai",
+    title: t("dock.ai"),
+    icon: <Sparkles className="w-5 h-5" />,
+    IconComponent: Sparkles,
   },
   {
     id: "add",
@@ -76,13 +83,17 @@ export const createDockItems = (
 // 根据菜单可见性过滤 Dock 项
 export const filterDockItems = (
   items: DockItem[],
-  menuVisibility: { languageToggle?: boolean; themeToggle?: boolean }
+  menuVisibility: { languageToggle?: boolean; themeToggle?: boolean },
+  widgetVisibility?: { aiAssistant?: boolean }
 ): DockItem[] => {
   return items.filter((item) => {
     if (item.id === "language" && menuVisibility.languageToggle === false) {
       return false;
     }
     if (item.id === "theme" && menuVisibility.themeToggle === false) {
+      return false;
+    }
+    if (item.id === "ai" && widgetVisibility?.aiAssistant === false) {
       return false;
     }
     return true;

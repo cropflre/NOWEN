@@ -11,7 +11,8 @@ import {
   Eye,
   EyeOff,
   MonitorSmartphone,
-  Monitor
+  Monitor,
+  Sparkles
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { WidgetVisibility } from '../../lib/api'
@@ -80,6 +81,14 @@ const widgetConfigs: WidgetConfig[] = [
     descKey: 'admin.settings.widget.mobile_ticker_desc',
     icon: BarChart3,
     gradient: 'from-teal-500 to-cyan-600',
+    category: 'dock',
+  },
+  {
+    id: 'aiAssistant',
+    labelKey: 'admin.settings.widget.ai_assistant',
+    descKey: 'admin.settings.widget.ai_assistant_desc',
+    icon: Sparkles,
+    gradient: 'from-violet-500 to-indigo-600',
     category: 'dock',
   },
 ]

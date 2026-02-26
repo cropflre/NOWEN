@@ -1,0 +1,424 @@
+/**
+ * AI 智能服务
+ * 支持 OpenAI / Gemini / 兼容 OpenAI 协议的本地模型 (Ollama 等)
+ * 配置优先级：数据库设置 > 环境变量
+ */
+
+import { queryAll, queryOne } from '../utils/index.js'
+
+// ========== 类型定义 ==========
+
+interface AiConfig {
+  provider: string       // openai | gemini | custom
+  apiKey: string
+  apiBase: string        // 自定义 API 地址 (Ollama 等)
+  model: string
+}
+
+interface AiCategorizeRequest {
+  url: string
+  title: string
+  description?: string
+  existingCategories: string[]
+  lang?: string
+}
+
+interface AiCategorizeResponse {
+  category: string
+  isNewCategory: boolean
+  tags: string[]
+  summary: string
+  confidence: number
+}
+
+export interface AiChatRequest {
+  message: string
+  lang?: string
+}
+
+export interface AiChatResponse {
+  reply: string
+  bookmarks?: Array<{
+    id: string
+    title: string
+    url: string
+    description?: string
+    categoryName?: string
+  }>
+}
+
+// ========== 配置管理 ==========
+
+// 从数据库读取 AI 配置
+function getDbAiConfig(): Partial<AiConfig> {
+  try {
+    const rows = queryAll("SELECT key, value FROM settings WHERE key LIKE 'ai_%'")
+    const config: Record<string, string> = {}
+    rows.forEach((r: any) => { config[r.key] = r.value })
+    return {
+      provider: config['ai_provider'] || '',
+      apiKey: config['ai_apiKey'] || '',
+      apiBase: config['ai_apiBase'] || '',
+      model: config['ai_model'] || '',
+    }
+  } catch {
+    return {}
+  }
+}
+
+// 合并配置：数据库优先 > 环境变量
+export function getAiConfig(): AiConfig {
+  const db = getDbAiConfig()
+
+  return {
+    provider: db.provider || process.env.AI_PROVIDER || '',
+    apiKey: db.apiKey || process.env.AI_API_KEY || '',
+    apiBase: db.apiBase || process.env.AI_API_BASE || '',
+    model: db.model || process.env.AI_MODEL || '',
+  }
+}
+
+export function isAiConfigured(): boolean {
+  const { provider, apiKey, apiBase } = getAiConfig()
+  if (!provider) return false
+  if (provider === 'custom') return !!apiBase
+  return !!apiKey
+}
+
+// 获取当前 AI 状态（给前端用）
+export function getAiFullStatus() {
+  const config = getAiConfig()
+  return {
+    configured: isAiConfigured(),
+    provider: config.provider || null,
+    model: config.model || null,
+    apiBase: config.apiBase || null,
+    hasApiKey: !!config.apiKey,
+  }
+}
+
+// ========== Prompt 构建 ==========
+
+function buildCategorizePrompt(req: AiCategorizeRequest): string {
+  const lang = req.lang?.startsWith('zh') ? '中文' : 'English'
+  const categoriesList = req.existingCategories.length > 0
+    ? req.existingCategories.join(', ')
+    : '(暂无已有分类)'
+
+  return `你是一个智能书签分类助手。根据以下网站信息，帮用户完成分类和整理。
+
+网站信息：
+- URL: ${req.url}
+- 标题: ${req.title}
+- 描述: ${req.description || '(无)'}
+
+用户已有的分类列表: [${categoriesList}]
+
+请返回一个 JSON 对象，包含以下字段：
+1. "category": 从已有分类中选择最匹配的一个。如果没有合适的，建议一个简短的新分类名称（2-6个字）。
+2. "isNewCategory": 布尔值，true 表示建议的是新分类，false 表示从已有分类中选择。
+3. "tags": 推荐3-5个相关标签，每个标签2-4个字，用于描述网站内容。
+4. "summary": 用一句话（不超过80字）精炼描述这个网站的核心价值，语言使用${lang}。
+5. "confidence": 0-1之间的数字，表示分类建议的置信度。
+
+只返回纯 JSON，不要包含 markdown 代码块或其他文本。`
+}
+
+function buildChatPrompt(req: AiChatRequest, bookmarks: any[]): string {
+  const lang = req.lang?.startsWith('zh') ? '中文' : 'English'
+
+  // 构建书签上下文（最多100条，避免 token 过长）
+  const bookmarkContext = bookmarks.slice(0, 100).map((b: any) =>
+    `- [${b.title}](${b.url})${b.description ? ` — ${b.description}` : ''}${b.categoryName ? ` [分类: ${b.categoryName}]` : ''}`
+  ).join('\n')
+
+  return `你是一个智能书签助手，名字叫 NOWEN AI。你的任务是帮助用户管理和发现他们收藏的书签。
+
+用户的书签库：
+${bookmarkContext}
+
+规则：
+1. 用${lang}回答。
+2. 如果用户想搜索/找某个书签，基于书签库中的标题、URL、描述进行语义匹配，返回最相关的结果。
+3. 在回复中，将相关的书签以下面的格式列出：
+   [[bookmark:书签ID]]
+   这样前端可以渲染为可点击的书签卡片。
+4. 如果用户的问题与书签无关（闲聊、知识问答等），也可以友好地回答，但适当引导回书签管理的话题。
+5. 保持回复简洁、友好、有帮助。每次回复不超过300字。
+6. 不要编造不存在的书签。
+
+用户的消息: ${req.message}`
+}
+
+// ========== API 调用 ==========
+
+async function callOpenAiCompatible(prompt: string, systemPrompt?: string): Promise<string> {
+  const { apiKey, apiBase, model } = getAiConfig()
+
+  const baseUrl = apiBase || 'https://api.openai.com/v1'
+  const modelName = model || 'gpt-4o-mini'
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  }
+  if (apiKey) {
+    headers['Authorization'] = `Bearer ${apiKey}`
+  }
+
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), 30000)
+
+  try {
+    const messages = [
+      { role: 'system', content: systemPrompt || 'You are a helpful assistant. Always respond in valid JSON format only.' },
+      { role: 'user', content: prompt },
+    ]
+
+    const resp = await fetch(`${baseUrl}/chat/completions`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        model: modelName,
+        messages,
+        temperature: 0.3,
+        max_tokens: 1000,
+      }),
+      signal: controller.signal,
+    })
+    clearTimeout(timer)
+
+    if (!resp.ok) {
+      const errText = await resp.text()
+      throw new Error(`API error ${resp.status}: ${errText}`)
+    }
+
+    const data = await resp.json()
+    return data.choices?.[0]?.message?.content || ''
+  } catch (err: any) {
+    clearTimeout(timer)
+    throw err
+  }
+}
+
+async function callGemini(prompt: string): Promise<string> {
+  const { apiKey, model } = getAiConfig()
+  const modelName = model || 'gemini-2.0-flash'
+
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), 30000)
+
+  try {
+    const resp = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.3,
+            maxOutputTokens: 1000,
+          },
+        }),
+        signal: controller.signal,
+      }
+    )
+    clearTimeout(timer)
+
+    if (!resp.ok) {
+      const errText = await resp.text()
+      throw new Error(`Gemini API error ${resp.status}: ${errText}`)
+    }
+
+    const data = await resp.json()
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || ''
+  } catch (err: any) {
+    clearTimeout(timer)
+    throw err
+  }
+}
+
+// 国内 AI Provider 默认配置
+const DOMESTIC_PROVIDERS: Record<string, { baseUrl: string; defaultModel: string }> = {
+  deepseek: { baseUrl: 'https://api.deepseek.com/v1', defaultModel: 'deepseek-chat' },
+  qwen: { baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1', defaultModel: 'qwen-turbo' },
+  doubao: { baseUrl: 'https://ark.cn-beijing.volces.com/api/v3', defaultModel: 'doubao-1-5-lite-32k-250115' },
+}
+
+// 通用调用入口
+async function callAi(prompt: string, systemPrompt?: string): Promise<string> {
+  const config = getAiConfig()
+  const { provider } = config
+
+  switch (provider) {
+    case 'gemini':
+      return callGemini(prompt)
+    case 'deepseek':
+    case 'qwen':
+    case 'doubao': {
+      // 国内 Provider：用 OpenAI 兼容协议，覆盖默认 baseUrl 和 model
+      const domestic = DOMESTIC_PROVIDERS[provider]
+      const originalBase = config.apiBase
+      const originalModel = config.model
+      // 临时覆盖配置（优先使用用户自定义值）
+      config.apiBase = originalBase || domestic.baseUrl
+      config.model = originalModel || domestic.defaultModel
+      return callOpenAiCompatibleWithConfig(prompt, config, systemPrompt)
+    }
+    case 'openai':
+    case 'custom':
+    default:
+      return callOpenAiCompatible(prompt, systemPrompt)
+  }
+}
+
+// 支持传入自定义配置的 OpenAI 兼容调用
+async function callOpenAiCompatibleWithConfig(prompt: string, config: AiConfig, systemPrompt?: string): Promise<string> {
+  const baseUrl = config.apiBase || 'https://api.openai.com/v1'
+  const modelName = config.model || 'gpt-4o-mini'
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  }
+  if (config.apiKey) {
+    headers['Authorization'] = `Bearer ${config.apiKey}`
+  }
+
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), 30000)
+
+  try {
+    const messages = [
+      { role: 'system', content: systemPrompt || 'You are a helpful assistant. Always respond in valid JSON format only.' },
+      { role: 'user', content: prompt },
+    ]
+
+    const resp = await fetch(`${baseUrl}/chat/completions`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        model: modelName,
+        messages,
+        temperature: 0.3,
+        max_tokens: 1000,
+      }),
+      signal: controller.signal,
+    })
+    clearTimeout(timer)
+
+    if (!resp.ok) {
+      const errText = await resp.text()
+      throw new Error(`API error ${resp.status}: ${errText}`)
+    }
+
+    const data = await resp.json()
+    return data.choices?.[0]?.message?.content || ''
+  } catch (err: any) {
+    clearTimeout(timer)
+    throw err
+  }
+}
+
+// ========== 解析工具 ==========
+
+function parseAiResponse(raw: string): AiCategorizeResponse {
+  let cleaned = raw.trim()
+  if (cleaned.startsWith('```')) {
+    cleaned = cleaned.replace(/^```(?:json)?\s*/, '').replace(/```\s*$/, '')
+  }
+
+  try {
+    const parsed = JSON.parse(cleaned)
+    return {
+      category: String(parsed.category || '').slice(0, 50),
+      isNewCategory: Boolean(parsed.isNewCategory),
+      tags: Array.isArray(parsed.tags) ? parsed.tags.map((t: any) => String(t).slice(0, 20)).slice(0, 5) : [],
+      summary: String(parsed.summary || '').slice(0, 200),
+      confidence: Math.min(1, Math.max(0, Number(parsed.confidence) || 0.5)),
+    }
+  } catch {
+    throw new Error('AI 返回格式异常，无法解析')
+  }
+}
+
+// ========== 公开 API ==========
+
+// AI 智能分类
+export async function aiCategorize(req: AiCategorizeRequest): Promise<AiCategorizeResponse> {
+  const prompt = buildCategorizePrompt(req)
+  const rawResponse = await callAi(prompt, 'You are a helpful assistant that categorizes bookmarks. Always respond in valid JSON format only.')
+  return parseAiResponse(rawResponse)
+}
+
+// AI 对话（智能助理）
+export async function aiChat(req: AiChatRequest): Promise<AiChatResponse> {
+  // 获取用户所有书签
+  const bookmarks = queryAll(`
+    SELECT id, title, url, description, category as categoryName
+    FROM bookmarks
+    ORDER BY createdAt DESC
+  `)
+
+  const prompt = buildChatPrompt(req, bookmarks)
+  const rawResponse = await callAi(prompt, 'You are NOWEN AI, a smart bookmark assistant. Be concise and helpful.')
+
+  // 从回复中提取 [[bookmark:xxx]] 引用
+  const bookmarkRefs: string[] = []
+  const refRegex = /\[\[bookmark:([^\]]+)\]\]/g
+  let match
+  while ((match = refRegex.exec(rawResponse)) !== null) {
+    bookmarkRefs.push(match[1])
+  }
+
+  // 查找引用的书签详情
+  let referencedBookmarks: any[] = []
+  if (bookmarkRefs.length > 0) {
+    referencedBookmarks = bookmarks.filter((b: any) => bookmarkRefs.includes(b.id))
+  }
+
+  // 清理回复中的标记
+  const cleanReply = rawResponse.replace(/\[\[bookmark:[^\]]+\]\]/g, '').trim()
+
+  return {
+    reply: cleanReply,
+    bookmarks: referencedBookmarks.length > 0 ? referencedBookmarks : undefined,
+  }
+}
+
+// AI 连接测试
+export async function aiTestConnection(): Promise<{ success: boolean; message: string; model?: string }> {
+  try {
+    const config = getAiConfig()
+    if (!config.provider) {
+      return { success: false, message: '未配置 AI Provider' }
+    }
+
+    const rawResponse = await callAi(
+      '请回复一个 JSON: {"status":"ok","message":"连接成功"}',
+      'Reply with valid JSON only.'
+    )
+
+    let cleaned = rawResponse.trim()
+    if (cleaned.startsWith('```')) {
+      cleaned = cleaned.replace(/^```(?:json)?\s*/, '').replace(/```\s*$/, '')
+    }
+
+    const parsed = JSON.parse(cleaned)
+    if (parsed.status === 'ok') {
+      const defaultModels: Record<string, string> = {
+        gemini: 'gemini-2.0-flash',
+        deepseek: 'deepseek-chat',
+        qwen: 'qwen-turbo',
+        doubao: 'doubao-1-5-lite-32k-250115',
+      }
+      return {
+        success: true,
+        message: '连接成功',
+        model: config.model || defaultModels[config.provider] || 'gpt-4o-mini',
+      }
+    }
+    return { success: true, message: '连接成功（响应格式不标准但可用）', model: config.model || undefined }
+  } catch (err: any) {
+    return { success: false, message: err?.message || 'AI 连接失败' }
+  }
+}

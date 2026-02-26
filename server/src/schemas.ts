@@ -13,7 +13,7 @@ export const createBookmarkSchema = z.object({
   icon: z.string().max(50).optional().nullable(),
   iconUrl: z.string().url('iconUrl 必须是有效的 URL').optional().nullable().or(z.literal('')),
   category: z.string().max(50).optional().nullable(),
-  tags: z.string().max(500).optional().nullable(),
+  tags: z.union([z.string().max(500), z.array(z.string().max(50))]).optional().nullable(),
   isReadLater: z.boolean().optional(),
 })
 
@@ -27,7 +27,7 @@ export const updateBookmarkSchema = z.object({
   icon: z.string().max(50).optional().nullable(),
   iconUrl: z.string().url('iconUrl 必须是有效的 URL').optional().nullable().or(z.literal('')),
   category: z.string().max(50).optional().nullable(),
-  tags: z.string().max(500).optional().nullable(),
+  tags: z.union([z.string().max(500), z.array(z.string().max(50))]).optional().nullable(),
   orderIndex: z.number().int().min(0).optional(),
   isPinned: z.boolean().optional(),
   isReadLater: z.boolean().optional(),
@@ -196,6 +196,7 @@ export const paginationQuerySchema = z.object({
   pageSize: z.coerce.number().int().min(1).max(100).default(20),
   search: z.string().max(100).optional(),
   category: z.string().max(50).optional(),
+  tag: z.string().max(50).optional(),
   isPinned: z.coerce.boolean().optional(),
   isReadLater: z.coerce.boolean().optional(),
   sortBy: z.enum(['createdAt', 'updatedAt', 'title', 'orderIndex']).default('orderIndex'),

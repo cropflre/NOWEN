@@ -18,7 +18,7 @@ export interface CreateBookmarkParams {
   icon?: string
   iconUrl?: string
   category?: string
-  tags?: string
+  tags?: string[]
   isReadLater?: boolean
 }
 
@@ -200,6 +200,7 @@ export interface PaginationParams {
   pageSize?: number
   search?: string
   category?: string
+  tag?: string
   isPinned?: boolean
   isReadLater?: boolean
   sortBy?: 'createdAt' | 'updatedAt' | 'title' | 'orderIndex'
@@ -226,6 +227,7 @@ export async function fetchBookmarksPaginated(params: PaginationParams = {}): Pr
   if (params.pageSize) searchParams.set('pageSize', params.pageSize.toString())
   if (params.search) searchParams.set('search', params.search)
   if (params.category) searchParams.set('category', params.category)
+  if (params.tag) searchParams.set('tag', params.tag)
   if (typeof params.isPinned === 'boolean') searchParams.set('isPinned', params.isPinned.toString())
   if (typeof params.isReadLater === 'boolean') searchParams.set('isReadLater', params.isReadLater.toString())
   if (params.sortBy) searchParams.set('sortBy', params.sortBy)
@@ -261,6 +263,37 @@ export async function reorderBookmarks(items: ReorderItem[]): Promise<SuccessRes
   return request<SuccessResponse>('/api/bookmarks/reorder', {
     method: 'PATCH',
     body: JSON.stringify({ items }),
+  })
+}
+
+// 获取所有已使用的标签
+export async function fetchTags(): Promise<string[]> {
+  return request<string[]>('/api/bookmarks/tags')
+}
+
+// 标签统计信息
+export interface TagStat {
+  name: string
+  count: number
+}
+
+// 获取标签列表（带使用计数）
+export async function fetchTagStats(): Promise<TagStat[]> {
+  return request<TagStat[]>('/api/bookmarks/tags/stats')
+}
+
+// 重命名/合并标签
+export async function renameTag(oldName: string, newName: string): Promise<{ success: boolean; updatedCount: number }> {
+  return request('/api/bookmarks/tags/rename', {
+    method: 'PATCH',
+    body: JSON.stringify({ oldName, newName }),
+  })
+}
+
+// 删除标签
+export async function deleteTag(name: string): Promise<{ success: boolean; updatedCount: number }> {
+  return request(`/api/bookmarks/tags/${encodeURIComponent(name)}`, {
+    method: 'DELETE',
   })
 }
 
@@ -309,6 +342,110 @@ export async function fetchMetadata(url: string, lang?: string): Promise<Metadat
 // 兼容旧导入名称
 export const metadataApi = {
   parse: fetchMetadata,
+} as const
+
+// ========== AI API ==========
+
+export interface AiStatusResponse {
+  configured: boolean
+  provider: string | null
+  model: string | null
+  apiBase: string | null
+  hasApiKey: boolean
+}
+
+export interface AiCategorizeResponse {
+  category: string
+  isNewCategory: boolean
+  categoryId: string | null
+  tags: string[]
+  summary: string
+  confidence: number
+  error?: string
+}
+
+export interface AiConfigResponse {
+  provider: string
+  apiKey: string
+  apiBase: string
+  model: string
+}
+
+export interface AiChatResponse {
+  reply: string
+  bookmarks?: Array<{
+    id: string
+    title: string
+    url: string
+    description?: string
+    categoryName?: string
+  }>
+  error?: string
+}
+
+export interface AiTestResponse {
+  success: boolean
+  message: string
+  model?: string
+}
+
+export async function getAiStatus(): Promise<AiStatusResponse> {
+  return request<AiStatusResponse>('/api/ai/status')
+}
+
+export async function aiCategorize(params: {
+  url: string
+  title: string
+  description?: string
+  lang?: string
+}): Promise<AiCategorizeResponse> {
+  return request<AiCategorizeResponse>('/api/ai/categorize', {
+    method: 'POST',
+    body: JSON.stringify(params),
+  })
+}
+
+export async function getAiConfig(): Promise<AiConfigResponse> {
+  return request<AiConfigResponse>('/api/ai/config', { requireAuth: true })
+}
+
+export async function saveAiConfig(config: {
+  provider: string
+  apiKey?: string
+  apiBase?: string
+  model?: string
+}): Promise<{ success: boolean }> {
+  return request('/api/ai/config', {
+    method: 'PUT',
+    body: JSON.stringify(config),
+    requireAuth: true,
+  })
+}
+
+export async function testAiConnection(): Promise<AiTestResponse> {
+  return request<AiTestResponse>('/api/ai/test', {
+    method: 'POST',
+    requireAuth: true,
+  })
+}
+
+export async function aiChat(params: {
+  message: string
+  lang?: string
+}): Promise<AiChatResponse> {
+  return request<AiChatResponse>('/api/ai/chat', {
+    method: 'POST',
+    body: JSON.stringify(params),
+  })
+}
+
+export const aiApi = {
+  status: getAiStatus,
+  categorize: aiCategorize,
+  getConfig: getAiConfig,
+  saveConfig: saveAiConfig,
+  testConnection: testAiConnection,
+  chat: aiChat,
 } as const
 
 // ========== 演示模式判断 ==========
@@ -443,6 +580,7 @@ export interface WidgetVisibility {
   processMatrix?: boolean      // 进程矩阵卡片
   dockMiniMonitor?: boolean    // Dock 迷你监控
   mobileTicker?: boolean       // 移动端状态栏
+  aiAssistant?: boolean        // AI 助手
 }
 
 // 菜单项可见性配置
@@ -592,6 +730,10 @@ export const bookmarkApi = {
   update: updateBookmark,
   delete: deleteBookmark,
   reorder: reorderBookmarks,
+  tags: fetchTags,
+  tagStats: fetchTagStats,
+  renameTag,
+  deleteTag,
 }
 
 export const categoryApi = {

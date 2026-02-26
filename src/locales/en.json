@@ -80,7 +80,13 @@
       "required_error": "Please fill in URL and title",
       "internal_url": "Internal URL (optional)",
       "internal_url_placeholder": "Enter intranet URL, e.g. http://192.168.1.100:8080",
-      "internal_url_hint": "When set, this URL will be used automatically in intranet environment"
+      "internal_url_hint": "When set, this URL will be used automatically in intranet environment",
+      "ai_magic": "AI Magic Categorize",
+      "ai_thinking": "AI Thinking",
+      "ai_applied": "AI Applied",
+      "ai_error": "AI categorization failed, please try again",
+      "tags": "Tags",
+      "tags_placeholder": "Type tag and press Enter, or use comma..."
     }
   },
   "category": {
@@ -110,6 +116,7 @@
   "dock": {
     "home": "Home",
     "search": "Search",
+    "ai": "AI Assistant",
     "add": "Add",
     "theme_light": "Switch to Light Mode",
     "theme_dark": "Switch to Dark Mode",
@@ -157,6 +164,8 @@
       "bookmarks_full": "Bookmark Management",
       "categories": "Categories",
       "categories_full": "Category Management",
+      "tags": "Tags",
+      "tags_full": "Tag Management",
       "quotes": "Quotes",
       "quotes_full": "Quote Management",
       "icons": "Icons",
@@ -178,7 +187,8 @@
       "view_analytics": "View visit data and trends",
       "check_health": "Check bookmark link health",
       "view_docs": "View platform features & guide",
-      "manage_config": "Manage your website configuration"
+      "manage_config": "Manage your website configuration",
+      "manage_tags": "Manage and organize bookmark tags"
     },
     "bookmark": {
       "add": "Add Bookmark",
@@ -256,6 +266,30 @@
       "batch_delete_confirm": "Are you sure you want to delete {{count}} categories? Bookmarks in these categories will become uncategorized.",
       "batch_deleted": "Deleted {{count}} categories"
     },
+    "tags": {
+      "total_tags": "Total Tags",
+      "total_usage": "Total Usage",
+      "avg_usage": "Avg Usage",
+      "search": "Search tags...",
+      "loading": "Loading...",
+      "empty": "No tags yet",
+      "no_results": "No matching tags found",
+      "col_name": "Tag Name",
+      "col_count": "Usage",
+      "col_actions": "Actions",
+      "rename": "Rename",
+      "merge": "Merge to...",
+      "merge_placeholder": "Enter target tag name...",
+      "renamed": "Renamed \"{{old}}\" to \"{{new}}\", {{count}} bookmarks affected",
+      "rename_error": "Rename failed",
+      "merged": "Merged \"{{source}}\" into \"{{target}}\", {{count}} bookmarks affected",
+      "merge_error": "Merge failed",
+      "deleted": "Deleted tag \"{{name}}\", {{count}} bookmarks affected",
+      "delete_error": "Delete failed",
+      "delete_confirm": "Confirm delete?",
+      "load_error": "Failed to load tags",
+      "hint": "Tags are derived from bookmarks. Renaming updates all bookmarks with that tag, merging replaces the source tag with the target (auto-deduped), and deleting removes the tag from all bookmarks."
+    },
     "quotes": {
       "title": "Quote Management",
       "count": "{{count}} custom quotes",
@@ -313,7 +347,9 @@
         "security": "Security",
         "security_desc": "Password, account security",
         "data": "Data",
-        "data_desc": "Import, export, backup"
+        "data_desc": "Import, export, backup",
+        "ai": "AI",
+        "ai_desc": "AI model configuration"
       },
       "site": {
         "title": "Site Settings",
@@ -395,6 +431,8 @@
         "dock_mini_desc": "Mini monitor ball next to desktop Dock",
         "mobile_ticker": "Mobile Status Bar",
         "mobile_ticker_desc": "Status indicator above mobile Dock",
+        "ai_assistant": "AI Assistant",
+        "ai_assistant_desc": "AI assistant entry in Dock & shortcut (⌘J)",
         "hint": "💡 Tip: Hiding widgets can reduce homepage data requests and improve loading speed. Save to apply changes.",
         "save": "Save Settings",
         "saving": "Saving...",
@@ -509,6 +547,23 @@
         "import_mode_overwrite_desc": "Clear all existing data and replace with browser bookmarks",
         "enriching_start": "Fetching icons for {{count}} bookmarks in background...",
         "enriching_done": "Icon fetching complete: {{success}}/{{total}} succeeded"
+      },
+      "ai": {
+        "title": "AI Configuration",
+        "subtitle": "Configure AI model to enable smart categorization and AI assistant",
+        "configured": "Configured",
+        "not_configured": "Not configured",
+        "provider": "AI Provider",
+        "select_provider": "Select AI provider...",
+        "model": "Model Name",
+        "optional": "optional",
+        "api_base_hint": "Leave empty for official API, or enter proxy/relay URL",
+        "save": "Save",
+        "saved": "Saved",
+        "save_error": "Save failed",
+        "test": "Test Connection",
+        "test_error": "Test failed",
+        "clear": "Clear"
       }
     },
     "login": {
@@ -695,5 +750,18 @@
       "progress_text": "Checked {{current}} / {{total}} links",
       "progress_preparing": "Preparing to check..."
     }
+  },
+  "ai_assistant": {
+    "subtitle": "Smart Bookmark Assistant",
+    "placeholder": "Ask me anything about your bookmarks...",
+    "welcome": "Hi, I'm NOWEN AI",
+    "welcome_hint": "I can help you search bookmarks, recommend sites, or answer any questions. Try asking me!",
+    "not_configured": "AI Not Configured",
+    "not_configured_hint": "Please configure AI model in Admin → Settings → AI first",
+    "error": "AI response failed, please try again",
+    "quick_1": "Find dev tools in my bookmarks",
+    "quick_2": "Recommend learning resources",
+    "quick_3": "Summarize my bookmark collection",
+    "clear_history": "Clear chat"
   }
 }

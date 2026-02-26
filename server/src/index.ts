@@ -13,6 +13,7 @@ import {
   systemRouter,
   visitsRouter,
   healthCheckRouter,
+  aiRouter,
 } from './routes/index.js'
 
 const app = express()
@@ -58,6 +59,7 @@ app.use('/api/quotes', quotesRouter)
 app.use('/api/system', systemRouter)
 app.use('/api/visits', visitsRouter)
 app.use('/api/health-check', healthCheckRouter)
+app.use('/api/ai', aiRouter)
 app.use('/api', dataRouter)  // /api/export, /api/import, /api/factory-reset
 
 // ========== 启动服务 ==========

@@ -25,6 +25,11 @@ services:
       - SYS_PATH=/host/sys
       # 文件系统根路径
       - FS_PATH=/host
+      # ========== AI 智能分类（可选） ==========
+      # - AI_PROVIDER=openai          # openai | gemini | custom
+      # - AI_API_KEY=sk-xxx
+      # - AI_MODEL=gpt-4o-mini
+      # - AI_API_BASE=                # 自定义 API 地址（Ollama 等）
     # 🔑 特权模式：允许读取 CPU 温度、SMART 磁盘信息、完整硬件信息
     privileged: true
 
