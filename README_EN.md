@@ -71,6 +71,7 @@
 | **Sidebar Navigation**   | Quick category navigation (Dev/Tools/Design/Reading/Media) · Smart highlighting            |
 | **Category Editing**     | Hover to show edit button ✏️ · Edit directly without backend                               |
 | **Quick Add Category**   | Create category while adding bookmark · 10 preset colors · Real-time refresh               |
+| **AI Assistant**         | AI smart tags · Batch AI classify · Batch AI metadata & icons · AI chat assistant · Multi-language output |
 | **System Monitoring**    | Engine Room (CPU 57%/RAM 89%/Disk) · Hardware ID · Vital Signs (28°C) · Network · Services |
 | **Dock Status Bar**      | SYSTEM ONLINE · CPU/MEM/Temp/Network speed · Freely draggable · Position memory          |
 | **Mobile Floating Dock** | Freely draggable energy orb · Petal-style expand menu · Bottom status bar · Haptic feedback · Position persistence |
@@ -159,14 +160,32 @@
 - **Link Health Check** (NEW): Batch check all bookmark links accessibility, dead link detection and cleanup
 - **Internal/External URL Switching** (NEW): Configure dual URLs per bookmark, auto-detect network environment for smart URL switching
 
+### 🤖 AI Features (NEW)
+
+- **AI Smart Tags**: Auto-generate matching tags when adding bookmarks via AI analysis
+  - Auto-triggers after URL analysis (no manual click needed)
+  - Auto-fills tags + category + optimized description
+  - AI settings panel and tag management panel
+- **Batch AI Smart Classify**: Batch assign categories to selected bookmarks via AI
+  - Auto-create new categories if no match exists
+  - Concurrent processing (2 workers), async with real-time progress
+- **Batch AI Metadata & Icons**: Batch optimize bookmark title, description, tags and icons via AI
+  - AI-recommended Iconify icons (simple-icons brand icons preferred)
+  - Multi-language output: metadata follows current UI language (Chinese/English)
+  - One-click enrich: title + description + tags + icon in a single operation
+- **AI Chat Assistant**: Smart bookmark assistant for search and discovery
+  - Semantic search across bookmark library
+  - Context-aware responses with clickable bookmark cards
+
 ### ⚙️ Admin Panel
 
 | Module              | Features                                                                                          |
 | ------------------- | ------------------------------------------------------------------------------------------------- |
-| **Bookmarks**       | CRUD, batch operations, category filter, search, numeric pagination, quick category change            |
+| **Bookmarks**       | CRUD, batch operations, category filter, search, numeric pagination, quick category change, batch AI tags/classify/enrich |
 | **Categories**      | Custom names, icon picker, color picker, drag sorting                                             |
 | **Icons**           | Upload custom icons, preview, delete management                                                   |
 | **Quotes**          | Custom quotes, system default toggle                                                              |
+| **AI Settings**     | AI provider config (OpenAI/Gemini/DeepSeek/Qwen/Doubao/Custom), API key, model, connection test  |
 | **Site Settings**   | Custom site name and icon, lite mode toggle, weather/lunar toggle, menu visibility, footer filing info |
 | **Theme Settings**  | 8 preset themes, light/dark mode, auto switch, day/night animation, circle expand animation       |
 | **Widget Settings** | Control each monitor component visibility, Beam border toggle                                     |
@@ -656,6 +675,23 @@ A: Ensure `privileged: true` is set and `/sys` is mounted. Temperature node path
 | ------ | -------------------- | ---- | ------------------------------------ |
 | POST   | `/api/health-check`  | ✅   | Batch check bookmark link health     |
 
+### AI API
+
+| Method | Path                          | Auth | Description                        |
+| ------ | ----------------------------- | ---- | ---------------------------------- |
+| GET    | `/api/ai/status`              | ❌   | Get AI configuration status        |
+| POST   | `/api/ai/categorize`          | ❌   | AI smart categorize single bookmark |
+| POST   | `/api/ai/chat`                | ❌   | AI chat assistant                  |
+| POST   | `/api/ai/batch-tags`          | ✅   | Batch AI smart tags                |
+| GET    | `/api/ai/batch-tags-status`   | ✅   | Query batch tags progress          |
+| POST   | `/api/ai/batch-classify`      | ✅   | Batch AI smart classify            |
+| GET    | `/api/ai/batch-classify-status` | ✅ | Query batch classify progress      |
+| POST   | `/api/ai/batch-enrich`        | ✅   | Batch AI metadata & icons          |
+| GET    | `/api/ai/batch-enrich-status` | ✅   | Query batch enrich progress        |
+| GET    | `/api/ai/config`              | ✅   | Get AI config (API key masked)     |
+| PUT    | `/api/ai/config`              | ✅   | Save AI config                     |
+| POST   | `/api/ai/test`                | ✅   | Test AI connection                 |
+
 ### Other APIs
 
 | Method | Path                 | Auth | Description         |
@@ -760,6 +796,18 @@ A: Admin → System Settings → Data Management → Export Backup, or copy `ser
   - Auto-triggers AI magic after URL analysis completes (no manual click needed)
   - Auto-fills tags + category + optimized description
   - New AI settings panel and tag management panel
+- **Batch AI Smart Classify**: Batch assign categories to selected bookmarks via AI
+  - Auto-create new categories if no existing match
+  - Also updates tags and descriptions alongside classification
+  - Async processing with concurrent workers (2), real-time progress polling
+- **Batch AI Metadata & Icons**: One-click batch optimize bookmark metadata via AI
+  - Optimizes title (removes SEO suffixes, preserves brand name)
+  - Generates concise description, recommends 3-5 tags
+  - Recommends Iconify icons (simple-icons brand icons preferred, mdi, lucide)
+  - Multi-language output: follows current UI language (Chinese/English)
+- **AI Chat Assistant**: Smart bookmark assistant for search and discovery
+  - Semantic search across all bookmarks
+  - Context-aware responses with referenced bookmark cards
 - **Bookmark Tag Display**: Colorful tag pills displayed on bookmark cards
   - 8 soft color variations based on tag name hash (blue/green/amber/red/violet/pink/cyan/lime)
   - Tags shown on both category and pinned bookmark cards
