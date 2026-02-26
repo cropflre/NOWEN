@@ -45,7 +45,7 @@ import {
 } from 'lucide-react'
 import { Bookmark, Category, CustomIcon } from '../types/bookmark'
 import { cn, presetIcons } from '../lib/utils'
-import { adminChangePassword, adminChangeUsername, fetchSettings, updateSettings, SiteSettings, WidgetVisibility, importData, getEnrichStatus, enrichBatch, fetchQuotes, updateQuotes } from '../lib/api'
+import { adminChangePassword, adminChangeUsername, fetchSettings, updateSettings, SiteSettings, WidgetVisibility, importData, getEnrichStatus, enrichBatch, fetchQuotes, updateQuotes, aiApi } from '../lib/api'
 import type { EnrichMode } from '../lib/api'
 import { AdminSidebar } from '../components/admin/AdminSidebar'
 import { QuotesCard } from '../components/admin/QuotesCard'
@@ -54,6 +54,7 @@ import { AnalyticsCard } from '../components/admin/AnalyticsCard'
 import { HealthCheckCard } from '../components/admin/HealthCheckCard'
 import { DocsCard } from '../components/admin/DocsCard'
 import { TagsManageCard } from '../components/admin/TagsManageCard'
+import { LogsCard } from '../components/admin/LogsCard'
 import { IconRenderer } from '../components/IconRenderer'
 import { IconifyPicker } from '../components/IconifyPicker'
 import { ToastProvider, useToast } from '../components/admin/Toast'
@@ -645,6 +646,55 @@ function AdminContent() {
     }
   }
 
+  // AI 状态检查
+  const [aiConfigured, setAiConfigured] = useState<boolean | null>(null)
+  const [isAiTagging, setIsAiTagging] = useState(false)
+
+  useEffect(() => {
+    aiApi.status().then(s => setAiConfigured(s.configured)).catch(() => setAiConfigured(false))
+  }, [])
+
+  // 批量 AI 智能标签
+  const batchAiTags = async () => {
+    const ids = Array.from(selectedIds)
+    if (ids.length === 0 || !aiConfigured) return
+
+    setIsAiTagging(true)
+    try {
+      const result = await aiApi.batchTags(ids)
+      if (result.processing > 0) {
+        showToast('info', t('admin.bookmark.batch_ai_tags_start', { count: result.processing }))
+        setSelectedIds(new Set())
+
+        // 轮询进度
+        const pollInterval = setInterval(async () => {
+          try {
+            const status = await aiApi.batchTagsStatus()
+            if (!status.running) {
+              clearInterval(pollInterval)
+              setIsAiTagging(false)
+              await refreshData()
+              showToast('success', t('admin.bookmark.batch_ai_tags_done', {
+                success: status.completed - status.failed,
+                total: status.total,
+              }))
+            }
+          } catch {
+            clearInterval(pollInterval)
+            setIsAiTagging(false)
+          }
+        }, 2000)
+        setTimeout(() => { clearInterval(pollInterval); setIsAiTagging(false) }, 300000)
+      } else {
+        showToast('info', t('admin.bookmark.batch_enrich_none'))
+        setIsAiTagging(false)
+      }
+    } catch (err: any) {
+      showToast('error', err.message || t('admin.bookmark.batch_ai_tags_error'))
+      setIsAiTagging(false)
+    }
+  }
+
   // ========== 重复/域名检测 ==========
   type DetectResult = { type: 'duplicate' | 'same-domain'; key: string; bookmarks: Bookmark[] }
   const [detectResults, setDetectResults] = useState<DetectResult[]>([])
@@ -922,6 +972,7 @@ function AdminContent() {
     icons: t('admin.nav.icons_full'),
     analytics: t('admin.nav.analytics_full'),
     'health-check': t('admin.nav.health_check_full'),
+    logs: t('admin.nav.logs_full'),
     docs: t('admin.nav.docs_full'),
     settings: t('admin.nav.settings_full'),
   }
@@ -978,6 +1029,7 @@ function AdminContent() {
                 {activeTab === 'icons' && t('admin.stats.total_icons', { count: customIcons.length })}
                 {activeTab === 'analytics' && t('admin.stats.view_analytics')}
                 {activeTab === 'health-check' && t('admin.stats.check_health')}
+                {activeTab === 'logs' && t('admin.stats.view_logs')}
                 {activeTab === 'docs' && t('admin.stats.view_docs')}
                 {activeTab === 'settings' && t('admin.stats.manage_config')}
               </p>
@@ -1156,6 +1208,47 @@ function AdminContent() {
                           <option value="icon" style={{ background: 'var(--color-bg-secondary)' }}>{t('admin.bookmark.batch_enrich_icon')}</option>
                           <option value="all" style={{ background: 'var(--color-bg-secondary)' }}>{t('admin.bookmark.batch_enrich_all')}</option>
                         </select>
+                      </div>
+                      {/* AI 智能标签 */}
+                      <div className="relative group/ai">
+                        <motion.button
+                          onClick={batchAiTags}
+                          disabled={!aiConfigured || isAiTagging}
+                          whileHover={aiConfigured ? { scale: 1.02 } : {}}
+                          whileTap={aiConfigured ? { scale: 0.98 } : {}}
+                          className={cn(
+                            'flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors',
+                            aiConfigured
+                              ? 'text-purple-400 hover:bg-purple-500/20'
+                              : 'opacity-40 cursor-not-allowed'
+                          )}
+                          style={{
+                            background: aiConfigured
+                              ? 'color-mix(in srgb, rgb(147,51,234) 15%, transparent)'
+                              : 'color-mix(in srgb, var(--color-text-muted) 10%, transparent)',
+                            border: aiConfigured
+                              ? '1px solid color-mix(in srgb, rgb(147,51,234) 30%, transparent)'
+                              : '1px solid color-mix(in srgb, var(--color-text-muted) 20%, transparent)',
+                          }}
+                        >
+                          <Sparkles className={cn('w-4 h-4', isAiTagging && 'animate-pulse')} />
+                          <span className="hidden lg:inline">
+                            {isAiTagging ? t('admin.bookmark.batch_ai_tags_loading') : t('admin.bookmark.batch_ai_tags')}
+                          </span>
+                        </motion.button>
+                        {/* AI 未配置时 hover 提示 */}
+                        {!aiConfigured && (
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 rounded-lg text-xs whitespace-nowrap opacity-0 group-hover/ai:opacity-100 transition-opacity pointer-events-none z-10"
+                            style={{
+                              background: 'var(--color-bg-secondary)',
+                              border: '1px solid var(--color-glass-border)',
+                              color: 'var(--color-text-secondary)',
+                              boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                            }}
+                          >
+                            {t('admin.bookmark.batch_ai_tags_need_config')}
+                          </div>
+                        )}
                       </div>
                       {/* 批量删除 */}
                       <motion.button
@@ -2530,6 +2623,19 @@ function AdminContent() {
                 className="max-w-5xl"
               >
                 <HealthCheckCard onShowToast={showToast} onDeleteBookmark={onDeleteBookmark} />
+              </motion.div>
+            )}
+
+            {/* Logs Tab */}
+            {activeTab === 'logs' && (
+              <motion.div
+                key="logs"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="max-w-5xl"
+              >
+                <LogsCard onShowToast={showToast} />
               </motion.div>
             )}
 

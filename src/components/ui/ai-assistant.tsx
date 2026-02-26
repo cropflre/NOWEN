@@ -218,7 +218,7 @@ export function AiAssistant({ isOpen, onClose }: AiAssistantProps) {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -20 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed inset-x-4 top-[8vh] md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-[680px] z-[61] max-h-[80vh] flex flex-col rounded-2xl shadow-2xl"
+            className="fixed inset-x-4 top-[8vh] md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-[680px] z-[61] max-h-[80vh] flex flex-col rounded-2xl shadow-2xl overflow-hidden"
             style={{
               background: 'var(--color-bg-primary)',
               border: '1px solid var(--color-glass-border)',

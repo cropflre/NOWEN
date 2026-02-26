@@ -160,6 +160,27 @@ export async function initDatabase() {
   db.run(`CREATE INDEX IF NOT EXISTS idx_visits_bookmarkId ON visits(bookmarkId)`)
   db.run(`CREATE INDEX IF NOT EXISTS idx_visits_visitedAt ON visits(visitedAt)`)
 
+  // 系统日志表
+  db.run(`
+    CREATE TABLE IF NOT EXISTS logs (
+      id TEXT PRIMARY KEY,
+      level TEXT NOT NULL DEFAULT 'info',
+      type TEXT NOT NULL DEFAULT 'operation',
+      message TEXT NOT NULL,
+      detail TEXT,
+      method TEXT,
+      path TEXT,
+      statusCode INTEGER,
+      ip TEXT,
+      userAgent TEXT,
+      username TEXT,
+      createdAt TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `)
+  db.run(`CREATE INDEX IF NOT EXISTS idx_logs_createdAt ON logs(createdAt)`)
+  db.run(`CREATE INDEX IF NOT EXISTS idx_logs_level ON logs(level)`)
+  db.run(`CREATE INDEX IF NOT EXISTS idx_logs_type ON logs(type)`)
+
   // 数据库迁移：为 bookmarks 表添加 visitCount 字段
   try {
     db.run('ALTER TABLE bookmarks ADD COLUMN visitCount INTEGER DEFAULT 0')

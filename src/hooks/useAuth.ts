@@ -48,7 +48,10 @@ export function useAuth() {
   }, []);
 
   // 密码修改成功后的处理
-  const handlePasswordChangeSuccess = useCallback(() => {
+  const handlePasswordChangeSuccess = useCallback((newUsername?: string) => {
+    if (newUsername) {
+      setAdminUsername(newUsername);
+    }
     setCurrentPage('admin');
   }, []);
 

@@ -13,7 +13,7 @@ import { TagInput } from './ui/TagInput'
 interface AddBookmarkModalProps {
   isOpen: boolean
   onClose: () => void
-  onAdd: (bookmark: Omit<Bookmark, 'id' | 'orderIndex' | 'createdAt' | 'updatedAt'>) => void
+  onAdd: (bookmark: Omit<Bookmark, 'id' | 'orderIndex' | 'createdAt' | 'updatedAt'>) => void | Promise<void>
   categories: Category[]
   customIcons?: CustomIcon[]
   initialUrl?: string
@@ -291,7 +291,7 @@ export function AddBookmarkModal({
     }
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!url || !title) {
       setError(t('bookmark.modal.required_error'))
       setShake(true)
@@ -299,7 +299,7 @@ export function AddBookmarkModal({
       return
     }
 
-    onAdd({
+    await onAdd({
       url,
       internalUrl: internalUrl || undefined,
       title,

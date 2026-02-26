@@ -15,11 +15,12 @@ import {
   BarChart3,
   HeartPulse,
   BookOpen,
-  Tag
+  Tag,
+  ScrollText
 } from 'lucide-react'
 
 
-type TabType = 'bookmarks' | 'categories' | 'tags' | 'quotes' | 'icons' | 'analytics' | 'health-check' | 'docs' | 'settings'
+type TabType = 'bookmarks' | 'categories' | 'tags' | 'quotes' | 'icons' | 'analytics' | 'health-check' | 'logs' | 'docs' | 'settings'
 
 interface AdminSidebarProps {
   activeTab: TabType
@@ -40,6 +41,7 @@ const navItems = [
   { id: 'icons' as TabType, labelKey: 'admin.nav.icons', fullLabelKey: 'admin.nav.icons_full', icon: ImageIcon },
   { id: 'analytics' as TabType, labelKey: 'admin.nav.analytics', fullLabelKey: 'admin.nav.analytics_full', icon: BarChart3 },
   { id: 'health-check' as TabType, labelKey: 'admin.nav.health_check', fullLabelKey: 'admin.nav.health_check_full', icon: HeartPulse },
+  { id: 'logs' as TabType, labelKey: 'admin.nav.logs', fullLabelKey: 'admin.nav.logs_full', icon: ScrollText },
   { id: 'docs' as TabType, labelKey: 'admin.nav.docs', fullLabelKey: 'admin.nav.docs_full', icon: BookOpen },
   { id: 'settings' as TabType, labelKey: 'admin.nav.settings', fullLabelKey: 'admin.nav.settings_full', icon: Settings },
 ]

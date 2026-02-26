@@ -14,7 +14,9 @@ import {
   visitsRouter,
   healthCheckRouter,
   aiRouter,
+  logsRouter,
 } from './routes/index.js'
+import { requestLoggerMiddleware } from './routes/logs.js'
 
 const app = express()
 
@@ -49,6 +51,9 @@ app.use(express.urlencoded({ limit: '10mb', extended: true }))
 // 全局请求频率限制
 app.use(generalLimiter)
 
+// 请求日志中间件（记录 API 错误和操作日志）
+app.use(requestLoggerMiddleware)
+
 // ========== 路由挂载 ==========
 app.use('/api/bookmarks', bookmarksRouter)
 app.use('/api/categories', categoriesRouter)
@@ -60,6 +65,7 @@ app.use('/api/system', systemRouter)
 app.use('/api/visits', visitsRouter)
 app.use('/api/health-check', healthCheckRouter)
 app.use('/api/ai', aiRouter)
+app.use('/api/logs', logsRouter)
 app.use('/api', dataRouter)  // /api/export, /api/import, /api/factory-reset
 
 // ========== 启动服务 ==========

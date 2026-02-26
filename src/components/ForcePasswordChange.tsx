@@ -1,16 +1,17 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Lock, Eye, EyeOff, Shield, KeyRound, AlertTriangle, Check } from 'lucide-react'
+import { Lock, Eye, EyeOff, Shield, KeyRound, AlertTriangle, Check, User } from 'lucide-react'
 import { BorderBeam } from './ui/advanced-effects'
-import { adminChangePassword, clearPasswordChangeFlag } from '../lib/api'
+import { adminChangePassword, adminChangeUsername, clearPasswordChangeFlag } from '../lib/api'
 
 interface ForcePasswordChangeProps {
   username: string
-  onSuccess: () => void
+  onSuccess: (newUsername?: string) => void
   onLogout: () => void
 }
 
 export function ForcePasswordChange({ username, onSuccess, onLogout }: ForcePasswordChangeProps) {
+  const [newUsername, setNewUsername] = useState('')
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -57,14 +58,46 @@ export function ForcePasswordChange({ username, onSuccess, onLogout }: ForcePass
       setError('新密码不能与当前密码相同')
       return
     }
+
+    // 验证新用户名格式
+    const trimmedUsername = newUsername.trim()
+    if (trimmedUsername) {
+      if (trimmedUsername.length < 2) {
+        setError('用户名长度至少2位')
+        return
+      }
+      if (!/^[a-zA-Z0-9_\-]+$/.test(trimmedUsername)) {
+        setError('用户名只能包含字母、数字、下划线和横线')
+        return
+      }
+    }
     
     setIsLoading(true)
     setError('')
     
     try {
+      // 先修改密码
       await adminChangePassword(currentPassword, newPassword)
+      
+      // 如果填写了新用户名，再修改用户名（用新密码验证）
+      let finalUsername: string | undefined
+      if (trimmedUsername && trimmedUsername !== username) {
+        try {
+          const result = await adminChangeUsername(trimmedUsername, newPassword)
+          finalUsername = result.username || trimmedUsername
+        } catch (err: unknown) {
+          // 密码已改成功，但用户名修改失败
+          const message = err instanceof Error ? err.message : '用户名修改失败'
+          clearPasswordChangeFlag()
+          onSuccess()
+          // 用 setTimeout 延迟提示，避免被页面切换覆盖
+          setTimeout(() => alert(`密码已修改成功，但用户名修改失败：${message}`), 100)
+          return
+        }
+      }
+      
       clearPasswordChangeFlag()
-      onSuccess()
+      onSuccess(finalUsername)
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : '修改密码失败，请重试'
       setError(message)
@@ -144,6 +177,35 @@ export function ForcePasswordChange({ username, onSuccess, onLogout }: ForcePass
           {/* Form */}
           <form onSubmit={handleSubmit}>
             <div className="space-y-4">
+              {/* New Username (Optional) */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.48 }}
+              >
+                <label className="block text-sm text-white/50 mb-2">
+                  新用户名 <span className="text-white/30">(可选)</span>
+                </label>
+                <div className="relative">
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+                  <input
+                    type="text"
+                    value={newUsername}
+                    onChange={(e) => {
+                      setNewUsername(e.target.value)
+                      setError('')
+                    }}
+                    placeholder={username}
+                    className="w-full pl-11 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/30 focus:outline-none focus:border-nebula-purple/50 transition-colors"
+                  />
+                </div>
+                {newUsername.trim() && newUsername.trim() !== username && (
+                  <p className="mt-1.5 text-xs text-white/30">
+                    用户名将从 <span className="text-nebula-purple">{username}</span> 修改为 <span className="text-nebula-purple">{newUsername.trim()}</span>
+                  </p>
+                )}
+              </motion.div>
+
               {/* Current Password */}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
@@ -290,7 +352,7 @@ export function ForcePasswordChange({ username, onSuccess, onLogout }: ForcePass
               >
                 <span className="relative z-10 flex items-center justify-center gap-2">
                   <KeyRound className="w-4 h-4" />
-                  {isLoading ? '修改中...' : '立即修改密码'}
+                  {isLoading ? '修改中...' : '立即修改'}
                 </span>
                 <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-orange-500 opacity-0 group-hover:opacity-100 transition-opacity" />
               </motion.button>

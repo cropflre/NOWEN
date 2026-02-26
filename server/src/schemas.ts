@@ -109,7 +109,7 @@ export const importDataSchema = z.object({
     icon: z.string().optional().nullable(),
     iconUrl: z.string().optional().nullable(),
     category: z.string().optional().nullable(),
-    tags: z.string().optional().nullable(),
+    tags: z.union([z.string(), z.array(z.string())]).optional().nullable(),
     orderIndex: z.number().optional(),
     isPinned: z.boolean().optional(),
     isReadLater: z.boolean().optional(),

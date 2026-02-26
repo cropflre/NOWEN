@@ -273,11 +273,15 @@ function App() {
   }, []);
 
   const handleSaveBookmark = useCallback(
-    (data: Omit<Bookmark, "id" | "orderIndex" | "createdAt" | "updatedAt">) => {
-      if (editingBookmark) {
-        updateBookmark(editingBookmark.id, data);
-      } else {
-        addBookmark(data);
+    async (data: Omit<Bookmark, "id" | "orderIndex" | "createdAt" | "updatedAt">) => {
+      try {
+        if (editingBookmark) {
+          await updateBookmark(editingBookmark.id, data);
+        } else {
+          await addBookmark(data);
+        }
+      } catch (err) {
+        console.error('保存书签失败:', err);
       }
       setEditingBookmark(null);
       setPendingUrl("");

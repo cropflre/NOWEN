@@ -439,6 +439,26 @@ export async function aiChat(params: {
   })
 }
 
+export interface AiBatchTagsStatus {
+  running: boolean
+  total: number
+  completed: number
+  failed: number
+  current: string
+}
+
+export async function aiBatchTags(ids: string[]): Promise<{ success: boolean; processing: number }> {
+  return request<{ success: boolean; processing: number }>('/api/ai/batch-tags', {
+    method: 'POST',
+    body: JSON.stringify({ ids }),
+    requireAuth: true,
+  })
+}
+
+export async function getAiBatchTagsStatus(): Promise<AiBatchTagsStatus> {
+  return request<AiBatchTagsStatus>('/api/ai/batch-tags-status', { requireAuth: true })
+}
+
 export const aiApi = {
   status: getAiStatus,
   categorize: aiCategorize,
@@ -446,6 +466,8 @@ export const aiApi = {
   saveConfig: saveAiConfig,
   testConnection: testAiConnection,
   chat: aiChat,
+  batchTags: aiBatchTags,
+  batchTagsStatus: getAiBatchTagsStatus,
 } as const
 
 // ========== 演示模式判断 ==========
@@ -1064,6 +1086,68 @@ export async function checkBookmarksHealth(
 
 export const healthCheckApi = {
   check: checkBookmarksHealth,
+}
+
+// ========== 日志 API ==========
+
+export interface LogEntry {
+  id: string
+  level: 'info' | 'warn' | 'error'
+  type: 'operation' | 'api_error' | 'system'
+  message: string
+  detail?: string
+  method?: string
+  path?: string
+  statusCode?: number
+  ip?: string
+  userAgent?: string
+  username?: string
+  createdAt: string
+}
+
+export interface LogsResponse {
+  logs: LogEntry[]
+  pagination: {
+    page: number
+    pageSize: number
+    total: number
+    totalPages: number
+  }
+  stats: {
+    info: number
+    warn: number
+    error: number
+  }
+}
+
+export async function fetchLogs(params: {
+  page?: number
+  pageSize?: number
+  level?: string
+  type?: string
+  search?: string
+} = {}): Promise<LogsResponse> {
+  const searchParams = new URLSearchParams()
+  if (params.page) searchParams.set('page', String(params.page))
+  if (params.pageSize) searchParams.set('pageSize', String(params.pageSize))
+  if (params.level) searchParams.set('level', params.level)
+  if (params.type) searchParams.set('type', params.type)
+  if (params.search) searchParams.set('search', params.search)
+  const qs = searchParams.toString()
+  return request<LogsResponse>(`/api/logs${qs ? `?${qs}` : ''}`, { requireAuth: true })
+}
+
+export async function clearLogs(before?: string): Promise<{ success: boolean; message: string }> {
+  const qs = before ? `?before=${encodeURIComponent(before)}` : ''
+  return request<{ success: boolean; message: string }>(`/api/logs${qs}`, {
+    method: 'DELETE',
+    requireAuth: true,
+  })
+}
+
+export const logsApi = {
+  list: fetchLogs,
+  clear: clearLogs,
 }
 
 // 重新导出类型供外部使用

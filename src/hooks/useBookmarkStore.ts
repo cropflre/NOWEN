@@ -73,6 +73,7 @@ export function useBookmarkStore() {
     try {
       const newBookmark = await api.createBookmark({
         url: bookmark.url,
+        internalUrl: bookmark.internalUrl,
         title: bookmark.title,
         description: bookmark.description,
         favicon: bookmark.favicon,

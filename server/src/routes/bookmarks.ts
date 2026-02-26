@@ -15,10 +15,19 @@ import {
 
 const router = Router()
 
-// 解析 tags 字符串为数组
+// 解析 tags 字符串为数组（兼容逗号分隔和 JSON 格式）
 function parseTags(bookmark: any) {
   if (bookmark && typeof bookmark.tags === 'string' && bookmark.tags) {
-    bookmark.tags = bookmark.tags.split(',').map((t: string) => t.trim()).filter(Boolean)
+    const trimmed = bookmark.tags.trim()
+    // 兼容旧的 JSON 数组格式（如 '["tag1","tag2"]'）
+    if (trimmed.startsWith('[')) {
+      try {
+        const parsed = JSON.parse(trimmed)
+        bookmark.tags = Array.isArray(parsed) ? parsed.map((t: any) => String(t).trim()).filter(Boolean) : []
+        return bookmark
+      } catch {}
+    }
+    bookmark.tags = trimmed.split(',').map((t: string) => t.trim()).filter(Boolean)
   } else if (bookmark) {
     bookmark.tags = bookmark.tags || []
   }
@@ -39,7 +48,15 @@ router.get('/tags', (_req, res) => {
     const tagSet = new Set<string>()
     rows.forEach((r: any) => {
       if (r.tags) {
-        r.tags.split(',').map((t: string) => t.trim()).filter(Boolean).forEach((t: string) => tagSet.add(t))
+        const trimmed = r.tags.trim()
+        let tagList: string[] = []
+        if (trimmed.startsWith('[')) {
+          try { tagList = JSON.parse(trimmed) } catch {}
+        }
+        if (tagList.length === 0) {
+          tagList = trimmed.split(',').map((t: string) => t.trim()).filter(Boolean)
+        }
+        tagList.forEach((t: string) => tagSet.add(t))
       }
     })
     res.json([...tagSet].sort())

@@ -106,7 +106,20 @@ router.get('/export', authMiddleware, (req: Request, res: Response) => {
     const bookmarks = queryAll(`
       SELECT * FROM bookmarks 
       ORDER BY isPinned DESC, orderIndex ASC, createdAt DESC
-    `).map(booleanize)
+    `).map(booleanize).map((b: any) => {
+      // 将 tags 从逗号分隔字符串转为数组（兼容 JSON 格式的旧数据）
+      if (typeof b.tags === 'string' && b.tags) {
+        const trimmed = b.tags.trim()
+        if (trimmed.startsWith('[')) {
+          try { b.tags = JSON.parse(trimmed) } catch { b.tags = trimmed.split(',').map((t: string) => t.trim()).filter(Boolean) }
+        } else {
+          b.tags = trimmed.split(',').map((t: string) => t.trim()).filter(Boolean)
+        }
+      } else {
+        b.tags = []
+      }
+      return b
+    })
     
     const categories = queryAll('SELECT * FROM categories ORDER BY orderIndex ASC')
     
@@ -173,7 +186,7 @@ router.post('/import', authMiddleware, validateBody(importDataSchema), (req: Req
         bookmark.icon || null,
         bookmark.iconUrl || null,
         bookmark.category || null,
-        bookmark.tags || null,
+        Array.isArray(bookmark.tags) ? bookmark.tags.filter(Boolean).join(',') : (bookmark.tags || null),
         bookmark.orderIndex || 0,
         bookmark.isPinned ? 1 : 0,
         bookmark.isReadLater ? 1 : 0,

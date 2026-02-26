@@ -60,7 +60,6 @@ export function parseBrowserBookmarks(html: string): BrowserBookmarkResult {
   // 递归解析 <DL> 列表
   function parseDL(dl: Element, folderPath: string[]) {
     const children = dl.children
-    let currentFolder: string | null = null
 
     for (let i = 0; i < children.length; i++) {
       const child = children[i]
@@ -72,15 +71,23 @@ export function parseBrowserBookmarks(html: string): BrowserBookmarkResult {
 
         if (h3) {
           // 这是一个文件夹
-          currentFolder = h3.textContent?.trim() || ''
-          if (currentFolder) {
-            const newPath = [...folderPath, currentFolder]
-            folderSet.add(currentFolder)
+          const folderName = h3.textContent?.trim() || ''
+          if (folderName) {
+            // 检测是否为根容器文件夹（PERSONAL_TOOLBAR_FOLDER 属性）
+            // 这类文件夹（如站点名 NOWEN）只是包裹层，不作为书签分类
+            const isToolbarFolder = h3.getAttribute('PERSONAL_TOOLBAR_FOLDER')?.toLowerCase() === 'true'
 
-            // 查找紧跟的 <DL> (文件夹内容)
             const nextDL = child.querySelector(':scope > DL')
-            if (nextDL) {
-              parseDL(nextDL, newPath)
+            if (isToolbarFolder && nextDL) {
+              // 跳过此文件夹层级，直接解析其子内容（不加入 folderPath）
+              parseDL(nextDL, folderPath)
+            } else {
+              const newPath = [...folderPath, folderName]
+              folderSet.add(folderName)
+
+              if (nextDL) {
+                parseDL(nextDL, newPath)
+              }
             }
           }
         } else if (a) {
@@ -145,9 +152,10 @@ export function parseBrowserBookmarks(html: string): BrowserBookmarkResult {
   // 构建书签
   let skippedEmpty = 0
   const bookmarks: Bookmark[] = allLinks.map((link, index) => {
-    // 使用第一个非内置的文件夹作为分类
+    // 使用最深层的非内置文件夹作为分类（倒序查找）
     let categoryId: string | undefined
-    for (const f of link.folder) {
+    for (let fi = link.folder.length - 1; fi >= 0; fi--) {
+      const f = link.folder[fi]
       if (!SKIP_FOLDERS.has(f) && categoryMap.has(f)) {
         categoryId = categoryMap.get(f)
         break
