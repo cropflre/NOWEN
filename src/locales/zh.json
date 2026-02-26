@@ -701,6 +701,19 @@
           "dead_title": "清理死链",
           "dead_desc": "一键删除所有异常/超时的失效书签，保持书签库整洁"
         },
+        "ai": {
+          "title": "AI 智能",
+          "tags_title": "智能标签",
+          "tags_desc": "添加书签时自动调用 AI 生成匹配标签、分类和优化描述，URL 分析完成后自动触发",
+          "classify_title": "批量 AI 分类",
+          "classify_desc": "批量为选中书签通过 AI 分配分类，无匹配时自动创建新分类，并发处理实时进度",
+          "enrich_title": "批量 AI 元数据",
+          "enrich_desc": "一键优化标题、描述、标签，推荐 Iconify 图标，多语言输出跟随当前界面语言",
+          "chat_title": "AI 对话助手",
+          "chat_desc": "智能书签搜索与发现，语义搜索全部书签，上下文感知回复带可点击书签卡片",
+          "config_title": "AI 配置",
+          "config_desc": "支持 OpenAI/Gemini/DeepSeek/Qwen/豆包等多种服务商，自定义 API Key 和模型"
+        },
         "frontend": {
           "title": "前台功能",
           "search_title": "全局搜索",

@@ -42,6 +42,10 @@ import {
   Sparkles,
   Smartphone,
   LayoutDashboard,
+  Bot,
+  Tags,
+  Wand2,
+  MessageSquare,
   type LucideIcon,
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
@@ -125,6 +129,18 @@ export function DocsCard() {
       ],
     },
     {
+      id: 'ai',
+      icon: Bot,
+      titleKey: 'admin.docs.sections.ai.title',
+      features: [
+        { icon: Tags, titleKey: 'admin.docs.sections.ai.tags_title', descKey: 'admin.docs.sections.ai.tags_desc' },
+        { icon: FolderOpen, titleKey: 'admin.docs.sections.ai.classify_title', descKey: 'admin.docs.sections.ai.classify_desc' },
+        { icon: Wand2, titleKey: 'admin.docs.sections.ai.enrich_title', descKey: 'admin.docs.sections.ai.enrich_desc' },
+        { icon: MessageSquare, titleKey: 'admin.docs.sections.ai.chat_title', descKey: 'admin.docs.sections.ai.chat_desc' },
+        { icon: Settings, titleKey: 'admin.docs.sections.ai.config_title', descKey: 'admin.docs.sections.ai.config_desc' },
+      ],
+    },
+    {
       id: 'frontend',
       icon: Globe,
       titleKey: 'admin.docs.sections.frontend.title',
@@ -172,8 +188,8 @@ export function DocsCard() {
       </div>
 
       {/* 功能概览 */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {sections.slice(0, 8).map((section) => {
+      <div className="grid grid-cols-3 sm:grid-cols-3 gap-3">
+        {sections.slice(0, 9).map((section) => {
           const Icon = section.icon
           return (
             <button

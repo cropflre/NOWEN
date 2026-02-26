@@ -288,28 +288,106 @@ NOWEN/
 ├── src/                              # Frontend Source
 │   ├── components/
 │   │   ├── ui/                       # UI Components
+│   │   │   ├── 3d-card.tsx           # 3D Card Effect
+│   │   │   ├── aurora-background.tsx # Aurora Background
+│   │   │   ├── bento-grid.tsx        # Bento Grid Layout
+│   │   │   ├── floating-dock.tsx     # Floating Dock Nav (Desktop, freely draggable + position memory)
+│   │   │   ├── mobile-floating-dock.tsx # Mobile Floating Dock (draggable orb + petal menu + bottom bar)
+│   │   │   ├── spotlight-card.tsx    # Spotlight Card
+│   │   │   ├── spotlight-search.tsx  # Spotlight Search Panel
+│   │   │   ├── effects.tsx           # Meteor/Starlight Effects
+│   │   │   ├── advanced-effects.tsx  # Border Beam etc.
+│   │   │   ├── typewriter.tsx        # Typewriter Effect
+│   │   │   └── scroll-to-top.tsx     # Scroll to Top Button
 │   │   ├── admin/                    # Admin Components
+│   │   │   ├── AdminSidebar.tsx      # Admin Sidebar Nav
+│   │   │   ├── SiteSettingsCard.tsx  # Site Settings
+│   │   │   ├── ThemeCard.tsx         # Theme Picker
+│   │   │   ├── WidgetSettingsCard.tsx # Widget Settings
+│   │   │   ├── WallpaperSettingsCard.tsx # Wallpaper Settings
+│   │   │   ├── SecurityCard.tsx      # Security Settings
+│   │   │   ├── DataManagementCard.tsx # Data Management
+│   │   │   ├── QuotesCard.tsx        # Quote Management
+│   │   │   ├── AnalyticsCard.tsx     # Visit Analytics
+│   │   │   ├── HealthCheckCard.tsx   # Link Health Check
+│   │   │   └── Toast.tsx             # Notifications
 │   │   ├── monitor/                  # System Monitor Components
-│   │   └── home/                     # Homepage Components
+│   │   │   ├── SystemMonitor.tsx     # Unified Monitor Interface
+│   │   │   ├── MonitorDashboard.tsx  # Full Dashboard (light mode transparent)
+│   │   │   ├── MiniMonitor.tsx       # Mini Monitor Widget (capsule design)
+│   │   │   └── TickerMonitor.tsx     # Scrolling Status Bar (mobile bottom bar)
+│   │   ├── SystemMonitorCard.tsx     # System Monitor Card
+│   │   ├── HardwareIdentityCard.tsx  # Hardware Identity Card
+│   │   ├── VitalSignsCard.tsx        # Vital Signs Card
+│   │   ├── NetworkTelemetryCard.tsx  # Network Telemetry Card
+│   │   ├── ProcessMatrixCard.tsx     # Process Matrix Card
+│   │   ├── AddBookmarkModal.tsx      # Add Bookmark Modal
+│   │   ├── CategoryEditModal.tsx     # Category Edit Modal
+│   │   ├── AdminLogin.tsx            # Login Page
+│   │   ├── ForcePasswordChange.tsx   # Force Password Change
+│   │   ├── BentoCard.tsx             # Bento Bookmark Card
+│   │   ├── BookmarkCard.tsx          # Bookmark Card
+│   │   ├── IconManager.tsx           # Icon Manager
+│   │   ├── ContextMenu.tsx           # Context Menu
+│   │   ├── VirtualBookmarkList.tsx   # Virtual Scroll List
+│   │   ├── ErrorBoundary.tsx         # Error Boundary
+│   │   └── CommandPalette.tsx        # Command Palette
 │   ├── hooks/                        # Custom Hooks
-│   ├── contexts/                     # React Contexts
+│   │   ├── useBookmarkStore.ts       # Bookmark State Management
+│   │   ├── useTheme.tsx              # Theme System (8 themes)
+│   │   ├── useTime.ts                # Time, Greeting, Lunar
+│   │   ├── useWeather.ts             # Weather Info
+│   │   └── useNetworkEnv.ts          # Network Environment Detection
+│   ├── contexts/
+│   │   └── AdminContext.tsx          # Admin Context
 │   ├── lib/                          # Utility Library
-│   ├── pages/                        # Pages
-│   ├── types/                        # Type Definitions
-│   ├── data/                         # Data Files
-│   ├── config/                       # Configuration
+│   │   ├── api.ts                    # API Wrapper
+│   │   ├── icons.ts                  # Icon Mapping
+│   │   ├── env.ts                    # Environment Variables
+│   │   ├── error-handling.ts         # Error Handling
+│   │   └── utils.ts                  # Utility Functions
+│   ├── pages/
+│   │   └── Admin.tsx                 # Admin Page
+│   ├── types/
+│   │   └── bookmark.ts               # Type Definitions
+│   ├── data/
+│   │   └── quotes.ts                 # Quotes Data
+│   ├── __tests__/                    # Unit Tests
 │   ├── App.tsx                       # Main App
-│   └── index.css                     # Global Styles
+│   └── index.css                     # Global Styles & CSS Variables
 ├── server/                           # Backend Source
 │   ├── src/
 │   │   ├── routes/                   # Route Modules
-│   │   ├── services/                 # Services
+│   │   │   ├── bookmarks.ts          # Bookmark Routes
+│   │   │   ├── categories.ts         # Category Routes
+│   │   │   ├── quotes.ts             # Quote Routes
+│   │   │   ├── admin.ts              # Admin Routes
+│   │   │   ├── settings.ts           # Settings Routes
+│   │   │   ├── system.ts             # System Monitor Routes
+│   │   │   ├── visits.ts             # Visit Analytics Routes
+│   │   │   ├── health-check.ts       # Link Health Check Routes
+│   │   │   ├── ai.ts                 # AI Routes
+│   │   │   └── ...
+│   │   ├── services/
+│   │   │   ├── metadata.ts           # URL Metadata Fetching
+│   │   │   └── ai.ts                 # AI Service
 │   │   ├── middleware/               # Middleware
-│   │   └── utils/                    # Utilities
-│   └── data/                         # Database
+│   │   ├── utils/                    # Utilities
+│   │   ├── index.ts                  # Server Entry
+│   │   ├── db.ts                     # Database Operations
+│   │   └── schemas.ts                # Request Validation
+│   └── data/
+│       └── zen-garden.db             # SQLite Database
+├── .github/
+│   └── workflows/
+│       └── docker-publish.yml        # GitHub Actions Auto Build
 ├── Dockerfile                        # Docker Config (Multi-arch)
 ├── docker-compose.yml                # Docker Compose
-├── build-multiarch.sh                # Multi-arch build script (amd64+arm64)
+├── build-multiarch.sh                # Multi-arch Build Script (amd64 + arm64)
+├── nginx.conf                        # Nginx Config
+├── vite.config.ts                    # Vite Config
+├── tailwind.config.js                # Tailwind Config
+├── vitest.config.ts                  # Vitest Test Config
 └── package.json                      # Dependencies
 ```
 

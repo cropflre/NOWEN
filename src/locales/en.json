@@ -701,6 +701,19 @@
           "dead_title": "Clean Dead Links",
           "dead_desc": "One-click delete all error/timeout bookmarks to keep your collection clean"
         },
+        "ai": {
+          "title": "AI Features",
+          "tags_title": "Smart Tags",
+          "tags_desc": "Auto-generate matching tags, category and optimized description via AI when adding bookmarks, triggered after URL analysis",
+          "classify_title": "Batch AI Classify",
+          "classify_desc": "Batch assign categories to selected bookmarks via AI, auto-create new categories if no match, concurrent processing with real-time progress",
+          "enrich_title": "Batch AI Metadata",
+          "enrich_desc": "One-click optimize title, description, tags and recommend Iconify icons, multi-language output follows current UI language",
+          "chat_title": "AI Chat Assistant",
+          "chat_desc": "Smart bookmark search and discovery with semantic search across all bookmarks, context-aware responses with clickable bookmark cards",
+          "config_title": "AI Configuration",
+          "config_desc": "Supports OpenAI/Gemini/DeepSeek/Qwen/Doubao and more providers, custom API key and model selection"
+        },
         "frontend": {
           "title": "Frontend Features",
           "search_title": "Global Search",
