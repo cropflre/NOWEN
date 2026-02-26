@@ -1170,19 +1170,38 @@ A: Admin → System Settings → Data Management → Export Backup, or copy `ser
 
 ## 🎯 Roadmap
 
-- [ ] Multi-user support and permission management
-- [ ] Bookmark tag system enhancement
-- [ ] Bookmark sharing feature
-- [ ] Browser extensions (Chrome/Firefox)
-- [ ] PWA offline support
-- [ ] More theme colors
+#### 🔜 Short-term
+
+- [ ] Multi-user support & permission management (role-based access, independent bookmark libraries, shared categories)
+- [ ] Browser extensions (Chrome/Firefox/Edge, one-click save current page, quick bookmark search)
+- [ ] Bookmark sharing (shareable links, public category pages, QR code sharing)
+- [ ] PWA offline support (offline bookmark access, Service Worker caching, install to homescreen)
+
+#### 📋 Mid-term
+
+- [ ] WebDAV sync support (cross-device bookmark sync, auto conflict merge, scheduled backups)
+- [ ] Mobile App (React Native / Flutter, push notifications, home screen widgets)
+- [ ] Bookmark folders & nested groups (multi-level folders, breadcrumb navigation, tree-view drag & drop)
+- [ ] RSS / site update monitoring (subscribe to bookmarked site RSS, new content push, unread count badges)
+- [ ] AI smart recommendations (suggest similar bookmarks based on browsing habits, discover new sites, smart dedup)
+
+#### 🔮 Long-term
+
+- [ ] More theme colors (community theme store, custom CSS variable editor)
+- [ ] System monitoring alerts (CPU/memory/temperature threshold alerts, Email/Webhook/Telegram notifications)
+- [ ] Custom monitoring metrics (custom API probes, port detection, SSL certificate expiry reminders)
+- [ ] Team collaboration workspace (shared bookmark libraries, comments & annotations, operation audit logs)
+- [ ] Plugin system (third-party plugin marketplace, custom component mounting, API Hook extensions)
+- [ ] Multi-language expansion (Japanese/Korean/French community translations, i18n contribution guide)
+
+#### ✅ Implemented
+
 - [x] ~~Access statistics~~ ✅ v0.1.4 Implemented
 - [x] ~~Link health check~~ ✅ v0.1.5 Implemented
 - [x] ~~Custom wallpaper background~~ ✅ v0.1.7 Implemented
-- [ ] WebDAV sync support
-- [ ] System monitoring alerts
-- [ ] Custom monitoring metrics
-- [ ] Mobile App
+- [x] ~~Bookmark tag system~~ ✅ v0.2.0 Implemented (AI smart tags + colorful tag pills)
+- [x] ~~AI smart classify & metadata~~ ✅ v0.2.0 Implemented (batch AI classify/metadata/icons)
+- [x] ~~AI chat assistant~~ ✅ v0.2.0 Implemented (semantic search + bookmark cards)
 
 ---
 
