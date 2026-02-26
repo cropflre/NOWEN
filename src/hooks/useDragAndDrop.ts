@@ -15,6 +15,7 @@ import { Bookmark } from '../types/bookmark';
 interface UseDragAndDropOptions {
   bookmarks: Bookmark[];
   reorderBookmarks: (newOrder: Bookmark[]) => void;
+  disabled?: boolean;
 }
 
 // DndContext measuring 配置：优化网格拖拽测量频率
@@ -24,7 +25,7 @@ export const measuringConfig = {
   },
 };
 
-export function useDragAndDrop({ bookmarks, reorderBookmarks }: UseDragAndDropOptions) {
+export function useDragAndDrop({ bookmarks, reorderBookmarks, disabled }: UseDragAndDropOptions) {
   const [activeId, setActiveId] = useState<string | null>(null);
   const activeBookmark = activeId ? bookmarks.find(b => b.id === activeId) : null;
 
@@ -48,16 +49,19 @@ export function useDragAndDrop({ bookmarks, reorderBookmarks }: UseDragAndDropOp
 
   // 拖拽开始
   const handleDragStart = useCallback((event: DragStartEvent) => {
+    if (disabled) return;
     setActiveId(event.active.id as string);
     if (typeof navigator !== 'undefined' && navigator.vibrate) {
       navigator.vibrate(10);
     }
-  }, []);
+  }, [disabled]);
 
   // 拖拽结束
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event;
     setActiveId(null);
+
+    if (disabled) return;
 
     if (over && active.id !== over.id) {
       const oldIndex = bookmarks.findIndex(b => b.id === active.id);

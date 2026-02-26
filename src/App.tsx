@@ -175,7 +175,7 @@ function App() {
     handleDragEnd,
     handleDragCancel,
     measuringConfig,
-  } = useDragAndDrop({ bookmarks, reorderBookmarks });
+  } = useDragAndDrop({ bookmarks, reorderBookmarks, disabled: !isLoggedIn });
 
   // 天气数据
   const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather(showWeather, weatherCity);
@@ -280,13 +280,15 @@ function App() {
         } else {
           await addBookmark(data);
         }
+        // 保存成功后刷新数据，确保前端状态与后端一致
+        await refreshData();
       } catch (err) {
         console.error('保存书签失败:', err);
       }
       setEditingBookmark(null);
       setPendingUrl("");
     },
-    [editingBookmark, updateBookmark, addBookmark]
+    [editingBookmark, updateBookmark, addBookmark, refreshData]
   );
 
   const handleDelete = useCallback(
@@ -600,7 +602,7 @@ function App() {
           )}
 
           {/* Category Sections - 支持拖拽排序 */}
-          <DndContext sensors={isLoggedIn ? sensors : []} collisionDetection={closestCorners} onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragCancel={handleDragCancel} measuring={measuringConfig}>
+          <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragCancel={handleDragCancel} measuring={measuringConfig}>
             {categories.map((category, catIndex) => {
               const categoryBookmarks = bookmarksByCategory[category.id] || [];
               if (categoryBookmarks.length === 0) return null;
