@@ -5,10 +5,11 @@ import { Sparkles } from '../ui/effects';
 
 interface EmptyStateProps {
   isLiteMode?: boolean;
+  isLoggedIn?: boolean;
   onAddBookmark: () => void;
 }
 
-export function EmptyState({ isLiteMode, onAddBookmark }: EmptyStateProps) {
+export function EmptyState({ isLiteMode, isLoggedIn, onAddBookmark }: EmptyStateProps) {
   return (
     <motion.div
       className="text-center py-20"
@@ -35,14 +36,16 @@ export function EmptyState({ isLiteMode, onAddBookmark }: EmptyStateProps) {
         </kbd>{' '}
         打开命令面板， 粘贴链接即可添加第一个书签
       </p>
-      <motion.button
-        onClick={onAddBookmark}
-        className="px-8 py-4 rounded-2xl bg-gradient-to-r from-nebula-purple to-nebula-pink text-white font-medium shadow-glow-md"
-        whileHover={{ scale: isLiteMode ? 1.02 : 1.05 }}
-        whileTap={{ scale: isLiteMode ? 0.98 : 0.95 }}
-      >
-        添加第一个书签
-      </motion.button>
+      {isLoggedIn && (
+        <motion.button
+          onClick={onAddBookmark}
+          className="px-8 py-4 rounded-2xl bg-gradient-to-r from-nebula-purple to-nebula-pink text-white font-medium shadow-glow-md"
+          whileHover={{ scale: isLiteMode ? 1.02 : 1.05 }}
+          whileTap={{ scale: isLiteMode ? 0.98 : 0.95 }}
+        >
+          添加第一个书签
+        </motion.button>
+      )}
     </motion.div>
   );
 }

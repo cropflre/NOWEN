@@ -198,7 +198,7 @@ function App() {
   }, [i18n]);
 
   const dockItems = createDockItems(isDark, toggleDarkMode, t, toggleLanguage);
-  const filteredDockItems = filterDockItems(dockItems, menuVisibility, widgetVisibility);
+  const filteredDockItems = filterDockItems(dockItems, menuVisibility, widgetVisibility, isLoggedIn);
 
   // ========== 全局快捷键 ==========
   useEffect(() => {
@@ -209,11 +209,11 @@ function App() {
       }
       if ((e.metaKey || e.ctrlKey) && e.key === "n") {
         e.preventDefault();
-        setIsAddModalOpen(true);
+        if (isLoggedIn) setIsAddModalOpen(true);
       }
       if ((e.metaKey || e.ctrlKey) && e.key === "j") {
         e.preventDefault();
-        if (widgetVisibility.aiAssistant !== false) {
+        if (isLoggedIn && widgetVisibility.aiAssistant !== false) {
           setIsAiAssistantOpen(prev => !prev);
         }
       }
@@ -221,7 +221,7 @@ function App() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  }, [isLoggedIn]);
 
   // ========== 事件处理函数 ==========
   const handleDockClick = (id: string) => {
@@ -233,12 +233,12 @@ function App() {
         setIsSpotlightOpen(true);
         break;
       case "ai":
-        if (widgetVisibility.aiAssistant !== false) {
+        if (isLoggedIn && widgetVisibility.aiAssistant !== false) {
           setIsAiAssistantOpen(true);
         }
         break;
       case "add":
-        setIsAddModalOpen(true);
+        if (isLoggedIn) setIsAddModalOpen(true);
         break;
       case "admin":
         navigateToAdmin();
@@ -600,7 +600,7 @@ function App() {
           )}
 
           {/* Category Sections - 支持拖拽排序 */}
-          <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragCancel={handleDragCancel} measuring={measuringConfig}>
+          <DndContext sensors={isLoggedIn ? sensors : []} collisionDetection={closestCorners} onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragCancel={handleDragCancel} measuring={measuringConfig}>
             {categories.map((category, catIndex) => {
               const categoryBookmarks = bookmarksByCategory[category.id] || [];
               if (categoryBookmarks.length === 0) return null;
@@ -622,6 +622,7 @@ function App() {
                     setCategoryModalMode('edit');
                     setIsCategoryModalOpen(true);
                   }}
+                  isLoggedIn={isLoggedIn}
                 />
               );
             })}
@@ -632,7 +633,7 @@ function App() {
 
           {/* Empty State */}
           {bookmarks.length === 0 && !isLoading && (
-            <EmptyState isLiteMode={isLiteMode ?? false} onAddBookmark={() => setIsAddModalOpen(true)} />
+            <EmptyState isLiteMode={isLiteMode ?? false} isLoggedIn={isLoggedIn} onAddBookmark={() => setIsAddModalOpen(true)} />
           )}
         </div>
       </div>
@@ -656,7 +657,7 @@ function App() {
         onAddBookmark={handleAddFromSpotlight}
       />
 
-      {widgetVisibility.aiAssistant !== false && (
+      {isLoggedIn && widgetVisibility.aiAssistant !== false && (
         <AiAssistant
           isOpen={isAiAssistantOpen}
           onClose={() => setIsAiAssistantOpen(false)}
@@ -910,6 +911,7 @@ function CategorySection({
   initialShowCount,
   onContextMenu,
   onEditCategory,
+  isLoggedIn,
 }: {
   category: import("./types/bookmark").Category;
   categoryBookmarks: Bookmark[];
@@ -921,6 +923,7 @@ function CategorySection({
   initialShowCount: number;
   onContextMenu: (e: React.MouseEvent, bookmark: Bookmark) => void;
   onEditCategory: (cat: import("./types/bookmark").Category) => void;
+  isLoggedIn?: boolean;
 }) {
   const { t } = useTranslation();
   const PAGE_SIZE = 100; // 每次点击加载更多的数量
@@ -971,14 +974,16 @@ function CategorySection({
         <span className="text-sm" style={{ color: "var(--color-text-muted)" }}>
           {categoryBookmarks.length}
         </span>
-        <button
-          onClick={() => onEditCategory(category)}
-          className="ml-2 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-white/10 transition-all"
-          style={{ color: "var(--color-text-muted)" }}
-          title="编辑分类"
-        >
-          <Edit2 className="w-4 h-4" />
-        </button>
+        {isLoggedIn && (
+          <button
+            onClick={() => onEditCategory(category)}
+            className="ml-2 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-white/10 transition-all"
+            style={{ color: "var(--color-text-muted)" }}
+            title="编辑分类"
+          >
+            <Edit2 className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
       <SortableContext items={visibleBookmarks.map(b => b.id)} strategy={rectSortingStrategy}>

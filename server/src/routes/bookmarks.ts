@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express'
 import { generateId } from '../db.js'
 import { queryAll, queryOne, run, runBatch, booleanize } from '../utils/index.js'
+import { authMiddleware } from '../middleware/index.js'
 import {
   validateBody,
   validateParams,
@@ -89,7 +90,7 @@ router.get('/tags/stats', (_req, res) => {
 })
 
 // 重命名标签（也用于合并：将 oldName 改为 newName）
-router.patch('/tags/rename', (req: Request, res: Response) => {
+router.patch('/tags/rename', authMiddleware, (req: Request, res: Response) => {
   try {
     const { oldName, newName } = req.body
     if (!oldName || !newName || typeof oldName !== 'string' || typeof newName !== 'string') {
@@ -126,7 +127,7 @@ router.patch('/tags/rename', (req: Request, res: Response) => {
 })
 
 // 删除标签（从所有书签中移除该标签）
-router.delete('/tags/:name', (req: Request, res: Response) => {
+router.delete('/tags/:name', authMiddleware, (req: Request, res: Response) => {
   try {
     const tagName = decodeURIComponent(req.params.name).trim()
     if (!tagName) {
@@ -251,7 +252,7 @@ router.get('/paginated', validateQuery(paginationQuerySchema), (req, res) => {
 })
 
 // 创建书签
-router.post('/', validateBody(createBookmarkSchema), (req, res) => {
+router.post('/', authMiddleware, validateBody(createBookmarkSchema), (req, res) => {
   try {
     const { url, internalUrl, title, description, favicon, ogImage, icon, iconUrl, category, tags, isReadLater } = req.body
     
@@ -276,7 +277,7 @@ router.post('/', validateBody(createBookmarkSchema), (req, res) => {
 })
 
 // 重排序书签（必须在 /:id 之前定义）
-router.patch('/reorder', validateBody(reorderBookmarksSchema), (req, res) => {
+router.patch('/reorder', authMiddleware, validateBody(reorderBookmarksSchema), (req, res) => {
   try {
     const { items } = req.body
     
@@ -293,7 +294,7 @@ router.patch('/reorder', validateBody(reorderBookmarksSchema), (req, res) => {
 })
 
 // 更新书签
-router.patch('/:id', validateParams(idParamSchema), validateBody(updateBookmarkSchema), (req, res) => {
+router.patch('/:id', authMiddleware, validateParams(idParamSchema), validateBody(updateBookmarkSchema), (req, res) => {
   try {
     const { id } = req.params
     const updates = req.body
@@ -333,7 +334,7 @@ router.patch('/:id', validateParams(idParamSchema), validateBody(updateBookmarkS
 })
 
 // 删除书签
-router.delete('/:id', validateParams(idParamSchema), (req, res) => {
+router.delete('/:id', authMiddleware, validateParams(idParamSchema), (req, res) => {
   try {
     const { id } = req.params
     run('DELETE FROM bookmarks WHERE id = ?', [id])

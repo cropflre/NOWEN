@@ -84,7 +84,8 @@ export const createDockItems = (
 export const filterDockItems = (
   items: DockItem[],
   menuVisibility: { languageToggle?: boolean; themeToggle?: boolean },
-  widgetVisibility?: { aiAssistant?: boolean }
+  widgetVisibility?: { aiAssistant?: boolean },
+  isLoggedIn?: boolean
 ): DockItem[] => {
   return items.filter((item) => {
     if (item.id === "language" && menuVisibility.languageToggle === false) {
@@ -93,7 +94,10 @@ export const filterDockItems = (
     if (item.id === "theme" && menuVisibility.themeToggle === false) {
       return false;
     }
-    if (item.id === "ai" && widgetVisibility?.aiAssistant === false) {
+    if (item.id === "ai" && (widgetVisibility?.aiAssistant === false || !isLoggedIn)) {
+      return false;
+    }
+    if (item.id === "add" && !isLoggedIn) {
       return false;
     }
     return true;

@@ -243,6 +243,7 @@ export async function createBookmark(data: CreateBookmarkParams): Promise<Bookma
   return request<Bookmark>('/api/bookmarks', {
     method: 'POST',
     body: JSON.stringify(data),
+    requireAuth: true,
   })
 }
 
@@ -250,12 +251,14 @@ export async function updateBookmark(id: string, data: UpdateBookmarkParams): Pr
   return request<Bookmark>(`/api/bookmarks/${encodeURIComponent(id)}`, {
     method: 'PATCH',
     body: JSON.stringify(data),
+    requireAuth: true,
   })
 }
 
 export async function deleteBookmark(id: string): Promise<void> {
   return request<void>(`/api/bookmarks/${encodeURIComponent(id)}`, {
     method: 'DELETE',
+    requireAuth: true,
   })
 }
 
@@ -263,6 +266,7 @@ export async function reorderBookmarks(items: ReorderItem[]): Promise<SuccessRes
   return request<SuccessResponse>('/api/bookmarks/reorder', {
     method: 'PATCH',
     body: JSON.stringify({ items }),
+    requireAuth: true,
   })
 }
 
@@ -287,6 +291,7 @@ export async function renameTag(oldName: string, newName: string): Promise<{ suc
   return request('/api/bookmarks/tags/rename', {
     method: 'PATCH',
     body: JSON.stringify({ oldName, newName }),
+    requireAuth: true,
   })
 }
 
@@ -294,6 +299,7 @@ export async function renameTag(oldName: string, newName: string): Promise<{ suc
 export async function deleteTag(name: string): Promise<{ success: boolean; updatedCount: number }> {
   return request(`/api/bookmarks/tags/${encodeURIComponent(name)}`, {
     method: 'DELETE',
+    requireAuth: true,
   })
 }
 
@@ -307,6 +313,7 @@ export async function createCategory(data: CreateCategoryParams): Promise<Catego
   return request<Category>('/api/categories', {
     method: 'POST',
     body: JSON.stringify(data),
+    requireAuth: true,
   })
 }
 
@@ -314,12 +321,14 @@ export async function updateCategory(id: string, data: UpdateCategoryParams): Pr
   return request<Category>(`/api/categories/${encodeURIComponent(id)}`, {
     method: 'PATCH',
     body: JSON.stringify(data),
+    requireAuth: true,
   })
 }
 
 export async function deleteCategory(id: string): Promise<void> {
   return request<void>(`/api/categories/${encodeURIComponent(id)}`, {
     method: 'DELETE',
+    requireAuth: true,
   })
 }
 
@@ -327,6 +336,7 @@ export async function reorderCategories(items: ReorderItem[]): Promise<SuccessRe
   return request<SuccessResponse>('/api/categories/reorder', {
     method: 'PATCH',
     body: JSON.stringify({ items }),
+    requireAuth: true,
   })
 }
 

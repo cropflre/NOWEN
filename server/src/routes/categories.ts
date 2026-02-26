@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { generateId } from '../db.js'
 import { queryAll, queryOne, run, runBatch } from '../utils/index.js'
+import { authMiddleware } from '../middleware/index.js'
 import {
   validateBody,
   validateParams,
@@ -23,7 +24,7 @@ router.get('/', (req, res) => {
 })
 
 // 创建分类
-router.post('/', validateBody(createCategorySchema), (req, res) => {
+router.post('/', authMiddleware, validateBody(createCategorySchema), (req, res) => {
   try {
     const { name, icon, color } = req.body
     
@@ -46,7 +47,7 @@ router.post('/', validateBody(createCategorySchema), (req, res) => {
 })
 
 // 重排序分类（必须在 /:id 之前定义）
-router.patch('/reorder', (req, res) => {
+router.patch('/reorder', authMiddleware, (req, res) => {
   try {
     const { items } = req.body
     
@@ -73,7 +74,7 @@ router.patch('/reorder', (req, res) => {
 })
 
 // 更新分类
-router.patch('/:id', validateParams(idParamSchema), validateBody(updateCategorySchema), (req, res) => {
+router.patch('/:id', authMiddleware, validateParams(idParamSchema), validateBody(updateCategorySchema), (req, res) => {
   try {
     const { id } = req.params
     const { name, icon, color, orderIndex } = req.body
@@ -104,7 +105,7 @@ router.patch('/:id', validateParams(idParamSchema), validateBody(updateCategoryS
 })
 
 // 删除分类
-router.delete('/:id', validateParams(idParamSchema), (req, res) => {
+router.delete('/:id', authMiddleware, validateParams(idParamSchema), (req, res) => {
   try {
     const { id } = req.params
     
