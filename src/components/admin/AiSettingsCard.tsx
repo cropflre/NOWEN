@@ -53,7 +53,7 @@ const AI_PROVIDERS: AiProvider[] = [
   {
     id: 'gemini',
     name: 'Google Gemini',
-    desc: 'Gemini 2.0 Flash / Pro',
+    desc: 'gemini-2.0-flash / gemini-2.5-flash-preview-05-20 / gemini-2.5-pro-preview-05-06',
     gradient: 'from-blue-500 to-indigo-600',
     defaultModel: 'gemini-2.0-flash',
     needsApiKey: true,

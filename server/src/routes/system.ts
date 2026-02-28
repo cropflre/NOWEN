@@ -505,13 +505,51 @@ router.get('/dynamic', async (_req, res) => {
       }
     }
 
-    // 过滤掉临时/虚拟文件系统
-    const physicalFS = fs.filter(f => 
-      !f.fs.startsWith('tmpfs') &&
-      !f.fs.startsWith('overlay') &&
-      !f.fs.startsWith('shm') &&
-      f.size > 0
-    )
+    // 过滤文件系统：排除纯虚拟类型，但保留 overlay 根分区（Docker 容器内的主文件系统）
+    const physicalFS = fs.filter(f => {
+      const fsLower = f.fs.toLowerCase()
+      // 始终排除的虚拟文件系统
+      if (fsLower.startsWith('tmpfs') || fsLower.startsWith('shm') || 
+          fsLower.startsWith('devtmpfs') || fsLower.startsWith('nsfs') ||
+          fsLower.startsWith('cgroup') || fsLower.startsWith('proc') || 
+          fsLower.startsWith('sysfs')) {
+        return false
+      }
+      // overlay：如果挂载在 / 且有实际大小，保留（这是 Docker 容器根文件系统）
+      if (fsLower === 'overlay' && f.mount !== '/' ) {
+        return false
+      }
+      return f.size > 0
+    })
+
+    // Docker 信息：si.dockerInfo 失败时尝试 CLI fallback
+    let dockerData: DynamicSystemInfo['docker'] = null
+    if (docker) {
+      dockerData = {
+        running: docker.containersRunning || 0,
+        paused: docker.containersPaused || 0,
+        stopped: docker.containersStopped || 0,
+        containers: docker.containers || 0,
+      }
+    } else {
+      // CLI fallback：通过 docker 命令获取容器统计
+      try {
+        const { stdout } = await execAsync('docker ps -a --format "{{.State}}"', { timeout: 5000 })
+        if (stdout.trim()) {
+          const states = stdout.trim().split('\n')
+          const running = states.filter(s => s === 'running').length
+          const paused = states.filter(s => s === 'paused').length
+          dockerData = {
+            running,
+            paused,
+            stopped: states.length - running - paused,
+            containers: states.length,
+          }
+        }
+      } catch {
+        // Docker 不可用，保持 null
+      }
+    }
 
     const dynamicInfo: DynamicSystemInfo = {
       cpu: {
@@ -567,18 +605,17 @@ router.get('/dynamic', async (_req, res) => {
         usedFormatted: formatBytes(f.used),
         availableFormatted: formatBytes(f.available),
       })),
-      docker: docker ? {
-        running: docker.containersRunning || 0,
-        paused: docker.containersPaused || 0,
-        stopped: docker.containersStopped || 0,
-        containers: docker.containers || 0,
-      } : null,
+      docker: dockerData,
       uptime: formatUptime(time.uptime),
       timestamp: now,
     }
 
-    // 清洗数据
+    // 清洗数据（保留 docker 字段即使为 null，前端需要判断）
     const cleanedData = cleanObject(dynamicInfo)
+    // 确保 docker 字段始终存在（cleanObject 会移除 null 值）
+    if (!('docker' in cleanedData)) {
+      (cleanedData as any).docker = null
+    }
 
     // 更新缓存
     dynamicCache = { data: cleanedData, timestamp: now }
@@ -678,12 +715,16 @@ router.get('/pulse', async (_req, res) => {
 
     // 过滤出物理磁盘（适配 NAS 多硬盘环境）
     // 在 Docker 环境下，宿主机挂载点会带有 /host 前缀
+    // 支持：Synology, QNAP, 绿联 UGREEN, 飞牛 fnOS, 群晖, 威联通等
     const physicalDisks = fs.filter(f => {
       const mount = f.mount
       const fsType = f.fs.toLowerCase()
+      const fsDevice = f.fs // 原始设备名（如 /dev/sda1）
       
-      // 排除虚拟文件系统
-      if (fsType.startsWith('tmpfs') ||
+      // 排除虚拟文件系统（overlay 挂载在 / 时保留 —— Docker 容器根文件系统）
+      const isOverlayRoot = fsType === 'overlay' && mount === '/'
+      if (!isOverlayRoot && (
+          fsType.startsWith('tmpfs') ||
           fsType.startsWith('overlay') ||
           fsType.startsWith('shm') ||
           fsType.startsWith('devtmpfs') ||
@@ -692,34 +733,42 @@ router.get('/pulse', async (_req, res) => {
           fsType.startsWith('nsfs') ||
           fsType.startsWith('cgroup') ||
           fsType.startsWith('proc') ||
-          fsType.startsWith('sysfs')) {
+          fsType.startsWith('sysfs') ||
+          fsType.startsWith('aufs') ||
+          fsType.startsWith('rootfs'))) {
         return false
       }
       
       // 排除系统目录
       const excludeMounts = [
-        '/snap', '/boot', '/sys', '/run', '/dev', '/proc',
-        '/host/snap', '/host/boot', '/host/sys', '/host/run', '/host/dev', '/host/proc'
+        '/snap', '/boot', '/sys', '/run', '/dev', '/proc', '/etc',
+        '/host/snap', '/host/boot', '/host/sys', '/host/run', '/host/dev', '/host/proc', '/host/etc',
+        '/var/lib/docker', '/host/var/lib/docker'  // Docker 存储目录
       ]
       if (excludeMounts.some(ex => mount.startsWith(ex))) {
         return false
       }
       
-      // 排除太小的分区（< 1GB）
-      if (f.size < 1024 * 1024 * 1024) {
+      // 排除太小的分区（< 1GB），但保留根分区
+      const isRoot = mount === '/' || mount === '/host' || mount === '/host/'
+      if (f.size < 1024 * 1024 * 1024 && !isRoot) {
         return false
       }
       
       // 保留以下类型的挂载点：
       // 1. 根目录 / 或 /host
-      // 2. NAS 卷挂载点：/volume1, /volume2, /mnt/xxx, /media/xxx
-      // 3. Docker 环境下的宿主机挂载：/host/volume1, /host/mnt/xxx
+      // 2. NAS 卷挂载点（各品牌）
+      // 3. Docker 环境下的宿主机挂载
       const validMountPatterns = [
         /^\/$/,                          // 根目录
         /^\/host$/,                      // Docker 宿主机根目录
         /^\/host\/$/,                    // Docker 宿主机根目录（带斜杠）
-        /^\/volume\d+/i,                 // Synology NAS 卷
-        /^\/host\/volume\d+/i,           // Docker 下的 Synology 卷
+        /^\/volume\d*/i,                 // Synology NAS 卷：/volume1, /volume2, /Volume0
+        /^\/host\/volume\d*/i,           // Docker 下的 Synology 卷
+        /^\/vol\d*/i,                    // 绿联 UGREEN: /vol1, /Vol0
+        /^\/host\/vol\d*/i,              // Docker 下的绿联卷
+        /^\/UGREEN/i,                    // 绿联数据目录
+        /^\/host\/UGREEN/i,              // Docker 下的绿联目录
         /^\/mnt\//,                      // 通用挂载点
         /^\/host\/mnt\//,                // Docker 下的挂载点
         /^\/media\//,                    // 媒体挂载
@@ -728,12 +777,29 @@ router.get('/pulse', async (_req, res) => {
         /^\/host\/data/i,                // Docker 下的数据目录
         /^\/storage/i,                   // 存储目录
         /^\/host\/storage/i,             // Docker 下的存储目录
-        /^\/share/i,                     // 共享目录（QNAP等）
+        /^\/share/i,                     // QNAP 共享目录
         /^\/host\/share/i,               // Docker 下的共享目录
+        /^\/sata/i,                      // 飞牛 fnOS / 某些 NAS 的 SATA 挂载点
+        /^\/host\/sata/i,                // Docker 下的 SATA 挂载
+        /^\/disk/i,                      // 通用磁盘挂载点
+        /^\/host\/disk/i,                // Docker 下的磁盘挂载
+        /^\/pool/i,                      // ZFS/存储池
+        /^\/host\/pool/i,                // Docker 下的存储池
+        /^\/tank/i,                      // ZFS tank
+        /^\/host\/tank/i,                // Docker 下的 ZFS
+        /^\/array/i,                     // 阵列挂载
+        /^\/host\/array/i,               // Docker 下的阵列
+        /^\/nas/i,                       // NAS 通用目录
+        /^\/host\/nas/i,                 // Docker 下的 NAS 目录
+        /^\/home$/,                      // 用户主目录（可能在单独分区）
+        /^\/host\/home$/,                // Docker 下的用户目录
         /^[A-Za-z]:[\\\/]/,              // Windows 盘符
       ]
       
-      return validMountPatterns.some(pattern => pattern.test(mount))
+      // 额外检查：如果是真实块设备（/dev/sd*, /dev/nvme*, /dev/md*）挂载的大分区，保留
+      const isRealBlockDevice = /^\/(dev\/)?(sd[a-z]|nvme\d|md\d|vd[a-z]|hd[a-z]|xvd[a-z])/.test(fsDevice)
+      
+      return validMountPatterns.some(pattern => pattern.test(mount)) || (isRealBlockDevice && f.size > 10 * 1024 * 1024 * 1024)
     })
     
     // 去重：如果同时存在 / 和 /host，优先保留 /host（Docker 宿主机）
@@ -817,6 +883,33 @@ router.get('/pulse', async (_req, res) => {
       timestamp: now,
     }
 
+    // Docker CLI fallback：如果 si.dockerInfo 失败，尝试 CLI
+    if (!pulseData.containers) {
+      try {
+        const { stdout } = await execAsync('docker ps -a --format "{{.State}}"', { timeout: 5000 })
+        if (stdout.trim()) {
+          const states = stdout.trim().split('\n')
+          pulseData.containers = {
+            running: states.filter(s => s === 'running').length,
+            total: states.length,
+          }
+        }
+      } catch {
+        // Docker 不可用
+      }
+    }
+
+    // 如果 disks 为空（没有宿主机挂载），用 targetDisk（容器根分区）作为 fallback
+    if (pulseData.disks.length === 0 && targetDisk) {
+      pulseData.disks = [{
+        mount: targetDisk.mount || '/',
+        usedPercent: Math.round(targetDisk.use * 10) / 10,
+        total: formatBytes(targetDisk.size),
+        used: formatBytes(targetDisk.used),
+        free: formatBytes(targetDisk.available),
+      }]
+    }
+
     // 更新缓存
     pulseCache = { data: pulseData, timestamp: now }
 
@@ -852,6 +945,41 @@ interface DockerContainer {
 let dockerContainersCache: CacheEntry<DockerContainer[]> = { data: null, timestamp: 0 }
 const DOCKER_CACHE_TTL = 5000 // 5秒
 
+/**
+ * 通过 docker CLI 获取容器列表（作为 systeminformation 的 fallback）
+ * 适配绿联/飞牛 OS 等 NAS 系统的嵌套 Docker 场景
+ */
+async function getDockerContainersViaCli(): Promise<DockerContainer[]> {
+  try {
+    // 使用 docker ps -a 获取所有容器（JSON 格式）
+    const { stdout } = await execAsync(
+      'docker ps -a --format "{{.ID}}|{{.Names}}|{{.Image}}|{{.State}}|{{.Status}}|{{.CreatedAt}}"',
+      { timeout: 10000 }
+    )
+    
+    if (!stdout.trim()) {
+      return []
+    }
+    
+    const containers: DockerContainer[] = stdout.trim().split('\n').map(line => {
+      const [id, name, image, state, status, createdAt] = line.split('|')
+      return {
+        id: id?.substring(0, 12) || 'unknown',
+        name: name?.replace(/^\//, '') || 'unnamed',
+        image: image || 'unknown',
+        state: state || 'unknown',
+        status: status || '',
+        started: createdAt ? new Date(createdAt).getTime() : 0,
+      }
+    })
+    
+    return containers
+  } catch (err) {
+    console.error('[Docker CLI] Failed to get containers:', err)
+    return []
+  }
+}
+
 router.get('/docker', async (_req, res) => {
   try {
     const now = Date.now()
@@ -865,15 +993,33 @@ router.get('/docker', async (_req, res) => {
       })
     }
 
-    // 获取 Docker 容器列表
-    const containers = await si.dockerContainers('all').catch(() => [])
+    // 尝试通过 systeminformation 获取容器列表（true = 包含所有容器，含已停止的）
+    let containers = await si.dockerContainers(true).catch(() => [])
+    
+    // 如果 systeminformation 返回空，尝试通过 docker CLI 获取
+    // 这对于绿联/飞牛 OS 等 NAS 系统的嵌套 Docker 场景更可靠
+    if (containers.length === 0) {
+      console.log('[Docker] systeminformation returned empty, trying docker CLI fallback...')
+      const cliContainers = await getDockerContainersViaCli()
+      if (cliContainers.length > 0) {
+        console.log(`[Docker] CLI fallback found ${cliContainers.length} containers`)
+        // 更新缓存
+        dockerContainersCache = { data: cliContainers, timestamp: now }
+        return res.json({
+          success: true,
+          data: cliContainers,
+          cached: false,
+          source: 'cli',
+        })
+      }
+    }
 
     const containerList: DockerContainer[] = containers.map(c => ({
       id: c.id?.substring(0, 12) || 'unknown',
       name: c.name?.replace(/^\//, '') || 'unnamed',
       image: c.image || 'unknown',
       state: c.state || 'unknown',
-      status: c.status || '',
+      status: (c as any).status || '',
       started: c.started || 0,
     }))
 
@@ -935,6 +1081,76 @@ router.post('/docker/:id/:action', async (req, res) => {
     res.status(500).json({
       success: false,
       error: error?.message || `Failed to ${req.params.action} container`,
+    })
+  }
+})
+
+// ============================================
+// GET /api/system/debug - 调试接口
+// 用于排查 NAS 环境下的系统信息读取问题
+// ============================================
+
+router.get('/debug', async (_req, res) => {
+  try {
+    // 获取原始文件系统数据（不过滤）
+    const rawFs = await si.fsSize()
+    
+    // 获取 Docker 信息
+    const dockerInfo = await si.dockerInfo().catch(() => null)
+    const dockerContainers = await si.dockerContainers(true).catch(() => [])
+    
+    // 尝试 CLI 方式获取 Docker
+    let cliDockerInfo = null
+    try {
+      const { stdout: dockerVersion } = await execAsync('docker --version', { timeout: 5000 })
+      const { stdout: dockerPs } = await execAsync('docker ps -a --format "{{.ID}}|{{.Names}}|{{.State}}"', { timeout: 5000 })
+      cliDockerInfo = {
+        version: dockerVersion.trim(),
+        containers: dockerPs.trim().split('\n').filter(Boolean).map(line => {
+          const [id, name, state] = line.split('|')
+          return { id, name, state }
+        })
+      }
+    } catch (e: any) {
+      cliDockerInfo = { error: e.message }
+    }
+    
+    // 环境变量
+    const envVars = {
+      NODE_ENV: process.env.NODE_ENV,
+      SI_FILESYSTEM_DISK_PREFIX: process.env.SI_FILESYSTEM_DISK_PREFIX,
+      PROC_PATH: process.env.PROC_PATH,
+      SYS_PATH: process.env.SYS_PATH,
+      FS_PATH: process.env.FS_PATH,
+    }
+
+    res.json({
+      success: true,
+      data: {
+        environment: envVars,
+        rawFilesystems: rawFs.map(f => ({
+          fs: f.fs,
+          type: f.type,
+          mount: f.mount,
+          size: formatBytes(f.size),
+          used: formatBytes(f.used),
+          use: f.use,
+        })),
+        docker: {
+          systeminformation: {
+            info: dockerInfo,
+            containers: dockerContainers.length,
+          },
+          cli: cliDockerInfo,
+        },
+        timestamp: Date.now(),
+      },
+    })
+  } catch (error: any) {
+    console.error('Debug endpoint error:', error)
+    res.status(500).json({
+      success: false,
+      error: error.message,
     })
   }
 })

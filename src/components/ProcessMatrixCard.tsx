@@ -830,12 +830,25 @@ export function ProcessMatrixCard({ className }: { className?: string }) {
                     ) : (
                       <div
                         className={cn(
-                          "flex flex-col items-center justify-center py-8",
+                          "flex flex-col items-center justify-center py-6 px-3",
                           isDark ? "text-green-400/50" : "text-emerald-500/60"
                         )}
                       >
                         <div className="text-2xl mb-2">○</div>
-                        <div className="text-xs font-mono">暂无容器</div>
+                        <div className="text-xs font-mono mb-2">
+                          {t("monitor.no_containers", "未检测到 Docker 容器")}
+                        </div>
+                        <div
+                          className={cn(
+                            "text-[10px] font-mono text-center leading-relaxed max-w-[260px]",
+                            isDark ? "text-white/25" : "text-slate-400"
+                          )}
+                        >
+                          {t(
+                            "monitor.docker_hint",
+                            "NAS 用户请在容器设置中挂载 Docker Socket：/var/run/docker.sock"
+                          )}
+                        </div>
                       </div>
                     )}
                   </motion.div>
@@ -912,13 +925,24 @@ export function ProcessMatrixCard({ className }: { className?: string }) {
                     ) : (
                       <div
                         className={cn(
-                          "flex flex-col items-center justify-center py-8",
+                          "flex flex-col items-center justify-center py-6 px-3",
                           isDark ? "text-green-400/50" : "text-emerald-500/60"
                         )}
                       >
                         <Container className="w-6 h-6 mb-2 opacity-50" />
-                        <div className="text-xs font-mono">
-                          暂无 Docker 容器
+                        <div className="text-xs font-mono mb-2">
+                          {t("monitor.no_docker", "未检测到 Docker 容器")}
+                        </div>
+                        <div
+                          className={cn(
+                            "text-[10px] font-mono text-center leading-relaxed max-w-[260px]",
+                            isDark ? "text-white/25" : "text-slate-400"
+                          )}
+                        >
+                          {t(
+                            "monitor.docker_mount_tip",
+                            "请在创建容器时添加挂载：/var/run/docker.sock → /var/run/docker.sock，并开启特权模式"
+                          )}
                         </div>
                       </div>
                     )}

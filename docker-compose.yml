@@ -7,16 +7,24 @@ services:
       - "3002:3000"
     volumes:
       - ./server/data:/app/server/data
-      # 挂载宿主机根目录（只读），让 systeminformation 读取真实系统状态
+      # ========== 宿主机系统信息（只读）==========
+      # 挂载宿主机根目录，让 systeminformation 读取真实系统状态
       - /:/host:ro
       # 挂载 proc 文件系统，用于读取 CPU、内存等信息
       - /proc:/host/proc:ro
       # 挂载 sys 文件系统，用于读取温度、硬件信息
       - /sys:/host/sys:ro
+      # ========== Docker Socket（用于读取容器状态）==========
       # 🔑 关键：挂载 Docker socket，允许读取宿主机 Docker 容器状态
+      # 标准路径（大多数 Linux/NAS 系统）
       - /var/run/docker.sock:/var/run/docker.sock
+      # 备选：某些 NAS 系统（如绿联 UGREEN）可能使用不同路径
+      # 如果标准路径无效，请尝试取消下方注释：
+      # - /run/docker.sock:/var/run/docker.sock
+      # - /volume1/@docker/docker.sock:/var/run/docker.sock  # Synology
     environment:
       - NODE_ENV=production
+      # ========== 系统信息读取路径 ==========
       # 告诉 systeminformation 从 /host 路径读取文件系统信息
       - SI_FILESYSTEM_DISK_PREFIX=/host
       # 设置 proc 路径
@@ -25,12 +33,21 @@ services:
       - SYS_PATH=/host/sys
       # 文件系统根路径
       - FS_PATH=/host
-      # ========== AI 智能分类（可选） ==========
+      # ========== AI 智能分类（可选）==========
       # - AI_PROVIDER=openai          # openai | gemini | custom
       # - AI_API_KEY=sk-xxx
       # - AI_MODEL=gpt-4o-mini
       # - AI_API_BASE=                # 自定义 API 地址（Ollama 等）
+    # ========== 权限设置 ==========
     # 🔑 特权模式：允许读取 CPU 温度、SMART 磁盘信息、完整硬件信息
+    # 对于绿联/飞牛 OS 等 NAS 系统，这是必需的
     privileged: true
+    # 可选：如果不想使用 privileged，可以尝试使用 capabilities（更安全但可能功能受限）
+    # cap_add:
+    #   - SYS_PTRACE
+    #   - NET_ADMIN
+
+
+
 
 

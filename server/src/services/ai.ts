@@ -234,28 +234,32 @@ async function callOpenAiCompatible(prompt: string, systemPrompt?: string): Prom
 }
 
 async function callGemini(prompt: string): Promise<string> {
-  const { apiKey, model } = getAiConfig()
+  const { apiKey, apiBase, model } = getAiConfig()
   const modelName = model || 'gemini-2.0-flash'
+
+  // 支持自定义 apiBase（代理/中转），默认使用 Google 官方地址
+  const base = apiBase || 'https://generativelanguage.googleapis.com'
+  const url = `${base}/v1beta/models/${modelName}:generateContent`
 
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), 30000)
 
   try {
-    const resp = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.3,
-            maxOutputTokens: 1000,
-          },
-        }),
-        signal: controller.signal,
-      }
-    )
+    const resp = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-goog-api-key': apiKey,
+      },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 0.3,
+          maxOutputTokens: 1000,
+        },
+      }),
+      signal: controller.signal,
+    })
     clearTimeout(timer)
 
     if (!resp.ok) {
