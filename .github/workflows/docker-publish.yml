@@ -22,8 +22,6 @@ jobs:
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
-        with:
-          platforms: linux/arm64
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -34,8 +32,8 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push
-        uses: docker/build-push-action@v5
+      - name: Build and push (multi-arch)
+        uses: docker/build-push-action@v6
         with:
           context: .
           platforms: linux/amd64,linux/arm64
@@ -43,8 +41,12 @@ jobs:
           tags: |
             ${{ env.DOCKER_IMAGE }}:latest
             ${{ env.DOCKER_IMAGE }}:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          # 针对 QEMU 模拟构建的超时保护
-          build-args: |
-            BUILDKIT_STEP_LOG_MAX_SIZE=50000000
+          # 暂时禁用缓存，确保 arm64 完整构建一次
+          no-cache: true
+          provenance: false
+
+      - name: Verify multi-arch manifest
+        run: |
+          echo "=== Checking manifest for multi-arch support ==="
+          docker manifest inspect ${{ env.DOCKER_IMAGE }}:latest | grep -E '"architecture"|"os"'
+          echo "=== Expected: both amd64 and arm64 ==="
