@@ -355,7 +355,9 @@ export function HardwareIdentityCard({ className }: { className?: string }) {
     const entries = [
       {
         label: '处理器',
-        value: data.cpu?.brand || '未知',
+        value: data.cpu?.brand 
+          ? `${data.cpu.brand}${data.os?.arch ? ` (${data.os.arch})` : ''}`
+          : '未知',
         icon: Cpu,
         color: 'cyan',
         status: 'ok' as const

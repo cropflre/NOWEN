@@ -302,7 +302,8 @@ router.get('/stats', async (_req, res) => {
 
     const stats: SystemStats = {
       cpuLoad: Math.round(cpuLoad.currentLoad * 10) / 10,
-      memUsage: Math.round((mem.used / mem.total) * 1000) / 10,
+      // 使用 (total - available) 排除 buffer/cache，与 NAS 系统资源管理器一致
+      memUsage: Math.round(((mem.total - mem.available) / mem.total) * 1000) / 10,
       diskUsage: targetDisk ? Math.round(targetDisk.use * 10) / 10 : 0,
       diskTotal: diskTotalGB,
       diskFree: diskFreeGB,
@@ -568,10 +569,12 @@ router.get('/dynamic', async (_req, res) => {
       },
       memory: {
         total: mem.total,
-        used: mem.used,
+        // 实际使用 = total - available（排除可回收的 buffer/cache）
+        used: mem.total - mem.available,
         free: mem.free,
         available: mem.available,
-        usagePercent: Math.round((mem.used / mem.total) * 1000) / 10,
+        // 使用 (total - available) 排除 buffer/cache，与 NAS 系统资源管理器一致
+        usagePercent: Math.round(((mem.total - mem.available) / mem.total) * 1000) / 10,
         swapTotal: mem.swaptotal,
         swapUsed: mem.swapused,
         swapFree: mem.swapfree,
@@ -851,9 +854,10 @@ router.get('/pulse', async (_req, res) => {
         temperature: temp.main !== null ? Math.round(temp.main) : null,
       },
       memory: {
-        usedPercent: Math.round((mem.used / mem.total) * 1000) / 10,
+        // 使用 (total - available) 排除 buffer/cache，与 NAS 系统资源管理器一致
+        usedPercent: Math.round(((mem.total - mem.available) / mem.total) * 1000) / 10,
         total: formatBytes(mem.total),
-        used: formatBytes(mem.used),
+        used: formatBytes(mem.total - mem.available),
         free: formatBytes(mem.available),
       },
       network: {

@@ -6,6 +6,10 @@
 # Build stage for frontend
 FROM node:20-alpine AS frontend-builder
 WORKDIR /app
+
+# 安装前端构建所需的编译工具（bcrypt 等 native 模块需要）
+RUN apk add --no-cache python3 make g++
+
 COPY package*.json ./
 RUN npm install
 COPY . .
@@ -24,15 +28,13 @@ LABEL org.opencontainers.image.licenses="MIT"
 
 WORKDIR /app
 
-# Install nginx, docker-cli, and build tools for native modules (ARM64 needs python3/make/g++)
-RUN apk add --no-cache nginx docker-cli python3 make g++
+# Install nginx and docker-cli
+RUN apk add --no-cache nginx docker-cli
 
 # Install production dependencies for backend
+# server 使用 bcryptjs（纯 JS）而非 bcrypt，无需编译工具
 COPY server/package*.json ./server/
 RUN cd server && npm install --omit=dev
-
-# Remove build tools to reduce image size
-RUN apk del python3 make g++
 
 # Install tsx globally
 RUN npm install -g tsx
