@@ -840,14 +840,28 @@ export function ProcessMatrixCard({ className }: { className?: string }) {
                         </div>
                         <div
                           className={cn(
-                            "text-[10px] font-mono text-center leading-relaxed max-w-[260px]",
+                            "text-[10px] font-mono text-center leading-relaxed max-w-[300px]",
                             isDark ? "text-white/25" : "text-slate-400"
                           )}
                         >
                           {t(
                             "monitor.docker_hint",
-                            "NAS 用户请在容器设置中挂载 Docker Socket：/var/run/docker.sock"
+                            "绿联NAS用户请通过SSH执行命令创建容器（Docker UI无法挂载系统路径），详见项目文档"
                           )}
+                        </div>
+                        <div
+                          className={cn(
+                            "text-[9px] font-mono text-center leading-relaxed max-w-[320px] mt-2 px-2 py-1.5 rounded",
+                            isDark ? "bg-white/5 text-white/20" : "bg-slate-100 text-slate-400"
+                          )}
+                        >
+                          docker run -d --privileged
+                          <br />
+                          -v /var/run/docker.sock:/var/run/docker.sock
+                          <br />
+                          -v nowen-data:/app/server/data
+                          <br />
+                          -p 3000:3000 cropflre/nowen
                         </div>
                       </div>
                     )}
@@ -935,14 +949,28 @@ export function ProcessMatrixCard({ className }: { className?: string }) {
                         </div>
                         <div
                           className={cn(
-                            "text-[10px] font-mono text-center leading-relaxed max-w-[260px]",
+                            "text-[10px] font-mono text-center leading-relaxed max-w-[300px]",
                             isDark ? "text-white/25" : "text-slate-400"
                           )}
                         >
                           {t(
                             "monitor.docker_mount_tip",
-                            "请在创建容器时添加挂载：/var/run/docker.sock → /var/run/docker.sock，并开启特权模式"
+                            "需通过SSH命令行挂载 docker.sock 并开启特权模式，绿联/飞牛NAS的Docker UI不支持手动输入系统路径"
                           )}
+                        </div>
+                        <div
+                          className={cn(
+                            "text-[9px] font-mono text-center leading-relaxed max-w-[320px] mt-2 px-2 py-1.5 rounded",
+                            isDark ? "bg-white/5 text-white/20" : "bg-slate-100 text-slate-400"
+                          )}
+                        >
+                          docker run -d --privileged
+                          <br />
+                          -v /var/run/docker.sock:/var/run/docker.sock
+                          <br />
+                          -v nowen-data:/app/server/data
+                          <br />
+                          -p 3000:3000 cropflre/nowen
                         </div>
                       </div>
                     )}
