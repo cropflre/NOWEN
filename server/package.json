@@ -13,14 +13,17 @@
     "cheerio": "^1.0.0",
     "cors": "^2.8.6",
     "express": "^4.21.2",
+    "node-cron": "^3.0.3",
     "sql.js": "^1.11.0",
     "systeminformation": "^5.23.5",
+    "webdav": "^5.8.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
     "@types/node": "^22.10.5",
+    "@types/node-cron": "^3.0.11",
     "cross-env": "^7.0.3",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2"
