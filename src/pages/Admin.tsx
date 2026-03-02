@@ -1124,7 +1124,7 @@ function AdminContent() {
                 {activeTab === 'analytics' && t('admin.stats.view_analytics')}
                 {activeTab === 'health-check' && t('admin.stats.check_health')}
                 {activeTab === 'logs' && t('admin.stats.view_logs')}
-                {activeTab === 'backup' && t('admin.backup.description', 'WebDAV 云端备份 & 本地备份下载')}
+                {activeTab === 'backup' && t('admin.settings.data.subtitle')}
                 {activeTab === 'docs' && t('admin.stats.view_docs')}
                 {activeTab === 'settings' && t('admin.stats.manage_config')}
               </p>
@@ -2823,7 +2823,50 @@ function AdminContent() {
                 exit={{ opacity: 0, y: -20 }}
                 className="max-w-5xl"
               >
-                <BackupCard onShowToast={showToast} />
+                <BackupCard 
+                  onShowToast={showToast}
+                  bookmarks={bookmarks}
+                  categories={categories}
+                  settings={siteSettings}
+                  onImport={async (data) => {
+                    const result = await importData(data)
+                    await refreshData()
+                    showToast('success', t('admin.settings.data.import_success', { bookmarks: data.bookmarks?.length || 0, categories: data.categories?.length || 0 }))
+
+                    // 如果有需要抓取 metadata 的书签，启动轮询
+                    if (result.enriching && result.enriching > 0) {
+                      showToast('info', t('admin.settings.data.enriching_start', { count: result.enriching }))
+                      
+                      const pollInterval = setInterval(async () => {
+                        try {
+                          const status = await getEnrichStatus()
+                          if (!status.running) {
+                            clearInterval(pollInterval)
+                            await refreshData()
+                            showToast('success', t('admin.settings.data.enriching_done', { 
+                              success: status.completed - status.failed,
+                              total: status.total 
+                            }))
+                          }
+                        } catch {
+                          clearInterval(pollInterval)
+                        }
+                      }, 3000)
+
+                      // 安全超时：最多轮询 5 分钟
+                      setTimeout(() => clearInterval(pollInterval), 300000)
+                    }
+
+                    // 导入成功后跳转到首页
+                    setTimeout(() => {
+                      onBack()
+                    }, 1000)
+                  }}
+                  onFactoryReset={() => {
+                    showToast('success', t('admin.settings.data.reset_success'))
+                    refreshData()
+                  }}
+                />
               </motion.div>
             )}
 
@@ -2888,47 +2931,6 @@ function AdminContent() {
                   onClearPasswordSuccess={() => setPasswordSuccess(false)}
                   onClearUsernameError={() => setUsernameError('')}
                   onClearUsernameSuccess={() => setUsernameSuccess(false)}
-                  // 数据管理
-                  bookmarks={bookmarks}
-                  categories={categories}
-                  onImport={async (data) => {
-                    const result = await importData(data)
-                    await refreshData()
-                    showToast('success', t('admin.settings.data.import_success', { bookmarks: data.bookmarks?.length || 0, categories: data.categories?.length || 0 }))
-
-                    // 如果有需要抓取 metadata 的书签，启动轮询
-                    if (result.enriching && result.enriching > 0) {
-                      showToast('info', t('admin.settings.data.enriching_start', { count: result.enriching }))
-                      
-                      const pollInterval = setInterval(async () => {
-                        try {
-                          const status = await getEnrichStatus()
-                          if (!status.running) {
-                            clearInterval(pollInterval)
-                            await refreshData()
-                            showToast('success', t('admin.settings.data.enriching_done', { 
-                              success: status.completed - status.failed,
-                              total: status.total 
-                            }))
-                          }
-                        } catch {
-                          clearInterval(pollInterval)
-                        }
-                      }, 3000)
-
-                      // 安全超时：最多轮询 5 分钟
-                      setTimeout(() => clearInterval(pollInterval), 300000)
-                    }
-
-                    // 导入成功后跳转到首页
-                    setTimeout(() => {
-                      onBack()
-                    }, 1000)
-                  }}
-                  onFactoryReset={() => {
-                    showToast('success', t('admin.settings.data.reset_success'))
-                    refreshData()
-                  }}
                   // 壁纸设置
                   onSaveWallpaperSettings={handleSaveWallpaperSettings}
                   isSavingWallpaperSettings={isSavingWallpaperSettings}

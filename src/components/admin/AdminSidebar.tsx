@@ -17,7 +17,7 @@ import {
   BookOpen,
   Tag,
   ScrollText,
-  CloudUpload
+  Database
 } from 'lucide-react'
 
 
@@ -43,7 +43,7 @@ const navItems = [
   { id: 'analytics' as TabType, labelKey: 'admin.nav.analytics', fullLabelKey: 'admin.nav.analytics_full', icon: BarChart3 },
   { id: 'health-check' as TabType, labelKey: 'admin.nav.health_check', fullLabelKey: 'admin.nav.health_check_full', icon: HeartPulse },
   { id: 'logs' as TabType, labelKey: 'admin.nav.logs', fullLabelKey: 'admin.nav.logs_full', icon: ScrollText },
-  { id: 'backup' as TabType, labelKey: 'admin.nav.backup', fullLabelKey: 'admin.nav.backup_full', icon: CloudUpload },
+  { id: 'backup' as TabType, labelKey: 'admin.nav.backup', fullLabelKey: 'admin.nav.backup_full', icon: Database },
   { id: 'docs' as TabType, labelKey: 'admin.nav.docs', fullLabelKey: 'admin.nav.docs_full', icon: BookOpen },
   { id: 'settings' as TabType, labelKey: 'admin.nav.settings', fullLabelKey: 'admin.nav.settings_full', icon: Settings },
 ]

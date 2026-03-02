@@ -5,7 +5,6 @@ import {
   Globe, 
   Palette, 
   Shield, 
-  Database,
   Gauge,
   Image,
   Sparkles
@@ -14,16 +13,14 @@ import { cn } from '../../lib/utils'
 import { SiteSettingsCard } from './SiteSettingsCard'
 import { ThemeCard } from './ThemeCard'
 import { SecurityCard } from './SecurityCard'
-import { DataManagementCard } from './DataManagementCard'
 import { WidgetSettingsCard } from './WidgetSettingsCard'
 import { WallpaperSettingsCard } from './WallpaperSettingsCard'
 import { AiSettingsCard } from './AiSettingsCard'
 import { SiteSettings, WidgetVisibility } from '../../lib/api'
-import { Bookmark, Category } from '../../types/bookmark'
 import { ThemeId } from '../../hooks/useTheme.tsx'
 
 // 设置子标签页类型
-type SettingsTab = 'site' | 'theme' | 'wallpaper' | 'widget' | 'security' | 'data' | 'ai'
+type SettingsTab = 'site' | 'theme' | 'wallpaper' | 'widget' | 'security' | 'ai'
 
 interface SettingsTabItem {
   id: SettingsTab
@@ -76,14 +73,6 @@ const settingsTabs: SettingsTabItem[] = [
     iconBg: 'from-amber-500/20 to-orange-600/20'
   },
   { 
-    id: 'data', 
-    labelKey: 'admin.settings.tabs.data', 
-    icon: Database, 
-    descKey: 'admin.settings.tabs.data_desc',
-    gradient: 'from-emerald-500/20 to-teal-500/20',
-    iconBg: 'from-emerald-500/20 to-teal-600/20'
-  },
-  { 
     id: 'ai', 
     labelKey: 'admin.settings.tabs.ai', 
     icon: Sparkles, 
@@ -129,11 +118,6 @@ interface SettingsPanelProps {
   onClearPasswordSuccess: () => void
   onClearUsernameError: () => void
   onClearUsernameSuccess: () => void
-  // 数据管理
-  bookmarks: Bookmark[]
-  categories: Category[]
-  onImport: (data: { bookmarks: Bookmark[]; categories: Category[]; settings: SiteSettings }) => Promise<void>
-  onFactoryReset?: () => void
   // 壁纸设置
   onSaveWallpaperSettings: () => Promise<void>
   isSavingWallpaperSettings: boolean
@@ -177,11 +161,6 @@ export function SettingsPanel({
   onClearPasswordSuccess,
   onClearUsernameError,
   onClearUsernameSuccess,
-  // 数据管理
-  bookmarks,
-  categories,
-  onImport,
-  onFactoryReset,
   // 壁纸设置
   onSaveWallpaperSettings,
   isSavingWallpaperSettings,
@@ -202,7 +181,7 @@ export function SettingsPanel({
         }}
       >
         {/* 标签页按钮网格 - 响应式 */}
-        <div className="grid grid-cols-2 lg:grid-cols-7 gap-2">
+        <div className="grid grid-cols-2 lg:grid-cols-6 gap-2">
           {settingsTabs.map((tab) => {
             const Icon = tab.icon
             const isActive = activeSettingsTab === tab.id
@@ -375,17 +354,6 @@ export function SettingsPanel({
               onClearSuccess={onClearPasswordSuccess}
               onClearUsernameError={onClearUsernameError}
               onClearUsernameSuccess={onClearUsernameSuccess}
-            />
-          )}
-
-          {/* 数据管理 */}
-          {activeSettingsTab === 'data' && (
-            <DataManagementCard
-              bookmarks={bookmarks}
-              categories={categories}
-              settings={siteSettings}
-              onImport={onImport}
-              onFactoryReset={onFactoryReset}
             />
           )}
 
