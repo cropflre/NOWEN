@@ -1141,6 +1141,114 @@ export async function checkBookmarksHealth(
   return finalResult
 }
 
+// ========== 云备份 API ==========
+
+export interface BackupConfig {
+  url: string
+  username: string
+  password: string
+  path: string
+  autoBackup: boolean
+  cronExpression: string
+  maxBackups: number
+}
+
+export interface BackupFile {
+  filename: string
+  size: number
+  lastmod: string
+}
+
+export interface BackupStatus {
+  enabled: boolean
+  cronExpression: string
+  running: boolean
+  lastBackupTime: string | null
+  lastError: string | null
+}
+
+export async function getBackupConfig(): Promise<BackupConfig> {
+  return request<BackupConfig>('/api/backup/config', { requireAuth: true })
+}
+
+export async function saveBackupConfig(config: Partial<BackupConfig>): Promise<{ success: boolean; message: string }> {
+  return request('/api/backup/config', {
+    method: 'POST',
+    body: JSON.stringify(config),
+    requireAuth: true,
+  })
+}
+
+export async function testBackupConnection(config?: Partial<BackupConfig>): Promise<{ success: boolean; message: string }> {
+  return request('/api/backup/test', {
+    method: 'POST',
+    body: JSON.stringify(config || {}),
+    requireAuth: true,
+  })
+}
+
+export async function backupNow(): Promise<{ success: boolean; filename: string; size: number }> {
+  return request('/api/backup/now', {
+    method: 'POST',
+    requireAuth: true,
+    timeout: 60000,
+  })
+}
+
+export async function listBackups(): Promise<{ backups: BackupFile[] }> {
+  return request('/api/backup/list', { requireAuth: true })
+}
+
+export async function restoreBackup(filename: string): Promise<{ success: boolean; message: string }> {
+  return request('/api/backup/restore', {
+    method: 'POST',
+    body: JSON.stringify({ filename }),
+    requireAuth: true,
+    timeout: 60000,
+  })
+}
+
+export async function deleteRemoteBackup(filename: string): Promise<{ success: boolean; message: string }> {
+  return request(`/api/backup/file/${encodeURIComponent(filename)}`, {
+    method: 'DELETE',
+    requireAuth: true,
+  })
+}
+
+export async function getBackupStatus(): Promise<BackupStatus> {
+  return request<BackupStatus>('/api/backup/status', { requireAuth: true })
+}
+
+export function downloadLocalBackup(): void {
+  const token = localStorage.getItem('admin_token')
+  const url = `${API_BASE}/api/backup/local/download`
+  const a = document.createElement('a')
+  // 用 fetch 下载（需要 auth header）
+  fetch(url, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  })
+    .then(res => res.blob())
+    .then(blob => {
+      const blobUrl = URL.createObjectURL(blob)
+      a.href = blobUrl
+      a.download = `nowen-backup-${new Date().toISOString().replace(/[:.]/g, '-')}.json`
+      a.click()
+      URL.revokeObjectURL(blobUrl)
+    })
+}
+
+export const backupApi = {
+  getConfig: getBackupConfig,
+  saveConfig: saveBackupConfig,
+  testConnection: testBackupConnection,
+  backupNow,
+  list: listBackups,
+  restore: restoreBackup,
+  deleteFile: deleteRemoteBackup,
+  status: getBackupStatus,
+  downloadLocal: downloadLocalBackup,
+} as const
+
 export const healthCheckApi = {
   check: checkBookmarksHealth,
 }

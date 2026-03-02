@@ -15,8 +15,10 @@ import {
   healthCheckRouter,
   aiRouter,
   logsRouter,
+  backupRouter,
 } from './routes/index.js'
 import { requestLoggerMiddleware } from './routes/logs.js'
+import { initBackupService } from './services/backup.js'
 
 const app = express()
 
@@ -66,10 +68,14 @@ app.use('/api/visits', visitsRouter)
 app.use('/api/health-check', healthCheckRouter)
 app.use('/api/ai', aiRouter)
 app.use('/api/logs', logsRouter)
+app.use('/api/backup', backupRouter)
 app.use('/api', dataRouter)  // /api/export, /api/import, /api/factory-reset
 
 // ========== 启动服务 ==========
 initDatabase().then(() => {
+  // 初始化自动备份定时任务
+  initBackupService()
+
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`✨ Server running at http://0.0.0.0:${PORT}`)
     if (isDev) {

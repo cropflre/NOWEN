@@ -57,6 +57,7 @@ import { HealthCheckCard } from '../components/admin/HealthCheckCard'
 import { DocsCard } from '../components/admin/DocsCard'
 import { TagsManageCard } from '../components/admin/TagsManageCard'
 import { LogsCard } from '../components/admin/LogsCard'
+import { BackupCard } from '../components/admin/BackupCard'
 import { IconRenderer } from '../components/IconRenderer'
 import { IconifyPicker } from '../components/IconifyPicker'
 import { ToastProvider, useToast } from '../components/admin/Toast'
@@ -355,7 +356,7 @@ function AdminContent() {
 
   const { showToast } = useToast()
   const { themeId, isDark, setTheme, toggleDarkMode, autoMode, setAutoMode } = useThemeContext()
-  const [activeTab, setActiveTab] = useState<'bookmarks' | 'categories' | 'tags' | 'quotes' | 'icons' | 'analytics' | 'health-check' | 'docs' | 'settings'>('bookmarks')
+  const [activeTab, setActiveTab] = useState<'bookmarks' | 'categories' | 'tags' | 'quotes' | 'icons' | 'analytics' | 'health-check' | 'logs' | 'backup' | 'docs' | 'settings'>('bookmarks')
   const [searchQuery, setSearchQuery] = useState('')
   const [filterCategory, setFilterCategory] = useState<string>('all')
   const [currentPage, setCurrentPage] = useState(1)
@@ -1065,6 +1066,7 @@ function AdminContent() {
     analytics: t('admin.nav.analytics_full'),
     'health-check': t('admin.nav.health_check_full'),
     logs: t('admin.nav.logs_full'),
+    backup: t('admin.nav.backup_full'),
     docs: t('admin.nav.docs_full'),
     settings: t('admin.nav.settings_full'),
   }
@@ -1122,6 +1124,7 @@ function AdminContent() {
                 {activeTab === 'analytics' && t('admin.stats.view_analytics')}
                 {activeTab === 'health-check' && t('admin.stats.check_health')}
                 {activeTab === 'logs' && t('admin.stats.view_logs')}
+                {activeTab === 'backup' && t('admin.backup.description', 'WebDAV 云端备份 & 本地备份下载')}
                 {activeTab === 'docs' && t('admin.stats.view_docs')}
                 {activeTab === 'settings' && t('admin.stats.manage_config')}
               </p>
@@ -2808,6 +2811,19 @@ function AdminContent() {
                 className="max-w-5xl"
               >
                 <LogsCard onShowToast={showToast} />
+              </motion.div>
+            )}
+
+            {/* Backup Tab */}
+            {activeTab === 'backup' && (
+              <motion.div
+                key="backup"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="max-w-5xl"
+              >
+                <BackupCard onShowToast={showToast} />
               </motion.div>
             )}
 
