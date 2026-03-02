@@ -38,6 +38,8 @@ if (!fs.existsSync(dataDir)) {
 }
 
 let db: SqlJsDatabase
+let autoSaveTimer: ReturnType<typeof setInterval> | null = null
+let isDirty = false  // 标记内存数据是否有未保存的变更
 
 export async function initDatabase() {
   const SQL = await initSqlJs()
@@ -267,6 +269,12 @@ export async function initDatabase() {
   
   saveDatabase()
   
+  // 🔑 启动定时自动保存（每 30 秒检查一次，有变更才写盘）
+  startAutoSave()
+  
+  // 🔑 注册进程退出时保存数据库
+  registerShutdownHooks()
+  
   return db
 }
 
@@ -279,7 +287,64 @@ export function saveDatabase() {
     const data = db.export()
     const buffer = Buffer.from(data)
     fs.writeFileSync(dbPath, buffer)
+    isDirty = false
   }
+}
+
+/** 标记数据已变更，需要保存。在每次写操作后调用 */
+export function markDirty() {
+  isDirty = true
+}
+
+/** 启动定时自动保存（每 30 秒），防止意外丢失数据 */
+function startAutoSave() {
+  if (autoSaveTimer) {
+    clearInterval(autoSaveTimer)
+  }
+  autoSaveTimer = setInterval(() => {
+    if (isDirty && db) {
+      try {
+        saveDatabase()
+        console.log('💾 Auto-saved database')
+      } catch (err) {
+        console.error('❌ Auto-save failed:', err)
+      }
+    }
+  }, 30000) // 每 30 秒
+}
+
+/** 注册进程退出钩子，确保退出前保存数据 */
+function registerShutdownHooks() {
+  const gracefulShutdown = (signal: string) => {
+    console.log(`\n🛑 Received ${signal}, saving database before exit...`)
+    try {
+      if (db) {
+        saveDatabase()
+        console.log('✅ Database saved successfully')
+      }
+    } catch (err) {
+      console.error('❌ Failed to save database on shutdown:', err)
+    }
+    process.exit(0)
+  }
+
+  // 只注册一次
+  process.once('SIGINT', () => gracefulShutdown('SIGINT'))
+  process.once('SIGTERM', () => gracefulShutdown('SIGTERM'))
+  
+  // 未捕获的异常也尝试保存
+  process.once('uncaughtException', (err) => {
+    console.error('💥 Uncaught exception:', err)
+    try {
+      if (db) {
+        saveDatabase()
+        console.log('✅ Emergency database save completed')
+      }
+    } catch (saveErr) {
+      console.error('❌ Emergency save failed:', saveErr)
+    }
+    process.exit(1)
+  })
 }
 
 // 生成唯一 ID
