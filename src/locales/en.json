@@ -693,7 +693,15 @@
       "tip_1": "Supports Nutstore, Synology WebDAV, UGREEN NAS, Alist and other WebDAV services",
       "tip_2": "Nutstore users should use 'App Password' instead of login password",
       "tip_3": "Backup includes bookmarks, categories, quotes, settings and all data",
-      "tip_4": "Local download/restore doesn't require WebDAV, can serve as emergency backup"
+      "tip_4": "Local download/restore doesn't require WebDAV, can serve as emergency backup",
+      "db_download": "Download DB",
+      "db_restore": "Restore DB",
+      "db_download_start": "Starting database file download",
+      "db_download_failed": "Database file download failed",
+      "db_restore_confirm": "Are you sure you want to overwrite current data with this database file? This cannot be undone.",
+      "db_restore_failed": "Database restore failed",
+      "invalid_db_file": "Please select a .db database file",
+      "tip_5": "Download/Restore DB operates on the raw database file, includes all data (visits, logs, etc.)"
     },
     "docs": {
       "title": "Documentation",

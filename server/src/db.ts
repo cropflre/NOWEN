@@ -23,6 +23,11 @@ const getDbPath = () => {
 const dbPath = getDbPath()
 console.log(`📂 Database path: ${dbPath}`)
 
+/** 获取数据库文件路径 */
+export function getDatabasePath(): string {
+  return dbPath
+}
+
 // bcrypt 加密轮数
 const BCRYPT_ROUNDS = 12
 

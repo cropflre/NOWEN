@@ -1,5 +1,7 @@
 import { Router, Request, Response } from 'express'
+import fs from 'fs'
 import { authMiddleware } from '../middleware/index.js'
+import { getDatabase, saveDatabase, getDatabasePath, initDatabase } from '../db.js'
 import {
   testConnection,
   uploadBackup,
@@ -19,7 +21,7 @@ const router = Router()
 
 // ========== 本地备份（方案二） ==========
 
-// 下载本地备份文件
+// 下载本地备份文件（JSON 格式）
 router.get('/local/download', authMiddleware, (req: Request, res: Response) => {
   try {
     const data = collectBackupData('manual')
@@ -32,6 +34,88 @@ router.get('/local/download', authMiddleware, (req: Request, res: Response) => {
   } catch (err: any) {
     console.error('本地备份下载失败:', err)
     res.status(500).json({ error: '备份下载失败' })
+  }
+})
+
+// 下载原始数据库文件（.db 二进制）
+router.get('/local/download-db', authMiddleware, (req: Request, res: Response) => {
+  try {
+    // 先将内存中的数据库写入磁盘，确保是最新的
+    saveDatabase()
+
+    const dbFilePath = getDatabasePath()
+    if (!fs.existsSync(dbFilePath)) {
+      return res.status(404).json({ error: '数据库文件不存在' })
+    }
+
+    const filename = `zen-garden-${new Date().toISOString().replace(/[:.]/g, '-')}.db`
+    res.setHeader('Content-Type', 'application/octet-stream')
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`)
+
+    const stream = fs.createReadStream(dbFilePath)
+    stream.pipe(res)
+  } catch (err: any) {
+    console.error('数据库文件下载失败:', err)
+    res.status(500).json({ error: '数据库文件下载失败' })
+  }
+})
+
+// 上传原始数据库文件恢复（.db 二进制）
+router.post('/local/upload-db', authMiddleware, async (req: Request, res: Response) => {
+  try {
+    const chunks: Buffer[] = []
+    for await (const chunk of req) {
+      chunks.push(Buffer.from(chunk))
+    }
+    const buffer = Buffer.concat(chunks)
+
+    if (buffer.length < 100) {
+      return res.status(400).json({ error: '文件太小，不是有效的 SQLite 数据库' })
+    }
+
+    // 检查 SQLite 魔数头：前 16 字节为 "SQLite format 3\0"
+    const header = buffer.slice(0, 16).toString('ascii')
+    if (!header.startsWith('SQLite format 3')) {
+      return res.status(400).json({ error: '不是有效的 SQLite 数据库文件' })
+    }
+
+    const dbFilePath = getDatabasePath()
+
+    // 备份当前数据库
+    const backupPath = dbFilePath + '.bak'
+    if (fs.existsSync(dbFilePath)) {
+      fs.copyFileSync(dbFilePath, backupPath)
+    }
+
+    try {
+      // 写入新数据库文件
+      fs.writeFileSync(dbFilePath, buffer)
+
+      // 重新加载数据库到内存
+      await initDatabase()
+
+      // 删除备份
+      if (fs.existsSync(backupPath)) {
+        fs.unlinkSync(backupPath)
+      }
+
+      res.json({
+        success: true,
+        message: `数据库已恢复，文件大小 ${(buffer.length / 1024).toFixed(1)} KB`,
+        size: buffer.length,
+      })
+    } catch (loadErr: any) {
+      // 恢复失败，回滚到备份
+      if (fs.existsSync(backupPath)) {
+        fs.copyFileSync(backupPath, dbFilePath)
+        await initDatabase()
+        fs.unlinkSync(backupPath)
+      }
+      throw new Error(`数据库加载失败，已回滚：${loadErr?.message}`)
+    }
+  } catch (err: any) {
+    console.error('数据库文件上传恢复失败:', err)
+    res.status(500).json({ error: err?.message || '数据库恢复失败' })
   }
 })
 

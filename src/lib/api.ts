@@ -1223,7 +1223,6 @@ export function downloadLocalBackup(): void {
   const token = localStorage.getItem('admin_token')
   const url = `${API_BASE}/api/backup/local/download`
   const a = document.createElement('a')
-  // 用 fetch 下载（需要 auth header）
   fetch(url, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   })
@@ -1237,6 +1236,41 @@ export function downloadLocalBackup(): void {
     })
 }
 
+export function downloadDatabaseFile(): void {
+  const token = localStorage.getItem('admin_token')
+  const url = `${API_BASE}/api/backup/local/download-db`
+  fetch(url, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  })
+    .then(res => {
+      if (!res.ok) throw new Error('下载失败')
+      return res.blob()
+    })
+    .then(blob => {
+      const blobUrl = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = blobUrl
+      a.download = `zen-garden-${new Date().toISOString().replace(/[:.]/g, '-')}.db`
+      a.click()
+      URL.revokeObjectURL(blobUrl)
+    })
+}
+
+export async function uploadDatabaseFile(file: File): Promise<{ success: boolean; message: string; size: number }> {
+  const token = localStorage.getItem('admin_token')
+  const res = await fetch(`${API_BASE}/api/backup/local/upload-db`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/octet-stream',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: file,
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || '上传失败')
+  return data
+}
+
 export const backupApi = {
   getConfig: getBackupConfig,
   saveConfig: saveBackupConfig,
@@ -1247,6 +1281,8 @@ export const backupApi = {
   deleteFile: deleteRemoteBackup,
   status: getBackupStatus,
   downloadLocal: downloadLocalBackup,
+  downloadDb: downloadDatabaseFile,
+  uploadDb: uploadDatabaseFile,
 } as const
 
 export const healthCheckApi = {

@@ -693,7 +693,15 @@
       "tip_1": "支持坚果云、群晖 WebDAV、绿联 NAS、Alist 等 WebDAV 服务",
       "tip_2": "坚果云用户请使用「应用密码」而非登录密码",
       "tip_3": "备份包含书签、分类、名言、设置等所有数据",
-      "tip_4": "本地下载/恢复不依赖 WebDAV，可作为紧急备份方案"
+      "tip_4": "本地下载/恢复不依赖 WebDAV，可作为紧急备份方案",
+      "db_download": "下载 DB",
+      "db_restore": "恢复 DB",
+      "db_download_start": "开始下载数据库文件",
+      "db_download_failed": "数据库文件下载失败",
+      "db_restore_confirm": "确定用此数据库文件覆盖当前数据吗？此操作不可撤销。",
+      "db_restore_failed": "数据库恢复失败",
+      "invalid_db_file": "请选择 .db 格式的数据库文件",
+      "tip_5": "「下载/恢复 DB」直接操作原始数据库文件，包含完整数据（含访问统计、日志等）"
     },
     "docs": {
       "title": "说明文档",

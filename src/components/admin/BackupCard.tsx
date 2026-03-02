@@ -20,6 +20,8 @@ import {
   EyeOff,
   AlertTriangle,
   Loader2,
+  Database,
+  Upload,
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import {
@@ -233,6 +235,42 @@ export function BackupCard({ onShowToast }: BackupCardProps) {
     input.click()
   }
 
+  // 下载原始数据库文件
+  const handleDownloadDb = () => {
+    try {
+      backupApi.downloadDb()
+      onShowToast('success', t('admin.backup.db_download_start', '开始下载数据库文件'))
+    } catch (err: any) {
+      onShowToast('error', err?.message || t('admin.backup.db_download_failed', '下载失败'))
+    }
+  }
+
+  // 上传原始数据库文件恢复
+  const handleUploadDb = () => {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = '.db'
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0]
+      if (!file) return
+
+      if (!file.name.endsWith('.db')) {
+        onShowToast('error', t('admin.backup.invalid_db_file', '请选择 .db 格式的数据库文件'))
+        return
+      }
+
+      if (!window.confirm(t('admin.backup.db_restore_confirm', '确定用此数据库文件覆盖当前数据吗？此操作不可撤销。'))) return
+
+      try {
+        const result = await backupApi.uploadDb(file)
+        onShowToast('success', result.message || t('admin.backup.restore_success', '恢复成功'))
+      } catch (err: any) {
+        onShowToast('error', err?.message || t('admin.backup.db_restore_failed', '数据库恢复失败'))
+      }
+    }
+    input.click()
+  }
+
   const formatSize = (bytes: number) => {
     if (bytes < 1024) return `${bytes} B`
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
@@ -292,7 +330,7 @@ export function BackupCard({ onShowToast }: BackupCardProps) {
       </div>
 
       {/* 快速操作 */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-3 sm:grid-cols-3 gap-3">
         {/* 云端备份 */}
         <button
           onClick={handleBackupNow}
@@ -360,6 +398,36 @@ export function BackupCard({ onShowToast }: BackupCardProps) {
           <RotateCcw className="w-5 h-5 text-purple-500 dark:text-purple-400" />
           <span className="text-xs font-medium text-gray-700 dark:text-white/70">
             {t('admin.backup.local_restore', '本地恢复')}
+          </span>
+        </button>
+
+        {/* 下载 DB 文件 */}
+        <button
+          onClick={handleDownloadDb}
+          className={cn(
+            'flex flex-col items-center gap-2 p-4 rounded-xl border transition-all',
+            'border-gray-200 dark:border-white/10',
+            'hover:border-teal-300 dark:hover:border-teal-500/30 hover:bg-teal-50 dark:hover:bg-teal-500/5',
+          )}
+        >
+          <Database className="w-5 h-5 text-teal-500 dark:text-teal-400" />
+          <span className="text-xs font-medium text-gray-700 dark:text-white/70">
+            {t('admin.backup.db_download', '下载 DB')}
+          </span>
+        </button>
+
+        {/* 上传 DB 文件恢复 */}
+        <button
+          onClick={handleUploadDb}
+          className={cn(
+            'flex flex-col items-center gap-2 p-4 rounded-xl border transition-all',
+            'border-gray-200 dark:border-white/10',
+            'hover:border-rose-300 dark:hover:border-rose-500/30 hover:bg-rose-50 dark:hover:bg-rose-500/5',
+          )}
+        >
+          <Upload className="w-5 h-5 text-rose-500 dark:text-rose-400" />
+          <span className="text-xs font-medium text-gray-700 dark:text-white/70">
+            {t('admin.backup.db_restore', '恢复 DB')}
           </span>
         </button>
       </div>
@@ -700,6 +768,7 @@ export function BackupCard({ onShowToast }: BackupCardProps) {
           <li>• {t('admin.backup.tip_2', '坚果云用户请使用「应用密码」而非登录密码')}</li>
           <li>• {t('admin.backup.tip_3', '备份包含书签、分类、名言、设置等所有数据')}</li>
           <li>• {t('admin.backup.tip_4', '本地下载/恢复不依赖 WebDAV，可作为紧急备份方案')}</li>
+          <li>• {t('admin.backup.tip_5', '「下载/恢复 DB」直接操作原始数据库文件，包含完整数据（含访问统计、日志等）')}</li>
         </ul>
       </div>
     </div>
