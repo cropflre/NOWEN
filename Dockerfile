@@ -52,6 +52,11 @@ COPY nginx.conf /etc/nginx/http.d/default.conf
 # Create data directory
 RUN mkdir -p /app/server/data
 
+# 🔑 声明数据卷 — 确保用户数据在容器更新/重建后不丢失
+# 即使用户不手动配置 -v 挂载（如绿联/飞牛 NAS 的 Docker 界面），
+# Docker 也会自动创建匿名卷(named volume)来持久化此目录
+VOLUME /app/server/data
+
 # 暴露端口
 EXPOSE 3000 3001
 
@@ -60,6 +65,24 @@ COPY <<EOF /app/start.sh
 #!/bin/sh
 echo "=== NOWEN Starting ==="
 echo "Architecture: $(uname -m)"
+echo "Data directory: /app/server/data"
+
+# 检查数据卷挂载状态
+if [ -f /app/server/data/zen-garden.db ]; then
+  DB_SIZE=$(ls -lh /app/server/data/zen-garden.db | awk '{print $5}')
+  echo "Database found: zen-garden.db (${DB_SIZE})"
+  echo "Data persistence: OK"
+else
+  echo "WARNING: No existing database found - creating new one"
+  echo "IMPORTANT: If you lost data after updating, please ensure"
+  echo "  the data volume is mounted: /app/server/data"
+  echo ""
+  echo "  NAS Docker UI: Mount a host path to /app/server/data"
+  echo "  Docker CLI:    docker run -v nowen-data:/app/server/data ..."
+  echo "  Compose:       volumes: nowen-data:/app/server/data"
+fi
+
+echo ""
 echo "Starting backend on port 3001..."
 cd /app/server && tsx src/index.ts &
 sleep 2

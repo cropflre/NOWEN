@@ -6,7 +6,8 @@ services:
     ports:
       - "3002:3000"
     volumes:
-      - ./server/data:/app/server/data
+      # 🔑 数据持久化 — 使用命名卷确保更新镜像后数据不丢失
+      - nowen-data:/app/server/data
       # ========== 宿主机系统信息（只读）==========
       # 挂载宿主机根目录，让 systeminformation 读取真实系统状态
       - /:/host:ro
@@ -46,6 +47,10 @@ services:
     # cap_add:
     #   - SYS_PTRACE
     #   - NET_ADMIN
+
+# 命名卷 — Docker 自动管理，容器删除/重建后数据仍保留
+volumes:
+  nowen-data:
 
 
 
