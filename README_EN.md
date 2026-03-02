@@ -81,7 +81,9 @@
 | **Network Switching**    | Dual URLs per bookmark (Internal/External) · Auto network detection · Smart URL switching              |
 | **Footer Filing Info**   | Configure footer text in settings · HTML rendering support · Homepage bottom display                   |
 | **Wallpaper**            | Custom background wallpaper · Upload/Drag/URL/Picsum/Bing · Adjustable blur and overlay · Beam effects layered |
-| **Data Management**      | Import/Export JSON · Factory reset · Auto redirect to home after import · SunPanel data import compatible · Auto-fetch icons after import (≤50 bookmarks) |
+| **Data Management**      | Import/Export JSON/HTML · Factory reset · Auto redirect to home after import · SunPanel data import compatible · Browser bookmark import (merge/overwrite) · Auto-fetch icons after import (≤50 bookmarks) |
+| **Cloud Backup**         | WebDAV cloud backup (Nutstore/Synology/UGREEN/Alist) · Auto scheduled backup (daily/12h/weekly/hourly) · Local JSON download/restore · Raw DB file download/upload · Keep up to 30 backups |
+| **System Logs**          | Operation logging · Filter by level/type · One-click clear logs                                        |
 | **ARM64 Support**        | Multi-arch Docker images · RK3588/RK3576/RK3566 SBCs · Apple Silicon · One-click build script |
 
 ---
@@ -191,7 +193,10 @@
 | **Widget Settings** | Control each monitor component visibility, Beam border toggle                                     |
 | **Wallpaper Settings** | Custom background wallpaper, image source selection (Upload/URL/Picsum/Bing), blur and overlay control |
 | **Security**        | Password change with strength indicator, first login force change, login state verification, admin username change |
-| **Data Management** | JSON import/export backup, factory reset, auto redirect to home after import, nested object support, SunPanel data compatible import, auto-fetch bookmark icons after import (≤50) |
+| **Data Management** | JSON/HTML import/export backup, factory reset, auto redirect to home after import, nested object support, SunPanel data compatible import, browser bookmark import (merge/overwrite modes), auto-fetch bookmark icons after import (≤50) |
+| **Cloud Backup**    | WebDAV cloud backup (Nutstore/Synology/UGREEN/Alist), auto scheduled backup (node-cron), local JSON download/restore, raw .db database file download/upload, keep up to 30 backups |
+| **System Logs**     | API request logging, operation logs, filter by level/type, one-click clear logs                           |
+| **Tag Management**  | Bookmark tag statistics, tag rename, tag delete                                                           |
 | **Analytics**       | Bookmark click tracking, top bookmarks ranking, visit trends, recent visits, data clearing          |
 | **Health Check**    | Batch check bookmark link accessibility, 4 status types (OK/Error/Timeout/Redirect), delete dead links |
 
@@ -268,6 +273,9 @@ Supports **8 carefully designed theme colors**, each with 20+ CSS variables:
 | **systeminformation** | 5.23.5  | System Hardware Info    |
 | **Cheerio**           | 1.0.0   | HTML Parsing (Metadata) |
 | **bcryptjs**          | 3.0.3   | Password Encryption     |
+| **webdav**            | 5.8.0   | WebDAV Cloud Backup     |
+| **node-cron**         | 3.0.3   | Scheduled Auto Backup   |
+| **Zod**               | 4.3.6   | Data Validation         |
 | **tsx**               | 4.19.2  | TypeScript Runtime      |
 
 ### Deployment
@@ -307,9 +315,13 @@ NOWEN/
 │   │   │   ├── WallpaperSettingsCard.tsx # Wallpaper Settings
 │   │   │   ├── SecurityCard.tsx      # Security Settings
 │   │   │   ├── DataManagementCard.tsx # Data Management
+│   │   │   ├── BackupCard.tsx        # Cloud Backup & Data Management
 │   │   │   ├── QuotesCard.tsx        # Quote Management
 │   │   │   ├── AnalyticsCard.tsx     # Visit Analytics
 │   │   │   ├── HealthCheckCard.tsx   # Link Health Check
+│   │   │   ├── TagsManageCard.tsx    # Tag Management
+│   │   │   ├── LogsCard.tsx          # System Logs
+│   │   │   ├── AiSettingsCard.tsx    # AI Settings
 │   │   │   └── Toast.tsx             # Notifications
 │   │   ├── monitor/                  # System Monitor Components
 │   │   │   ├── SystemMonitor.tsx     # Unified Monitor Interface
@@ -367,10 +379,13 @@ NOWEN/
 │   │   │   ├── visits.ts             # Visit Analytics Routes
 │   │   │   ├── health-check.ts       # Link Health Check Routes
 │   │   │   ├── ai.ts                 # AI Routes
-│   │   │   └── ...
+│   │   │   ├── logs.ts               # System Logs Routes
+│   │   │   ├── backup.ts             # Cloud Backup Routes
+│   │   │   └── data.ts               # Data Import/Export Routes
 │   │   ├── services/
 │   │   │   ├── metadata.ts           # URL Metadata Fetching
-│   │   │   └── ai.ts                 # AI Service
+│   │   │   ├── ai.ts                 # AI Service
+│   │   │   └── backup.ts             # WebDAV Backup Service
 │   │   ├── middleware/               # Middleware
 │   │   ├── utils/                    # Utilities
 │   │   ├── index.ts                  # Server Entry
@@ -478,8 +493,6 @@ docker pull cropflre/nowen:latest
 
 # Create docker-compose.yml
 cat > docker-compose.yml << 'EOF'
-version: '3.8'
-
 services:
   nowen:
     image: cropflre/nowen:latest
@@ -487,9 +500,10 @@ services:
     restart: unless-stopped
     ports:
       - "3000:3000"
-      - "3001:3001"
     volumes:
-      - ./server/data:/app/server/data
+      # Data persistence (REQUIRED!) - prevents data loss on container update
+      - ./nowen-data:/app/server/data
+      # System monitoring mounts (optional)
       - /:/host:ro
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
@@ -500,17 +514,86 @@ services:
       - PROC_PATH=/host/proc
       - SYS_PATH=/host/sys
       - FS_PATH=/host
-    privileged: true
+    privileged: true  # Required for CPU temperature and hardware info
 EOF
 
 # Start service
 docker-compose up -d
+
+# View logs
+docker-compose logs -f
 ```
 
-**Access:**
+**Access:** http://localhost:3000
 
-- Frontend: http://localhost:3000
-- API: http://localhost:3001
+---
+
+**Method B: Build Locally**
+
+```bash
+# 1. Clone project
+git clone https://github.com/cropflre/NOWEN.git
+cd NOWEN
+
+# 2. Build and start
+docker-compose up -d --build
+
+# 3. View logs
+docker-compose logs -f
+```
+
+**Method C: Docker Run Command**
+
+```bash
+# Run container directly
+docker run -d \
+  --name nowen \
+  --restart unless-stopped \
+  -p 3000:3000 \
+  -v $(pwd)/nowen-data:/app/server/data \
+  -v /:/host:ro \
+  -v /proc:/host/proc:ro \
+  -v /sys:/host/sys:ro \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -e NODE_ENV=production \
+  -e SI_FILESYSTEM_DISK_PREFIX=/host \
+  -e PROC_PATH=/host/proc \
+  -e SYS_PATH=/host/sys \
+  -e FS_PATH=/host \
+  --privileged \
+  cropflre/nowen:latest
+```
+
+**Common Commands**
+
+```bash
+# Stop service
+docker-compose down
+
+# Restart service
+docker-compose restart
+
+# View logs
+docker-compose logs -f
+
+# Update to latest version
+docker-compose pull
+docker-compose up -d
+
+# Check container status
+docker ps
+```
+
+**System Monitoring Notes**
+
+To enable full system monitoring, you need:
+
+1. Mount host filesystem (read-only)
+2. Mount `/proc` and `/sys` directories
+3. Mount Docker socket (for container monitoring)
+4. Use `privileged` mode (for temperature and hardware info)
+
+If system monitoring is not needed, remove the related mounts and environment variables, keeping only the data directory mount.
 
 ---
 
@@ -531,6 +614,8 @@ docker-compose up -d
 3. Upload project files via File Manager
 4. In Docker app: Compose → Add → Select project path
 5. Access: `http://NAS_IP:3000`
+
+> **Important**: When configuring Docker, manually specify the data volume path (e.g., `/docker/nebula-portal/data:/app/server/data`). Do NOT rely on "auto configure storage" — it may not reuse old volumes during container updates, causing data loss.
 
 ---
 
@@ -611,9 +696,8 @@ services:
     restart: unless-stopped
     ports:
       - "3000:3000"
-      - "3001:3001"
     volumes:
-      - ./server/data:/app/server/data
+      - ./nowen-data:/app/server/data
       # System monitoring mounts (optional, recommended for ARM device monitoring)
       - /:/host:ro
       - /proc:/host/proc:ro
@@ -702,6 +786,78 @@ A: Ensure `privileged: true` is set and `/sys` is mounted. Temperature node path
 
 ---
 
+## 🔧 Docker Deployment Configuration
+
+### Port Mapping
+
+| Port | Purpose                              |
+| ---- | ------------------------------------ |
+| 3000 | Web UI (Nginx reverse proxies both frontend and API) |
+| 3001 | Backend API (internal port, no need to expose) |
+
+> NOWEN uses Nginx to serve both the frontend and API on port 3000. **You only need to map port 3000**.
+
+### Data Persistence
+
+Database file is located at `/app/server/data/zen-garden.db` inside the container.
+
+**Warning**: You MUST map this directory to a fixed host path, otherwise data will be lost when the container is recreated/updated!
+
+```yaml
+volumes:
+  # Recommended: use host bind mount (data survives container updates)
+  - ./nowen-data:/app/server/data
+  # Or NAS users specify an absolute path
+  # - /volume1/docker/nowen/data:/app/server/data
+```
+
+> **NAS Users Note**: UGREEN/fnOS and other NAS Docker UIs with "auto configure storage" may not reuse old data volumes when updating containers. Always manually specify a host path. NOWEN has built-in triple data protection: auto-backup on startup, process exit save, and 30-second periodic flush.
+
+### System Monitoring Configuration
+
+To enable full hardware monitoring, use the following mounts and configuration:
+
+```yaml
+volumes:
+  # Mount host root filesystem (read-only) for filesystem info
+  - /:/host:ro
+  # Mount proc filesystem for CPU, memory, process info
+  - /proc:/host/proc:ro
+  # Mount sys filesystem for temperature, hardware info
+  - /sys:/host/sys:ro
+  # Mount Docker socket for container monitoring
+  - /var/run/docker.sock:/var/run/docker.sock
+
+environment:
+  # Tell systeminformation to read filesystem from /host
+  - SI_FILESYSTEM_DISK_PREFIX=/host
+  - PROC_PATH=/host/proc
+  - SYS_PATH=/host/sys
+  - FS_PATH=/host
+
+# Privileged mode: allows reading CPU temperature, SMART disk info
+privileged: true
+```
+
+**Notes**:
+
+- Remove these configurations if system monitoring is not needed
+- Windows and macOS Docker Desktop runs in a VM and can only read VM info
+- Deploy on a Linux host for the best experience
+
+### Environment Variables
+
+| Variable                  | Default    | Description              |
+| ------------------------- | ---------- | ------------------------ |
+| NODE_ENV                  | production | Runtime environment      |
+| PORT                      | 3001       | Backend port (usually no need to change) |
+| SI_FILESYSTEM_DISK_PREFIX | /host      | Filesystem path prefix   |
+| PROC_PATH                 | /host/proc | proc filesystem path     |
+| SYS_PATH                  | /host/sys  | sys filesystem path      |
+| FS_PATH                   | /host      | Filesystem root path     |
+
+---
+
 ## 📡 API Reference
 
 ### Bookmarks API
@@ -779,10 +935,35 @@ A: Ensure `privileged: true` is set and `/sys` is mounted. Temperature node path
 | PATCH  | `/api/settings`      | ✅   | Update settings     |
 | GET    | `/api/system/info`   | ❌   | Get system info     |
 | GET    | `/api/system/stats`  | ❌   | Get real-time stats |
+| GET    | `/api/system/network`| ❌   | Get network info    |
+| GET    | `/api/system/processes` | ❌ | Get process list    |
 | GET    | `/api/export`        | ✅   | Export data (JSON)  |
 | POST   | `/api/import`        | ✅   | Import data (JSON)  |
 | GET    | `/api/import/enrich-status` | ✅ | Query icon fetch progress after import |
 | POST   | `/api/factory-reset` | ✅   | Factory reset       |
+
+### Backup API
+
+| Method | Path                          | Auth | Description                              |
+| ------ | ----------------------------- | ---- | ---------------------------------------- |
+| GET    | `/api/backup/config`          | ✅   | Get WebDAV config (password masked)      |
+| POST   | `/api/backup/config`          | ✅   | Save WebDAV config                       |
+| POST   | `/api/backup/test`            | ✅   | Test WebDAV connection                   |
+| POST   | `/api/backup/now`             | ✅   | Execute WebDAV backup immediately        |
+| GET    | `/api/backup/list`            | ✅   | List remote backup files                 |
+| POST   | `/api/backup/restore`         | ✅   | Restore data from remote backup          |
+| DELETE | `/api/backup/file/:filename`  | ✅   | Delete remote backup file                |
+| GET    | `/api/backup/status`          | ✅   | Get auto backup status                   |
+| GET    | `/api/backup/local/download`  | ✅   | Download local JSON backup               |
+| GET    | `/api/backup/local/download-db` | ✅ | Download raw .db database file           |
+| POST   | `/api/backup/local/upload-db` | ✅   | Upload .db file restore (with validation and rollback) |
+
+### Logs API
+
+| Method | Path          | Auth | Description              |
+| ------ | ------------- | ---- | ------------------------ |
+| GET    | `/api/logs`   | ✅   | Get system logs (paged)  |
+| DELETE | `/api/logs`   | ✅   | Clear all logs           |
 
 ---
 
@@ -816,12 +997,11 @@ A: Check if ports are occupied:
 
 ```bash
 lsof -i :3000
-lsof -i :3001
 ```
 
-**Q: Data lost?**
+**Q: Data lost after update?**
 
-A: Ensure correct volume mapping. Database is in `/app/server/data`.
+A: Ensure you have configured the data volume mount correctly. The database is in `/app/server/data`. Use a bind mount like `./nowen-data:/app/server/data`. NAS Docker UI "auto configure storage" may not reuse old volumes during container updates — always manually specify the host path.
 
 ### System Monitoring Issues
 
@@ -854,7 +1034,27 @@ A: Some sites have hotlink protection. Upload custom icons instead.
 
 **Q: How to backup data?**
 
-A: Admin → System Settings → Data Management → Export Backup, or copy `server/data/zen-garden.db`
+A:
+
+1. Admin → Data Management → Export JSON backup or download .db database file
+2. Configure WebDAV cloud backup for automatic scheduled backups (supports Nutstore/Synology/UGREEN/Alist)
+3. Or directly copy the `zen-garden.db` file from the mounted data directory on host
+
+**Q: Data lost after container update?**
+
+A: Make sure you manually specified the data volume mount path when creating the container, e.g., `-v /your/path:/app/server/data`. UGREEN and other NAS "auto configure storage" may not reuse old volumes during updates — always use a fixed host path.
+
+**Q: How to update to latest version?**
+
+A:
+
+```bash
+# Pull latest image
+docker-compose pull
+
+# Restart container
+docker-compose up -d
+```
 
 ---
 
@@ -1179,7 +1379,7 @@ A: Admin → System Settings → Data Management → Export Backup, or copy `ser
 
 #### 📋 Mid-term
 
-- [ ] WebDAV sync support (cross-device bookmark sync, auto conflict merge, scheduled backups)
+- [ ] WebDAV cross-device sync (cross-device bookmark sync, auto conflict merge)
 - [ ] Mobile App (React Native / Flutter, push notifications, home screen widgets)
 - [ ] Bookmark folders & nested groups (multi-level folders, breadcrumb navigation, tree-view drag & drop)
 - [ ] RSS / site update monitoring (subscribe to bookmarked site RSS, new content push, unread count badges)
@@ -1202,6 +1402,7 @@ A: Admin → System Settings → Data Management → Export Backup, or copy `ser
 - [x] ~~Bookmark tag system~~ ✅ v0.2.0 Implemented (AI smart tags + colorful tag pills)
 - [x] ~~AI smart classify & metadata~~ ✅ v0.2.0 Implemented (batch AI classify/metadata/icons)
 - [x] ~~AI chat assistant~~ ✅ v0.2.0 Implemented (semantic search + bookmark cards)
+- [x] ~~WebDAV cloud backup~~ ✅ v0.2.1 Implemented (WebDAV cloud + local backup + scheduled auto backup)
 
 ---
 
@@ -1210,7 +1411,7 @@ A: Admin → System Settings → Data Management → Export Backup, or copy `ser
 ```bash
 # Using Docker Hub image (Recommended)
 docker pull cropflre/nowen:latest
-docker run -d -p 3000:3000 -p 3001:3001 -v ./data:/app/server/data --name nowen cropflre/nowen:latest
+docker run -d -p 3000:3000 -v ./nowen-data:/app/server/data --name nowen cropflre/nowen:latest
 
 # Access
 # http://localhost:3000
