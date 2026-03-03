@@ -2,7 +2,7 @@
 
 > A minimalist personal navigation hub combining bookmark management and system monitoring, featuring deep space aesthetics and glassmorphism design, supporting day/night dual modes with complete real-time hardware monitoring capabilities
 
-![Version](https://img.shields.io/badge/version-0.2.0-blue)
+![Version](https://img.shields.io/badge/version-0.2.1-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Node](https://img.shields.io/badge/node-%3E%3D20-brightgreen)
 ![React](https://img.shields.io/badge/React-18.3-61dafb)
@@ -316,6 +316,8 @@ NOWEN/
 │   │   │   ├── SecurityCard.tsx      # Security Settings
 │   │   │   ├── DataManagementCard.tsx # Data Management
 │   │   │   ├── BackupCard.tsx        # Cloud Backup & Data Management
+│   │   │   ├── DocsCard.tsx          # Documentation Card
+│   │   │   ├── SettingsPanel.tsx     # Settings Panel
 │   │   │   ├── QuotesCard.tsx        # Quote Management
 │   │   │   ├── AnalyticsCard.tsx     # Visit Analytics
 │   │   │   ├── HealthCheckCard.tsx   # Link Health Check
@@ -357,6 +359,9 @@ NOWEN/
 │   │   ├── icons.ts                  # Icon Mapping
 │   │   ├── env.ts                    # Environment Variables
 │   │   ├── error-handling.ts         # Error Handling
+│   │   ├── bookmarkParser.ts         # Bookmark File Parser
+│   │   ├── i18n.ts                   # Internationalization
+│   │   ├── animation.ts              # Animation Utilities
 │   │   └── utils.ts                  # Utility Functions
 │   ├── pages/
 │   │   └── Admin.tsx                 # Admin Page
@@ -880,6 +885,8 @@ privileged: true
 | PATCH  | `/api/bookmarks/:id`       | ✅   | Update bookmark         |
 | DELETE | `/api/bookmarks/:id`       | ✅   | Delete bookmark         |
 | PATCH  | `/api/bookmarks/reorder`   | ✅   | Reorder bookmarks       |
+| GET    | `/api/bookmarks/tags`        | ❌ | Get all tags            |
+| GET    | `/api/bookmarks/tags/stats`  | ❌ | Get tag usage stats     |
 | PATCH  | `/api/bookmarks/tags/rename` | ✅ | Rename tag              |
 | DELETE | `/api/bookmarks/tags/:name`  | ✅ | Delete tag              |
 
@@ -901,6 +908,7 @@ privileged: true
 | POST   | `/api/admin/logout`          | ✅   | Logout              |
 | GET    | `/api/admin/verify`          | ✅   | Verify token        |
 | POST   | `/api/admin/change-password` | ✅   | Change password     |
+| POST   | `/api/admin/change-username` | ✅   | Change username     |
 
 ### Visit Analytics API
 
@@ -918,6 +926,7 @@ privileged: true
 | Method | Path                 | Auth | Description                          |
 | ------ | -------------------- | ---- | ------------------------------------ |
 | POST   | `/api/health-check`  | ✅   | Batch check bookmark link health     |
+| POST   | `/api/health-check/single`  | ✅   | Single link health check             |
 
 ### AI API
 
@@ -1079,6 +1088,30 @@ docker-compose up -d
 ---
 
 ## 📝 Changelog
+
+### v0.2.1 (2026-03-03)
+
+#### ✨ New Features
+
+- **WebDAV Cloud Backup**: Cloud data backup & restore via WebDAV protocol
+  - Supports Nutstore, Synology, UGREEN, Alist and other WebDAV services
+  - Configurable automatic scheduled backups (via node-cron)
+  - One-click backup, remote backup list, remote restore, remote delete
+  - Download local JSON backup or raw .db database file
+  - Upload .db file restore (with validation and rollback)
+- **Data Management Merge**: Consolidated data management into the backup page for unified entry
+- **NAS Update Backup Warning**: Added NAS Docker update warning banner in data management page
+- **Data Persistence Enhancement**: Triple data protection mechanism
+  - Auto-backup database on startup (keeps last 5), auto-restore from backup if DB missing
+  - Auto-save on process exit (SIGINT/SIGTERM/uncaughtException)
+  - Dirty data auto-flush every 30 seconds
+- **Documentation Card**: New DocsCard in admin panel with embedded project documentation
+
+#### 🐛 Bug Fixes
+
+- Fixed data loss after Docker container update (docker-compose switched to bind mount)
+- Fixed missing `webdav` and `node-cron` dependencies in Docker container causing startup failure
+- Fixed reverse proxy Nginx example configuration (no need to separately proxy `/api` to port 3001)
 
 ### v0.2.0 (2026-02-26)
 

@@ -2,7 +2,7 @@
 
 > 一个集书签管理、系统监控于一体的极简主义个人导航站，采用深空美学与玻璃态设计风格，支持日间/夜间双模式，提供完整的硬件实时监控能力
 
-![Version](https://img.shields.io/badge/version-0.2.0-blue)
+![Version](https://img.shields.io/badge/version-0.2.1-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Node](https://img.shields.io/badge/node-%3E%3D20-brightgreen)
 ![React](https://img.shields.io/badge/React-18.3-61dafb)
@@ -324,6 +324,8 @@ NOWEN/
 │   │   │   ├── TagsManageCard.tsx    # 标签管理
 │   │   │   ├── LogsCard.tsx          # 系统日志
 │   │   │   ├── AiSettingsCard.tsx    # AI 设置
+│   │   │   ├── DocsCard.tsx          # 说明文档
+│   │   │   ├── SettingsPanel.tsx     # 设置面板容器
 │   │   │   └── Toast.tsx             # 消息通知
 │   │   ├── monitor/                  # 系统监控组件
 │   │   │   ├── SystemMonitor.tsx     # 统一监控接口
@@ -356,6 +358,9 @@ NOWEN/
 │   │   └── AdminContext.tsx          # 后台管理上下文
 │   ├── lib/                          # 工具库
 │   │   ├── api.ts                    # API 封装
+│   │   ├── bookmarkParser.ts         # 浏览器书签 HTML 解析器
+│   │   ├── i18n.ts                   # 国际化配置
+│   │   ├── animation.ts              # 动画工具函数
 │   │   ├── icons.ts                  # 图标映射
 │   │   ├── env.ts                    # 环境变量
 │   │   ├── error-handling.ts         # 错误处理
@@ -745,8 +750,6 @@ docker ps
 在 Docker Compose 编辑器中填入：
 
 ```yaml
-version: "3.8"
-
 services:
   nebula-portal:
     build: /docker/nebula-portal
@@ -1121,23 +1124,19 @@ privileged: true
 
 ### 反向代理配置（Nginx 示例）
 
+如果你在 NOWEN 容器前方使用额外的 Nginx 反向代理（例如域名转发），只需代理到容器的 3000 端口即可，因为容器内部 Nginx 已将前端和 API 统一在 3000 端口：
+
 ```nginx
 server {
     listen 80;
     server_name your-domain.com;
 
-    # 前端
     location / {
         proxy_pass http://127.0.0.1:3000;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
-    }
-
-    # 后端 API
-    location /api {
-        proxy_pass http://127.0.0.1:3001;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
     }
 }
 ```
@@ -1156,6 +1155,8 @@ server {
 | PATCH  | `/api/bookmarks/:id`       | ✅   | 更新书签     |
 | DELETE | `/api/bookmarks/:id`       | ✅   | 删除书签     |
 | PATCH  | `/api/bookmarks/reorder`   | ✅   | 重排序书签   |
+| GET    | `/api/bookmarks/tags`        | ❌ | 获取标签列表 |
+| GET    | `/api/bookmarks/tags/stats`  | ❌ | 标签使用统计 |
 | PATCH  | `/api/bookmarks/tags/rename` | ✅ | 重命名标签   |
 | DELETE | `/api/bookmarks/tags/:name`  | ✅ | 删除标签     |
 
@@ -1184,6 +1185,7 @@ server {
 | POST | `/api/admin/logout`          | ✅   | 退出登录               |
 | GET  | `/api/admin/verify`          | ✅   | 验证 Token 有效性      |
 | POST | `/api/admin/change-password` | ✅   | 修改密码               |
+| POST | `/api/admin/change-username` | ✅   | 修改用户名             |
 
 ### 访问统计 API
 
@@ -1198,9 +1200,10 @@ server {
 
 ### 健康检查 API
 
-| 方法 | 路径                 | 认证 | 说明                           |
-| ---- | -------------------- | ---- | ------------------------------ |
-| POST | `/api/health-check`  | ✅   | 批量检测书签链接健康状态       |
+| 方法 | 路径                        | 认证 | 说明                           |
+| ---- | --------------------------- | ---- | ------------------------------ |
+| POST | `/api/health-check`         | ✅   | 批量检测书签链接健康状态       |
+| POST | `/api/health-check/single`  | ✅   | 单个链接健康检测               |
 
 ### AI API
 
@@ -1524,6 +1527,30 @@ docker-compose up -d
 ---
 
 ## 📝 更新日志
+
+### v0.2.1 (2026-03-03)
+
+#### ✨ 新功能
+
+- **WebDAV 云备份**：支持 WebDAV 协议的云端数据备份与恢复
+  - 支持坚果云、群晖、绿联、Alist 等 WebDAV 服务
+  - 可配置自动定时备份（基于 node-cron）
+  - 支持一键备份、远程备份列表查看、远程恢复、远程删除
+  - 支持下载本地 JSON 备份和原始 .db 数据库文件
+  - 支持上传 .db 文件恢复（含验证与回滚机制）
+- **数据管理合并**：将数据管理功能整合到备份页面，统一管理入口
+- **NAS 更新备份提醒**：数据管理页面新增 NAS Docker 更新警告横幅，提醒用户更新前备份数据
+- **数据持久化增强**：三重数据保护机制
+  - 启动时自动备份数据库（保留最近 5 份），数据库缺失时自动从备份恢复
+  - 进程退出时自动保存（SIGINT/SIGTERM/uncaughtException）
+  - 每 30 秒脏数据自动刷盘
+- **使用说明文档**：后台管理新增使用说明卡片（DocsCard），内嵌项目文档
+
+#### 🐛 Bug 修复
+
+- 修复 Docker 容器更新后数据丢失问题（docker-compose 改用 bind mount）
+- 修复 Docker 容器内缺少 `webdav` 和 `node-cron` 依赖导致启动失败
+- 修复反向代理 Nginx 示例配置错误（无需单独代理 `/api` 到 3001 端口）
 
 ### v0.2.0 (2026-02-26)
 
