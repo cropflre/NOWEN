@@ -698,6 +698,8 @@ docker ps
 2. 解压后通过 File Station 上传到 NAS 的 `/docker/nebula-portal` 目录
 3. 按上述步骤在 Container Manager 中创建项目
 
+> ⚠️ **更新提醒**：通过群晖 Container Manager 更新镜像前，请务必先备份数据！可通过 NOWEN 管理面板导出备份，或复制 `data/zen-garden.db` 文件。
+
 ---
 
 ### 方式四：绿联 (UGREENNAS) 安装
@@ -759,6 +761,8 @@ services:
       - NODE_ENV=production
 ```
 
+> ⚠️ **更新提醒**：通过绿联 Docker 可视化界面更新镜像前，请务必先备份数据！绿联的「版本检测与更新」功能会删除旧容器并创建新容器，如果使用了「自动配置存储」，数据可能会丢失。建议使用上述固定路径挂载，并在更新前通过 NOWEN 管理面板导出备份。
+
 ---
 
 ### 方式五：飞牛 OS (fnOS) 安装
@@ -808,6 +812,8 @@ docker-compose up -d --build
 2. 选择 **容器编排** 或 **Compose**
 3. 点击 **添加** → **从路径创建**
 4. 选择项目目录，点击部署
+
+> ⚠️ **更新提醒**：通过飞牛 Docker 界面更新镜像前，请务必先备份数据！
 
 ---
 
@@ -859,6 +865,8 @@ git clone https://github.com/cropflre/NOWEN.git nebula-portal
 
 - 访问地址：`http://NAS的IP地址:3000`
 
+> ⚠️ **更新提醒**：通过威联通 Container Station 更新镜像前，请务必先备份数据！
+
 ---
 
 ### 方式七：极空间 NAS 安装
@@ -903,6 +911,8 @@ docker-compose up -d --build
 **第四步：访问应用**
 
 - 访问地址：`http://NAS的IP地址:3000`
+
+> ⚠️ **更新提醒**：通过极空间 Docker 界面更新镜像前，请务必先备份数据！
 
 ---
 
@@ -1063,6 +1073,8 @@ volumes:
 ```
 
 > 💡 **NAS 用户特别注意**：绿联/飞牛等 NAS 的 Docker UI「自动配置存储」在更新容器时可能不会复用旧数据卷，建议手动指定宿主机路径。NOWEN 内置启动时自动备份、进程退出保存、30 秒定时刷盘三重数据保护机制。
+
+> ⚠️ **NAS Docker 更新警告**：通过 NAS 自带的 Docker 可视化管理软件（绿联/群晖/威联通/飞牛/极空间等）更新镜像时，**请务必先备份数据**！这些工具在更新过程中可能会删除旧容器并重建，如果数据卷未正确挂载到宿主机固定路径，将导致数据丢失。更新前建议通过管理面板导出 JSON 备份或手动复制 `zen-garden.db` 文件。
 
 ### 系统监控配置
 
@@ -1487,15 +1499,25 @@ A:
 
 A: 确保创建容器时手动指定了数据卷挂载路径，例如 `-v /your/path:/app/server/data`。绿联等 NAS 的「自动配置存储」可能在更新时不复用旧卷，务必使用固定宿主机路径。
 
+> ⚠️ **NAS 用户特别警告**：通过 NAS 自带的 Docker 可视化管理软件（如绿联 Docker、群晖 Container Manager、威联通 Container Station、飞牛 Docker、极空间 Docker 等）更新镜像时，**务必先备份数据**！这些 NAS 的 Docker GUI 在「更新镜像」或「重新创建容器」时，可能会删除旧容器并创建新容器，导致未正确挂载的数据卷丢失。建议更新前：
+> 1. 通过 NOWEN 管理面板的「数据管理」导出 JSON 备份
+> 2. 或通过 WebDAV 云备份手动触发一次备份
+> 3. 或直接复制宿主机上 `nowen-data/zen-garden.db` 文件
+
 **Q: 如何更新到最新版本？**
 
 A:
 
+> ⚠️ **更新前请先备份数据！** 尤其是使用 NAS 自带 Docker 可视化软件的用户，更新操作可能导致数据丢失。
+
 ```bash
-# 拉取最新镜像
+# 1. 先备份数据（重要！）
+cp -r ./nowen-data ./nowen-data-backup-$(date +%Y%m%d)
+
+# 2. 拉取最新镜像
 docker-compose pull
 
-# 重启容器
+# 3. 重启容器
 docker-compose up -d
 ```
 

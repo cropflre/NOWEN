@@ -605,6 +605,8 @@ If system monitoring is not needed, remove the related mounts and environment va
 4. In Container Manager: Projects → Add → Select `docker-compose.yml`
 5. Access: `http://NAS_IP:3000`
 
+> ⚠️ **Update Reminder**: Always backup your data before updating images through Synology Container Manager!
+
 ---
 
 ### Option 4: UGREEN NAS
@@ -616,6 +618,8 @@ If system monitoring is not needed, remove the related mounts and environment va
 5. Access: `http://NAS_IP:3000`
 
 > **Important**: When configuring Docker, manually specify the data volume path (e.g., `/docker/nebula-portal/data:/app/server/data`). Do NOT rely on "auto configure storage" — it may not reuse old volumes during container updates, causing data loss.
+
+> ⚠️ **Update Reminder**: Always backup your data before updating images through UGREEN Docker GUI! The "Version Check & Update" feature deletes the old container and creates a new one, which may cause data loss if using "auto configure storage".
 
 ---
 
@@ -641,6 +645,8 @@ Access: `http://NAS_IP:3000`
 4. In Container Station: Applications → Create → Docker Compose
 5. Access: `http://NAS_IP:3000`
 
+> ⚠️ **Update Reminder**: Always backup your data before updating images through QNAP Container Station!
+
 ---
 
 ### Option 7: Extreme Space NAS
@@ -654,6 +660,8 @@ docker-compose up -d --build
 ```
 
 Access: `http://NAS_IP:3000`
+
+> ⚠️ **Update Reminder**: Always backup your data before updating images through Extreme Space Docker GUI!
 
 ---
 
@@ -812,6 +820,8 @@ volumes:
 ```
 
 > **NAS Users Note**: UGREEN/fnOS and other NAS Docker UIs with "auto configure storage" may not reuse old data volumes when updating containers. Always manually specify a host path. NOWEN has built-in triple data protection: auto-backup on startup, process exit save, and 30-second periodic flush.
+
+> ⚠️ **NAS Docker Update Warning**: When updating images through NAS built-in Docker GUI tools (UGREEN, Synology, QNAP, fnOS, Extreme Space, etc.), **always backup your data first!** These tools may delete the old container and recreate it, causing data loss if the volume is not properly bind-mounted to a fixed host path. Export a backup from NOWEN's Admin Panel or copy the `zen-garden.db` file before updating.
 
 ### System Monitoring Configuration
 
@@ -1044,15 +1054,25 @@ A:
 
 A: Make sure you manually specified the data volume mount path when creating the container, e.g., `-v /your/path:/app/server/data`. UGREEN and other NAS "auto configure storage" may not reuse old volumes during updates — always use a fixed host path.
 
+> ⚠️ **NAS Docker Update Warning**: When updating images through NAS built-in Docker GUI tools (UGREEN Docker, Synology Container Manager, QNAP Container Station, fnOS Docker, Extreme Space Docker, etc.), **always backup your data first!** These tools may delete the old container and create a new one during the update process, which can result in data loss if volumes are not properly mounted to a fixed host path. Before updating:
+> 1. Export a JSON backup via NOWEN's Admin Panel → Data Management
+> 2. Or trigger a manual WebDAV cloud backup
+> 3. Or directly copy the `zen-garden.db` file from your host data directory
+
 **Q: How to update to latest version?**
 
 A:
 
+> ⚠️ **Backup your data before updating!** Especially if you're using NAS built-in Docker GUI tools, the update process may cause data loss.
+
 ```bash
-# Pull latest image
+# 1. Backup data first (important!)
+cp -r ./nowen-data ./nowen-data-backup-$(date +%Y%m%d)
+
+# 2. Pull latest image
 docker-compose pull
 
-# Restart container
+# 3. Restart container
 docker-compose up -d
 ```
 
