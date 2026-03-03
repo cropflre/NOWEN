@@ -701,7 +701,8 @@
       "db_restore_confirm": "Are you sure you want to overwrite current data with this database file? This cannot be undone.",
       "db_restore_failed": "Database restore failed",
       "invalid_db_file": "Please select a .db database file",
-      "tip_5": "Download/Restore DB operates on the raw database file, includes all data (visits, logs, etc.)"
+      "tip_5": "Download/Restore DB operates on the raw database file, includes all data (visits, logs, etc.)",
+      "nas_update_warning": "Before updating images via NAS Docker GUI tools (UGREEN/Synology/QNAP/fnOS/Extreme Space, etc.), always export a backup or trigger a cloud backup here first, or data may be lost!"
     },
     "docs": {
       "title": "Documentation",

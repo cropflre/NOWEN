@@ -624,6 +624,14 @@ export function BackupCard({ onShowToast, bookmarks, categories, settings, onImp
           </div>
         </div>
 
+        {/* NAS Docker 更新警告 */}
+        <div className="relative flex items-start gap-3 mb-6 p-3 rounded-xl bg-amber-500/10 border border-amber-500/20">
+          <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
+          <p className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+            {t('admin.backup.nas_update_warning')}
+          </p>
+        </div>
+
         {/* Stats */}
         <div className="relative grid grid-cols-3 gap-4 mb-6">
           <div className="p-3 rounded-xl" style={{ background: 'var(--color-bg-tertiary)', border: '1px solid var(--color-glass-border)' }}>
