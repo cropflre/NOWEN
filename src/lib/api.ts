@@ -512,6 +512,26 @@ export async function getAiBatchEnrichStatus(): Promise<AiBatchEnrichStatus> {
   return request<AiBatchEnrichStatus>('/api/ai/batch-enrich-status', { requireAuth: true })
 }
 
+// AI 生成名言
+export interface AiGenerateQuotesResponse {
+  quotes: string[]
+  error?: string
+}
+
+export async function aiGenerateQuotes(params: {
+  count?: number
+  lang?: string
+  theme?: string
+  existingQuotes?: string[]
+}): Promise<AiGenerateQuotesResponse> {
+  return request<AiGenerateQuotesResponse>('/api/ai/generate-quotes', {
+    method: 'POST',
+    body: JSON.stringify(params),
+    requireAuth: true,
+    timeout: 60000,
+  })
+}
+
 export const aiApi = {
   status: getAiStatus,
   categorize: aiCategorize,
@@ -525,6 +545,7 @@ export const aiApi = {
   batchClassifyStatus: getAiBatchClassifyStatus,
   batchEnrich: aiBatchEnrich,
   batchEnrichStatus: getAiBatchEnrichStatus,
+  generateQuotes: aiGenerateQuotes,
 } as const
 
 // ========== 演示模式判断 ==========

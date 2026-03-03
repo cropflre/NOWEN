@@ -337,7 +337,20 @@
       "empty_error": "Quote content cannot be empty",
       "duplicate_error": "This quote already exists",
       "no_match": "No matching quotes found",
-      "empty": "No quotes yet, click add button to create one"
+      "empty": "No quotes yet, click add button to create one",
+      "ai_generate": "AI Generate",
+      "ai_generating": "AI Generating...",
+      "ai_generate_title": "AI Smart Quote Generation",
+      "ai_count": "Number of quotes",
+      "ai_theme": "Theme preference (optional)",
+      "ai_theme_placeholder": "e.g., motivational, philosophy, science, literature...",
+      "ai_generate_btn": "Generate",
+      "ai_generated": "AI generated {{count}} quotes",
+      "ai_add_all": "Add All",
+      "ai_add_selected": "Add Selected ({{count}})",
+      "ai_added": "Added {{count}} AI quotes",
+      "ai_not_configured": "Please configure AI service in AI settings first",
+      "ai_error": "AI generation failed, please try again later"
     },
     "icons": {
       "title": "Icon Management",
@@ -816,9 +829,44 @@
           "widget_title": "Widget Display",
           "widget_desc": "Control visibility of system monitor, hardware info, network telemetry widgets on homepage",
           "security_title": "Security",
-          "security_desc": "Change admin username and password to protect backend access",
+          "security_desc": "Change admin username and password with real-time password strength detection (weak/medium/strong/very strong), disabled in demo mode",
           "data_title": "Data Management",
-          "data_desc": "Export/import JSON backups, import browser bookmarks (Chrome/Edge/Firefox), factory reset"
+          "data_desc": "Export/import JSON backups, export HTML browser bookmarks, import browser bookmarks (overwrite and merge modes), SunPanel format auto-conversion, factory reset"
+        },
+        "backup": {
+          "title": "Cloud Backup",
+          "webdav_title": "WebDAV Cloud Backup",
+          "webdav_desc": "Configure WebDAV service (Nutstore/Synology/UGREEN/Alist, etc.) to backup data to the cloud with one click",
+          "auto_title": "Scheduled Auto Backup",
+          "auto_desc": "Configure automatic backup schedule via Cron expression (daily/every 12h/weekly/hourly) with max retention count",
+          "restore_title": "Cloud Restore",
+          "restore_desc": "View cloud backup list, restore from any backup version or delete remote backups",
+          "db_title": "Database File Operations",
+          "db_desc": "Download raw .db database file (includes all data: bookmarks, categories, stats, logs, etc.) or upload .db file to restore (with SQLite validation and rollback protection)",
+          "import_title": "Local Backup",
+          "import_desc": "Download local JSON backup file, or upload JSON file to restore data",
+          "nas_title": "NAS Update Warning",
+          "nas_desc": "NAS Docker GUI tools may cause data loss when updating images. Always backup data before updating"
+        },
+        "tags": {
+          "title": "Tag Management",
+          "stats_title": "Tag Statistics",
+          "stats_desc": "View total tags, total usage count, average usage and other statistics",
+          "rename_title": "Rename Tags",
+          "rename_desc": "Rename a tag, all bookmarks using it will be automatically updated",
+          "merge_title": "Merge Tags",
+          "merge_desc": "Merge one tag into another to consolidate similar tags",
+          "delete_title": "Delete Tags",
+          "delete_desc": "Delete a tag to remove it from all bookmarks"
+        },
+        "logs": {
+          "title": "System Logs",
+          "view_title": "View Logs",
+          "view_desc": "View operation logs, API error logs, and system logs with INFO/WARN/ERROR level classification",
+          "search_title": "Search & Filter",
+          "search_desc": "Search log content by keyword, filter by type (operation/API/system), paginated browsing",
+          "clear_title": "Clear Logs",
+          "clear_desc": "Clear all historical log records with one click"
         }
       }
     },

@@ -15,27 +15,21 @@ import {
   Search,
   GripVertical,
   Import,
-  Shield,
   Palette,
-  Image,
   Monitor,
   Database,
   Zap,
   Layers,
   MousePointerClick,
   ScanSearch,
-  Copy,
   Trash2,
   ArrowUpDown,
   Sun,
-  Moon,
   Languages,
   FileText,
   Wallpaper,
   CloudDownload,
   CloudUpload,
-  RotateCcw,
-  UserCog,
   Lock,
   Eye,
   EyeOff,
@@ -46,6 +40,12 @@ import {
   Tags,
   Wand2,
   MessageSquare,
+  Cloud,
+  CalendarClock,
+  HardDrive,
+  Merge,
+  ScrollText,
+  AlertTriangle,
   type LucideIcon,
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
@@ -168,6 +168,40 @@ export function DocsCard() {
         { icon: Database, titleKey: 'admin.docs.sections.settings.data_title', descKey: 'admin.docs.sections.settings.data_desc' },
       ],
     },
+    {
+      id: 'backup',
+      icon: Cloud,
+      titleKey: 'admin.docs.sections.backup.title',
+      features: [
+        { icon: CloudUpload, titleKey: 'admin.docs.sections.backup.webdav_title', descKey: 'admin.docs.sections.backup.webdav_desc' },
+        { icon: CalendarClock, titleKey: 'admin.docs.sections.backup.auto_title', descKey: 'admin.docs.sections.backup.auto_desc' },
+        { icon: CloudDownload, titleKey: 'admin.docs.sections.backup.restore_title', descKey: 'admin.docs.sections.backup.restore_desc' },
+        { icon: HardDrive, titleKey: 'admin.docs.sections.backup.db_title', descKey: 'admin.docs.sections.backup.db_desc' },
+        { icon: Import, titleKey: 'admin.docs.sections.backup.import_title', descKey: 'admin.docs.sections.backup.import_desc' },
+        { icon: AlertTriangle, titleKey: 'admin.docs.sections.backup.nas_title', descKey: 'admin.docs.sections.backup.nas_desc' },
+      ],
+    },
+    {
+      id: 'tags',
+      icon: Tags,
+      titleKey: 'admin.docs.sections.tags.title',
+      features: [
+        { icon: Tags, titleKey: 'admin.docs.sections.tags.stats_title', descKey: 'admin.docs.sections.tags.stats_desc' },
+        { icon: FileText, titleKey: 'admin.docs.sections.tags.rename_title', descKey: 'admin.docs.sections.tags.rename_desc' },
+        { icon: Merge, titleKey: 'admin.docs.sections.tags.merge_title', descKey: 'admin.docs.sections.tags.merge_desc' },
+        { icon: Trash2, titleKey: 'admin.docs.sections.tags.delete_title', descKey: 'admin.docs.sections.tags.delete_desc' },
+      ],
+    },
+    {
+      id: 'logs',
+      icon: ScrollText,
+      titleKey: 'admin.docs.sections.logs.title',
+      features: [
+        { icon: ScrollText, titleKey: 'admin.docs.sections.logs.view_title', descKey: 'admin.docs.sections.logs.view_desc' },
+        { icon: Search, titleKey: 'admin.docs.sections.logs.search_title', descKey: 'admin.docs.sections.logs.search_desc' },
+        { icon: Trash2, titleKey: 'admin.docs.sections.logs.clear_title', descKey: 'admin.docs.sections.logs.clear_desc' },
+      ],
+    },
   ]
 
   const toggleSection = (id: string) => {
@@ -188,8 +222,8 @@ export function DocsCard() {
       </div>
 
       {/* 功能概览 */}
-      <div className="grid grid-cols-3 sm:grid-cols-3 gap-3">
-        {sections.slice(0, 9).map((section) => {
+      <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+        {sections.map((section) => {
           const Icon = section.icon
           return (
             <button

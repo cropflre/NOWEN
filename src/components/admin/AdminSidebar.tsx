@@ -19,13 +19,12 @@ import {
   ScrollText,
   Database
 } from 'lucide-react'
+import type { AdminTabType } from '../../hooks/useHashRouter'
 
-
-type TabType = 'bookmarks' | 'categories' | 'tags' | 'quotes' | 'icons' | 'analytics' | 'health-check' | 'logs' | 'backup' | 'docs' | 'settings'
 
 interface AdminSidebarProps {
-  activeTab: TabType
-  onTabChange: (tab: TabType) => void
+  activeTab: AdminTabType
+  onTabChange: (tab: AdminTabType) => void
   onBack: () => void
   onLogout: () => void
   bookmarkCount: number
@@ -35,17 +34,17 @@ interface AdminSidebarProps {
 }
 
 const navItems = [
-  { id: 'bookmarks' as TabType, labelKey: 'admin.nav.bookmarks', fullLabelKey: 'admin.nav.bookmarks_full', icon: Bookmark },
-  { id: 'categories' as TabType, labelKey: 'admin.nav.categories', fullLabelKey: 'admin.nav.categories_full', icon: FolderOpen },
-  { id: 'tags' as TabType, labelKey: 'admin.nav.tags', fullLabelKey: 'admin.nav.tags_full', icon: Tag },
-  { id: 'quotes' as TabType, labelKey: 'admin.nav.quotes', fullLabelKey: 'admin.nav.quotes_full', icon: Quote },
-  { id: 'icons' as TabType, labelKey: 'admin.nav.icons', fullLabelKey: 'admin.nav.icons_full', icon: ImageIcon },
-  { id: 'analytics' as TabType, labelKey: 'admin.nav.analytics', fullLabelKey: 'admin.nav.analytics_full', icon: BarChart3 },
-  { id: 'health-check' as TabType, labelKey: 'admin.nav.health_check', fullLabelKey: 'admin.nav.health_check_full', icon: HeartPulse },
-  { id: 'logs' as TabType, labelKey: 'admin.nav.logs', fullLabelKey: 'admin.nav.logs_full', icon: ScrollText },
-  { id: 'backup' as TabType, labelKey: 'admin.nav.backup', fullLabelKey: 'admin.nav.backup_full', icon: Database },
-  { id: 'docs' as TabType, labelKey: 'admin.nav.docs', fullLabelKey: 'admin.nav.docs_full', icon: BookOpen },
-  { id: 'settings' as TabType, labelKey: 'admin.nav.settings', fullLabelKey: 'admin.nav.settings_full', icon: Settings },
+  { id: 'bookmarks' as AdminTabType, labelKey: 'admin.nav.bookmarks', fullLabelKey: 'admin.nav.bookmarks_full', icon: Bookmark },
+  { id: 'categories' as AdminTabType, labelKey: 'admin.nav.categories', fullLabelKey: 'admin.nav.categories_full', icon: FolderOpen },
+  { id: 'tags' as AdminTabType, labelKey: 'admin.nav.tags', fullLabelKey: 'admin.nav.tags_full', icon: Tag },
+  { id: 'quotes' as AdminTabType, labelKey: 'admin.nav.quotes', fullLabelKey: 'admin.nav.quotes_full', icon: Quote },
+  { id: 'icons' as AdminTabType, labelKey: 'admin.nav.icons', fullLabelKey: 'admin.nav.icons_full', icon: ImageIcon },
+  { id: 'analytics' as AdminTabType, labelKey: 'admin.nav.analytics', fullLabelKey: 'admin.nav.analytics_full', icon: BarChart3 },
+  { id: 'health-check' as AdminTabType, labelKey: 'admin.nav.health_check', fullLabelKey: 'admin.nav.health_check_full', icon: HeartPulse },
+  { id: 'logs' as AdminTabType, labelKey: 'admin.nav.logs', fullLabelKey: 'admin.nav.logs_full', icon: ScrollText },
+  { id: 'backup' as AdminTabType, labelKey: 'admin.nav.backup', fullLabelKey: 'admin.nav.backup_full', icon: Database },
+  { id: 'docs' as AdminTabType, labelKey: 'admin.nav.docs', fullLabelKey: 'admin.nav.docs_full', icon: BookOpen },
+  { id: 'settings' as AdminTabType, labelKey: 'admin.nav.settings', fullLabelKey: 'admin.nav.settings_full', icon: Settings },
 ]
 
 // 液态动画配置 - 如同在蜂蜜中滑动
@@ -251,7 +250,7 @@ export function AdminSidebar({
   const { t } = useTranslation()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
-  const getCount = (id: TabType) => {
+  const getCount = (id: AdminTabType) => {
     if (id === 'bookmarks') return bookmarkCount
     if (id === 'categories') return categoryCount
     if (id === 'quotes') return quoteCount ?? null
@@ -259,7 +258,7 @@ export function AdminSidebar({
     return null
   }
 
-  const handleTabChange = (tab: TabType) => {
+  const handleTabChange = (tab: AdminTabType) => {
     onTabChange(tab)
     setMobileMenuOpen(false)
   }

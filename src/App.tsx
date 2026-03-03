@@ -134,9 +134,11 @@ function App() {
   // 认证状态
   const {
     currentPage,
+    adminTab,
     adminUsername,
     isLoggedIn,
     setCurrentPage,
+    setAdminTab,
     handleAdminLogin,
     handlePasswordChangeSuccess,
     handleAdminLogout,
@@ -353,6 +355,8 @@ function App() {
           categories={categories}
           customIcons={customIcons}
           username={adminUsername}
+          activeTab={adminTab}
+          onTabChange={setAdminTab}
           onBack={() => setCurrentPage("home")}
           onLogout={handleAdminLogout}
           onAddBookmark={() => setIsAddModalOpen(true)}

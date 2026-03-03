@@ -65,6 +65,7 @@ import { useThemeContext, ThemeId } from '../hooks/useTheme.tsx'
 import { useNetworkEnv, getBookmarkUrl } from '../hooks/useNetworkEnv'
 import { AdminProvider, useAdmin, useBookmarkActions, useCategoryActions, useIconActions } from '../contexts/AdminContext'
 import { IconManager } from '../components/IconManager'
+import type { AdminTabType } from '../hooks/useHashRouter'
 
 // 分页配置
 const PAGE_SIZE_OPTIONS = [20, 50, 100, 200, 500] as const
@@ -81,6 +82,8 @@ export interface AdminProps {
   categories: Category[]
   customIcons: CustomIcon[]
   username: string
+  activeTab: AdminTabType
+  onTabChange: (tab: AdminTabType) => void
   onBack: () => void
   onLogout: () => void
   onAddBookmark: () => void
@@ -356,7 +359,7 @@ function AdminContent() {
 
   const { showToast } = useToast()
   const { themeId, isDark, setTheme, toggleDarkMode, autoMode, setAutoMode } = useThemeContext()
-  const [activeTab, setActiveTab] = useState<'bookmarks' | 'categories' | 'tags' | 'quotes' | 'icons' | 'analytics' | 'health-check' | 'logs' | 'backup' | 'docs' | 'settings'>('bookmarks')
+  const { activeTab, setActiveTab } = useAdmin()
   const [searchQuery, setSearchQuery] = useState('')
   const [filterCategory, setFilterCategory] = useState<string>('all')
   const [currentPage, setCurrentPage] = useState(1)
@@ -2954,6 +2957,8 @@ export function Admin(props: AdminProps) {
       categories={props.categories}
       customIcons={props.customIcons}
       username={props.username}
+      activeTab={props.activeTab}
+      onTabChange={props.onTabChange}
       onBack={props.onBack}
       onLogout={props.onLogout}
       onAddBookmark={props.onAddBookmark}

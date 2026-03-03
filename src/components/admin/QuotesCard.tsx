@@ -12,9 +12,13 @@ import {
   CheckCircle,
   Search,
   ToggleLeft,
-  ToggleRight
+  ToggleRight,
+  Sparkles,
+  Loader2,
+  Check
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
+import { aiGenerateQuotes, getAiStatus } from '../../lib/api'
 
 interface QuotesCardProps {
   quotes: string[]
@@ -33,6 +37,13 @@ export function QuotesCard({ quotes, useDefaultQuotes, onUpdate }: QuotesCardPro
   const [success, setSuccess] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
+  const [isAiPanel, setIsAiPanel] = useState(false)
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiConfigured, setAiConfigured] = useState<boolean | null>(null)
+  const [aiCount, setAiCount] = useState(5)
+  const [aiTheme, setAiTheme] = useState('')
+  const [aiResults, setAiResults] = useState<string[]>([])
+  const [aiSelected, setAiSelected] = useState<Set<number>>(new Set())
 
   useEffect(() => {
     setLocalQuotes(quotes)
@@ -41,6 +52,63 @@ export function QuotesCard({ quotes, useDefaultQuotes, onUpdate }: QuotesCardPro
   useEffect(() => {
     setLocalUseDefault(useDefaultQuotes)
   }, [useDefaultQuotes])
+
+  // 检查 AI 是否已配置
+  useEffect(() => {
+    getAiStatus().then(s => setAiConfigured(s.configured)).catch(() => setAiConfigured(false))
+  }, [])
+
+  // AI 生成名言
+  const handleAiGenerate = async () => {
+    setAiLoading(true)
+    setAiResults([])
+    setAiSelected(new Set())
+    setError(null)
+    try {
+      const result = await aiGenerateQuotes({
+        count: aiCount,
+        lang: i18n.language,
+        theme: aiTheme || undefined,
+        existingQuotes: localQuotes,
+      })
+      setAiResults(result.quotes)
+      // 默认全选
+      setAiSelected(new Set(result.quotes.map((_, i) => i)))
+      setSuccess(t('admin.quotes.ai_generated', { count: result.quotes.length }))
+      setTimeout(() => setSuccess(null), 3000)
+    } catch (err: any) {
+      setError(err?.message || t('admin.quotes.ai_error'))
+    } finally {
+      setAiLoading(false)
+    }
+  }
+
+  // 切换 AI 结果选择
+  const toggleAiSelect = (index: number) => {
+    setAiSelected(prev => {
+      const next = new Set(prev)
+      if (next.has(index)) next.delete(index)
+      else next.add(index)
+      return next
+    })
+  }
+
+  // 添加选中的 AI 名言
+  const handleAddAiQuotes = () => {
+    const selected = aiResults.filter((_, i) => aiSelected.has(i))
+    const newQuotes = selected.filter(q => !localQuotes.includes(q))
+    if (newQuotes.length === 0) return
+    const updated = [...localQuotes, ...newQuotes]
+    setLocalQuotes(updated)
+    onUpdate(updated, localUseDefault)
+    setSuccess(t('admin.quotes.ai_added', { count: newQuotes.length }))
+    setTimeout(() => setSuccess(null), 3000)
+    setAiResults([])
+    setAiSelected(new Set())
+    setIsAiPanel(false)
+  }
+
+  const { i18n } = useTranslation()
 
   // 切换默认名言开关
   const handleToggleDefault = () => {
@@ -149,16 +217,34 @@ export function QuotesCard({ quotes, useDefaultQuotes, onUpdate }: QuotesCardPro
             </div>
           </div>
           
-          {/* 添加按钮 */}
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setIsAdding(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium shadow-lg shadow-amber-500/20"
-          >
-            <Plus className="w-4 h-4" />
-            {t('admin.quotes.add')}
-          </motion.button>
+          {/* 操作按钮 */}
+          <div className="flex items-center gap-2">
+            {aiConfigured && (
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => { setIsAiPanel(!isAiPanel); setIsAdding(false) }}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2 rounded-xl font-medium shadow-lg transition-all duration-300",
+                  isAiPanel
+                    ? "bg-gradient-to-r from-purple-500 to-violet-500 text-white shadow-purple-500/20"
+                    : "bg-gradient-to-r from-purple-500/10 to-violet-500/10 text-purple-500 border border-purple-500/20"
+                )}
+              >
+                <Sparkles className="w-4 h-4" />
+                {t('admin.quotes.ai_generate')}
+              </motion.button>
+            )}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => { setIsAdding(true); setIsAiPanel(false) }}
+              className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium shadow-lg shadow-amber-500/20"
+            >
+              <Plus className="w-4 h-4" />
+              {t('admin.quotes.add')}
+            </motion.button>
+          </div>
         </div>
 
         {/* 系统默认名言开关 */}
@@ -259,6 +345,164 @@ export function QuotesCard({ quotes, useDefaultQuotes, onUpdate }: QuotesCardPro
                     {t('common.cancel')}
                   </motion.button>
                 </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* AI 生成面板 */}
+        <AnimatePresence>
+          {isAiPanel && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mb-4 overflow-hidden"
+            >
+              <div 
+                className="p-4 rounded-xl space-y-4"
+                style={{
+                  background: 'var(--color-bg-tertiary)',
+                  border: '1px solid var(--color-glass-border)',
+                }}
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <Sparkles className="w-5 h-5 text-purple-500" />
+                  <h4 className="font-medium" style={{ color: 'var(--color-text-primary)' }}>
+                    {t('admin.quotes.ai_generate_title')}
+                  </h4>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-sm mb-1 block" style={{ color: 'var(--color-text-muted)' }}>
+                      {t('admin.quotes.ai_count')}
+                    </label>
+                    <select
+                      value={aiCount}
+                      onChange={(e) => setAiCount(Number(e.target.value))}
+                      className="w-full px-3 py-2 rounded-lg focus:outline-none text-sm"
+                      style={{
+                        background: 'var(--color-glass)',
+                        border: '1px solid var(--color-glass-border)',
+                        color: 'var(--color-text-primary)',
+                      }}
+                    >
+                      {[3, 5, 8, 10].map(n => (
+                        <option key={n} value={n}>{n}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-sm mb-1 block" style={{ color: 'var(--color-text-muted)' }}>
+                      {t('admin.quotes.ai_theme')}
+                    </label>
+                    <input
+                      type="text"
+                      value={aiTheme}
+                      onChange={(e) => setAiTheme(e.target.value)}
+                      placeholder={t('admin.quotes.ai_theme_placeholder')}
+                      className="w-full px-3 py-2 rounded-lg focus:outline-none text-sm"
+                      style={{
+                        background: 'var(--color-glass)',
+                        border: '1px solid var(--color-glass-border)',
+                        color: 'var(--color-text-primary)',
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleAiGenerate}
+                  disabled={aiLoading}
+                  className={cn(
+                    "w-full py-2.5 rounded-xl font-medium text-white flex items-center justify-center gap-2 transition-all",
+                    aiLoading
+                      ? "bg-purple-500/50 cursor-not-allowed"
+                      : "bg-gradient-to-r from-purple-500 to-violet-500 shadow-lg shadow-purple-500/20"
+                  )}
+                >
+                  {aiLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      {t('admin.quotes.ai_generating')}
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4" />
+                      {t('admin.quotes.ai_generate_btn')}
+                    </>
+                  )}
+                </motion.button>
+
+                {/* AI 生成结果 */}
+                {aiResults.length > 0 && (
+                  <div className="space-y-2">
+                    {aiResults.map((quote, idx) => (
+                      <motion.div
+                        key={idx}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.05 }}
+                        onClick={() => toggleAiSelect(idx)}
+                        className={cn(
+                          "flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-all duration-200",
+                          aiSelected.has(idx)
+                            ? "bg-purple-500/10 border border-purple-500/30"
+                            : "border border-transparent hover:bg-purple-500/5"
+                        )}
+                        style={{
+                          background: aiSelected.has(idx) ? undefined : 'var(--color-glass)',
+                          borderColor: aiSelected.has(idx) ? undefined : 'var(--color-glass-border)',
+                        }}
+                      >
+                        <div className={cn(
+                          "flex-shrink-0 w-5 h-5 rounded-md border-2 flex items-center justify-center mt-0.5 transition-all",
+                          aiSelected.has(idx)
+                            ? "bg-purple-500 border-purple-500"
+                            : "border-gray-400/40"
+                        )}>
+                          {aiSelected.has(idx) && <Check className="w-3 h-3 text-white" />}
+                        </div>
+                        <p className="text-sm leading-relaxed flex-1" style={{ color: 'var(--color-text-primary)' }}>
+                          {quote}
+                        </p>
+                      </motion.div>
+                    ))}
+
+                    <div className="flex gap-2 pt-2">
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => setAiSelected(new Set(aiResults.map((_, i) => i)))}
+                        className="flex-1 py-2 rounded-xl text-sm font-medium"
+                        style={{
+                          background: 'var(--color-glass)',
+                          border: '1px solid var(--color-glass-border)',
+                          color: 'var(--color-text-primary)',
+                        }}
+                      >
+                        {t('admin.quotes.ai_add_all')}
+                      </motion.button>
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={handleAddAiQuotes}
+                        disabled={aiSelected.size === 0}
+                        className={cn(
+                          "flex-1 py-2 rounded-xl text-sm font-medium text-white transition-all",
+                          aiSelected.size > 0
+                            ? "bg-gradient-to-r from-purple-500 to-violet-500"
+                            : "bg-purple-500/30 cursor-not-allowed"
+                        )}
+                      >
+                        {t('admin.quotes.ai_add_selected', { count: aiSelected.size })}
+                      </motion.button>
+                    </div>
+                  </div>
+                )}
               </div>
             </motion.div>
           )}

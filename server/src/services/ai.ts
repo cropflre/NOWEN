@@ -61,6 +61,17 @@ export interface AiChatResponse {
   }>
 }
 
+export interface AiGenerateQuotesRequest {
+  count?: number
+  lang?: string
+  theme?: string
+  existingQuotes?: string[]
+}
+
+export interface AiGenerateQuotesResponse {
+  quotes: string[]
+}
+
 // ========== 配置管理 ==========
 
 // 从数据库读取 AI 配置
@@ -181,6 +192,37 @@ ${bookmarkContext}
 6. 不要编造不存在的书签。
 
 用户的消息: ${req.message}`
+}
+
+function buildGenerateQuotesPrompt(req: AiGenerateQuotesRequest): string {
+  const lang = req.lang?.startsWith('zh') ? '中文' : 'English'
+  const count = req.count || 5
+  const themeHint = req.theme ? `\n主题偏好: ${req.theme}` : ''
+  
+  const existingHint = req.existingQuotes && req.existingQuotes.length > 0
+    ? `\n\n用户已有的名言（请避免重复或相似内容）:\n${req.existingQuotes.slice(0, 20).map(q => `- ${q}`).join('\n')}`
+    : ''
+
+  return `你是一个名言金句生成专家。请生成 ${count} 条高质量的名言/格言/金句。
+
+要求：
+1. 语言使用${lang}。
+2. 每条名言格式：名言内容 —— 作者
+3. 如果有出处，格式为：名言内容 —— 作者《书名》
+4. 名言来源多样化：中外经典文学、哲学、科学、历史人物、现代名人等。
+5. 内容积极向上、富有启发性和智慧。
+6. 每条名言不超过80个字（不含作者信息）。
+7. 确保名言的准确性，不要编造不存在的名言，确保作者和内容对应正确。${themeHint}${existingHint}
+
+请返回一个 JSON 对象，格式如下：
+{
+  "quotes": [
+    "名言内容 —— 作者",
+    "名言内容 —— 作者《书名》"
+  ]
+}
+
+只返回纯 JSON，不要包含 markdown 代码块或其他文本。`
 }
 
 // ========== API 调用 ==========
@@ -397,6 +439,27 @@ function parseAiEnrichResponse(raw: string): AiEnrichResponse {
   }
 }
 
+function parseAiQuotesResponse(raw: string): AiGenerateQuotesResponse {
+  let cleaned = raw.trim()
+  if (cleaned.startsWith('```')) {
+    cleaned = cleaned.replace(/^```(?:json)?\s*/, '').replace(/```\s*$/, '')
+  }
+
+  try {
+    const parsed = JSON.parse(cleaned)
+    const quotes = Array.isArray(parsed.quotes)
+      ? parsed.quotes.map((q: any) => String(q).trim()).filter((q: string) => q.length > 0).slice(0, 20)
+      : []
+    if (quotes.length === 0) {
+      throw new Error('AI 未返回有效名言')
+    }
+    return { quotes }
+  } catch (err: any) {
+    if (err.message === 'AI 未返回有效名言') throw err
+    throw new Error('AI 返回格式异常，无法解析')
+  }
+}
+
 // ========== 公开 API ==========
 
 // AI 智能分类
@@ -446,6 +509,13 @@ export async function aiChat(req: AiChatRequest): Promise<AiChatResponse> {
     reply: cleanReply,
     bookmarks: referencedBookmarks.length > 0 ? referencedBookmarks : undefined,
   }
+}
+
+// AI 生成名言
+export async function aiGenerateQuotes(req: AiGenerateQuotesRequest): Promise<AiGenerateQuotesResponse> {
+  const prompt = buildGenerateQuotesPrompt(req)
+  const rawResponse = await callAi(prompt, 'You are a quote generation expert. Always respond in valid JSON format only.')
+  return parseAiQuotesResponse(rawResponse)
 }
 
 // AI 连接测试

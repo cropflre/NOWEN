@@ -337,7 +337,20 @@
       "empty_error": "名言内容不能为空",
       "duplicate_error": "该名言已存在",
       "no_match": "没有找到匹配的名言",
-      "empty": "暂无名言，点击添加按钮新增"
+      "empty": "暂无名言，点击添加按钮新增",
+      "ai_generate": "AI 生成",
+      "ai_generating": "AI 生成中...",
+      "ai_generate_title": "AI 智能生成名言",
+      "ai_count": "生成数量",
+      "ai_theme": "主题偏好（可选）",
+      "ai_theme_placeholder": "如：励志、哲学、科学、文学...",
+      "ai_generate_btn": "开始生成",
+      "ai_generated": "AI 已生成 {{count}} 条名言",
+      "ai_add_all": "全部添加",
+      "ai_add_selected": "添加选中 ({{count}})",
+      "ai_added": "已添加 {{count}} 条 AI 名言",
+      "ai_not_configured": "请先在 AI 设置中配置 AI 服务",
+      "ai_error": "AI 生成失败，请稍后重试"
     },
     "icons": {
       "title": "图标管理",
@@ -816,9 +829,44 @@
           "widget_title": "仪表显示",
           "widget_desc": "控制首页系统监控、硬件信息、网络遥测等仪表组件的显示/隐藏",
           "security_title": "安全设置",
-          "security_desc": "修改管理员用户名和密码，保护后台安全",
+          "security_desc": "修改管理员用户名和密码，支持密码强度实时检测（弱/中/强/非常强），演示模式下禁止修改",
           "data_title": "数据管理",
-          "data_desc": "导出/导入 JSON 备份，导入浏览器书签（Chrome/Edge/Firefox），恢复出厂设置"
+          "data_desc": "导出/导入 JSON 备份、导出 HTML 浏览器书签、导入浏览器书签（支持覆盖和合并模式）、支持 SunPanel 数据格式自动转换、恢复出厂设置"
+        },
+        "backup": {
+          "title": "云备份",
+          "webdav_title": "WebDAV 云备份",
+          "webdav_desc": "配置 WebDAV 服务（坚果云/群晖/绿联/Alist 等），一键备份数据到云端",
+          "auto_title": "自动定时备份",
+          "auto_desc": "通过 Cron 表达式配置自动备份周期（每天/每12小时/每周/每小时），设置最大保留份数",
+          "restore_title": "云端恢复",
+          "restore_desc": "查看云端备份列表，选择任意备份版本进行恢复或删除",
+          "db_title": "数据库文件操作",
+          "db_desc": "下载原始 .db 数据库文件（包含完整数据：书签、分类、统计、日志等），或上传 .db 文件恢复（含 SQLite 校验和回滚保护）",
+          "import_title": "本地备份",
+          "import_desc": "下载本地 JSON 备份文件，或上传 JSON 文件恢复数据",
+          "nas_title": "NAS 更新提醒",
+          "nas_desc": "NAS Docker 可视化工具更新镜像可能导致数据丢失，更新前务必先备份数据"
+        },
+        "tags": {
+          "title": "标签管理",
+          "stats_title": "标签统计",
+          "stats_desc": "查看总标签数、总使用次数、平均使用次数等统计数据",
+          "rename_title": "标签重命名",
+          "rename_desc": "修改标签名称，所有使用该标签的书签自动更新",
+          "merge_title": "标签合并",
+          "merge_desc": "将一个标签合并到另一个标签，统一管理相似标签",
+          "delete_title": "标签删除",
+          "delete_desc": "删除标签后，该标签将从所有书签中移除"
+        },
+        "logs": {
+          "title": "系统日志",
+          "view_title": "日志查看",
+          "view_desc": "查看操作日志、接口错误日志和系统日志，支持 INFO/WARN/ERROR 三级分类",
+          "search_title": "搜索与筛选",
+          "search_desc": "按关键词搜索日志内容，按类型（操作/接口/系统）筛选，分页浏览",
+          "clear_title": "清除日志",
+          "clear_desc": "一键清除全部历史日志记录"
         }
       }
     },

@@ -2,7 +2,7 @@ import { Router } from 'express'
 import crypto from 'crypto'
 import { z } from 'zod'
 import { validateBody } from '../schemas.js'
-import { aiCategorize, aiEnrichMetadata, aiChat, aiTestConnection, isAiConfigured, getAiFullStatus } from '../services/ai.js'
+import { aiCategorize, aiEnrichMetadata, aiChat, aiGenerateQuotes, aiTestConnection, isAiConfigured, getAiFullStatus } from '../services/ai.js'
 import { queryAll, queryOne, run } from '../utils/index.js'
 import { getDatabase, saveDatabase } from '../db.js'
 import { authMiddleware } from '../middleware/index.js'
@@ -93,6 +93,31 @@ router.post('/chat', validateBody(chatSchema), async (req, res) => {
 })
 
 // ========== 需认证端点 ==========
+
+// POST /api/ai/generate-quotes - AI 生成名言
+const generateQuotesSchema = z.object({
+  count: z.number().int().min(1).max(20).optional(),
+  lang: z.string().max(10).optional(),
+  theme: z.string().max(100).optional(),
+  existingQuotes: z.array(z.string()).optional(),
+})
+
+router.post('/generate-quotes', authMiddleware, validateBody(generateQuotesSchema), async (req, res) => {
+  if (!isAiConfigured()) {
+    return res.status(503).json({
+      error: 'AI 服务未配置。请在后台设置中配置 AI 参数。',
+    })
+  }
+
+  try {
+    const { count, lang, theme, existingQuotes } = req.body
+    const result = await aiGenerateQuotes({ count, lang, theme, existingQuotes })
+    res.json(result)
+  } catch (error: any) {
+    console.error('AI 生成名言失败:', error?.message || error)
+    res.status(500).json({ error: error?.message || 'AI 生成名言服务暂时不可用' })
+  }
+})
 
 // POST /api/ai/batch-tags - 批量 AI 智能标签（异步处理）
 const batchTagsStatus = {

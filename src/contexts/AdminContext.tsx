@@ -1,6 +1,7 @@
 import { createContext, useContext, ReactNode, useCallback, useState } from 'react'
 import { Bookmark, Category, CustomIcon } from '../types/bookmark'
 import { SiteSettings } from '../lib/api'
+import type { AdminTabType } from '../hooks/useHashRouter'
 
 // ========== Context 类型定义 ==========
 
@@ -14,6 +15,10 @@ export interface AdminContextValue {
   // 导航操作
   onBack: () => void
   onLogout: () => void
+  
+  // 标签页路由
+  activeTab: AdminTabType
+  setActiveTab: (tab: AdminTabType) => void
   
   // 书签操作
   addBookmark: () => void
@@ -61,6 +66,9 @@ export interface AdminProviderProps {
   // 导航
   onBack: () => void
   onLogout: () => void
+  // 标签页路由
+  activeTab: AdminTabType
+  onTabChange: (tab: AdminTabType) => void
   // 书签回调
   onAddBookmark: () => void
   onEditBookmark: (bookmark: Bookmark) => void
@@ -92,6 +100,8 @@ export function AdminProvider({
   username,
   onBack,
   onLogout,
+  activeTab,
+  onTabChange,
   onAddBookmark,
   onEditBookmark,
   onDeleteBookmark,
@@ -147,6 +157,10 @@ export function AdminProvider({
     // 导航
     onBack,
     onLogout,
+    
+    // 标签页路由
+    activeTab,
+    setActiveTab: onTabChange,
     
     // 书签操作
     addBookmark: handleAddBookmark,
