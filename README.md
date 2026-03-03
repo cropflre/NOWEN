@@ -180,6 +180,9 @@
 - **AI 对话助手**：智能书签搜索与发现助手
   - 语义搜索全部书签
   - 上下文感知回复，带可点击书签卡片
+- **AI 名言生成** (NEW)：通过 AI 批量生成主题名言
+  - 支持自定义生成数量和主题关键词
+  - 生成结果可勾选后一键添加到名言库
 
 ### ⚙️ 后台管理
 
@@ -188,7 +191,7 @@
 | **书签管理**   | 增删改查、批量操作、分类筛选、搜索过滤、数字分页、快速修改分类、批量 AI 标签/分类/元数据 |
 | **分类管理**   | 自定义分类名称、图标选择器、颜色选择器、拖拽排序                        |
 | **图标管理**   | 上传自定义图标、图标预览、删除管理                                      |
-| **名言管理**   | 自定义名言、系统默认名言开关                                            |
+| **名言管理**   | 自定义名言、系统默认名言开关、AI 生成名言                               |
 | **AI 设置**    | AI 服务商配置（OpenAI/Gemini/DeepSeek/Qwen/豆包/自定义）、API Key、模型选择、连接测试 |
 | **站点设置**   | 自定义网站名称和图标、精简模式开关、天气/农历开关、菜单可见性控制、底部备案信息配置 |
 | **主题设置**   | 8 款预设主题、明/暗模式、自动切换、日夜动画切换、圆圈扩散动画           |
@@ -350,6 +353,8 @@ NOWEN/
 │   │   └── CommandPalette.tsx        # 命令面板
 │   ├── hooks/                        # 自定义 Hooks
 │   │   ├── useBookmarkStore.ts       # 书签状态管理
+│   │   ├── useHashRouter.ts          # 轻量级 Hash 路由
+│   │   ├── useAuth.ts                # 认证与页面导航
 │   │   ├── useTheme.tsx              # 主题系统（8 款主题）
 │   │   ├── useTime.ts                # 时间、问候语、农历
 │   │   ├── useWeather.ts             # 天气信息
@@ -1221,6 +1226,7 @@ server {
 | GET  | `/api/ai/config`                | ✅   | 获取 AI 配置（API Key 脱敏）   |
 | PUT  | `/api/ai/config`                | ✅   | 保存 AI 配置                   |
 | POST | `/api/ai/test`                  | ✅   | 测试 AI 连接                   |
+| POST | `/api/ai/generate-quotes`       | ✅   | AI 生成名言                    |
 
 ### 备份 API
 
@@ -1545,6 +1551,15 @@ docker-compose up -d
   - 进程退出时自动保存（SIGINT/SIGTERM/uncaughtException）
   - 每 30 秒脏数据自动刷盘
 - **使用说明文档**：后台管理新增使用说明卡片（DocsCard），内嵌项目文档
+- **AI 名言生成**：名言管理支持通过 AI 批量生成主题名言
+  - 自定义生成数量和主题关键词
+  - 生成结果可勾选后一键添加到名言库
+  - 新增 `POST /api/ai/generate-quotes` API 端点
+- **Hash 路由**：后台管理采用轻量级 Hash 路由方案
+  - 基于 `window.location.hash` 的零依赖路由
+  - 支持浏览器前进/后退导航、地址栏直接输入
+  - 路由映射：`#/admin` → 书签管理、`#/admin/{tab}` → 对应后台标签页
+  - 新增 `useHashRouter.ts` Hook，统一 `AdminTabType` 类型定义
 
 #### 🐛 Bug 修复
 

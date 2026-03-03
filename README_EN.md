@@ -178,6 +178,9 @@
 - **AI Chat Assistant**: Smart bookmark assistant for search and discovery
   - Semantic search across bookmark library
   - Context-aware responses with clickable bookmark cards
+- **AI Quote Generation** (NEW): Batch generate themed quotes via AI
+  - Customizable generation count and theme keywords
+  - Select from results and add to quote library in one click
 
 ### ⚙️ Admin Panel
 
@@ -186,7 +189,7 @@
 | **Bookmarks**       | CRUD, batch operations, category filter, search, numeric pagination, quick category change, batch AI tags/classify/enrich |
 | **Categories**      | Custom names, icon picker, color picker, drag sorting                                             |
 | **Icons**           | Upload custom icons, preview, delete management                                                   |
-| **Quotes**          | Custom quotes, system default toggle                                                              |
+| **Quotes**          | Custom quotes, system default toggle, AI quote generation                                         |
 | **AI Settings**     | AI provider config (OpenAI/Gemini/DeepSeek/Qwen/Doubao/Custom), API key, model, connection test  |
 | **Site Settings**   | Custom site name and icon, lite mode toggle, weather/lunar toggle, menu visibility, footer filing info |
 | **Theme Settings**  | 8 preset themes, light/dark mode, auto switch, day/night animation, circle expand animation       |
@@ -348,6 +351,8 @@ NOWEN/
 │   │   └── CommandPalette.tsx        # Command Palette
 │   ├── hooks/                        # Custom Hooks
 │   │   ├── useBookmarkStore.ts       # Bookmark State Management
+│   │   ├── useHashRouter.ts          # Lightweight Hash Router
+│   │   ├── useAuth.ts                # Authentication & Page Navigation
 │   │   ├── useTheme.tsx              # Theme System (8 themes)
 │   │   ├── useTime.ts                # Time, Greeting, Lunar
 │   │   ├── useWeather.ts             # Weather Info
@@ -944,6 +949,7 @@ privileged: true
 | GET    | `/api/ai/config`              | ✅   | Get AI config (API key masked)     |
 | PUT    | `/api/ai/config`              | ✅   | Save AI config                     |
 | POST   | `/api/ai/test`                | ✅   | Test AI connection                 |
+| POST   | `/api/ai/generate-quotes`     | ✅   | AI generate quotes                 |
 
 ### Other APIs
 
@@ -1106,6 +1112,15 @@ docker-compose up -d
   - Auto-save on process exit (SIGINT/SIGTERM/uncaughtException)
   - Dirty data auto-flush every 30 seconds
 - **Documentation Card**: New DocsCard in admin panel with embedded project documentation
+- **AI Quote Generation**: Generate themed quotes via AI in quote management
+  - Customizable generation count and theme keywords
+  - Select from results and add to quote library in one click
+  - New `POST /api/ai/generate-quotes` API endpoint
+- **Hash Router**: Lightweight hash-based routing for admin panel
+  - Zero-dependency routing based on `window.location.hash`
+  - Supports browser forward/back navigation and direct URL entry
+  - Route mapping: `#/admin` → bookmarks, `#/admin/{tab}` → specific admin tab
+  - New `useHashRouter.ts` hook with unified `AdminTabType` type definition
 
 #### 🐛 Bug Fixes
 
