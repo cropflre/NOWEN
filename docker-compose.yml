@@ -15,9 +15,8 @@ services:
       #   - 容器重建时自动挂载回同一个卷
       #   - NAS Docker UI 更新镜像时也不会丢失
       - nowen-data:/app/server/data
-      # 🔑 安全备份卷 — 额外的数据保护层
-      # 即使主数据卷出问题，也能从备份卷恢复
-      - nowen-backup:/app/.data-backup
+      # ⚠️ 安全备份现在在镜像层内（/app/.nowen-safe），不再需要单独挂载
+      # 这样即使 NAS 更新容器时创建新的存储目录，镜像层内的备份仍然可用
       # ========== 宿主机系统信息（只读）==========
       # 挂载宿主机根目录，让 systeminformation 读取真实系统状态
       - /:/host:ro
@@ -65,5 +64,3 @@ services:
 volumes:
   nowen-data:
     name: nowen-data
-  nowen-backup:
-    name: nowen-backup

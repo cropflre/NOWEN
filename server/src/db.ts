@@ -44,22 +44,94 @@ let isDirty = false  // 标记内存数据是否有未保存的变更
 export async function initDatabase() {
   const SQL = await initSqlJs()
   
-  // 安全备份路径（与 start.sh 中的 SAFE_BACKUP_DIR 保持一致）
-  const safeBackupDir = process.env.NODE_ENV === 'production' ? '/app/.data-backup' : path.join(process.cwd(), '.data-backup')
+  // 安全备份路径 — 使用镜像层内路径，NAS 不会为它创建独立存储目录
+  // 🔑 关键：不能用 /app/.data-backup（如果 Dockerfile 声明了 VOLUME 或 NAS 自动挂载了它，
+  // 更新容器时备份也会一起丢失）
+  const safeBackupDir = process.env.NODE_ENV === 'production' ? '/app/.nowen-safe' : path.join(process.cwd(), '.data-backup')
   const safeDbFile = path.join(safeBackupDir, 'zen-garden.db.safe')
+  
+  // 兼容旧版安全备份路径
+  const legacySafeFile = process.env.NODE_ENV === 'production' ? '/app/.data-backup/zen-garden.db.safe' : ''
   
   // 检查数据库文件是否存在
   let isNewDatabase = !fs.existsSync(dbPath)
   
   // 🔑 如果主数据库不存在，尝试从安全备份恢复（Node.js 层面的二次保障）
-  if (isNewDatabase && fs.existsSync(safeDbFile)) {
-    console.log('🔄 Main database missing, attempting recovery from safe backup...')
-    try {
-      fs.copyFileSync(safeDbFile, dbPath)
-      isNewDatabase = false
-      console.log('✅ Database recovered from safe backup (Node.js layer)')
-    } catch (err) {
-      console.error('❌ Safe backup recovery failed:', err)
+  if (isNewDatabase) {
+    // 尝试新路径
+    if (fs.existsSync(safeDbFile)) {
+      console.log('🔄 Main database missing, attempting recovery from safe backup...')
+      try {
+        fs.copyFileSync(safeDbFile, dbPath)
+        isNewDatabase = false
+        console.log('✅ Database recovered from safe backup (Node.js layer)')
+      } catch (err) {
+        console.error('❌ Safe backup recovery failed:', err)
+      }
+    }
+    // 尝试旧路径
+    else if (legacySafeFile && fs.existsSync(legacySafeFile)) {
+      console.log('🔄 Main database missing, attempting recovery from legacy safe backup...')
+      try {
+        fs.copyFileSync(legacySafeFile, dbPath)
+        isNewDatabase = false
+        console.log('✅ Database recovered from legacy safe backup (Node.js layer)')
+      } catch (err) {
+        console.error('❌ Legacy safe backup recovery failed:', err)
+      }
+    }
+    
+    // 🔑 扫描宿主机旧容器目录（Node.js 层面二次保障，与 start.sh 互补）
+    if (isNewDatabase && process.env.NODE_ENV === 'production') {
+      console.log('🔍 [Node.js] Scanning host for existing data...')
+      const scanPaths = [
+        // 绿联 NAS 旧容器目录（通过 /host 只读挂载）
+        '/host/docker', '/host/DATA/docker', '/host/volume1/docker',
+        '/host/volume2/docker', '/host/mnt/docker', '/host/opt/docker'
+      ]
+      
+      const findDbInDir = (dir: string, depth: number = 0): string | null => {
+        if (depth > 4) return null
+        try {
+          if (!fs.existsSync(dir)) return null
+          const entries = fs.readdirSync(dir, { withFileTypes: true })
+          for (const entry of entries) {
+            const fullPath = path.join(dir, entry.name)
+            if (entry.isFile() && entry.name === 'zen-garden.db') {
+              const stat = fs.statSync(fullPath)
+              if (stat.size > 100) return fullPath
+            }
+            if (entry.isDirectory() && (
+              entry.name.toLowerCase().includes('nowen') ||
+              entry.name.toLowerCase().includes('cropflre') ||
+              entry.name.includes('app_server') ||
+              entry.name === 'data' ||
+              entry.name === 'server'
+            )) {
+              const found = findDbInDir(fullPath, depth + 1)
+              if (found) return found
+            }
+          }
+        } catch {
+          // 权限不足等错误，忽略
+        }
+        return null
+      }
+      
+      for (const scanBase of scanPaths) {
+        const found = findDbInDir(scanBase)
+        if (found) {
+          console.log(`🎉 [Node.js] Found database: ${found}`)
+          try {
+            fs.copyFileSync(found, dbPath)
+            isNewDatabase = false
+            console.log('✅ Database recovered from host filesystem (Node.js layer)')
+            break
+          } catch (err) {
+            console.error(`❌ Failed to copy from ${found}:`, err)
+          }
+        }
+      }
     }
   }
   
@@ -359,9 +431,11 @@ export function saveDatabase() {
     fs.writeFileSync(dbPath, buffer)
     isDirty = false
     
-    // 🔑 同步到安全备份位置（静默失败，不影响主流程）
+    // 🔑 同步到镜像层内的安全备份位置（静默失败，不影响主流程）
+    // 使用 /app/.nowen-safe 而非 /app/.data-backup，
+    // 因为后者可能被 NAS Docker GUI 挂载为独立卷
     try {
-      const safeBackupDir = process.env.NODE_ENV === 'production' ? '/app/.data-backup' : path.join(process.cwd(), '.data-backup')
+      const safeBackupDir = process.env.NODE_ENV === 'production' ? '/app/.nowen-safe' : path.join(process.cwd(), '.data-backup')
       const safeDbFile = path.join(safeBackupDir, 'zen-garden.db.safe')
       if (!fs.existsSync(safeBackupDir)) {
         fs.mkdirSync(safeBackupDir, { recursive: true })
@@ -369,6 +443,15 @@ export function saveDatabase() {
       fs.writeFileSync(safeDbFile, buffer)
     } catch {
       // 安全备份失败不影响主流程
+    }
+    
+    // 兼容：也写到旧的备份路径（如果目录存在）
+    try {
+      if (process.env.NODE_ENV === 'production' && fs.existsSync('/app/.data-backup')) {
+        fs.writeFileSync('/app/.data-backup/zen-garden.db.safe', buffer)
+      }
+    } catch {
+      // ignore
     }
   }
 }

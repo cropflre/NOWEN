@@ -50,13 +50,16 @@ COPY --from=frontend-builder /app/dist ./dist
 COPY nginx.conf /etc/nginx/http.d/default.conf
 
 # Create data directory and safe backup directory
-RUN mkdir -p /app/server/data /app/.data-backup
+# 🔑 安全备份使用 /app/.nowen-safe（不在 VOLUME 声明中，属于镜像层）
+# 这样即使 NAS Docker UI 重建容器，镜像层内的备份不受影响
+RUN mkdir -p /app/server/data /app/.nowen-safe
 
-# 🔑 声明数据卷 — 确保用户数据在容器更新/重建后不丢失
-# 即使用户不手动配置 -v 挂载（如绿联/飞牛 NAS 的 Docker 界面），
-# Docker 也会自动创建匿名卷(named volume)来持久化此目录
-# 同时声明安全备份目录为卷，提供二次保障
-VOLUME ["/app/server/data", "/app/.data-backup"]
+# ⚠️ 故意不声明 VOLUME！
+# 原因：绿联/飞牛等 NAS 的 Docker GUI 会为 VOLUME 声明的路径自动创建
+# 以容器名为前缀的目录（如 cropflre_nowen-1/app_server_data），
+# 更新容器时容器名变化（变成 cropflre_nowen-2），新目录是空的，数据丢失。
+# 不声明 VOLUME，让用户通过 docker-compose.yml 中的 volumes 手动挂载，
+# 或者 NAS GUI 的存储配置来指定固定路径。
 
 # 暴露端口
 EXPOSE 3000 3001
