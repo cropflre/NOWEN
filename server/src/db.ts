@@ -44,16 +44,70 @@ let isDirty = false  // 标记内存数据是否有未保存的变更
 export async function initDatabase() {
   const SQL = await initSqlJs()
   
+  // 安全备份路径（与 start.sh 中的 SAFE_BACKUP_DIR 保持一致）
+  const safeBackupDir = process.env.NODE_ENV === 'production' ? '/app/.data-backup' : path.join(process.cwd(), '.data-backup')
+  const safeDbFile = path.join(safeBackupDir, 'zen-garden.db.safe')
+  
   // 检查数据库文件是否存在
-  const isNewDatabase = !fs.existsSync(dbPath)
+  let isNewDatabase = !fs.existsSync(dbPath)
+  
+  // 🔑 如果主数据库不存在，尝试从安全备份恢复（Node.js 层面的二次保障）
+  if (isNewDatabase && fs.existsSync(safeDbFile)) {
+    console.log('🔄 Main database missing, attempting recovery from safe backup...')
+    try {
+      fs.copyFileSync(safeDbFile, dbPath)
+      isNewDatabase = false
+      console.log('✅ Database recovered from safe backup (Node.js layer)')
+    } catch (err) {
+      console.error('❌ Safe backup recovery failed:', err)
+    }
+  }
   
   // 加载已有数据库或创建新的
   if (!isNewDatabase) {
     console.log('📖 Loading existing database...')
     const buffer = fs.readFileSync(dbPath)
-    db = new SQL.Database(buffer)
+    
+    // 🔑 完整性校验：检查 SQLite 文件头魔数
+    if (buffer.length < 16 || buffer.toString('utf8', 0, 15) !== 'SQLite format 3') {
+      console.error('❌ Database file corrupted (invalid SQLite header)!')
+      // 尝试从安全备份恢复
+      if (fs.existsSync(safeDbFile)) {
+        console.log('🔄 Attempting recovery from safe backup...')
+        const safeBuffer = fs.readFileSync(safeDbFile)
+        if (safeBuffer.length >= 16 && safeBuffer.toString('utf8', 0, 15) === 'SQLite format 3') {
+          fs.copyFileSync(safeDbFile, dbPath)
+          db = new SQL.Database(safeBuffer)
+          console.log('✅ Recovered from safe backup after corruption')
+        } else {
+          console.log('⚠️ Safe backup also corrupted, creating new database')
+          db = new SQL.Database()
+          isNewDatabase = true
+        }
+      } else {
+        console.log('⚠️ No safe backup available, creating new database')
+        db = new SQL.Database()
+        isNewDatabase = true
+      }
+    } else {
+      db = new SQL.Database(buffer)
+    }
   } else {
     console.log('🆕 Creating new database...')
+    console.log('')
+    console.log('╔═══════════════════════════════════════════════════════╗')
+    console.log('║  ⚠️  首次运行 / First Run Detected                  ║')
+    console.log('║                                                       ║')
+    console.log('║  正在创建全新数据库。如果这是更新后的首次启动且       ║')
+    console.log('║  你之前有数据，说明数据卷未正确挂载！                 ║')
+    console.log('║                                                       ║')
+    console.log('║  Creating new database. If you had existing data      ║')
+    console.log('║  before this update, your volume is NOT mounted!      ║')
+    console.log('║                                                       ║')
+    console.log('║  请检查 docker-compose.yml 中的 volumes 配置          ║')
+    console.log('║  Check volumes config in docker-compose.yml           ║')
+    console.log('╚═══════════════════════════════════════════════════════╝')
+    console.log('')
     db = new SQL.Database()
   }
   
@@ -269,6 +323,22 @@ export async function initDatabase() {
   
   saveDatabase()
   
+  // 🔑 打印数据统计，帮助用户判断数据是否正常
+  try {
+    const bookmarkCount = db.exec('SELECT COUNT(*) FROM bookmarks')
+    const categoryCount = db.exec('SELECT COUNT(*) FROM categories')
+    const quoteCount = db.exec('SELECT COUNT(*) FROM quotes')
+    const bCount = bookmarkCount[0]?.values[0]?.[0] ?? 0
+    const cCount = categoryCount[0]?.values[0]?.[0] ?? 0
+    const qCount = quoteCount[0]?.values[0]?.[0] ?? 0
+    console.log(`📊 Data loaded: ${bCount} bookmarks, ${cCount} categories, ${qCount} quotes`)
+    if (Number(bCount) === 0 && !isNewDatabase) {
+      console.log('⚠️  WARNING: 0 bookmarks in existing database — data may have been lost!')
+    }
+  } catch {
+    // 统计失败不影响启动
+  }
+  
   // 🔑 启动定时自动保存（每 30 秒检查一次，有变更才写盘）
   startAutoSave()
   
@@ -288,6 +358,18 @@ export function saveDatabase() {
     const buffer = Buffer.from(data)
     fs.writeFileSync(dbPath, buffer)
     isDirty = false
+    
+    // 🔑 同步到安全备份位置（静默失败，不影响主流程）
+    try {
+      const safeBackupDir = process.env.NODE_ENV === 'production' ? '/app/.data-backup' : path.join(process.cwd(), '.data-backup')
+      const safeDbFile = path.join(safeBackupDir, 'zen-garden.db.safe')
+      if (!fs.existsSync(safeBackupDir)) {
+        fs.mkdirSync(safeBackupDir, { recursive: true })
+      }
+      fs.writeFileSync(safeDbFile, buffer)
+    } catch {
+      // 安全备份失败不影响主流程
+    }
   }
 }
 

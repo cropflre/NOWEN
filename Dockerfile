@@ -49,16 +49,20 @@ COPY --from=frontend-builder /app/dist ./dist
 # Copy nginx config
 COPY nginx.conf /etc/nginx/http.d/default.conf
 
-# Create data directory
-RUN mkdir -p /app/server/data
+# Create data directory and safe backup directory
+RUN mkdir -p /app/server/data /app/.data-backup
 
 # 🔑 声明数据卷 — 确保用户数据在容器更新/重建后不丢失
 # 即使用户不手动配置 -v 挂载（如绿联/飞牛 NAS 的 Docker 界面），
 # Docker 也会自动创建匿名卷(named volume)来持久化此目录
-VOLUME /app/server/data
+# 同时声明安全备份目录为卷，提供二次保障
+VOLUME ["/app/server/data", "/app/.data-backup"]
 
 # 暴露端口
 EXPOSE 3000 3001
+
+# 🔑 确保容器停止时发送 SIGTERM，让 start.sh 有机会保存数据
+STOPSIGNAL SIGTERM
 
 # Start script
 COPY start.sh /app/start.sh

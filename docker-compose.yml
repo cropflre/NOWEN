@@ -3,14 +3,21 @@ services:
     build: .
     container_name: nowen
     restart: unless-stopped
+    # 🔑 确保容器停止时有足够时间保存数据
+    stop_grace_period: 15s
     ports:
       - "3002:3000"
     volumes:
       # ========== 🔑 数据持久化（最重要！）==========
-      # 使用宿主机绑定挂载确保更新镜像后数据不丢失
-      # ⚠️ 请将 ./nowen-data 替换为你想要的宿主机路径
-      # 如 NAS 用户: /volume1/docker/nowen/data:/app/server/data
-      - ./nowen-data:/app/server/data
+      # 使用 Docker Named Volume，容器重建/更新后自动复用同一个卷
+      # ⚠️ 比 bind mount (./nowen-data) 更安全：
+      #   - Named Volume 在 docker-compose down 时不会删除（除非 -v 参数）
+      #   - 容器重建时自动挂载回同一个卷
+      #   - NAS Docker UI 更新镜像时也不会丢失
+      - nowen-data:/app/server/data
+      # 🔑 安全备份卷 — 额外的数据保护层
+      # 即使主数据卷出问题，也能从备份卷恢复
+      - nowen-backup:/app/.data-backup
       # ========== 宿主机系统信息（只读）==========
       # 挂载宿主机根目录，让 systeminformation 读取真实系统状态
       - /:/host:ro
@@ -50,3 +57,13 @@ services:
     # cap_add:
     #   - SYS_PTRACE
     #   - NET_ADMIN
+
+# 🔑 Named Volumes 声明
+# Docker 会在宿主机上创建持久化的命名卷
+# 容器删除/重建/更新镜像后，命名卷数据不受影响
+# 除非用户主动执行 docker volume rm
+volumes:
+  nowen-data:
+    name: nowen-data
+  nowen-backup:
+    name: nowen-backup
