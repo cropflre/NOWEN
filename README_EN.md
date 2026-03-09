@@ -168,6 +168,8 @@
   - Auto-triggers after URL analysis (no manual click needed)
   - Auto-fills tags + category + optimized description
   - AI settings panel and tag management panel
+  - Auto-trigger toggle (can be disabled in AI settings)
+  - Customizable timeout (60-120s recommended for local models)
 - **Batch AI Smart Classify**: Batch assign categories to selected bookmarks via AI
   - Auto-create new categories if no match exists
   - Concurrent processing (2 workers), async with real-time progress
@@ -186,11 +188,11 @@
 
 | Module              | Features                                                                                          |
 | ------------------- | ------------------------------------------------------------------------------------------------- |
-| **Bookmarks**       | CRUD, batch operations, category filter, search, numeric pagination, quick category change, batch AI tags/classify/enrich |
+| **Bookmarks**       | CRUD, batch operations, category filter, multi-keyword search, numeric pagination, quick category change, batch AI tags/classify/enrich |
 | **Categories**      | Custom names, icon picker, color picker, drag sorting                                             |
 | **Icons**           | Upload custom icons, preview, delete management                                                   |
 | **Quotes**          | Custom quotes, system default toggle, AI quote generation                                         |
-| **AI Settings**     | AI provider config (OpenAI/Gemini/DeepSeek/Qwen/Doubao/Custom), API key, model, connection test  |
+| **AI Settings**     | AI provider config (OpenAI/Gemini/DeepSeek/Qwen/Doubao/Custom), API key, model, timeout config, auto-trigger toggle, connection test |
 | **Site Settings**   | Custom site name and icon, lite mode toggle, weather/lunar toggle, menu visibility, footer filing info |
 | **Theme Settings**  | 8 preset themes, light/dark mode, auto switch, day/night animation, circle expand animation       |
 | **Widget Settings** | Control each monitor component visibility, Beam border toggle                                     |
@@ -1094,6 +1096,38 @@ docker-compose up -d
 ---
 
 ## 📝 Changelog
+
+### v0.2.2 (2026-03-09)
+
+#### ✨ New Features
+
+- **AI Auto-Trigger Toggle**: New "Auto AI Categorize" switch in AI settings
+  - Controls whether AI smart categorization and tag generation auto-triggers when adding bookmarks
+  - Enabled by default (backward compatible), can be disabled in settings
+- **AI Timeout Configuration**: New timeout parameter in AI settings panel
+  - Supports 10-300 seconds custom setting
+  - Local models (e.g., Ollama) recommend 60-120s, cloud APIs default 30s
+- **Multi-Keyword Search**: Bookmark management search supports multi-keyword AND search
+  - Keywords split by spaces, each keyword must match
+  - Searches across title, URL, description, and tags
+- **Batch Task Progress Recovery**: Auto-resume running AI batch task progress after page refresh
+  - New `GET /api/ai/batch-status` endpoint for unified batch status query
+  - Frontend auto-detects and resumes polling on load
+- **Unified Tags Utility Module**: Extracted `tags.ts` utility for unified tag parsing and serialization
+  - Compatible with both legacy JSON array format and comma-separated format
+  - Merge tags with deduplication (`mergeTags`)
+
+#### 🔒 Security Enhancements
+
+- **AI API Auth Protection**: `/api/ai/categorize` and `/api/ai/chat` changed from public to authenticated
+  - Prevents unauthorized users from abusing AI API quota
+  - Prevents unauthenticated users from exposing bookmark data via AI chat
+
+#### 🐛 Bug Fixes
+
+- Fixed admin login state loss on page refresh (`isLoggedIn` now synchronously initialized from localStorage to avoid race condition redirect)
+- Fixed public API 401 responses incorrectly clearing existing auth token (now only clears on `requireAuth` requests)
+- Fixed bookmark deletion not cascading to associated visit records
 
 ### v0.2.1 (2026-03-03)
 
