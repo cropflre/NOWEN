@@ -164,6 +164,11 @@ async function request<T>(
       throw new ApiError(message, res.status, details)
     }
     
+    // 🔑 认证请求成功 → 刷新前端登录时间（与后端续期机制同步）
+    if (requireAuth && localStorage.getItem('admin_token')) {
+      localStorage.setItem('admin_login_time', Date.now().toString())
+    }
+    
     return data as T
   } catch (error) {
     clearTimeout(timeoutId)
@@ -640,11 +645,14 @@ export function checkAuthStatus(): AuthStatus {
   const authenticated = localStorage.getItem('admin_authenticated')
   const loginTime = localStorage.getItem('admin_login_time')
   const username = localStorage.getItem('admin_username')
+  const token = localStorage.getItem('admin_token')
   const requirePasswordChange = localStorage.getItem('admin_require_password_change') === 'true'
   
-  if (authenticated === 'true' && loginTime) {
-    // 登录有效期 24 小时
-    const isValid = Date.now() - parseInt(loginTime) < 24 * 60 * 60 * 1000
+  if (authenticated === 'true' && loginTime && token) {
+    // 前端宽松校验：7天内有效（实际以后端 Token 过期为准）
+    // 后端会在使用时自动续期，所以只要用户活跃，基本不会过期
+    const TOKEN_MAX_AGE = 7 * 24 * 60 * 60 * 1000 // 7天
+    const isValid = Date.now() - parseInt(loginTime) < TOKEN_MAX_AGE
     if (isValid) {
       return { isValid: true, username, requirePasswordChange }
     }

@@ -64,6 +64,20 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction) 
     return res.status(401).json({ error: 'Token 已过期' })
   }
   
+  // 🔑 自动续期：如果剩余有效期不足一半（<3.5天），自动延长到7天
+  const TOKEN_MAX_AGE = 7 * 24 * 60 * 60 * 1000 // 7天
+  const remaining = tokenData.expiresAt - Date.now()
+  if (remaining < TOKEN_MAX_AGE / 2) {
+    const newExpiresAt = Date.now() + TOKEN_MAX_AGE
+    try {
+      const db = getDatabase()
+      db.run('UPDATE tokens SET expiresAt = ? WHERE token = ?', [newExpiresAt, token])
+      // 不调用 saveDatabase，让自动保存机制处理，避免频繁写盘
+    } catch (e) {
+      // 续期失败不影响本次请求
+    }
+  }
+  
   // 将用户信息附加到请求对象
   ;(req as any).user = { id: tokenData.userId, username: tokenData.username }
   next()

@@ -28,9 +28,9 @@ router.post('/login', authLimiter, validateBody(loginSchema), async (req, res) =
       return res.status(401).json({ error: '用户名或密码错误' })
     }
     
-    // 生成 Token
+    // 生成 Token（7天有效期，活跃使用时自动续期）
     const token = generateToken()
-    const expiresAt = Date.now() + 24 * 60 * 60 * 1000 // 24小时有效期
+    const expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000 // 7天有效期
     
     // 存储 Token 到数据库
     saveTokenToDb(token, admin.id, admin.username, expiresAt)
