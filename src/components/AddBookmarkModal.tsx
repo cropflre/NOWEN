@@ -20,6 +20,7 @@ interface AddBookmarkModalProps {
   editBookmark?: Bookmark | null
   onOpenIconManager?: () => void
   onCategoryAdded?: (category: Category) => void
+  enableAutoAi?: boolean  // 是否自动触发 AI 分类（默认 true，可在设置中关闭）
 }
 
 // 骨架屏组件
@@ -39,6 +40,7 @@ export function AddBookmarkModal({
   editBookmark = null,
   onOpenIconManager,
   onCategoryAdded,
+  enableAutoAi = true,
 }: AddBookmarkModalProps) {
   const { t, i18n } = useTranslation()
   const [url, setUrl] = useState(initialUrl)
@@ -190,8 +192,8 @@ export function AddBookmarkModal({
       setDescription(metadata.description || '')
       setFavicon(metadata.favicon || '')
       setHasAnalyzed(true)
-      // 标记需要自动触发 AI（非编辑模式）
-      if (!editBookmark) {
+      // 标记需要自动触发 AI（非编辑模式 且 enableAutoAi 开启）
+      if (!editBookmark && enableAutoAi) {
         pendingAutoAiRef.current = true
       }
     } catch (err) {
@@ -203,8 +205,8 @@ export function AddBookmarkModal({
         setTitle(domain.charAt(0).toUpperCase() + domain.slice(1).split('.')[0])
         setFavicon(`https://www.google.com/s2/favicons?domain=${urlObj.hostname}&sz=64`)
         setHasAnalyzed(true)
-        // 标记需要自动触发 AI（非编辑模式）
-        if (!editBookmark) {
+        // 标记需要自动触发 AI（非编辑模式 且 enableAutoAi 开启）
+        if (!editBookmark && enableAutoAi) {
           pendingAutoAiRef.current = true
         }
         // 震动提示

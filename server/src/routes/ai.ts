@@ -3,7 +3,7 @@ import crypto from 'crypto'
 import { z } from 'zod'
 import { validateBody } from '../schemas.js'
 import { aiCategorize, aiEnrichMetadata, aiChat, aiGenerateQuotes, aiTestConnection, isAiConfigured, getAiFullStatus } from '../services/ai.js'
-import { queryAll, queryOne, run } from '../utils/index.js'
+import { queryAll, queryOne, run, mergeTags } from '../utils/index.js'
 import { getDatabase, saveDatabase } from '../db.js'
 import { authMiddleware } from '../middleware/index.js'
 
@@ -28,6 +28,7 @@ const configSchema = z.object({
   apiKey: z.string().max(500).optional(),
   apiBase: z.string().max(500).optional(),
   model: z.string().max(100).optional(),
+  timeout: z.number().min(10).max(300).optional(),  // 超时时间（秒），10-300 秒
 })
 
 // ========== 公开端点 ==========
@@ -37,8 +38,10 @@ router.get('/status', (_req, res) => {
   res.json(getAiFullStatus())
 })
 
-// POST /api/ai/categorize - AI 智能分类
-router.post('/categorize', validateBody(categorizeSchema), async (req, res) => {
+// ========== 需认证端点 ==========
+
+// POST /api/ai/categorize - AI 智能分类（需认证，防止滥用 API 额度）
+router.post('/categorize', authMiddleware, validateBody(categorizeSchema), async (req, res) => {
   if (!isAiConfigured()) {
     return res.status(503).json({
       error: 'AI 服务未配置。请在后台设置中配置 AI 参数。',
@@ -74,8 +77,8 @@ router.post('/categorize', validateBody(categorizeSchema), async (req, res) => {
   }
 })
 
-// POST /api/ai/chat - AI 智能助理对话
-router.post('/chat', validateBody(chatSchema), async (req, res) => {
+// POST /api/ai/chat - AI 智能助理对话（需认证，防止暴露书签数据和滥用 API 额度）
+router.post('/chat', authMiddleware, validateBody(chatSchema), async (req, res) => {
   if (!isAiConfigured()) {
     return res.status(503).json({
       error: 'AI 服务未配置。请在后台设置中配置 AI 参数。',
@@ -91,8 +94,6 @@ router.post('/chat', validateBody(chatSchema), async (req, res) => {
     res.status(500).json({ error: error?.message || 'AI 对话服务暂时不可用' })
   }
 })
-
-// ========== 需认证端点 ==========
 
 // POST /api/ai/generate-quotes - AI 生成名言
 const generateQuotesSchema = z.object({
@@ -126,6 +127,7 @@ const batchTagsStatus = {
   completed: 0,
   failed: 0,
   current: '',
+  startedAt: 0,  // 任务开始时间（用于过期检测）
 }
 
 router.post('/batch-tags', authMiddleware, async (req, res) => {
@@ -157,6 +159,7 @@ router.post('/batch-tags', authMiddleware, async (req, res) => {
   batchTagsStatus.completed = 0
   batchTagsStatus.failed = 0
   batchTagsStatus.current = ''
+  batchTagsStatus.startedAt = Date.now()
 
   const categories = queryAll('SELECT name FROM categories ORDER BY orderIndex ASC')
   const existingCategories = categories.map((c: any) => c.name)
@@ -181,23 +184,12 @@ router.post('/batch-tags', authMiddleware, async (req, res) => {
           })
 
           if (result.tags && result.tags.length > 0) {
-            // 合并已有标签和新标签（tags 在数据库中以逗号分隔存储）
-            let existingTags: string[] = []
-            if (bm.tags) {
-              // 兼容旧的 JSON 格式和逗号分隔格式
-              try {
-                const parsed = JSON.parse(bm.tags)
-                existingTags = Array.isArray(parsed) ? parsed : []
-              } catch {
-                existingTags = bm.tags.split(',').map((t: string) => t.trim()).filter(Boolean)
-              }
-            }
-            const merged = [...new Set([...existingTags, ...result.tags])]
+            const mergedTags = mergeTags(bm.tags, result.tags)
 
             const db = getDatabase()
             db.run(
               'UPDATE bookmarks SET tags = ?, updatedAt = ? WHERE id = ?',
-              [merged.filter(Boolean).join(','), new Date().toISOString(), bm.id]
+              [mergedTags, new Date().toISOString(), bm.id]
             )
 
             // 同时更新描述（如果原来没有且 AI 有建议）
@@ -248,6 +240,7 @@ const batchClassifyStatus = {
   failed: 0,
   current: '',
   newCategories: [] as string[],
+  startedAt: 0,
 }
 
 router.post('/batch-classify', authMiddleware, async (req, res) => {
@@ -278,6 +271,7 @@ router.post('/batch-classify', authMiddleware, async (req, res) => {
   batchClassifyStatus.failed = 0
   batchClassifyStatus.current = ''
   batchClassifyStatus.newCategories = []
+  batchClassifyStatus.startedAt = Date.now()
 
   const categories = queryAll('SELECT id, name FROM categories ORDER BY orderIndex ASC')
   const existingCategories = categories.map((c: any) => c.name)
@@ -336,19 +330,10 @@ router.post('/batch-classify', authMiddleware, async (req, res) => {
 
           // 同时更新标签和描述（与 batch-tags 一致）
           if (result.tags && result.tags.length > 0) {
-            let existingTags: string[] = []
-            if (bm.tags) {
-              try {
-                const parsed = JSON.parse(bm.tags)
-                existingTags = Array.isArray(parsed) ? parsed : []
-              } catch {
-                existingTags = bm.tags.split(',').map((t: string) => t.trim()).filter(Boolean)
-              }
-            }
-            const merged = [...new Set([...existingTags, ...result.tags])]
+            const mergedTags = mergeTags(bm.tags, result.tags)
             db.run(
               'UPDATE bookmarks SET tags = ?, updatedAt = ? WHERE id = ?',
-              [merged.filter(Boolean).join(','), now, bm.id]
+              [mergedTags, now, bm.id]
             )
           }
 
@@ -394,6 +379,7 @@ const batchEnrichStatus = {
   completed: 0,
   failed: 0,
   current: '',
+  startedAt: 0,
 }
 
 router.post('/batch-enrich', authMiddleware, async (req, res) => {
@@ -423,6 +409,7 @@ router.post('/batch-enrich', authMiddleware, async (req, res) => {
   batchEnrichStatus.completed = 0
   batchEnrichStatus.failed = 0
   batchEnrichStatus.current = ''
+  batchEnrichStatus.startedAt = Date.now()
 
   ;(async () => {
     const CONCURRENCY = 2
@@ -464,18 +451,9 @@ router.post('/batch-enrich', authMiddleware, async (req, res) => {
 
           // 合并标签
           if (result.tags && result.tags.length > 0) {
-            let existingTags: string[] = []
-            if (bm.tags) {
-              try {
-                const parsed = JSON.parse(bm.tags)
-                existingTags = Array.isArray(parsed) ? parsed : []
-              } catch {
-                existingTags = bm.tags.split(',').map((t: string) => t.trim()).filter(Boolean)
-              }
-            }
-            const merged = [...new Set([...existingTags, ...result.tags])]
+            const mergedTags = mergeTags(bm.tags, result.tags)
             updates.push('tags = ?')
-            values.push(merged.filter(Boolean).join(','))
+            values.push(mergedTags)
           }
 
           if (updates.length > 0) {
@@ -518,6 +496,36 @@ router.get('/batch-enrich-status', authMiddleware, (_req, res) => {
   res.json(batchEnrichStatus)
 })
 
+// ========== 批量任务状态自愈 ==========
+// 如果某个批量任务的 running 状态超过 10 分钟未更新，自动标记为完成（防止状态泄漏）
+const BATCH_STALE_TIMEOUT = 10 * 60 * 1000 // 10 分钟
+
+function autoHealBatchStatus() {
+  const now = Date.now()
+  if (batchTagsStatus.running && now - batchTagsStatus.startedAt > BATCH_STALE_TIMEOUT) {
+    console.warn('⚠️ batch-tags 状态超时，自动重置')
+    batchTagsStatus.running = false
+  }
+  if (batchClassifyStatus.running && now - batchClassifyStatus.startedAt > BATCH_STALE_TIMEOUT) {
+    console.warn('⚠️ batch-classify 状态超时，自动重置')
+    batchClassifyStatus.running = false
+  }
+  if (batchEnrichStatus.running && now - batchEnrichStatus.startedAt > BATCH_STALE_TIMEOUT) {
+    console.warn('⚠️ batch-enrich 状态超时，自动重置')
+    batchEnrichStatus.running = false
+  }
+}
+
+// GET /api/ai/batch-status - 统一查询所有批量任务状态（含自愈检测）
+router.get('/batch-status', authMiddleware, (_req, res) => {
+  autoHealBatchStatus()
+  res.json({
+    tags: batchTagsStatus,
+    classify: batchClassifyStatus,
+    enrich: batchEnrichStatus,
+  })
+})
+
 // GET /api/ai/config - 获取 AI 配置（隐藏 API Key）
 router.get('/config', authMiddleware, (_req, res) => {
   try {
@@ -539,13 +547,14 @@ router.get('/config', authMiddleware, (_req, res) => {
 // PUT /api/ai/config - 保存 AI 配置
 router.put('/config', authMiddleware, validateBody(configSchema), (req, res) => {
   try {
-    const { provider, apiKey, apiBase, model } = req.body
+    const { provider, apiKey, apiBase, model, timeout } = req.body
     const now = new Date().toISOString()
 
     const fields = [
       { key: 'ai_provider', value: provider || '' },
       { key: 'ai_apiBase', value: apiBase || '' },
       { key: 'ai_model', value: model || '' },
+      { key: 'ai_timeout', value: String(timeout ? Math.max(10, Math.min(300, Number(timeout))) * 1000 : 30000) },
     ]
 
     // 只有在前端传了非掩码的 apiKey 时才更新

@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express'
 import { generateId } from '../db.js'
-import { queryAll, queryOne, run, runBatch, booleanize } from '../utils/index.js'
+import { queryAll, queryOne, run, runBatch, booleanize, parseBookmarkTags, serializeTags, parseTags } from '../utils/index.js'
 import { authMiddleware } from '../middleware/index.js'
 import {
   validateBody,
@@ -16,49 +16,13 @@ import {
 
 const router = Router()
 
-// 解析 tags 字符串为数组（兼容逗号分隔和 JSON 格式）
-function parseTags(bookmark: any) {
-  if (bookmark && typeof bookmark.tags === 'string' && bookmark.tags) {
-    const trimmed = bookmark.tags.trim()
-    // 兼容旧的 JSON 数组格式（如 '["tag1","tag2"]'）
-    if (trimmed.startsWith('[')) {
-      try {
-        const parsed = JSON.parse(trimmed)
-        bookmark.tags = Array.isArray(parsed) ? parsed.map((t: any) => String(t).trim()).filter(Boolean) : []
-        return bookmark
-      } catch {}
-    }
-    bookmark.tags = trimmed.split(',').map((t: string) => t.trim()).filter(Boolean)
-  } else if (bookmark) {
-    bookmark.tags = bookmark.tags || []
-  }
-  return bookmark
-}
-
-// 序列化 tags 数组为字符串
-function serializeTags(tags: string[] | string | null | undefined): string | null {
-  if (!tags) return null
-  if (Array.isArray(tags)) return tags.filter(Boolean).join(',') || null
-  return tags
-}
-
 // 获取所有已使用的标签列表（简版，用于下拉建议）
 router.get('/tags', (_req, res) => {
   try {
     const rows = queryAll("SELECT DISTINCT tags FROM bookmarks WHERE tags IS NOT NULL AND tags != ''")
     const tagSet = new Set<string>()
     rows.forEach((r: any) => {
-      if (r.tags) {
-        const trimmed = r.tags.trim()
-        let tagList: string[] = []
-        if (trimmed.startsWith('[')) {
-          try { tagList = JSON.parse(trimmed) } catch {}
-        }
-        if (tagList.length === 0) {
-          tagList = trimmed.split(',').map((t: string) => t.trim()).filter(Boolean)
-        }
-        tagList.forEach((t: string) => tagSet.add(t))
-      }
+      parseTags(r.tags).forEach((t: string) => tagSet.add(t))
     })
     res.json([...tagSet].sort())
   } catch (error) {
@@ -73,11 +37,9 @@ router.get('/tags/stats', (_req, res) => {
     const rows = queryAll("SELECT tags FROM bookmarks WHERE tags IS NOT NULL AND tags != ''")
     const tagCountMap = new Map<string, number>()
     rows.forEach((r: any) => {
-      if (r.tags) {
-        r.tags.split(',').map((t: string) => t.trim()).filter(Boolean).forEach((t: string) => {
-          tagCountMap.set(t, (tagCountMap.get(t) || 0) + 1)
-        })
-      }
+      parseTags(r.tags).forEach((t: string) => {
+        tagCountMap.set(t, (tagCountMap.get(t) || 0) + 1)
+      })
     })
     const result = [...tagCountMap.entries()]
       .map(([name, count]) => ({ name, count }))
@@ -161,7 +123,7 @@ router.get('/', (req, res) => {
       ORDER BY isPinned DESC, orderIndex ASC, createdAt DESC
     `)
     
-    res.json(bookmarks.map(booleanize).map(parseTags))
+    res.json(bookmarks.map(booleanize).map(parseBookmarkTags))
   } catch (error) {
     console.error('获取书签失败:', error)
     res.status(500).json({ error: '获取书签失败' })
@@ -179,9 +141,23 @@ router.get('/paginated', validateQuery(paginationQuerySchema), (req, res) => {
     const params: any[] = []
     
     if (search) {
-      conditions.push('(title LIKE ? OR url LIKE ? OR description LIKE ? OR tags LIKE ?)')
-      const searchPattern = `%${search}%`
-      params.push(searchPattern, searchPattern, searchPattern, searchPattern)
+      // 分词搜索：按空格拆分关键词，每个关键词都必须在 title/url/description/tags 中匹配
+      const keywords = search.trim().split(/\s+/).filter((k: string) => k.length > 0)
+      if (keywords.length === 1) {
+        conditions.push('(title LIKE ? OR url LIKE ? OR description LIKE ? OR tags LIKE ?)')
+        const searchPattern = `%${keywords[0]}%`
+        params.push(searchPattern, searchPattern, searchPattern, searchPattern)
+      } else {
+        // 多关键词 AND 搜索
+        const keywordConditions = keywords.map(() =>
+          '(title LIKE ? OR url LIKE ? OR description LIKE ? OR tags LIKE ?)'
+        )
+        conditions.push(`(${keywordConditions.join(' AND ')})`)
+        keywords.forEach((kw: string) => {
+          const pattern = `%${kw}%`
+          params.push(pattern, pattern, pattern, pattern)
+        })
+      }
     }
     
     if (category) {
@@ -236,7 +212,7 @@ router.get('/paginated', validateQuery(paginationQuerySchema), (req, res) => {
     `, [...params, pageSize, offset])
     
     res.json({
-      items: bookmarks.map(booleanize).map(parseTags),
+      items: bookmarks.map(booleanize).map(parseBookmarkTags),
       pagination: {
         page,
         pageSize,
@@ -269,7 +245,7 @@ router.post('/', authMiddleware, validateBody(createBookmarkSchema), (req, res) 
     
     const bookmark = queryOne('SELECT * FROM bookmarks WHERE id = ?', [id])
     
-    res.status(201).json(parseTags(booleanize(bookmark)))
+    res.status(201).json(parseBookmarkTags(booleanize(bookmark)))
   } catch (error) {
     console.error('创建书签失败:', error)
     res.status(500).json({ error: '创建书签失败' })
@@ -326,7 +302,7 @@ router.patch('/:id', authMiddleware, validateParams(idParamSchema), validateBody
     
     const bookmark = queryOne('SELECT * FROM bookmarks WHERE id = ?', [id])
     
-    res.json(parseTags(booleanize(bookmark)))
+    res.json(parseBookmarkTags(booleanize(bookmark)))
   } catch (error) {
     console.error('更新书签失败:', error)
     res.status(500).json({ error: '更新书签失败' })
@@ -337,6 +313,8 @@ router.patch('/:id', authMiddleware, validateParams(idParamSchema), validateBody
 router.delete('/:id', authMiddleware, validateParams(idParamSchema), (req, res) => {
   try {
     const { id } = req.params
+    // 级联删除关联的访问记录
+    run('DELETE FROM visits WHERE bookmarkId = ?', [id])
     run('DELETE FROM bookmarks WHERE id = ?', [id])
     res.status(204).send()
   } catch (error) {

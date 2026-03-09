@@ -602,7 +602,12 @@
         "save_error": "保存失败",
         "test": "测试连接",
         "test_error": "测试失败",
-        "clear": "清除"
+        "clear": "清除",
+        "auto_trigger": "自动 AI 分类",
+        "auto_trigger_desc": "添加书签时自动触发 AI 智能分类和标签生成",
+        "timeout": "超时时间",
+        "timeout_unit": "秒",
+        "timeout_hint": "本地模型（如 Ollama）建议设置 60-120 秒，云端 API 通常 30 秒即可"
       }
     },
     "login": {

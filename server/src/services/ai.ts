@@ -4,7 +4,7 @@
  * 配置优先级：数据库设置 > 环境变量
  */
 
-import { queryAll, queryOne } from '../utils/index.js'
+import { queryAll } from '../utils/index.js'
 
 // ========== 类型定义 ==========
 
@@ -13,6 +13,7 @@ interface AiConfig {
   apiKey: string
   apiBase: string        // 自定义 API 地址 (Ollama 等)
   model: string
+  timeout: number        // API 超时时间（毫秒），默认 30000
 }
 
 interface AiCategorizeRequest {
@@ -85,6 +86,7 @@ function getDbAiConfig(): Partial<AiConfig> {
       apiKey: config['ai_apiKey'] || '',
       apiBase: config['ai_apiBase'] || '',
       model: config['ai_model'] || '',
+      timeout: Number(config['ai_timeout']) || 0,
     }
   } catch {
     return {}
@@ -100,6 +102,7 @@ export function getAiConfig(): AiConfig {
     apiKey: db.apiKey || process.env.AI_API_KEY || '',
     apiBase: db.apiBase || process.env.AI_API_BASE || '',
     model: db.model || process.env.AI_MODEL || '',
+    timeout: Number(db.timeout) || Number(process.env.AI_TIMEOUT) || 30000,
   }
 }
 
@@ -125,12 +128,14 @@ export function getAiFullStatus() {
 // ========== Prompt 构建 ==========
 
 function buildCategorizePrompt(req: AiCategorizeRequest): string {
-  const lang = req.lang?.startsWith('zh') ? '中文' : 'English'
+  const isZh = req.lang?.startsWith('zh')
+  const lang = isZh ? '中文' : 'English'
   const categoriesList = req.existingCategories.length > 0
     ? req.existingCategories.join(', ')
-    : '(暂无已有分类)'
+    : (isZh ? '(暂无已有分类)' : '(no existing categories)')
 
-  return `你是一个智能书签分类助手。根据以下网站信息，帮用户完成分类和整理。
+  if (isZh) {
+    return `你是一个智能书签分类助手。根据以下网站信息，帮用户完成分类和整理。
 
 网站信息：
 - URL: ${req.url}
@@ -147,12 +152,33 @@ function buildCategorizePrompt(req: AiCategorizeRequest): string {
 5. "confidence": 0-1之间的数字，表示分类建议的置信度。
 
 只返回纯 JSON，不要包含 markdown 代码块或其他文本。`
+  }
+
+  return `You are a smart bookmark categorization assistant. Based on the following website info, help the user categorize and organize it.
+
+Website info:
+- URL: ${req.url}
+- Title: ${req.title}
+- Description: ${req.description || '(none)'}
+
+User's existing categories: [${categoriesList}]
+
+Return a JSON object with the following fields:
+1. "category": Choose the best matching one from existing categories. If none fits, suggest a short new category name (2-6 words).
+2. "isNewCategory": Boolean, true if suggesting a new category, false if choosing from existing ones.
+3. "tags": Recommend 3-5 relevant tags, each 1-3 words, describing the website content.
+4. "summary": A concise one-sentence description (max 80 chars) of the website's core value, in ${lang}.
+5. "confidence": A number between 0-1 indicating the confidence of the categorization.
+
+Return pure JSON only, no markdown code blocks or other text.`
 }
 
 function buildEnrichPrompt(req: AiEnrichRequest): string {
-  const lang = req.lang?.startsWith('zh') ? '中文' : 'English'
+  const isZh = req.lang?.startsWith('zh')
+  const lang = isZh ? '中文' : 'English'
 
-  return `你是一个智能书签元数据优化助手。根据以下网站信息，帮用户优化书签的标题、描述，推荐相关标签，并推荐一个合适的 Iconify 图标。
+  if (isZh) {
+    return `你是一个智能书签元数据优化助手。根据以下网站信息，帮用户优化书签的标题、描述，推荐相关标签，并推荐一个合适的 Iconify 图标。
 
 网站信息：
 - URL: ${req.url}
@@ -166,44 +192,87 @@ function buildEnrichPrompt(req: AiEnrichRequest): string {
 4. "iconName": 推荐一个最能代表这个网站类型/功能的 Iconify 图标名称。格式为 "prefix:name"，例如 "mdi:github"、"simple-icons:react"、"lucide:code"、"ri:twitter-x-fill"。优先使用 simple-icons（品牌图标）、mdi（Material Design Icons）、lucide 这几个图标集。如果是知名品牌/产品，优先使用其品牌图标（simple-icons集）。
 
 只返回纯 JSON，不要包含 markdown 代码块或其他文本。`
+  }
+
+  return `You are a smart bookmark metadata optimization assistant. Based on the following website info, help optimize the bookmark's title, description, suggest relevant tags, and recommend a suitable Iconify icon.
+
+Website info:
+- URL: ${req.url}
+- Current title: ${req.title}
+- Current description: ${req.description || '(none)'}
+
+Return a JSON object with the following fields:
+1. "title": Optimized website title in ${lang}. Keep it concise, retain brand names, remove SEO suffixes (e.g. " - Official", " | Home"), 2-30 characters. If original title is good, keep it concise.
+2. "description": A concise one-sentence description (max 100 chars) of the website's core functionality and value, in ${lang}.
+3. "tags": Recommend 3-5 relevant tags, each 1-3 words, describing the website content, in ${lang}.
+4. "iconName": Recommend an Iconify icon name that best represents this website type/function. Format: "prefix:name", e.g. "mdi:github", "simple-icons:react", "lucide:code", "ri:twitter-x-fill". Prefer simple-icons (brand icons), mdi (Material Design Icons), lucide icon sets. For well-known brands/products, prioritize their brand icon (simple-icons set).
+
+Return pure JSON only, no markdown code blocks or other text.`
 }
 
 function buildChatPrompt(req: AiChatRequest, bookmarks: any[]): string {
-  const lang = req.lang?.startsWith('zh') ? '中文' : 'English'
+  const isZh = req.lang?.startsWith('zh')
+  const lang = isZh ? '中文' : 'English'
 
-  // 构建书签上下文（最多100条，避免 token 过长）
-  const bookmarkContext = bookmarks.slice(0, 100).map((b: any) =>
-    `- [${b.title}](${b.url})${b.description ? ` — ${b.description}` : ''}${b.categoryName ? ` [分类: ${b.categoryName}]` : ''}`
+  // 构建书签上下文（已经是预筛选过的相关书签，最多30条）
+  const categoryLabel = isZh ? '分类' : 'Category'
+  const bookmarkContext = bookmarks.map((b: any) =>
+    `- [${b.title}](${b.url})${b.description ? ` — ${b.description}` : ''}${b.categoryName ? ` [${categoryLabel}: ${b.categoryName}]` : ''}`
   ).join('\n')
 
-  return `你是一个智能书签助手，名字叫 NOWEN AI。你的任务是帮助用户管理和发现他们收藏的书签。
+  const noBookmarks = isZh ? '(未找到相关书签)' : '(No relevant bookmarks found)'
 
-用户的书签库：
-${bookmarkContext}
+  if (isZh) {
+    return `你是一个智能书签助手，名字叫 NOWEN AI。你的任务是帮助用户管理和发现他们收藏的书签。
+
+以下是与用户问题最相关的书签（已根据关键词预筛选）：
+${bookmarkContext || noBookmarks}
 
 规则：
 1. 用${lang}回答。
-2. 如果用户想搜索/找某个书签，基于书签库中的标题、URL、描述进行语义匹配，返回最相关的结果。
+2. 如果用户想搜索/找某个书签，基于上述书签中的标题、URL、描述进行语义匹配，返回最相关的结果。
 3. 在回复中，将相关的书签以下面的格式列出：
    [[bookmark:书签ID]]
    这样前端可以渲染为可点击的书签卡片。
 4. 如果用户的问题与书签无关（闲聊、知识问答等），也可以友好地回答，但适当引导回书签管理的话题。
 5. 保持回复简洁、友好、有帮助。每次回复不超过300字。
-6. 不要编造不存在的书签。
+6. 不要编造不存在的书签。如果上述列表中没有匹配的书签，诚实告知用户。
 
 用户的消息: ${req.message}`
+  }
+
+  return `You are a smart bookmark assistant named NOWEN AI. Your task is to help users manage and discover their bookmarked sites.
+
+Here are bookmarks most relevant to the user's question (pre-filtered by keywords):
+${bookmarkContext || noBookmarks}
+
+Rules:
+1. Answer in ${lang}.
+2. When users search for bookmarks, match semantically against the titles, URLs, and descriptions above, returning the most relevant results.
+3. Reference bookmarks in your reply using this format:
+   [[bookmark:bookmarkID]]
+   The frontend will render them as clickable bookmark cards.
+4. If the user's question is unrelated to bookmarks (small talk, general knowledge, etc.), answer friendly but gently guide back to bookmark management.
+5. Keep replies concise, friendly, and helpful. Max 300 characters per reply.
+6. Never fabricate bookmarks. If no match exists in the list above, honestly inform the user.
+
+User's message: ${req.message}`
 }
 
 function buildGenerateQuotesPrompt(req: AiGenerateQuotesRequest): string {
-  const lang = req.lang?.startsWith('zh') ? '中文' : 'English'
+  const isZh = req.lang?.startsWith('zh')
+  const lang = isZh ? '中文' : 'English'
   const count = req.count || 5
-  const themeHint = req.theme ? `\n主题偏好: ${req.theme}` : ''
   
   const existingHint = req.existingQuotes && req.existingQuotes.length > 0
-    ? `\n\n用户已有的名言（请避免重复或相似内容）:\n${req.existingQuotes.slice(0, 20).map(q => `- ${q}`).join('\n')}`
+    ? (isZh
+      ? `\n\n用户已有的名言（请避免重复或相似内容）:\n${req.existingQuotes.slice(0, 20).map(q => `- ${q}`).join('\n')}`
+      : `\n\nUser's existing quotes (avoid duplicates or similar content):\n${req.existingQuotes.slice(0, 20).map(q => `- ${q}`).join('\n')}`)
     : ''
 
-  return `你是一个名言金句生成专家。请生成 ${count} 条高质量的名言/格言/金句。
+  if (isZh) {
+    const themeHint = req.theme ? `\n主题偏好: ${req.theme}` : ''
+    return `你是一个名言金句生成专家。请生成 ${count} 条高质量的名言/格言/金句。
 
 要求：
 1. 语言使用${lang}。
@@ -223,25 +292,49 @@ function buildGenerateQuotesPrompt(req: AiGenerateQuotesRequest): string {
 }
 
 只返回纯 JSON，不要包含 markdown 代码块或其他文本。`
+  }
+
+  const themeHint = req.theme ? `\nTheme preference: ${req.theme}` : ''
+  return `You are an expert quote generator. Please generate ${count} high-quality quotes/aphorisms.
+
+Requirements:
+1. Language: ${lang}.
+2. Format: "Quote content — Author"
+3. With source: "Quote content — Author, Book Title"
+4. Diverse sources: classic literature, philosophy, science, historical figures, modern celebrities, etc.
+5. Positive, inspiring, and wise content.
+6. Each quote max 80 characters (excluding author info).
+7. Ensure accuracy — do not fabricate quotes. Verify author-content accuracy.${themeHint}${existingHint}
+
+Return a JSON object in this format:
+{
+  "quotes": [
+    "Quote content — Author",
+    "Quote content — Author, Book Title"
+  ]
+}
+
+Return pure JSON only, no markdown code blocks or other text.`
 }
 
 // ========== API 调用 ==========
 
-async function callOpenAiCompatible(prompt: string, systemPrompt?: string): Promise<string> {
-  const { apiKey, apiBase, model } = getAiConfig()
-
-  const baseUrl = apiBase || 'https://api.openai.com/v1'
-  const modelName = model || 'gpt-4o-mini'
+// 统一的 OpenAI 兼容协议调用（支持可选的自定义配置）
+async function callOpenAiCompatible(prompt: string, systemPrompt?: string, customConfig?: AiConfig): Promise<string> {
+  const config = customConfig || getAiConfig()
+  const baseUrl = config.apiBase || 'https://api.openai.com/v1'
+  const modelName = config.model || 'gpt-4o-mini'
+  const timeoutMs = config.timeout || 30000
 
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
   }
-  if (apiKey) {
-    headers['Authorization'] = `Bearer ${apiKey}`
+  if (config.apiKey) {
+    headers['Authorization'] = `Bearer ${config.apiKey}`
   }
 
   const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), 30000)
+  const timer = setTimeout(() => controller.abort(), timeoutMs)
 
   try {
     const messages = [
@@ -275,31 +368,40 @@ async function callOpenAiCompatible(prompt: string, systemPrompt?: string): Prom
   }
 }
 
-async function callGemini(prompt: string): Promise<string> {
-  const { apiKey, apiBase, model } = getAiConfig()
+async function callGemini(prompt: string, systemPrompt?: string): Promise<string> {
+  const config = getAiConfig()
+  const { apiKey, apiBase, model } = config
   const modelName = model || 'gemini-2.0-flash'
+  const timeoutMs = config.timeout || 30000
 
   // 支持自定义 apiBase（代理/中转），默认使用 Google 官方地址
   const base = apiBase || 'https://generativelanguage.googleapis.com'
   const url = `${base}/v1beta/models/${modelName}:generateContent`
 
   const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), 30000)
+  const timer = setTimeout(() => controller.abort(), timeoutMs)
 
   try {
+    const requestBody: any = {
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: {
+        temperature: 0.3,
+        maxOutputTokens: 1000,
+      },
+    }
+
+    // 添加 systemInstruction（Gemini API 支持的系统级指令）
+    if (systemPrompt) {
+      requestBody.systemInstruction = { parts: [{ text: systemPrompt }] }
+    }
+
     const resp = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-goog-api-key': apiKey,
       },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.3,
-          maxOutputTokens: 1000,
-        },
-      }),
+      body: JSON.stringify(requestBody),
       signal: controller.signal,
     })
     clearTimeout(timer)
@@ -331,70 +433,23 @@ async function callAi(prompt: string, systemPrompt?: string): Promise<string> {
 
   switch (provider) {
     case 'gemini':
-      return callGemini(prompt)
+      return callGemini(prompt, systemPrompt)
     case 'deepseek':
     case 'qwen':
     case 'doubao': {
-      // 国内 Provider：用 OpenAI 兼容协议，覆盖默认 baseUrl 和 model
+      // 国内 Provider：用 OpenAI 兼容协议，创建新配置对象（不修改原引用）
       const domestic = DOMESTIC_PROVIDERS[provider]
-      const originalBase = config.apiBase
-      const originalModel = config.model
-      // 临时覆盖配置（优先使用用户自定义值）
-      config.apiBase = originalBase || domestic.baseUrl
-      config.model = originalModel || domestic.defaultModel
-      return callOpenAiCompatibleWithConfig(prompt, config, systemPrompt)
+      const domesticConfig: AiConfig = {
+        ...config,
+        apiBase: config.apiBase || domestic.baseUrl,
+        model: config.model || domestic.defaultModel,
+      }
+      return callOpenAiCompatible(prompt, systemPrompt, domesticConfig)
     }
     case 'openai':
     case 'custom':
     default:
       return callOpenAiCompatible(prompt, systemPrompt)
-  }
-}
-
-// 支持传入自定义配置的 OpenAI 兼容调用
-async function callOpenAiCompatibleWithConfig(prompt: string, config: AiConfig, systemPrompt?: string): Promise<string> {
-  const baseUrl = config.apiBase || 'https://api.openai.com/v1'
-  const modelName = config.model || 'gpt-4o-mini'
-
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  }
-  if (config.apiKey) {
-    headers['Authorization'] = `Bearer ${config.apiKey}`
-  }
-
-  const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), 30000)
-
-  try {
-    const messages = [
-      { role: 'system', content: systemPrompt || 'You are a helpful assistant. Always respond in valid JSON format only.' },
-      { role: 'user', content: prompt },
-    ]
-
-    const resp = await fetch(`${baseUrl}/chat/completions`, {
-      method: 'POST',
-      headers,
-      body: JSON.stringify({
-        model: modelName,
-        messages,
-        temperature: 0.3,
-        max_tokens: 1000,
-      }),
-      signal: controller.signal,
-    })
-    clearTimeout(timer)
-
-    if (!resp.ok) {
-      const errText = await resp.text()
-      throw new Error(`API error ${resp.status}: ${errText}`)
-    }
-
-    const data = await resp.json()
-    return data.choices?.[0]?.message?.content || ''
-  } catch (err: any) {
-    clearTimeout(timer)
-    throw err
   }
 }
 
@@ -478,12 +533,68 @@ export async function aiEnrichMetadata(req: AiEnrichRequest): Promise<AiEnrichRe
 
 // AI 对话（智能助理）
 export async function aiChat(req: AiChatRequest): Promise<AiChatResponse> {
-  // 获取用户所有书签
-  const bookmarks = queryAll(`
-    SELECT id, title, url, description, category as categoryName
-    FROM bookmarks
-    ORDER BY createdAt DESC
-  `)
+  // 两阶段检索：先用关键词从数据库筛选相关书签，减少 Token 消耗
+  const message = req.message
+
+  // 1. 提取用户消息中的关键词（去除常用停用词）
+  const stopWords = new Set([
+    '的', '了', '是', '在', '我', '有', '和', '就', '不', '人', '都', '一', '一个',
+    '上', '也', '很', '到', '说', '要', '去', '你', '会', '着', '没有', '看', '好',
+    '自己', '这', '他', '她', '它', '吗', '什么', '怎么', '哪个', '哪些', '能',
+    '可以', '请', '帮', '帮我', '找', '搜索', '查找', '推荐', '给我',
+    'the', 'a', 'an', 'is', 'are', 'was', 'were', 'be', 'been', 'being',
+    'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could',
+    'should', 'may', 'might', 'can', 'shall', 'to', 'of', 'in', 'for',
+    'on', 'with', 'at', 'by', 'from', 'as', 'into', 'about', 'like',
+    'and', 'or', 'but', 'not', 'no', 'if', 'so', 'it', 'i', 'me', 'my',
+    'find', 'search', 'show', 'get', 'what', 'which', 'how', 'where',
+  ])
+
+  const keywords = message
+    .replace(/[^\w\u4e00-\u9fff]/g, ' ')  // 保留中英文字符
+    .split(/\s+/)
+    .filter(w => w.length >= 2 && !stopWords.has(w.toLowerCase()))
+
+  let bookmarks: any[] = []
+
+  if (keywords.length > 0) {
+    // 2. 用关键词搜索相关书签（LIKE 匹配标题、URL、描述、分类名）
+    const likeConditions = keywords.map(() =>
+      '(b.title LIKE ? OR b.url LIKE ? OR b.description LIKE ? OR c.name LIKE ?)'
+    )
+    const likeParams = keywords.flatMap(kw => {
+      const pattern = `%${kw}%`
+      return [pattern, pattern, pattern, pattern]
+    })
+
+    bookmarks = queryAll(`
+      SELECT b.id, b.title, b.url, b.description, c.name as categoryName
+      FROM bookmarks b
+      LEFT JOIN categories c ON b.category = c.id
+      WHERE ${likeConditions.join(' OR ')}
+      ORDER BY b.createdAt DESC
+      LIMIT 30
+    `, likeParams)
+  }
+
+  // 3. 如果关键词匹配结果太少，补充最新的书签作为上下文
+  if (bookmarks.length < 10) {
+    const existingIds = new Set(bookmarks.map((b: any) => b.id))
+    const recentBookmarks = queryAll(`
+      SELECT b.id, b.title, b.url, b.description, c.name as categoryName
+      FROM bookmarks b
+      LEFT JOIN categories c ON b.category = c.id
+      ORDER BY b.createdAt DESC
+      LIMIT 20
+    `)
+    for (const bm of recentBookmarks) {
+      if (!existingIds.has((bm as any).id)) {
+        bookmarks.push(bm)
+        existingIds.add((bm as any).id)
+      }
+      if (bookmarks.length >= 30) break
+    }
+  }
 
   const prompt = buildChatPrompt(req, bookmarks)
   const rawResponse = await callAi(prompt, 'You are NOWEN AI, a smart bookmark assistant. Be concise and helpful.')

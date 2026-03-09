@@ -18,6 +18,8 @@ import { aiApi } from '../../lib/api'
 
 interface AiSettingsCardProps {
   onSave?: () => void
+  enableAutoAi?: boolean
+  onAutoAiChange?: (enabled: boolean) => void
 }
 
 interface AiProvider {
@@ -122,7 +124,7 @@ const AI_PROVIDERS: AiProvider[] = [
   },
 ]
 
-export function AiSettingsCard({ onSave }: AiSettingsCardProps) {
+export function AiSettingsCard({ onSave, enableAutoAi = true, onAutoAiChange }: AiSettingsCardProps) {
   const { t } = useTranslation()
 
   // 表单状态
@@ -130,6 +132,7 @@ export function AiSettingsCard({ onSave }: AiSettingsCardProps) {
   const [apiKey, setApiKey] = useState('')
   const [apiBase, setApiBase] = useState('')
   const [model, setModel] = useState('')
+  const [timeout, setTimeout_] = useState(30) // 超时时间（秒）
   const [showApiKey, setShowApiKey] = useState(false)
   const [showProviderDropdown, setShowProviderDropdown] = useState(false)
 
@@ -154,6 +157,7 @@ export function AiSettingsCard({ onSave }: AiSettingsCardProps) {
       setApiKey(config.apiKey || '')
       setApiBase(config.apiBase || '')
       setModel(config.model || '')
+      setTimeout_(config.timeout || 30)
     } catch {
       // 如果没有配置，保持空
     } finally {
@@ -174,6 +178,7 @@ export function AiSettingsCard({ onSave }: AiSettingsCardProps) {
         apiKey: apiKey.startsWith('••••••') ? apiKey : apiKey,
         apiBase,
         model,
+        timeout,
       })
       setSaveSuccess(true)
       setTimeout(() => setSaveSuccess(false), 3000)
@@ -204,6 +209,7 @@ export function AiSettingsCard({ onSave }: AiSettingsCardProps) {
     setApiKey('')
     setApiBase('')
     setModel('')
+    setTimeout_(30)
     setTestResult(null)
   }
 
@@ -451,6 +457,65 @@ export function AiSettingsCard({ onSave }: AiSettingsCardProps) {
                       color: 'var(--color-text-primary)',
                     }}
                   />
+                </div>
+
+                {/* Timeout */}
+                <div>
+                  <label className="block text-sm font-medium mb-2" style={{ color: 'var(--color-text-secondary)' }}>
+                    {t('admin.settings.ai.timeout')}
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="number"
+                      min={10}
+                      max={300}
+                      value={timeout}
+                      onChange={(e) => setTimeout_(Math.max(10, Math.min(300, Number(e.target.value) || 30)))}
+                      className="w-24 px-4 py-3 rounded-xl text-sm transition-all outline-none"
+                      style={{
+                        background: 'var(--color-bg-secondary)',
+                        border: '1px solid var(--color-glass-border)',
+                        color: 'var(--color-text-primary)',
+                      }}
+                    />
+                    <span className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+                      {t('admin.settings.ai.timeout_unit')}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                    {t('admin.settings.ai.timeout_hint')}
+                  </p>
+                </div>
+
+                {/* AI 自动触发开关 */}
+                <div
+                  className="flex items-center justify-between px-4 py-3 rounded-xl"
+                  style={{
+                    background: 'var(--color-bg-secondary)',
+                    border: '1px solid var(--color-glass-border)',
+                  }}
+                >
+                  <div>
+                    <div className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>
+                      {t('admin.settings.ai.auto_trigger')}
+                    </div>
+                    <div className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+                      {t('admin.settings.ai.auto_trigger_desc')}
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => onAutoAiChange?.(!enableAutoAi)}
+                    className={cn(
+                      'relative w-11 h-6 rounded-full transition-colors flex-shrink-0',
+                      enableAutoAi ? 'bg-emerald-500' : 'bg-gray-400'
+                    )}
+                  >
+                    <div
+                      className="absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-all"
+                      style={{ left: enableAutoAi ? 'calc(100% - 20px)' : '4px' }}
+                    />
+                  </button>
                 </div>
 
                 {/* 测试结果 */}

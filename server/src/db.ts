@@ -512,9 +512,9 @@ function registerShutdownHooks() {
   })
 }
 
-// 生成唯一 ID
+// 生成唯一 ID（使用 crypto.randomUUID 确保无碰撞风险）
 export function generateId(): string {
-  return Math.random().toString(36).substring(2, 9) + Date.now().toString(36)
+  return crypto.randomUUID().replace(/-/g, '').substring(0, 16)
 }
 
 // 密码哈希 (使用 bcrypt)

@@ -125,6 +125,7 @@ function App() {
     showWeather,
     showLunar,
     weatherCity,
+    enableAutoAi,
     menuVisibility,
     widgetVisibility,
     categoryCollapseThreshold,
@@ -392,6 +393,7 @@ function App() {
           editBookmark={editingBookmark}
           onOpenIconManager={() => setIsIconManagerOpen(true)}
           onCategoryAdded={(newCategory) => appendCategory(newCategory)}
+          enableAutoAi={enableAutoAi}
         />
         <IconManager
           isOpen={isIconManagerOpen}
@@ -684,6 +686,7 @@ function App() {
         editBookmark={editingBookmark}
         onOpenIconManager={() => setIsIconManagerOpen(true)}
         onCategoryAdded={(newCategory) => appendCategory(newCategory)}
+        enableAutoAi={enableAutoAi}
       />
 
       <IconManager

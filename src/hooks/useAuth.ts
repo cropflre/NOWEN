@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { checkAuthStatus, clearAuthStatus, isDemoMode } from '../lib/api';
+import { checkAuthStatus, clearAuthStatus, isDemoMode, adminVerify } from '../lib/api';
 import { useHashRouter } from './useHashRouter';
 import type { PageType, AdminTabType } from './useHashRouter';
 
@@ -8,11 +8,15 @@ export type { PageType, AdminTabType } from './useHashRouter';
 export function useAuth() {
   const { page: currentPage, adminTab, navigateTo, setAdminTab } = useHashRouter();
   const [adminUsername, setAdminUsername] = useState<string>('');
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  // 从 localStorage 同步初始化登录状态，避免闪烁和竞态
+  const [isLoggedIn, setIsLoggedIn] = useState(() => {
+    const { isValid } = checkAuthStatus();
+    return isValid;
+  });
   // force-password-change 不暴露到 URL，用内部状态
   const [forcePasswordChange, setForcePasswordChange] = useState(false);
 
-  // 初始化时检查登录状态
+  // 初始化时检查登录状态（先 localStorage 快速恢复，再后端异步验证）
   useEffect(() => {
     const { isValid, username, requirePasswordChange } = checkAuthStatus();
     if (isValid && username) {
@@ -21,12 +25,34 @@ export function useAuth() {
       if (requirePasswordChange && !isDemoMode()) {
         setForcePasswordChange(true);
       }
+
+      // 异步向后端验证 Token 是否仍然有效
+      adminVerify()
+        .then((result) => {
+          if (!result.valid) {
+            // Token 已失效，清除前端登录状态
+            clearAuthStatus();
+            setIsLoggedIn(false);
+            setAdminUsername('');
+            setForcePasswordChange(false);
+            if (currentPage === 'admin') {
+              navigateTo('admin-login');
+            }
+          } else if (result.user?.username) {
+            // 同步后端最新用户名
+            setAdminUsername(result.user.username);
+          }
+        })
+        .catch(() => {
+          // 网络错误时不清除登录状态（离线容错），保持本地状态
+        });
     }
   }, []);
 
   // 如果用户通过 URL 直接访问 /#/admin 但未登录，重定向到登录页
   useEffect(() => {
     if (currentPage === 'admin' && !isLoggedIn) {
+      // 再次从 localStorage 检查（防止与初始化 useEffect 的竞态）
       const { isValid, username } = checkAuthStatus();
       if (isValid && username) {
         setIsLoggedIn(true);

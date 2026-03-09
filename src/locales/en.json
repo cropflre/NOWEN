@@ -602,7 +602,12 @@
         "save_error": "Save failed",
         "test": "Test Connection",
         "test_error": "Test failed",
-        "clear": "Clear"
+        "clear": "Clear",
+        "auto_trigger": "Auto AI Categorize",
+        "auto_trigger_desc": "Automatically trigger AI categorization and tag generation when adding bookmarks",
+        "timeout": "Timeout",
+        "timeout_unit": "seconds",
+        "timeout_hint": "For local models (e.g. Ollama), set 60-120s. Cloud APIs usually work fine with 30s"
       }
     },
     "login": {

@@ -359,7 +359,14 @@ export function SettingsPanel({
 
           {/* AI 设置 */}
           {activeSettingsTab === 'ai' && (
-            <AiSettingsCard />
+            <AiSettingsCard
+              enableAutoAi={siteSettings.enableAutoAi ?? true}
+              onAutoAiChange={(enabled) => {
+                onSiteSettingsChange({ ...siteSettings, enableAutoAi: enabled })
+                // 自动保存
+                onSaveSiteSettings()
+              }}
+            />
           )}
         </motion.div>
       </AnimatePresence>

@@ -149,8 +149,9 @@ async function request<T>(
     }
     
     if (!res.ok) {
-      // 401 未授权 - 清除登录状态
-      if (res.status === 401) {
+      // 401 未授权 - 仅在需要认证的请求中清除登录状态
+      // 公开接口的 401 不应影响已有的登录态
+      if (res.status === 401 && requireAuth) {
         localStorage.removeItem('admin_authenticated')
         localStorage.removeItem('admin_login_time')
         localStorage.removeItem('admin_token')
@@ -384,6 +385,7 @@ export interface AiConfigResponse {
   apiKey: string
   apiBase: string
   model: string
+  timeout: number  // 超时时间（秒）
 }
 
 export interface AiChatResponse {
@@ -417,6 +419,7 @@ export async function aiCategorize(params: {
   return request<AiCategorizeResponse>('/api/ai/categorize', {
     method: 'POST',
     body: JSON.stringify(params),
+    requireAuth: true,
   })
 }
 
@@ -429,6 +432,7 @@ export async function saveAiConfig(config: {
   apiKey?: string
   apiBase?: string
   model?: string
+  timeout?: number
 }): Promise<{ success: boolean }> {
   return request('/api/ai/config', {
     method: 'PUT',
@@ -451,6 +455,7 @@ export async function aiChat(params: {
   return request<AiChatResponse>('/api/ai/chat', {
     method: 'POST',
     body: JSON.stringify(params),
+    requireAuth: true,
   })
 }
 
@@ -517,6 +522,17 @@ export async function getAiBatchEnrichStatus(): Promise<AiBatchEnrichStatus> {
   return request<AiBatchEnrichStatus>('/api/ai/batch-enrich-status', { requireAuth: true })
 }
 
+// 统一查询所有批量任务状态（用于页面加载时恢复进度）
+export interface AllBatchStatus {
+  tags: AiBatchTagsStatus
+  classify: AiBatchClassifyStatus
+  enrich: AiBatchEnrichStatus
+}
+
+export async function getAllBatchStatus(): Promise<AllBatchStatus> {
+  return request<AllBatchStatus>('/api/ai/batch-status', { requireAuth: true })
+}
+
 // AI 生成名言
 export interface AiGenerateQuotesResponse {
   quotes: string[]
@@ -551,6 +567,7 @@ export const aiApi = {
   batchEnrich: aiBatchEnrich,
   batchEnrichStatus: getAiBatchEnrichStatus,
   generateQuotes: aiGenerateQuotes,
+  allBatchStatus: getAllBatchStatus,
 } as const
 
 // ========== 演示模式判断 ==========
@@ -714,6 +731,7 @@ export interface SiteSettings {
   enableLiteMode?: boolean // 精简模式开关 - 禅 (Zen)
   enableWeather?: boolean  // 天气显示开关
   enableLunar?: boolean    // 农历显示开关
+  enableAutoAi?: boolean   // AI 自动触发开关（添加书签时自动调用 AI 分类/标签）
   weatherCity?: string     // 手动设置的天气城市名
   footerText?: string      // 底部备案信息
   categoryCollapseThreshold?: number  // 分类书签折叠阈值（0=不折叠）
@@ -788,6 +806,8 @@ function parseSettings(raw: Record<string, string>): SiteSettings {
     // 默认开启天气和农历
     enableWeather: raw.enableWeather === undefined ? true : raw.enableWeather === 'true' || raw.enableWeather === '1',
     enableLunar: raw.enableLunar === undefined ? true : raw.enableLunar === 'true' || raw.enableLunar === '1',
+    // AI 自动触发：默认开启（保持向后兼容，原有行为不变）
+    enableAutoAi: raw.enableAutoAi === undefined ? true : raw.enableAutoAi === 'true' || raw.enableAutoAi === '1',
     weatherCity: raw.weatherCity || '',
     footerText: raw.footerText || '',
     // 分类折叠：默认 0（不折叠）
@@ -813,6 +833,7 @@ export async function updateSettings(settings: SiteSettings): Promise<SiteSettin
     enableLiteMode: settings.enableLiteMode ? 'true' : 'false',
     enableWeather: settings.enableWeather ? 'true' : 'false',
     enableLunar: settings.enableLunar ? 'true' : 'false',
+    enableAutoAi: settings.enableAutoAi === false ? 'false' : 'true',
     weatherCity: settings.weatherCity ?? '',
     footerText: settings.footerText ?? '',
     categoryCollapseThreshold: String(settings.categoryCollapseThreshold ?? 0),

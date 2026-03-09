@@ -660,7 +660,56 @@ function AdminContent() {
 
   useEffect(() => {
     aiApi.status().then(s => setAiConfigured(s.configured)).catch(() => setAiConfigured(false))
+
+    // 恢复批量任务进度：如果服务器有正在运行的批量任务，恢复前端轮询
+    aiApi.allBatchStatus().then(status => {
+      if (status.tags.running) {
+        setIsAiTagging(true)
+        resumeBatchPoll('tags')
+      }
+      if (status.classify.running) {
+        setIsAiClassifying(true)
+        resumeBatchPoll('classify')
+      }
+      if (status.enrich.running) {
+        setIsAiEnriching(true)
+        resumeBatchPoll('enrich')
+      }
+    }).catch(() => {})
   }, [])
+
+  // 恢复批量任务轮询
+  const resumeBatchPoll = useCallback((type: 'tags' | 'classify' | 'enrich') => {
+    const pollFn = type === 'tags' ? aiApi.batchTagsStatus
+      : type === 'classify' ? aiApi.batchClassifyStatus
+      : aiApi.batchEnrichStatus
+    const setRunning = type === 'tags' ? setIsAiTagging
+      : type === 'classify' ? setIsAiClassifying
+      : setIsAiEnriching
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const status = await pollFn()
+        if (!status.running) {
+          clearInterval(pollInterval)
+          setRunning(false)
+          await refreshData()
+          const success = status.completed - status.failed
+          showToast('success', t(`admin.bookmark.batch_ai_${type}_done`, {
+            success,
+            total: status.total,
+            ...('newCategories' in status && (status as any).newCategories?.length > 0
+              ? { newCount: (status as any).newCategories.length, newNames: (status as any).newCategories.join('、') }
+              : {}),
+          }))
+        }
+      } catch {
+        clearInterval(pollInterval)
+        setRunning(false)
+      }
+    }, 2000)
+    setTimeout(() => { clearInterval(pollInterval); setRunning(false) }, 300000)
+  }, [refreshData, showToast, t])
 
   // 批量 AI 智能标签
   const batchAiTags = async () => {

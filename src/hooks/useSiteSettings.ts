@@ -57,6 +57,7 @@ export function useSiteSettings() {
   const showWeather = siteSettings.enableWeather ?? true;
   const showLunar = siteSettings.enableLunar ?? true;
   const weatherCity = siteSettings.weatherCity || '';
+  const enableAutoAi = siteSettings.enableAutoAi ?? true;
 
   // 分类折叠配置
   const categoryCollapseThreshold = siteSettings.categoryCollapseThreshold ?? 0;
@@ -118,6 +119,7 @@ export function useSiteSettings() {
     showWeather,
     showLunar,
     weatherCity,
+    enableAutoAi,
     menuVisibility,
     widgetVisibility,
     categoryCollapseThreshold,
