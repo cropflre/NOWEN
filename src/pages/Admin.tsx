@@ -572,6 +572,19 @@ function AdminContent() {
     enabled: useVirtual,
   })
 
+  // 当标签页切换回书签管理时，强制虚拟滚动器重新测量
+  // 因为 AnimatePresence mode="wait" 会卸载/重挂载 DOM，
+  // 导致 virtualizer 的 scrollElement 引用失效
+  useEffect(() => {
+    if (activeTab === 'bookmarks' && useVirtual) {
+      // 等待 DOM 挂载完成后重新测量
+      const timer = setTimeout(() => {
+        virtualizer.measure()
+      }, 50)
+      return () => clearTimeout(timer)
+    }
+  }, [activeTab, useVirtual])
+
   // 选择操作
   const toggleSelect = (id: string) => {
     const newSelected = new Set(selectedIds)
@@ -1200,15 +1213,21 @@ function AdminContent() {
           </motion.header>
 
           {/* Content */}
-          <AnimatePresence mode="wait">
+          <AnimatePresence mode="popLayout">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className={cn(
+                ['tags', 'quotes', 'icons'].includes(activeTab) && 'max-w-4xl',
+                ['analytics', 'health-check', 'logs', 'backup', 'docs', 'settings'].includes(activeTab) && 'max-w-5xl',
+              )}
+            >
             {/* Bookmarks Tab */}
             {activeTab === 'bookmarks' && (
-              <motion.div
-                key="bookmarks"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-              >
+              <>
                 {/* Toolbar */}
                 <div className="flex flex-col sm:flex-row gap-4 mb-6">
                   {/* Search */}
@@ -2254,17 +2273,12 @@ function AdminContent() {
                   )}
                 </AnimatePresence>
 
-              </motion.div>
+              </>
             )}
 
             {/* Categories Tab */}
             {activeTab === 'categories' && (
-              <motion.div
-                key="categories"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-              >
+              <>
                 {/* Toolbar */}
                 <div className="flex flex-col sm:flex-row gap-4 mb-6">
                   {/* Search */}
@@ -2774,48 +2788,30 @@ function AdminContent() {
                     </div>
                   </div>
                 )}
-              </motion.div>
+              </>
             )}
 
             {/* Tags Tab */}
             {activeTab === 'tags' && (
-              <motion.div
-                key="tags"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="max-w-4xl"
-              >
+              <>
                 <TagsManageCard onShowToast={showToast} />
-              </motion.div>
+              </>
             )}
 
             {/* Quotes Tab */}
             {activeTab === 'quotes' && (
-              <motion.div
-                key="quotes"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="max-w-4xl"
-              >
+              <>
                 <QuotesCard
                   quotes={quotes}
                   useDefaultQuotes={useDefaultQuotes}
                   onUpdate={handleUpdateQuotes}
                 />
-              </motion.div>
+              </>
             )}
 
             {/* Icons Tab */}
             {activeTab === 'icons' && (
-              <motion.div
-                key="icons"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="max-w-4xl"
-              >
+              <>
                 <IconManager
                   isOpen={true}
                   onClose={() => {}}
@@ -2824,57 +2820,33 @@ function AdminContent() {
                   onDeleteIcon={onDeleteCustomIcon}
                   embedded
                 />
-              </motion.div>
+              </>
             )}
 
             {/* Analytics Tab */}
             {activeTab === 'analytics' && (
-              <motion.div
-                key="analytics"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="max-w-5xl"
-              >
+              <>
                 <AnalyticsCard onShowToast={showToast} />
-              </motion.div>
+              </>
             )}
 
             {/* Health Check Tab */}
             {activeTab === 'health-check' && (
-              <motion.div
-                key="health-check"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="max-w-5xl"
-              >
+              <>
                 <HealthCheckCard onShowToast={showToast} onDeleteBookmark={onDeleteBookmark} />
-              </motion.div>
+              </>
             )}
 
             {/* Logs Tab */}
             {activeTab === 'logs' && (
-              <motion.div
-                key="logs"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="max-w-5xl"
-              >
+              <>
                 <LogsCard onShowToast={showToast} />
-              </motion.div>
+              </>
             )}
 
             {/* Backup Tab */}
             {activeTab === 'backup' && (
-              <motion.div
-                key="backup"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="max-w-5xl"
-              >
+              <>
                 <BackupCard 
                   onShowToast={showToast}
                   bookmarks={bookmarks}
@@ -2919,31 +2891,19 @@ function AdminContent() {
                     refreshData()
                   }}
                 />
-              </motion.div>
+              </>
             )}
 
             {/* Docs Tab */}
             {activeTab === 'docs' && (
-              <motion.div
-                key="docs"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="max-w-5xl"
-              >
+              <>
                 <DocsCard />
-              </motion.div>
+              </>
             )}
 
             {/* Settings Tab */}
             {activeTab === 'settings' && (
-              <motion.div
-                key="settings"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="max-w-5xl"
-              >
+              <>
                 <SettingsPanel
                   // 站点设置
                   siteSettings={siteSettings}
@@ -2989,8 +2949,9 @@ function AdminContent() {
                   wallpaperSettingsSuccess={wallpaperSettingsSuccess}
                   wallpaperSettingsError={wallpaperSettingsError}
                 />
-              </motion.div>
+              </>
             )}
+            </motion.div>
           </AnimatePresence>
         </div>
       </main>
