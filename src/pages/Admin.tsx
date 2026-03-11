@@ -2852,8 +2852,8 @@ function AdminContent() {
                   bookmarks={bookmarks}
                   categories={categories}
                   settings={siteSettings}
-                  onImport={async (data) => {
-                    const result = await importData(data)
+                  onImport={async (data, enableAiEnrich) => {
+                    const result = await importData(data, enableAiEnrich)
                     await refreshData()
                     showToast('success', t('admin.settings.data.import_success', { bookmarks: data.bookmarks?.length || 0, categories: data.categories?.length || 0 }))
 

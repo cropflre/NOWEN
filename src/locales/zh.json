@@ -591,7 +591,9 @@
         "import_mode_overwrite": "覆盖导入",
         "import_mode_overwrite_desc": "清空现有数据，用浏览器书签替换",
         "enriching_start": "正在后台抓取 {{count}} 个书签的图标...",
-        "enriching_done": "图标抓取完成：{{success}}/{{total}} 个成功"
+        "enriching_done": "图标抓取完成：{{success}}/{{total}} 个成功",
+        "ai_enrich_toggle": "AI 智能刮削",
+        "ai_enrich_toggle_desc": "导入时自动用 AI 优化标题、描述、图标和标签（需先配置 AI 服务）"
       },
       "ai": {
         "title": "AI 智能配置",

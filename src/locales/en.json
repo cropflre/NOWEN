@@ -591,7 +591,9 @@
         "import_mode_overwrite": "Overwrite Import",
         "import_mode_overwrite_desc": "Clear all existing data and replace with browser bookmarks",
         "enriching_start": "Fetching icons for {{count}} bookmarks in background...",
-        "enriching_done": "Icon fetching complete: {{success}}/{{total}} succeeded"
+        "enriching_done": "Icon fetching complete: {{success}}/{{total}} succeeded",
+        "ai_enrich_toggle": "AI Smart Scraping",
+        "ai_enrich_toggle_desc": "Auto-optimize title, description, icon & tags via AI on import (requires AI config)"
       },
       "ai": {
         "title": "AI Configuration",

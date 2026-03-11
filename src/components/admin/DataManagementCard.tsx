@@ -224,7 +224,7 @@ interface DataManagementCardProps {
   bookmarks: Bookmark[]
   categories: Category[]
   settings: SiteSettings
-  onImport: (data: ExportData['data']) => Promise<void>
+  onImport: (data: ExportData['data'], enableAiEnrich?: boolean) => Promise<void>
   onFactoryReset?: () => void
 }
 

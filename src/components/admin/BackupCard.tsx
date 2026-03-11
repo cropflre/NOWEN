@@ -27,6 +27,7 @@ import {
   Layers,
   AlertCircle,
   CheckCircle,
+  Sparkles,
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import {
@@ -214,7 +215,7 @@ interface BackupCardProps {
   bookmarks: Bookmark[]
   categories: Category[]
   settings: SiteSettings
-  onImport: (data: ExportData['data']) => Promise<void>
+  onImport: (data: ExportData['data'], enableAiEnrich?: boolean) => Promise<void>
   onFactoryReset?: () => void
 }
 
@@ -252,6 +253,7 @@ export function BackupCard({ onShowToast, bookmarks, categories, settings, onImp
   const [showImportModeModal, setShowImportModeModal] = useState(false)
   const [pendingBrowserData, setPendingBrowserData] = useState<ExportData['data'] | null>(null)
   const [pendingBrowserStats, setPendingBrowserStats] = useState<{ totalLinks: number; totalFolders: number } | null>(null)
+  const [enableAiEnrich, setEnableAiEnrich] = useState(settings.enableAiEnrichOnImport ?? false)
 
   // ========== WebDAV 加载 ==========
   const loadConfig = useCallback(async () => {
@@ -485,7 +487,7 @@ export function BackupCard({ onShowToast, bookmarks, categories, settings, onImp
         importPayload = data.data; sourceLabel = 'NOWEN'
       }
 
-      await onImport(importPayload)
+      await onImport(importPayload, enableAiEnrich)
       const successMsg = sourceLabel === 'SunPanel'
         ? t('admin.settings.data.sunpanel_import_success', { bookmarks: importPayload.bookmarks.length, categories: importPayload.categories.length })
         : t('admin.settings.data.import_success', { bookmarks: importPayload.bookmarks.length, categories: importPayload.categories?.length || 0 })
@@ -543,13 +545,13 @@ export function BackupCard({ onShowToast, bookmarks, categories, settings, onImp
           categories: [...categories, ...newCategories],
           settings: pendingBrowserData.settings,
         }
-        await onImport(mergedData)
+        await onImport(mergedData, enableAiEnrich)
         const skipped = pendingBrowserData.bookmarks.length - newBookmarks.length
         let msg = t('admin.settings.data.browser_merge_success', { bookmarks: newBookmarks.length, categories: newCategories.length })
         if (skipped > 0) msg += ' ' + t('admin.settings.data.browser_merge_skipped', { count: skipped })
         setDataSuccess(msg)
       } else {
-        await onImport(pendingBrowserData)
+        await onImport(pendingBrowserData, enableAiEnrich)
         setDataSuccess(t('admin.settings.data.browser_import_success', {
           bookmarks: pendingBrowserData.bookmarks.length,
           categories: pendingBrowserData.categories.length,
@@ -718,6 +720,49 @@ export function BackupCard({ onShowToast, bookmarks, categories, settings, onImp
 
           <input ref={fileInputRef} type="file" accept=".json" onChange={handleImport} className="hidden" />
           <input ref={htmlFileInputRef} type="file" accept=".html,.htm" onChange={handleBrowserImport} className="hidden" />
+        </div>
+
+        {/* AI 刮削元数据开关 */}
+        <div
+          className="relative mt-4 flex items-center justify-between p-4 rounded-xl transition-all duration-300"
+          style={{
+            background: enableAiEnrich ? 'linear-gradient(135deg, rgba(168, 85, 247, 0.08), rgba(59, 130, 246, 0.08))' : 'var(--color-bg-tertiary)',
+            border: enableAiEnrich ? '1px solid rgba(168, 85, 247, 0.3)' : '1px solid var(--color-glass-border)',
+          }}
+        >
+          <div className="flex items-center gap-3">
+            <div className={cn(
+              'w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300',
+              enableAiEnrich ? 'bg-gradient-to-br from-purple-500/20 to-blue-500/20' : 'bg-white/5'
+            )}>
+              <Sparkles className={cn('w-5 h-5 transition-colors duration-300', enableAiEnrich ? 'text-purple-400' : 'text-gray-500')} />
+            </div>
+            <div>
+              <p className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>
+                {t('admin.settings.data.ai_enrich_toggle')}
+              </p>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+                {t('admin.settings.data.ai_enrich_toggle_desc')}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={enableAiEnrich}
+            onClick={() => setEnableAiEnrich(!enableAiEnrich)}
+            className={cn(
+              'relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-300 focus:outline-none shrink-0',
+              enableAiEnrich ? 'bg-purple-500' : 'bg-gray-600'
+            )}
+          >
+            <span
+              className={cn(
+                'inline-block h-4 w-4 rounded-full bg-white transition-transform duration-300 shadow-sm',
+                enableAiEnrich ? 'translate-x-6' : 'translate-x-1'
+              )}
+            />
+          </button>
         </div>
 
         {/* 恢复出厂设置 */}

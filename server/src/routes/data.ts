@@ -4,6 +4,7 @@ import { queryAll, queryOne, booleanize } from '../utils/index.js'
 import { authMiddleware } from '../middleware/index.js'
 import { validateBody, importDataSchema } from '../schemas.js'
 import { parseMetadata } from '../services/metadata.js'
+import { isAiConfigured, aiEnrichMetadata } from '../services/ai.js'
 
 const router = Router()
 
@@ -19,12 +20,18 @@ let enrichStatus: {
 // 抓取模式
 type EnrichMode = 'icon' | 'metadata' | 'all'
 
-// 异步抓取书签 metadata
-async function enrichBookmarkMetadata(bookmarkIds: string[], mode: EnrichMode = 'icon') {
+// 异步抓取书签 metadata（支持 AI 增强模式）
+async function enrichBookmarkMetadata(bookmarkIds: string[], mode: EnrichMode = 'icon', useAi: boolean = false) {
   if (bookmarkIds.length === 0) return
 
   enrichStatus = { running: true, total: bookmarkIds.length, completed: 0, failed: 0, current: '' }
   
+  // AI 模式下检查 AI 是否已配置
+  const aiAvailable = useAi && isAiConfigured()
+  if (useAi && !aiAvailable) {
+    console.warn('⚠️ AI 刮削已启用但未配置 AI 服务，将仅使用普通 metadata 抓取')
+  }
+
   const CONCURRENCY = 3 // 并发数限制
   let index = 0
 
@@ -45,20 +52,69 @@ async function enrichBookmarkMetadata(bookmarkIds: string[], mode: EnrichMode = 
         const updates: string[] = []
         const values: any[] = []
 
-        // 元数据模式或全部模式：更新 title 和 description
-        if (mode === 'metadata' || mode === 'all') {
-          if (meta.title && meta.title !== bookmark.title) {
-            updates.push('title = ?')
-            values.push(meta.title)
+        // AI 增强模式：使用 AI 优化标题、描述并推荐图标
+        if (aiAvailable) {
+          try {
+            const aiResult = await aiEnrichMetadata({
+              url: bookmark.url,
+              title: meta.title || bookmark.title,
+              description: meta.description || bookmark.description || '',
+            })
+
+            // AI 优化的标题
+            if (aiResult.title) {
+              updates.push('title = ?')
+              values.push(aiResult.title)
+            }
+
+            // AI 优化的描述
+            if (aiResult.description) {
+              updates.push('description = ?')
+              values.push(aiResult.description)
+            }
+
+            // AI 推荐的 Iconify 图标名称
+            if (aiResult.iconName) {
+              updates.push('icon = ?')
+              values.push(aiResult.iconName)
+            }
+
+            // AI 推荐的标签
+            if (aiResult.tags && aiResult.tags.length > 0) {
+              updates.push('tags = ?')
+              values.push(aiResult.tags.join(','))
+            }
+          } catch (aiErr: any) {
+            console.warn(`AI 刮削失败 [${id}]:`, aiErr?.message || aiErr)
+            // AI 失败时降级：使用普通 metadata 的标题和描述
+            if (mode === 'metadata' || mode === 'all') {
+              if (meta.title && meta.title !== bookmark.title) {
+                updates.push('title = ?')
+                values.push(meta.title)
+              }
+              if (meta.description) {
+                updates.push('description = ?')
+                values.push(meta.description)
+              }
+            }
           }
-          if (meta.description) {
-            updates.push('description = ?')
-            values.push(meta.description)
+        } else {
+          // 非 AI 模式：使用普通 metadata
+          // 元数据模式或全部模式：更新 title 和 description
+          if (mode === 'metadata' || mode === 'all') {
+            if (meta.title && meta.title !== bookmark.title) {
+              updates.push('title = ?')
+              values.push(meta.title)
+            }
+            if (meta.description) {
+              updates.push('description = ?')
+              values.push(meta.description)
+            }
           }
         }
 
-        // 图标模式或全部模式：更新 favicon 和 ogImage
-        if (mode === 'icon' || mode === 'all') {
+        // 图标模式或全部模式或 AI 模式：更新 favicon 和 ogImage
+        if (mode === 'icon' || mode === 'all' || useAi) {
           if (meta.favicon && !bookmark.favicon) {
             updates.push('favicon = ?')
             values.push(meta.favicon)
@@ -92,7 +148,7 @@ async function enrichBookmarkMetadata(bookmarkIds: string[], mode: EnrichMode = 
   // 完成后保存数据库
   try {
     saveDatabase()
-    console.log(`✅ Metadata 抓取完成: ${enrichStatus.completed - enrichStatus.failed}/${enrichStatus.total} 成功`)
+    console.log(`✅ Metadata 抓取完成: ${enrichStatus.completed - enrichStatus.failed}/${enrichStatus.total} 成功${aiAvailable ? ' (AI 增强)' : ''}`)
   } catch (err) {
     console.error('保存数据库失败:', err)
   }
@@ -150,7 +206,7 @@ router.get('/export', authMiddleware, (req: Request, res: Response) => {
 // 导入数据（覆盖现有数据）
 router.post('/import', authMiddleware, validateBody(importDataSchema), (req: Request, res: Response) => {
   try {
-    const { bookmarks, categories, settings } = req.body
+    const { bookmarks, categories, settings, enableAiEnrich } = req.body
     
     const db = getDatabase()
     
@@ -170,6 +226,7 @@ router.post('/import', authMiddleware, validateBody(importDataSchema), (req: Req
     
     // 导入书签
     const insertedIds: string[] = []
+    const allInsertedIds: string[] = []
     for (const bookmark of bookmarks) {
       const id = bookmark.id || generateId()
       db.run(`
@@ -194,6 +251,8 @@ router.post('/import', authMiddleware, validateBody(importDataSchema), (req: Req
         bookmark.createdAt || new Date().toISOString(),
         bookmark.updatedAt || new Date().toISOString(),
       ])
+
+      allInsertedIds.push(id)
 
       // 记录缺少 favicon 的书签 ID
       if (!bookmark.favicon && !bookmark.iconUrl) {
@@ -221,7 +280,22 @@ router.post('/import', authMiddleware, validateBody(importDataSchema), (req: Req
     
     saveDatabase()
 
-    // 异步启动 metadata 抓取（不阻塞响应）
+    // AI 刮削模式：对所有导入的书签进行 AI 增强（标题+描述+图标+标签）
+    if (enableAiEnrich && allInsertedIds.length > 0) {
+      console.log(`🤖 AI 刮削模式：开始处理 ${allInsertedIds.length} 个书签...`)
+      enrichBookmarkMetadata(allInsertedIds, 'all', true).catch(err => {
+        console.error('AI 刮削任务异常:', err)
+      })
+      
+      res.json({ 
+        success: true, 
+        message: `成功导入 ${bookmarks.length} 个书签和 ${categories?.length || 0} 个分类`,
+        enriching: allInsertedIds.length,
+      })
+      return
+    }
+
+    // 普通模式：异步启动 metadata 抓取（不阻塞响应）
     // 超过 50 条书签时跳过图标抓取，避免大量导入时请求过多
     const shouldEnrich = insertedIds.length > 0 && bookmarks.length <= 50
     if (shouldEnrich) {

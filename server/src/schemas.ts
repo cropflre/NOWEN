@@ -125,6 +125,7 @@ export const importDataSchema = z.object({
     orderIndex: z.number().optional(),
   })).optional(),
   settings: z.record(z.string(), z.unknown()).optional(),
+  enableAiEnrich: z.boolean().optional(),  // AI 刮削元数据开关
 })
 
 // ========== 验证中间件工厂函数 ==========

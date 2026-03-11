@@ -741,6 +741,7 @@ export interface SiteSettings {
   wallpaper?: WallpaperSettings    // 壁纸设置
   cardViewMode?: 'compact' | 'standard' | 'comfortable'  // 书签卡片视图模式
   widgetSizeMode?: 'S' | 'M' | 'L'  // 监控 Widget 尺寸预设（S=迷你摘要, M=用户自控, L=全展开）
+  enableAiEnrichOnImport?: boolean  // 导入时启用 AI 刮削元数据/标题/图标
 }
 
 // 转换设置值类型（后端存储为字符串）
@@ -820,6 +821,7 @@ function parseSettings(raw: Record<string, string>): SiteSettings {
     wallpaper,
     cardViewMode: (raw.cardViewMode as SiteSettings['cardViewMode']) || 'standard',
     widgetSizeMode: (['S', 'M', 'L'].includes(raw.widgetSizeMode) ? raw.widgetSizeMode : 'M') as SiteSettings['widgetSizeMode'],
+    enableAiEnrichOnImport: raw.enableAiEnrichOnImport === 'true' || raw.enableAiEnrichOnImport === '1',
   }
 }
 
@@ -847,6 +849,7 @@ export async function updateSettings(settings: SiteSettings): Promise<SiteSettin
     wallpaper: settings.wallpaper ? JSON.stringify(settings.wallpaper) : undefined,
     cardViewMode: settings.cardViewMode || 'standard',
     widgetSizeMode: settings.widgetSizeMode || 'M',
+    enableAiEnrichOnImport: settings.enableAiEnrichOnImport ? 'true' : 'false',
   }
   const raw = await request<Record<string, string>>('/api/settings', {
     method: 'PATCH',
@@ -924,10 +927,10 @@ export interface EnrichStatus {
   current: string
 }
 
-export async function importData(data: ExportData['data']): Promise<ImportResponse> {
+export async function importData(data: ExportData['data'], enableAiEnrich?: boolean): Promise<ImportResponse> {
   return request<ImportResponse>('/api/import', {
     method: 'POST',
-    body: JSON.stringify(data),
+    body: JSON.stringify({ ...data, enableAiEnrich: enableAiEnrich || false }),
     requireAuth: true,
   })
 }
