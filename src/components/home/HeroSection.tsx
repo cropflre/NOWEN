@@ -71,13 +71,13 @@ export function HeroSection({
       >
         <div
           className="text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tighter font-mono"
-          style={{ color: 'var(--color-text-primary)', ...(hasWallpaper ? wallpaperTextShadow.primary : {}) }}
+          style={{ color: hasWallpaper ? 'rgba(255, 255, 255, 0.95)' : 'var(--color-text-primary)', ...(hasWallpaper ? wallpaperTextShadow.primary : {}) }}
         >
           {formattedTime}
         </div>
         <div
           className="text-base tracking-[0.2em] uppercase mt-3 flex flex-wrap items-center justify-center gap-2"
-          style={{ color: 'var(--color-text-muted)', ...(hasWallpaper ? wallpaperTextShadow.muted : {}) }}
+          style={{ color: hasWallpaper ? 'rgba(255, 255, 255, 0.7)' : 'var(--color-text-muted)', ...(hasWallpaper ? wallpaperTextShadow.muted : {}) }}
         >
           <span>{formattedDate}</span>
           {showLunar && lunarDate.display && (
@@ -87,11 +87,12 @@ export function HeroSection({
                 background:
                   lunarDate.festival || lunarDate.jieQi
                     ? 'rgba(251, 146, 60, 0.15)'
-                    : 'var(--color-bg-tertiary)',
+                    : hasWallpaper ? 'rgba(255, 255, 255, 0.15)' : 'var(--color-bg-tertiary)',
                 color:
                   lunarDate.festival || lunarDate.jieQi
                     ? 'rgb(251, 146, 60)'
-                    : 'var(--color-text-muted)',
+                    : hasWallpaper ? 'rgba(255, 255, 255, 0.85)' : 'var(--color-text-muted)',
+                ...(hasWallpaper ? wallpaperTextShadow.muted : {}),
               }}
             >
               {lunarDate.display}
