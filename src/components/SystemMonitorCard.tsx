@@ -895,7 +895,7 @@ function MultiDiskDisplay({ disks, isDark = true }: { disks: DiskInfo[]; isDark?
 // ============================================
 const SMC_COLLAPSE_KEY = 'nowen-card-collapse-engine'
 
-export function SystemMonitorCard({ className }: { className?: string }) {
+export function SystemMonitorCard({ className, forceCollapsed }: { className?: string; forceCollapsed?: boolean }) {
   const { isDark } = useThemeContext()
   const { t } = useTranslation()
   const [isCollapsed, setIsCollapsed] = useState(() => {
@@ -909,6 +909,9 @@ export function SystemMonitorCard({ className }: { className?: string }) {
       return next
     })
   }, [])
+
+  // 有效折叠状态：forceCollapsed 优先于本地状态
+  const effectiveCollapsed = forceCollapsed !== undefined ? forceCollapsed : isCollapsed
 
   const { data, error, isLoading } = useSWR<PulseData>(
     '/api/system/pulse',
@@ -932,7 +935,7 @@ export function SystemMonitorCard({ className }: { className?: string }) {
       "relative overflow-hidden rounded-2xl",
       "backdrop-blur-xl",
       "p-4",
-      isCollapsed ? "h-auto" : "h-full min-h-[280px]",
+      effectiveCollapsed ? "h-auto" : "h-full min-h-[280px]",
       isDark 
         ? "bg-gradient-to-br from-slate-900/95 via-slate-800/90 to-slate-900/95 border border-white/10"
         : "bg-gradient-to-br from-white/95 via-slate-50/90 to-white/95 border border-slate-200/60 shadow-xl shadow-blue-500/5",
@@ -981,7 +984,7 @@ export function SystemMonitorCard({ className }: { className?: string }) {
         )}>{t('monitor.engine_room')}</span>
         
         {/* Mini 摘要（收缩时显示） */}
-        {isCollapsed && (
+        {effectiveCollapsed && (
           <div className="flex items-center gap-3 ml-2">
             <span className={cn(
               "text-xs font-mono font-bold tabular-nums",
@@ -1011,16 +1014,16 @@ export function SystemMonitorCard({ className }: { className?: string }) {
               "p-0.5 rounded-md transition-colors",
               isDark ? "hover:bg-white/10 text-white/40 hover:text-white/70" : "hover:bg-slate-100 text-slate-400 hover:text-slate-600"
             )}
-            title={isCollapsed ? '展开' : '收缩'}
+            title={effectiveCollapsed ? '展开' : '收缩'}
           >
-            {isCollapsed ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
+            {effectiveCollapsed ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
           </button>
         </div>
       </div>
 
       {/* 主内容区 - 可折叠 */}
       <AnimatePresence initial={false}>
-        {!isCollapsed && (
+        {!effectiveCollapsed && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}

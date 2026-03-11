@@ -306,7 +306,7 @@ function PostHeader({ onComplete, isMobile, isDark = true }: { onComplete: () =>
 // ============================================
 const HW_COLLAPSE_KEY = 'nowen-card-collapse-hardware'
 
-export function HardwareIdentityCard({ className }: { className?: string }) {
+export function HardwareIdentityCard({ className, forceCollapsed }: { className?: string; forceCollapsed?: boolean }) {
   const { isDark } = useThemeContext()
   const { t } = useTranslation()
   const [isCollapsed, setIsCollapsed] = useState(() => {
@@ -320,6 +320,9 @@ export function HardwareIdentityCard({ className }: { className?: string }) {
       return next
     })
   }, [])
+
+  // 有效折叠状态：forceCollapsed 优先于本地状态
+  const effectiveCollapsed = forceCollapsed !== undefined ? forceCollapsed : isCollapsed
 
   const { data, error, isLoading } = useSWR<StaticSystemInfo>(
     '/api/system/static',
@@ -419,7 +422,7 @@ export function HardwareIdentityCard({ className }: { className?: string }) {
     <div className={cn(
       "relative overflow-hidden rounded-2xl",
       "backdrop-blur-xl",
-      isCollapsed ? "h-auto" : "h-full",
+      effectiveCollapsed ? "h-auto" : "h-full",
       isMobile ? "p-3" : "p-4",
       isDark 
         ? "bg-gradient-to-br from-slate-950/95 via-slate-900/90 to-slate-950/95 border border-cyan-500/10"
@@ -485,7 +488,7 @@ export function HardwareIdentityCard({ className }: { className?: string }) {
         </span>
 
         {/* Mini 摘要（收缩时显示） */}
-        {isCollapsed && data && (
+        {effectiveCollapsed && data && (
           <div className="flex items-center gap-2 ml-2 flex-1 min-w-0 overflow-hidden">
             <span className={cn("text-[10px] font-mono truncate", isDark ? "text-cyan-400/70" : "text-blue-600/70")}>
               {data.cpu?.brand?.split(' ').slice(0, 3).join(' ') || ''}
@@ -504,15 +507,15 @@ export function HardwareIdentityCard({ className }: { className?: string }) {
             "ml-auto p-0.5 rounded-md transition-colors z-20",
             isDark ? "hover:bg-white/10 text-white/40 hover:text-white/70" : "hover:bg-slate-100 text-slate-400 hover:text-slate-600"
           )}
-          title={isCollapsed ? '展开' : '收缩'}
+          title={effectiveCollapsed ? '展开' : '收缩'}
         >
-          {isCollapsed ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
+          {effectiveCollapsed ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
         </button>
       </div>
 
       {/* 主内容区 - 可折叠 */}
       <AnimatePresence initial={false}>
-        {!isCollapsed && (
+        {!effectiveCollapsed && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
@@ -587,7 +590,7 @@ export function HardwareIdentityCard({ className }: { className?: string }) {
       </AnimatePresence>
 
       {/* 底部状态栏 */}
-      {!isCollapsed && (
+      {!effectiveCollapsed && (
       <div className={cn(
         "absolute left-3 right-3 flex items-center justify-between",
         isMobile ? "bottom-1.5" : "bottom-2 left-4 right-4"

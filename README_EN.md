@@ -72,7 +72,7 @@
 | **Category Editing**     | Hover to show edit button ✏️ · Edit directly without backend                               |
 | **Quick Add Category**   | Create category while adding bookmark · 10 preset colors · Real-time refresh               |
 | **AI Assistant**         | AI smart tags · Batch AI classify · Batch AI metadata & icons · AI chat assistant · Multi-language output |
-| **System Monitoring**    | Engine Room (CPU 57%/RAM 89%/Disk) · Hardware ID · Vital Signs (28°C) · Network · Services |
+| **System Monitoring**    | Engine Room (CPU 57%/RAM 89%/Disk) · Hardware ID · Vital Signs (28°C) · Network · Services · S/M/L size switching |
 | **Dock Status Bar**      | SYSTEM ONLINE · CPU/MEM/Temp/Network speed · Freely draggable · Position memory          |
 | **Mobile Floating Dock** | Freely draggable energy orb · Petal-style expand menu · Bottom status bar · Haptic feedback · Position persistence |
 | **Read Later**           | Hero card display · 3D card effect · List view · Mark as read                              |
@@ -137,6 +137,10 @@
 - **Ticker Status Bar**: Mobile bottom scrolling status bar, integrated into draggable energy orb bottom bar
 - **Monitor Tri-Mode**: Mini capsule / Ticker bar / Full dashboard seamless switching, view selection persisted
 - **Widget Visibility Control**: Backend control for each monitor component
+- **Widget Size Preset S/M/L** (NEW): One-click switch all monitor widget display sizes
+  - S (Mini Summary): All widgets force-collapsed, showing only title bar + key metrics
+  - M (Default): Users can individually collapse/expand each widget
+  - L (Expanded): All widgets force-expanded, showing full content
 - **Menu Visibility Control** (NEW): Control language/theme toggle buttons visibility
 
 ### 🔍 Spotlight Search
@@ -195,7 +199,7 @@
 | **AI Settings**     | AI provider config (OpenAI/Gemini/DeepSeek/Qwen/Doubao/Custom), API key, model, timeout config, auto-trigger toggle, connection test |
 | **Site Settings**   | Custom site name and icon, lite mode toggle, weather/lunar toggle, menu visibility, footer filing info |
 | **Theme Settings**  | 8 preset themes, light/dark mode, auto switch, day/night animation, circle expand animation       |
-| **Widget Settings** | Control each monitor component visibility, Beam border toggle                                     |
+| **Widget Settings** | Control each monitor component visibility, Beam border toggle, Widget Size Preset S/M/L  |
 | **Wallpaper Settings** | Custom background wallpaper, image source selection (Upload/URL/Picsum/Bing), blur and overlay control |
 | **Security**        | Password change with strength indicator, first login force change, login state verification, admin username change |
 | **Data Management** | JSON/HTML import/export backup, factory reset, auto redirect to home after import, nested object support, SunPanel data compatible import, browser bookmark import (merge/overwrite modes), auto-fetch bookmark icons after import (≤50) |
@@ -1101,6 +1105,12 @@ docker-compose up -d
 
 #### ✨ New Features
 
+- **Monitor Widget Size Preset S/M/L**: One-click switch all monitor widget display sizes
+  - S (Mini Summary): All widgets force-collapsed, showing only title bar + key metrics summary, BentoGrid rowSpan=1
+  - M (Default): No override, users can individually collapse/expand each widget, BentoGrid rowSpan=2
+  - L (Expanded): All widgets force-expanded with full content, BentoGrid rowSpan=2
+  - Toggle buttons located at the right side of widget area title bar, using Minimize2/Square/Maximize2 icons
+  - Settings persisted to database via API, preserved across page refreshes
 - **AI Auto-Trigger Toggle**: New "Auto AI Categorize" switch in AI settings
   - Controls whether AI smart categorization and tag generation auto-triggers when adding bookmarks
   - Enabled by default (backward compatible), can be disabled in settings
@@ -1234,6 +1244,7 @@ docker-compose up -d
 - **Monitor Tri-Mode Switching**: Mini capsule / Ticker bar / Full dashboard seamless switching
   - View mode persisted via localStorage
   - Smooth scale + fade + slide transition animations between modes
+- **Widget Size Preset S/M/L**: Mini summary / Default / Expanded one-click switching, settings auto-persisted
 - **Dashboard Light Mode Transparency**: Monitor dashboard background fully transparent in light mode, blending with page
   - DataBlock sub-card backgrounds synchronized to transparent, border opacity reduced to 30%
 

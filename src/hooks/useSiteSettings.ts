@@ -34,6 +34,8 @@ export const defaultSiteSettings: SiteSettings = {
     blur: 0,
     overlay: 30,
   },
+  cardViewMode: 'standard',
+  widgetSizeMode: 'M',
 };
 
 // 默认小部件可见性（加载前隐藏避免闪烁）
@@ -62,6 +64,12 @@ export function useSiteSettings() {
   // 分类折叠配置
   const categoryCollapseThreshold = siteSettings.categoryCollapseThreshold ?? 0;
   const categoryInitialShowCount = siteSettings.categoryInitialShowCount ?? 8;
+
+  // 书签卡片视图模式
+  const cardViewMode = siteSettings.cardViewMode ?? 'standard';
+
+  // 监控 Widget 尺寸模式
+  const widgetSizeMode = siteSettings.widgetSizeMode ?? 'M';
 
   // 菜单可见性
   const menuVisibility = siteSettings.menuVisibility || {
@@ -124,5 +132,7 @@ export function useSiteSettings() {
     widgetVisibility,
     categoryCollapseThreshold,
     categoryInitialShowCount,
+    cardViewMode,
+    widgetSizeMode,
   };
 }

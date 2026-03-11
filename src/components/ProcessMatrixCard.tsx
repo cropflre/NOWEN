@@ -522,7 +522,7 @@ function DockerContainerRow({
 // ============================================
 const PM_COLLAPSE_KEY = "nowen-card-collapse-process";
 
-export function ProcessMatrixCard({ className }: { className?: string }) {
+export function ProcessMatrixCard({ className, forceCollapsed }: { className?: string; forceCollapsed?: boolean }) {
   const { isDark } = useThemeContext();
   const { t } = useTranslation();
   const isDemo = isDemoMode();
@@ -549,6 +549,9 @@ export function ProcessMatrixCard({ className }: { className?: string }) {
       return next;
     });
   }, []);
+
+  // 有效折叠状态：forceCollapsed 优先于本地状态
+  const effectiveCollapsed = forceCollapsed !== undefined ? forceCollapsed : isCollapsed;
 
   // 获取 Docker 容器列表
   const {
@@ -623,7 +626,7 @@ export function ProcessMatrixCard({ className }: { className?: string }) {
         "relative rounded-2xl overflow-hidden",
         "backdrop-blur-xl",
         "p-3 sm:p-4 min-w-0",
-        isCollapsed ? "h-auto" : "h-full",
+        effectiveCollapsed ? "h-auto" : "h-full",
         isDark
           ? "bg-gradient-to-br from-gray-950 via-gray-900 to-black border border-green-500/20"
           : "bg-gradient-to-br from-emerald-50/95 via-white/90 to-emerald-50/95 border border-emerald-200/50 shadow-xl shadow-emerald-500/5",
@@ -716,9 +719,9 @@ export function ProcessMatrixCard({ className }: { className?: string }) {
                   ? "hover:bg-white/10 text-white/40 hover:text-white/70"
                   : "hover:bg-slate-100 text-slate-400 hover:text-slate-600"
               )}
-              title={isCollapsed ? "展开" : "收缩"}
+              title={effectiveCollapsed ? "展开" : "收缩"}
             >
-              {isCollapsed ? (
+              {effectiveCollapsed ? (
                 <ChevronDown className="w-3.5 h-3.5" />
               ) : (
                 <ChevronUp className="w-3.5 h-3.5" />
@@ -728,7 +731,7 @@ export function ProcessMatrixCard({ className }: { className?: string }) {
         </div>
 
         {/* 第二行：Tab 切换（仅展开时显示） */}
-        {!isCollapsed && (
+        {!effectiveCollapsed && (
           <div
             className={cn(
               "flex items-center rounded-lg border p-0.5 gap-0.5",
@@ -762,7 +765,7 @@ export function ProcessMatrixCard({ className }: { className?: string }) {
 
       {/* 主内容区 - 可折叠 */}
       <AnimatePresence initial={false}>
-        {!isCollapsed && (
+        {!effectiveCollapsed && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}

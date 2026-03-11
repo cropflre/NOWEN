@@ -739,6 +739,8 @@ export interface SiteSettings {
   widgetVisibility?: WidgetVisibility
   menuVisibility?: MenuVisibility  // 菜单项可见性配置
   wallpaper?: WallpaperSettings    // 壁纸设置
+  cardViewMode?: 'compact' | 'standard' | 'comfortable'  // 书签卡片视图模式
+  widgetSizeMode?: 'S' | 'M' | 'L'  // 监控 Widget 尺寸预设（S=迷你摘要, M=用户自控, L=全展开）
 }
 
 // 转换设置值类型（后端存储为字符串）
@@ -816,6 +818,8 @@ function parseSettings(raw: Record<string, string>): SiteSettings {
     widgetVisibility,
     menuVisibility,
     wallpaper,
+    cardViewMode: (raw.cardViewMode as SiteSettings['cardViewMode']) || 'standard',
+    widgetSizeMode: (['S', 'M', 'L'].includes(raw.widgetSizeMode) ? raw.widgetSizeMode : 'M') as SiteSettings['widgetSizeMode'],
   }
 }
 
@@ -841,6 +845,8 @@ export async function updateSettings(settings: SiteSettings): Promise<SiteSettin
     widgetVisibility: settings.widgetVisibility ? JSON.stringify(settings.widgetVisibility) : undefined,
     menuVisibility: settings.menuVisibility ? JSON.stringify(settings.menuVisibility) : undefined,
     wallpaper: settings.wallpaper ? JSON.stringify(settings.wallpaper) : undefined,
+    cardViewMode: settings.cardViewMode || 'standard',
+    widgetSizeMode: settings.widgetSizeMode || 'M',
   }
   const raw = await request<Record<string, string>>('/api/settings', {
     method: 'PATCH',

@@ -53,6 +53,9 @@
     "copy_link": "Copy Link",
     "collapse": "Collapse",
     "show_more": "Show More",
+    "view_compact": "Compact View",
+    "view_standard": "Standard View",
+    "view_comfortable": "Comfortable View",
     "modal": {
       "analyzing": "Analyzing...",
       "url_placeholder": "Paste link to auto-fetch info...",
@@ -115,7 +118,10 @@
     "network": "Network",
     "temperature": "Temperature",
     "uptime": "Uptime",
-    "services": "Services"
+    "services": "Services",
+    "widget_size_small": "Mini Summary (S)",
+    "widget_size_medium": "Default (M)",
+    "widget_size_large": "Expanded (L)"
   },
   "dock": {
     "home": "Home",

@@ -26,10 +26,18 @@ interface HeroSectionProps {
   weather: WeatherData | null;
   weatherLoading?: boolean;
   weatherCity?: string;
+  hasWallpaper?: boolean;
   onRefreshWeather: () => void;
   onCityChange?: (city: string) => void;
   onOpenSearch: () => void;
 }
+
+// A11y: 壁纸模式下的文字阴影样式 - 提升对比度确保可读性
+const wallpaperTextShadow = {
+  primary: { textShadow: '0 1px 3px rgba(0,0,0,0.8), 0 0 12px rgba(0,0,0,0.4)' },
+  secondary: { textShadow: '0 1px 3px rgba(0,0,0,0.7), 0 0 10px rgba(0,0,0,0.35)' },
+  muted: { textShadow: '0 1px 2px rgba(0,0,0,0.6), 0 0 8px rgba(0,0,0,0.3)' },
+};
 
 export function HeroSection({
   formattedTime,
@@ -42,6 +50,7 @@ export function HeroSection({
   weather,
   weatherLoading,
   weatherCity,
+  hasWallpaper,
   onRefreshWeather,
   onCityChange,
   onOpenSearch,
@@ -62,13 +71,13 @@ export function HeroSection({
       >
         <div
           className="text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tighter font-mono"
-          style={{ color: 'var(--color-text-primary)' }}
+          style={{ color: 'var(--color-text-primary)', ...(hasWallpaper ? wallpaperTextShadow.primary : {}) }}
         >
           {formattedTime}
         </div>
         <div
           className="text-base tracking-[0.2em] uppercase mt-3 flex flex-wrap items-center justify-center gap-2"
-          style={{ color: 'var(--color-text-muted)' }}
+          style={{ color: 'var(--color-text-muted)', ...(hasWallpaper ? wallpaperTextShadow.muted : {}) }}
         >
           <span>{formattedDate}</span>
           {showLunar && lunarDate.display && (
@@ -99,7 +108,10 @@ export function HeroSection({
       {/* Greeting with Typewriter */}
       <motion.h1
         className="text-base sm:text-lg lg:text-xl font-serif font-medium mb-8 tracking-wide min-h-[3.5em] flex items-center justify-center"
-        style={{ color: 'var(--color-text-secondary)' }}
+        style={{ 
+          color: hasWallpaper ? 'rgba(255, 255, 255, 0.95)' : 'var(--color-text-secondary)',
+          ...(hasWallpaper ? wallpaperTextShadow.secondary : {}),
+        }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.4 }}

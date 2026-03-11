@@ -9,6 +9,12 @@ import {
   Edit2,
   ChevronDown,
   ChevronUp,
+  LayoutGrid,
+  Grid3X3,
+  StretchHorizontal,
+  Minimize2,
+  Maximize2,
+  Square,
 } from "lucide-react";
 
 // API
@@ -130,6 +136,8 @@ function App() {
     widgetVisibility,
     categoryCollapseThreshold,
     categoryInitialShowCount,
+    cardViewMode,
+    widgetSizeMode,
   } = useSiteSettings();
 
   // 认证状态
@@ -186,6 +194,28 @@ function App() {
   // 天气城市变更
   const handleWeatherCityChange = useCallback(async (city: string) => {
     const newSettings = { ...siteSettings, weatherCity: city };
+    setSiteSettings(newSettings);
+    try {
+      await updateSettings(newSettings);
+    } catch {
+      // 静默失败，本地已生效
+    }
+  }, [siteSettings, setSiteSettings]);
+
+  // 书签卡片视图模式变更
+  const handleCardViewModeChange = useCallback(async (mode: 'compact' | 'standard' | 'comfortable') => {
+    const newSettings = { ...siteSettings, cardViewMode: mode };
+    setSiteSettings(newSettings);
+    try {
+      await updateSettings(newSettings);
+    } catch {
+      // 静默失败，本地已生效
+    }
+  }, [siteSettings, setSiteSettings]);
+
+  // 监控 Widget 尺寸模式变更 (S/M/L)
+  const handleWidgetSizeModeChange = useCallback(async (mode: 'S' | 'M' | 'L') => {
+    const newSettings = { ...siteSettings, widgetSizeMode: mode };
     setSiteSettings(newSettings);
     try {
       await updateSettings(newSettings);
@@ -484,6 +514,7 @@ function App() {
             weather={weather}
             weatherLoading={weatherLoading}
             weatherCity={weatherCity}
+            hasWallpaper={wallpaperEnabled && !!wallpaperImageSrc}
             onRefreshWeather={refreshWeather}
             onCityChange={handleWeatherCityChange}
             onOpenSearch={() => setIsSpotlightOpen(true)}
@@ -517,33 +548,39 @@ function App() {
                 <span className="text-sm" style={{ color: "var(--color-text-muted)" }}>
                   {pinnedBookmarks.length}
                 </span>
+                {/* Widget 尺寸 S/M/L 切换 */}
+                {(widgetVisibility.systemMonitor !== false || widgetVisibility.hardwareIdentity !== false || widgetVisibility.vitalSigns !== false || widgetVisibility.networkTelemetry !== false || widgetVisibility.processMatrix !== false) && (
+                  <div className="ml-auto">
+                    <WidgetSizeModeToggle widgetSizeMode={widgetSizeMode} onChange={handleWidgetSizeModeChange} />
+                  </div>
+                )}
               </div>
 
               <BentoGrid>
                 {/* System Monitor Cards */}
                 {widgetVisibility.systemMonitor !== false && (
-                  <BentoGridItem key="system-monitor" colSpan={2} rowSpan={2} spotlightColor={isLiteMode ? undefined : "rgba(6, 182, 212, 0.15)"} delay={0}>
-                    <SystemMonitorCard />
+                  <BentoGridItem key="system-monitor" colSpan={2} rowSpan={widgetSizeMode === 'S' ? 1 : 2} spotlightColor={isLiteMode ? undefined : "rgba(6, 182, 212, 0.15)"} delay={0}>
+                    <SystemMonitorCard forceCollapsed={widgetSizeMode === 'S' ? true : widgetSizeMode === 'L' ? false : undefined} />
                   </BentoGridItem>
                 )}
                 {widgetVisibility.hardwareIdentity !== false && (
-                  <BentoGridItem key="hardware-specs" colSpan={2} rowSpan={2} spotlightColor={isLiteMode ? undefined : "rgba(6, 182, 212, 0.1)"} delay={0.1}>
-                    <HardwareIdentityCard />
+                  <BentoGridItem key="hardware-specs" colSpan={2} rowSpan={widgetSizeMode === 'S' ? 1 : 2} spotlightColor={isLiteMode ? undefined : "rgba(6, 182, 212, 0.1)"} delay={0.1}>
+                    <HardwareIdentityCard forceCollapsed={widgetSizeMode === 'S' ? true : widgetSizeMode === 'L' ? false : undefined} />
                   </BentoGridItem>
                 )}
                 {widgetVisibility.vitalSigns !== false && (
-                  <BentoGridItem key="vital-signs" colSpan={2} rowSpan={2} spotlightColor={isLiteMode ? undefined : "rgba(6, 182, 212, 0.12)"} delay={0.15}>
-                    <VitalSignsCard />
+                  <BentoGridItem key="vital-signs" colSpan={2} rowSpan={widgetSizeMode === 'S' ? 1 : 2} spotlightColor={isLiteMode ? undefined : "rgba(6, 182, 212, 0.12)"} delay={0.15}>
+                    <VitalSignsCard forceCollapsed={widgetSizeMode === 'S' ? true : widgetSizeMode === 'L' ? false : undefined} />
                   </BentoGridItem>
                 )}
                 {widgetVisibility.networkTelemetry !== false && (
-                  <BentoGridItem key="network-telemetry" colSpan={2} rowSpan={2} spotlightColor={isLiteMode ? undefined : "rgba(168, 85, 247, 0.12)"} delay={0.2}>
-                    <NetworkTelemetryCard />
+                  <BentoGridItem key="network-telemetry" colSpan={2} rowSpan={widgetSizeMode === 'S' ? 1 : 2} spotlightColor={isLiteMode ? undefined : "rgba(168, 85, 247, 0.12)"} delay={0.2}>
+                    <NetworkTelemetryCard forceCollapsed={widgetSizeMode === 'S' ? true : widgetSizeMode === 'L' ? false : undefined} />
                   </BentoGridItem>
                 )}
                 {widgetVisibility.processMatrix !== false && (
-                  <BentoGridItem key="process-matrix" colSpan={2} rowSpan={2} spotlightColor={isLiteMode ? undefined : "rgba(34, 197, 94, 0.12)"} delay={0.25}>
-                    <ProcessMatrixCard />
+                  <BentoGridItem key="process-matrix" colSpan={2} rowSpan={widgetSizeMode === 'S' ? 1 : 2} spotlightColor={isLiteMode ? undefined : "rgba(34, 197, 94, 0.12)"} delay={0.25}>
+                    <ProcessMatrixCard forceCollapsed={widgetSizeMode === 'S' ? true : widgetSizeMode === 'L' ? false : undefined} />
                   </BentoGridItem>
                 )}
 
@@ -577,30 +614,36 @@ function App() {
           ) : (
             /* 独立显示系统监控卡片 */
             <motion.section className="mb-12" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }}>
+              {/* Widget 尺寸 S/M/L 切换 */}
+              {(widgetVisibility.systemMonitor !== false || widgetVisibility.hardwareIdentity !== false || widgetVisibility.vitalSigns !== false || widgetVisibility.networkTelemetry !== false || widgetVisibility.processMatrix !== false) && (
+                <div className="flex items-center justify-end mb-4">
+                  <WidgetSizeModeToggle widgetSizeMode={widgetSizeMode} onChange={handleWidgetSizeModeChange} />
+                </div>
+              )}
               <BentoGrid>
                 {widgetVisibility.systemMonitor !== false && (
-                  <BentoGridItem key="system-monitor-standalone" colSpan={2} rowSpan={2} spotlightColor={isLiteMode ? undefined : "rgba(6, 182, 212, 0.15)"} delay={0}>
-                    <SystemMonitorCard />
+                  <BentoGridItem key="system-monitor-standalone" colSpan={2} rowSpan={widgetSizeMode === 'S' ? 1 : 2} spotlightColor={isLiteMode ? undefined : "rgba(6, 182, 212, 0.15)"} delay={0}>
+                    <SystemMonitorCard forceCollapsed={widgetSizeMode === 'S' ? true : widgetSizeMode === 'L' ? false : undefined} />
                   </BentoGridItem>
                 )}
                 {widgetVisibility.hardwareIdentity !== false && (
-                  <BentoGridItem key="hardware-specs-standalone" colSpan={2} rowSpan={2} spotlightColor={isLiteMode ? undefined : "rgba(6, 182, 212, 0.1)"} delay={0.1}>
-                    <HardwareIdentityCard />
+                  <BentoGridItem key="hardware-specs-standalone" colSpan={2} rowSpan={widgetSizeMode === 'S' ? 1 : 2} spotlightColor={isLiteMode ? undefined : "rgba(6, 182, 212, 0.1)"} delay={0.1}>
+                    <HardwareIdentityCard forceCollapsed={widgetSizeMode === 'S' ? true : widgetSizeMode === 'L' ? false : undefined} />
                   </BentoGridItem>
                 )}
                 {widgetVisibility.vitalSigns !== false && (
-                  <BentoGridItem key="vital-signs-standalone" colSpan={2} rowSpan={2} spotlightColor={isLiteMode ? undefined : "rgba(6, 182, 212, 0.12)"} delay={0.15}>
-                    <VitalSignsCard />
+                  <BentoGridItem key="vital-signs-standalone" colSpan={2} rowSpan={widgetSizeMode === 'S' ? 1 : 2} spotlightColor={isLiteMode ? undefined : "rgba(6, 182, 212, 0.12)"} delay={0.15}>
+                    <VitalSignsCard forceCollapsed={widgetSizeMode === 'S' ? true : widgetSizeMode === 'L' ? false : undefined} />
                   </BentoGridItem>
                 )}
                 {widgetVisibility.networkTelemetry !== false && (
-                  <BentoGridItem key="network-telemetry-standalone" colSpan={2} rowSpan={2} spotlightColor={isLiteMode ? undefined : "rgba(168, 85, 247, 0.12)"} delay={0.2}>
-                    <NetworkTelemetryCard />
+                  <BentoGridItem key="network-telemetry-standalone" colSpan={2} rowSpan={widgetSizeMode === 'S' ? 1 : 2} spotlightColor={isLiteMode ? undefined : "rgba(168, 85, 247, 0.12)"} delay={0.2}>
+                    <NetworkTelemetryCard forceCollapsed={widgetSizeMode === 'S' ? true : widgetSizeMode === 'L' ? false : undefined} />
                   </BentoGridItem>
                 )}
                 {widgetVisibility.processMatrix !== false && (
-                  <BentoGridItem key="process-matrix-standalone" colSpan={2} rowSpan={2} spotlightColor={isLiteMode ? undefined : "rgba(34, 197, 94, 0.12)"} delay={0.25}>
-                    <ProcessMatrixCard />
+                  <BentoGridItem key="process-matrix-standalone" colSpan={2} rowSpan={widgetSizeMode === 'S' ? 1 : 2} spotlightColor={isLiteMode ? undefined : "rgba(34, 197, 94, 0.12)"} delay={0.25}>
+                    <ProcessMatrixCard forceCollapsed={widgetSizeMode === 'S' ? true : widgetSizeMode === 'L' ? false : undefined} />
                   </BentoGridItem>
                 )}
               </BentoGrid>
@@ -624,19 +667,21 @@ function App() {
                   totalBookmarkCount={bookmarks.length}
                   collapseThreshold={categoryCollapseThreshold}
                   initialShowCount={categoryInitialShowCount}
+                  cardViewMode={cardViewMode}
                   onContextMenu={handleContextMenu}
                   onEditCategory={(cat) => {
                     setEditingCategory(cat);
                     setCategoryModalMode('edit');
                     setIsCategoryModalOpen(true);
                   }}
+                  onViewModeChange={handleCardViewModeChange}
                   isLoggedIn={isLoggedIn}
                 />
               );
             })}
 
             {/* 拖拽覆盖层 */}
-            <BookmarkDragOverlay activeBookmark={activeBookmark} />
+            <BookmarkDragOverlay activeBookmark={activeBookmark} cardViewMode={cardViewMode} />
           </DndContext>
 
           {/* Empty State */}
@@ -783,6 +828,7 @@ const MemoizedBookmarkItem = React.memo(function MemoizedBookmarkItem({
   isLiteMode,
   isInternal,
   lightweight,
+  cardViewMode = 'standard',
   onContextMenu,
 }: {
   bookmark: Bookmark;
@@ -791,41 +837,53 @@ const MemoizedBookmarkItem = React.memo(function MemoizedBookmarkItem({
   isLiteMode: boolean | undefined;
   isInternal: boolean;
   lightweight: boolean;
+  cardViewMode?: 'compact' | 'standard' | 'comfortable';
   onContextMenu: (e: React.MouseEvent, bookmark: Bookmark) => void;
 }) {
   const animDelay = index < MAX_ANIMATED_INDEX ? index * 0.04 : 0;
+  const isCompact = cardViewMode === 'compact';
 
   // 轻量模式：跳过 framer-motion 入场动画
   const card = (
     <SpotlightCard
       className="h-full cursor-pointer"
+      size={isCompact ? 'sm' : 'md'}
       spotlightColor={isLiteMode ? "transparent" : `${category.color}20`}
       lightweight={lightweight}
       onClick={() => { visitsApi.track(bookmark.id).catch(console.error); window.open(getBookmarkUrl(bookmark, isInternal), "_blank") }}
       onContextMenu={(e) => onContextMenu(e, bookmark)}
     >
-      <div className="flex flex-col h-full">
+      <div className={`flex ${isCompact ? 'flex-row items-center gap-3' : 'flex-col'} h-full`}>
         <div
-          className="w-10 h-10 rounded-xl flex items-center justify-center mb-4"
+          className={`${isCompact ? 'w-8 h-8' : 'w-10 h-10'} rounded-xl flex items-center justify-center ${isCompact ? '' : 'mb-4'} flex-shrink-0`}
           style={{ background: "var(--color-bg-tertiary)" }}
         >
           {bookmark.iconUrl ? (
-            <img src={bookmark.iconUrl} alt="" className="w-5 h-5 object-contain" loading="lazy" />
+            <img src={bookmark.iconUrl} alt="" className={`${isCompact ? 'w-4 h-4' : 'w-5 h-5'} object-contain`} loading="lazy" />
           ) : bookmark.icon ? (
-            <IconRenderer icon={bookmark.icon} className="w-5 h-5" style={{ color: "var(--color-primary)" }} />
+            <IconRenderer icon={bookmark.icon} className={isCompact ? 'w-4 h-4' : 'w-5 h-5'} style={{ color: "var(--color-primary)" }} />
           ) : bookmark.favicon ? (
-            <img src={bookmark.favicon} alt="" className="w-5 h-5" loading="lazy" />
+            <img src={bookmark.favicon} alt="" className={`${isCompact ? 'w-4 h-4' : 'w-5 h-5'}`} loading="lazy" />
           ) : (
-            <ExternalLink className="w-5 h-5" style={{ color: "var(--color-text-muted)" }} />
+            <ExternalLink className={isCompact ? 'w-4 h-4' : 'w-5 h-5'} style={{ color: "var(--color-text-muted)" }} />
           )}
         </div>
-        <h3 className="font-medium line-clamp-1 mb-1" style={{ color: "var(--color-text-primary)" }}>
-          {bookmark.title}
-        </h3>
-        <p className="text-sm line-clamp-2 flex-1" style={{ color: "var(--color-text-muted)" }}>
-          {bookmark.description || (() => { try { return new URL(bookmark.url).hostname } catch { return bookmark.url } })()}
-        </p>
-        {bookmark.tags && bookmark.tags.length > 0 && (
+        <div className={`${isCompact ? 'flex-1 min-w-0' : ''}`}>
+          <h3 className={`font-medium line-clamp-1 ${isCompact ? 'text-sm' : 'mb-1'}`} style={{ color: "var(--color-text-primary)" }}>
+            {bookmark.title}
+          </h3>
+          {!isCompact && (
+            <p className="text-sm line-clamp-2 flex-1" style={{ color: "var(--color-text-muted)" }}>
+              {bookmark.description || (() => { try { return new URL(bookmark.url).hostname } catch { return bookmark.url } })()}
+            </p>
+          )}
+          {isCompact && (
+            <p className="text-xs line-clamp-1" style={{ color: "var(--color-text-muted)" }}>
+              {bookmark.description || (() => { try { return new URL(bookmark.url).hostname } catch { return bookmark.url } })()}
+            </p>
+          )}
+        </div>
+        {!isCompact && bookmark.tags && bookmark.tags.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-2">
             {bookmark.tags.slice(0, 3).map(tag => {
               const color = getTagColor(tag)
@@ -884,25 +942,127 @@ const MemoizedBookmarkItem = React.memo(function MemoizedBookmarkItem({
   );
 });
 
+// ========== 视图模式配置 ==========
+const VIEW_MODE_CONFIG = {
+  compact: {
+    gridClass: 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3',
+    skeletonHeight: '64px',
+  },
+  standard: {
+    gridClass: 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4',
+    skeletonHeight: '120px',
+  },
+  comfortable: {
+    gridClass: 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5',
+    skeletonHeight: '140px',
+  },
+} as const;
+
 // ========== 分类骨架屏占位 ==========
-function CategorySkeleton({ count, color }: { count: number; color: string }) {
+function CategorySkeleton({ count, color, cardViewMode = 'standard' }: { count: number; color: string; cardViewMode?: 'compact' | 'standard' | 'comfortable' }) {
   const displayCount = Math.min(count, 8);
+  const config = VIEW_MODE_CONFIG[cardViewMode];
+  const isCompact = cardViewMode === 'compact';
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 relative z-10">
+    <div className={`${config.gridClass} relative z-10`}>
       {Array.from({ length: displayCount }).map((_, i) => (
         <div
           key={i}
-          className="rounded-2xl p-5 animate-pulse"
+          className={`rounded-2xl ${isCompact ? 'p-3' : 'p-5'} animate-pulse`}
           style={{
             background: 'var(--color-glass)',
             border: '1px solid var(--color-glass-border)',
-            minHeight: '120px',
+            minHeight: config.skeletonHeight,
           }}
         >
-          <div className="w-10 h-10 rounded-xl mb-4" style={{ background: `${color}15` }} />
-          <div className="h-4 rounded-md mb-2 w-3/4" style={{ background: 'var(--color-bg-tertiary)' }} />
-          <div className="h-3 rounded-md w-1/2" style={{ background: 'var(--color-bg-tertiary)' }} />
+          <div className={`${isCompact ? 'w-8 h-8 mb-2' : 'w-10 h-10 mb-4'} rounded-xl`} style={{ background: `${color}15` }} />
+          <div className={`${isCompact ? 'h-3' : 'h-4'} rounded-md mb-2 w-3/4`} style={{ background: 'var(--color-bg-tertiary)' }} />
+          {!isCompact && <div className="h-3 rounded-md w-1/2" style={{ background: 'var(--color-bg-tertiary)' }} />}
         </div>
+      ))}
+    </div>
+  );
+}
+
+// ========== 视图切换按钮组 ==========
+const VIEW_MODES = [
+  { key: 'compact' as const, icon: Grid3X3, titleKey: 'bookmark.view_compact' },
+  { key: 'standard' as const, icon: LayoutGrid, titleKey: 'bookmark.view_standard' },
+  { key: 'comfortable' as const, icon: StretchHorizontal, titleKey: 'bookmark.view_comfortable' },
+];
+
+function ViewModeToggle({
+  cardViewMode,
+  onChange,
+}: {
+  cardViewMode: 'compact' | 'standard' | 'comfortable';
+  onChange: (mode: 'compact' | 'standard' | 'comfortable') => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div
+      className="flex items-center rounded-lg p-0.5 gap-0.5"
+      style={{ background: 'var(--color-bg-tertiary)' }}
+    >
+      {VIEW_MODES.map(({ key, icon: Icon, titleKey }) => (
+        <button
+          key={key}
+          onClick={() => onChange(key)}
+          className={`p-1.5 rounded-md transition-all ${
+            cardViewMode === key
+              ? 'shadow-sm'
+              : 'hover:bg-white/5'
+          }`}
+          style={{
+            background: cardViewMode === key ? 'var(--color-glass)' : 'transparent',
+            color: cardViewMode === key ? 'var(--color-text-primary)' : 'var(--color-text-muted)',
+          }}
+          title={t(titleKey, key)}
+        >
+          <Icon className="w-3.5 h-3.5" />
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ========== Widget 尺寸 S/M/L 切换按钮 ==========
+const WIDGET_SIZE_MODES = [
+  { key: 'S' as const, icon: Minimize2, titleKey: 'monitor.widget_size_small' },
+  { key: 'M' as const, icon: Square, titleKey: 'monitor.widget_size_medium' },
+  { key: 'L' as const, icon: Maximize2, titleKey: 'monitor.widget_size_large' },
+];
+
+function WidgetSizeModeToggle({
+  widgetSizeMode,
+  onChange,
+}: {
+  widgetSizeMode: 'S' | 'M' | 'L';
+  onChange: (mode: 'S' | 'M' | 'L') => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div
+      className="flex items-center rounded-lg p-0.5 gap-0.5"
+      style={{ background: 'var(--color-bg-tertiary)' }}
+    >
+      {WIDGET_SIZE_MODES.map(({ key, icon: Icon, titleKey }) => (
+        <button
+          key={key}
+          onClick={() => onChange(key)}
+          className={`p-1.5 rounded-md transition-all ${
+            widgetSizeMode === key
+              ? 'shadow-sm'
+              : 'hover:bg-white/5'
+          }`}
+          style={{
+            background: widgetSizeMode === key ? 'var(--color-glass)' : 'transparent',
+            color: widgetSizeMode === key ? 'var(--color-text-primary)' : 'var(--color-text-muted)',
+          }}
+          title={t(titleKey, key)}
+        >
+          <Icon className="w-3.5 h-3.5" />
+        </button>
       ))}
     </div>
   );
@@ -918,8 +1078,10 @@ function CategorySection({
   totalBookmarkCount,
   collapseThreshold,
   initialShowCount,
+  cardViewMode = 'standard',
   onContextMenu,
   onEditCategory,
+  onViewModeChange,
   isLoggedIn,
 }: {
   category: import("./types/bookmark").Category;
@@ -930,8 +1092,10 @@ function CategorySection({
   totalBookmarkCount: number;
   collapseThreshold: number;
   initialShowCount: number;
+  cardViewMode?: 'compact' | 'standard' | 'comfortable';
   onContextMenu: (e: React.MouseEvent, bookmark: Bookmark) => void;
   onEditCategory: (cat: import("./types/bookmark").Category) => void;
+  onViewModeChange?: (mode: 'compact' | 'standard' | 'comfortable') => void;
   isLoggedIn?: boolean;
 }) {
   const { t } = useTranslation();
@@ -993,10 +1157,16 @@ function CategorySection({
             <Edit2 className="w-4 h-4" />
           </button>
         )}
+        {/* 视图切换 - 仅首个分类显示 */}
+        {catIndex === 0 && onViewModeChange && (
+          <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
+            <ViewModeToggle cardViewMode={cardViewMode} onChange={onViewModeChange} />
+          </div>
+        )}
       </div>
 
       <SortableContext items={visibleBookmarks.map(b => b.id)} strategy={rectSortingStrategy}>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 relative z-10">
+        <div className={`${VIEW_MODE_CONFIG[cardViewMode].gridClass} relative z-10`}>
           {doRender ? visibleBookmarks.map((bookmark, index) => (
             <MemoizedBookmarkItem
               key={bookmark.id}
@@ -1006,6 +1176,7 @@ function CategorySection({
               isLiteMode={isLiteMode}
               isInternal={isInternal}
               lightweight={lightweight}
+              cardViewMode={cardViewMode}
               onContextMenu={onContextMenu}
             />
           )) : null}
@@ -1014,7 +1185,7 @@ function CategorySection({
 
       {/* 骨架屏：懒渲染未激活时显示 */}
       {!doRender && (
-        <CategorySkeleton count={categoryBookmarks.length} color={category.color || '#667eea'} />
+        <CategorySkeleton count={categoryBookmarks.length} color={category.color || '#667eea'} cardViewMode={cardViewMode} />
       )}
 
       {/* 展开/折叠按钮 */}
