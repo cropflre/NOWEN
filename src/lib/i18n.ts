@@ -5,6 +5,26 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 // 引入语言包
 import en from '../locales/en.json';
 import zh from '../locales/zh.json';
+import ja from '../locales/ja.json';
+import ko from '../locales/ko.json';
+
+// 支持的语言列表（按切换顺序）
+export const supportedLanguages = ['zh', 'en', 'ja', 'ko'] as const;
+export type SupportedLanguage = typeof supportedLanguages[number];
+
+// 语言显示名称
+export const languageNames: Record<SupportedLanguage, string> = {
+  zh: '中文',
+  en: 'English',
+  ja: '日本語',
+  ko: '한국어',
+};
+
+// 获取下一个语言（循环切换）
+export function getNextLanguage(current: string): SupportedLanguage {
+  const idx = supportedLanguages.indexOf(current as SupportedLanguage);
+  return supportedLanguages[(idx + 1) % supportedLanguages.length];
+}
 
 i18n
   // 1. 嗅探用户浏览器的语言偏好
@@ -16,6 +36,8 @@ i18n
     resources: {
       en: { translation: en },
       zh: { translation: zh },
+      ja: { translation: ja },
+      ko: { translation: ko },
     },
     fallbackLng: 'zh', // 默认回退到中文
     interpolation: {

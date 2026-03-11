@@ -226,7 +226,9 @@ function App() {
 
   // ========== Dock 配置 ==========
   const toggleLanguage = useCallback(() => {
-    const nextLang = i18n.language === 'en' ? 'zh' : 'en';
+    const langs = ['zh', 'en', 'ja', 'ko'];
+    const idx = langs.indexOf(i18n.language);
+    const nextLang = langs[(idx + 1) % langs.length];
     i18n.changeLanguage(nextLang);
   }, [i18n]);
 

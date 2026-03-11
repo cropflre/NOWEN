@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { useTime } from '../hooks/useTime'
 import { useThemeContext } from '../hooks/useTheme'
 import { cn } from '../lib/utils'
+import { getNextLanguage, languageNames, type SupportedLanguage } from '../lib/i18n'
 
 interface HeaderProps {
   onOpenCommand: () => void
@@ -16,9 +17,9 @@ export function Header({ onOpenCommand, onToggleEditMode, isEditMode }: HeaderPr
   const { formattedTime, formattedDate } = useTime()
   const { isDark, toggleDarkMode } = useThemeContext()
 
-  // 切换语言：在 'en' 和 'zh' 之间循环
+  // 切换语言：在 zh → en → ja → ko 之间循环
   const toggleLanguage = () => {
-    const nextLang = i18n.language === 'en' ? 'zh' : 'en'
+    const nextLang = getNextLanguage(i18n.language)
     i18n.changeLanguage(nextLang)
   }
 
