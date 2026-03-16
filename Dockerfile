@@ -7,9 +7,7 @@
 FROM node:20-alpine AS frontend-builder
 WORKDIR /app
 
-# 安装前端构建所需的编译工具（bcrypt 等 native 模块需要）
-RUN apk add --no-cache python3 make g++
-
+# 前端已移除 bcrypt 等 native 模块，无需编译工具链
 COPY package*.json ./
 RUN npm install
 COPY . .

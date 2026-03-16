@@ -1,6 +1,6 @@
 # NOWEN - 星云门户
 
-> 一个集书签管理、系统监控于一体的极简主义个人导航站，采用深空美学与玻璃态设计风格，支持日间/夜间双模式，提供完整的硬件实时监控能力
+> 一个集书签管理、系统监控于一体的极简主义个人导航站，采用深空美学与玻璃态设计风格，支持日间/夜间双模式，提供完整的硬件实时监控能�?
 
 ![Version](https://img.shields.io/badge/version-0.2.2-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -15,24 +15,24 @@
 
 **🔗 访问地址 / Access URL**: [http://118.145.185.221/](http://118.145.185.221/)
 
-> 🎯 **演示模式**：通过上述地址访问时，登录页面自动填入默认账号密码（admin / admin123），直接点击登录即可体验后台功能。演示模式下禁止修改密码。
+> 🎯 **演示模式**：通过上述地址访问时，登录页面自动填入默认账号密码（admin / admin123），直接点击登录即可体验后台功能。演示模式下禁止修改密码�?
 
 ## 📖 文档 | Documentation
 
 | 语言        | 文档                                |
 | ----------- | ----------------------------------- |
-| 🇨🇳 简体中文 | [README.md](./README.md) (当前文档) |
+| 🇨🇳 简体中�?| [README.md](./README.md) (当前文档) |
 | 🇬🇧 English  | [README_EN.md](./README_EN.md)      |
 
 ---
 
 ## 📸 界面预览
 
-### ☀️ 日间模式
+### ☀�?日间模式
 
 <table>
   <tr>
-    <td align="center" colspan="2"><b>桌面端首页 - 系统监控仪表盘</b></td>
+    <td align="center" colspan="2"><b>桌面端首�?- 系统监控仪表�?/b></td>
   </tr>
   <tr>
     <td colspan="2"><img src="https://github.com/cropflre/NOWEN/raw/main/public/screenshots/light-desktop-monitor.png" alt="日间模式-系统监控" width="800"></td>
@@ -41,12 +41,12 @@
 
 <table>
   <tr>
-    <td align="center"><b>书签分类 & 侧边栏导航</b></td>
-    <td align="center"><b>移动端首页</b></td>
+    <td align="center"><b>书签分类 & 侧边栏导�?/b></td>
+    <td align="center"><b>移动端首�?/b></td>
   </tr>
   <tr>
     <td><img src="https://github.com/cropflre/NOWEN/raw/main/public/screenshots/light-desktop-bookmarks.png" alt="日间模式-书签分类" width="500"></td>
-    <td><img src="https://github.com/cropflre/NOWEN/raw/main/public/screenshots/light-mobile.png" alt="日间模式-移动端" width="250"></td>
+    <td><img src="https://github.com/cropflre/NOWEN/raw/main/public/screenshots/light-mobile.png" alt="日间模式-移动�? width="250"></td>
   </tr>
 </table>
 
@@ -54,199 +54,199 @@
 
 <table>
   <tr>
-    <td align="center"><b>桌面端首页 - 深空美学</b></td>
-    <td align="center"><b>移动端首页</b></td>
+    <td align="center"><b>桌面端首�?- 深空美学</b></td>
+    <td align="center"><b>移动端首�?/b></td>
   </tr>
   <tr>
-    <td><img src="https://github.com/cropflre/NOWEN/raw/main/public/screenshots/dark-desktop-monitor.png" alt="夜间模式-桌面端" width="500"></td>
-    <td><img src="https://github.com/cropflre/NOWEN/raw/main/public/screenshots/dark-mobile.png" alt="夜间模式-移动端" width="250"></td>
+    <td><img src="https://github.com/cropflre/NOWEN/raw/main/public/screenshots/dark-desktop-monitor.png" alt="夜间模式-桌面�? width="500"></td>
+    <td><img src="https://github.com/cropflre/NOWEN/raw/main/public/screenshots/dark-mobile.png" alt="夜间模式-移动�? width="250"></td>
   </tr>
 </table>
 
-### 🎛️ 功能亮点
+### 🎛�?功能亮点
 
 | 功能               | 说明                                                                                     |
 | ------------------ | ---------------------------------------------------------------------------------------- |
-| **天气 & 农历**    | 实时天气 19°C · 少云 · 75% 湿度 · 5.5m/s 风速 · 农历日期 · 立春节气                      |
-| **侧边栏导航**     | 分类快速导航（开发/效率/设计/阅读/媒体等）· 智能高亮当前分类                             |
+| **天气 & 农历**    | 实时天气 19°C · 少云 · 75% 湿度 · 5.5m/s 风�?· 农历日期 · 立春节气                      |
+| **侧边栏导�?*     | 分类快速导航（开�?效率/设计/阅读/媒体等）· 智能高亮当前分类                             |
 | **分类编辑**       | 悬停显示编辑按钮 ✏️ · 无需进入后台直接编辑                                               |
-| **快速新增分类**   | 添加书签时内嵌创建分类 · 10 种预设颜色 · 实时刷新                                        |
-| **AI 助手**        | AI 智能标签 · 批量 AI 分类 · 批量 AI 元数据&图标 · AI 对话助手 · 多语言输出 · 自动触发开关 · 超时配置 |
-| **系统监控**       | 引擎室 (CPU 57%/内存 89%/硬盘) · 硬件身份卡 · 核心脉搏 (温度 28°C) · 网络遥测 · 服务蜂巢 · S/M/L 尺寸切换 |
-| **Dock 状态栏**    | SYSTEM ONLINE · CPU/MEM/温度/网速实时显示 · 可自由拖拽定位 · 位置记忆                    |
-| **移动端悬浮坞**   | 可自由拖拽能量球 · 花瓣式展开菜单 · 底部状态栏 · 触觉振动反馈 · 位置持久化              |
+| **快速新增分�?*   | 添加书签时内嵌创建分�?· 10 种预设颜�?· 实时刷新                                        |
+| **AI 助手**        | AI 智能标签 · 批量 AI 分类 · 批量 AI 元数�?图标 · AI 对话助手 · 多语言输出 · 自动触发开�?· 超时配置 |
+| **系统监控**       | 引擎�?(CPU 57%/内存 89%/硬盘) · 硬件身份�?· 核心脉搏 (温度 28°C) · 网络遥测 · 服务蜂巢 · S/M/L 尺寸切换 |
+| **Dock 状态栏**    | SYSTEM ONLINE · CPU/MEM/温度/网速实时显�?· 可自由拖拽定�?· 位置记忆                    |
+| **移动端悬浮坞**   | 可自由拖拽能量球 · 花瓣式展开菜单 · 底部状态栏 · 触觉振动反馈 · 位置持久�?             |
 | **稍后阅读**       | Hero 卡片展示 · 3D 卡片效果 · 列表视图 · 标记已读                                        |
-| **访问统计**       | 点击追踪 · 热门排行 · 趋势图表 · 最近访问 · 数据清除                                     |
-| **链接健康检查**   | 一键批量检测 · 死链识别 · 超时/重定向检测 · 响应时间统计 · 一键删除死链                   |
-| **内外网切换**     | 书签支持双链接（内网/外网）· 自动检测网络环境 · 智能切换访问地址                          |
+| **访问统计**       | 点击追踪 · 热门排行 · 趋势图表 · 最近访�?· 数据清除                                     |
+| **链接健康检�?*   | 一键批量检�?· 死链识别 · 超时/重定向检�?· 响应时间统计 · 一键删除死�?                  |
+| **内外网切�?*     | 书签支持双链接（内网/外网）�?自动检测网络环�?· 智能切换访问地址                          |
 | **底部备案信息**   | 系统设置配置备案文本 · 支持 HTML 渲染 · 首页底部展示                                      |
-| **壁纸背景**       | 自定义背景壁纸 · 上传/拖拽/URL/Picsum/Bing壁纸 · 模糊度和遮罩可调 · 光束效果叠加          |
-| **数据管理**       | 导入/导出 JSON/HTML · 恢复出厂设置 · 导入成功自动返回首页 · 兼容 SunPanel 数据导入 · 浏览器书签导入（合并/覆盖）· 导入后自动抓取图标（≤50条） |
-| **云备份**         | WebDAV 云端备份（坚果云/群晖/绿联/Alist）· 自动定时备份（每天/12h/每周/每小时）· 本地 JSON 下载/恢复 · 原始 DB 文件下载/上传 · 最多保留 30 个备份 |
-| **防呆数据保护**   | Named Volume 防丢 · 双卷互备 · 5 级自动恢复链 · SQLite 完整性校验 · 运行时每 5 分钟同步 · 优雅停止保存 · 启动数据统计 |
-| **系统日志**       | 操作日志记录 · 按级别/类型筛选 · 一键清除日志                                                             |
-| **ARM64 支持**     | 多架构 Docker 镜像 · RK3588/RK3576/RK3566 开发板 · Apple Silicon · 一键构建脚本                           |
+| **壁纸背景**       | 自定义背景壁�?· 上传/拖拽/URL/Picsum/Bing壁纸 · 模糊度和遮罩可调 · 光束效果叠加          |
+| **数据管理**       | 导入/导出 JSON/HTML · 恢复出厂设置 · 导入成功自动返回首页 · 兼容 SunPanel 数据导入 · 浏览器书签导入（合并/覆盖）�?导入后自动抓取图标（�?0条） |
+| **云备�?*         | WebDAV 云端备份（坚果云/群晖/绿联/Alist）�?自动定时备份（每�?12h/每周/每小时）· 本地 JSON 下载/恢复 · 原始 DB 文件下载/上传 · 最多保�?30 个备�?|
+| **防呆数据保护**   | Named Volume 防丢 · 双卷互备 · 5 级自动恢复链 · SQLite 完整性校�?· 运行时每 5 分钟同步 · 优雅停止保存 · 启动数据统计 |
+| **系统日志**       | 操作日志记录 · 按级�?类型筛�?· 一键清除日�?                                                            |
+| **ARM64 支持**     | 多架�?Docker 镜像 · RK3588/RK3576/RK3566 开发板 · Apple Silicon · 一键构建脚�?                          |
 
 ---
 
 ## 📋 目录
 
 - [界面预览](#-界面预览)
-- [功能特性](#-功能特性)
+- [功能特性](#-功能特�?
 - [主题系统](#-主题系统)
-- [技术栈](#️-技术栈)
+- [技术栈](#�?技术栈)
 - [项目结构](#-项目结构)
 - [安装部署](#-安装部署)
   - [Windows 本地安装](#方式一windows-本地安装推荐新手)
   - [Docker 通用安装](#方式二docker-通用安装)
-  - [群晖 NAS 安装](#方式三群晖-synology-nas-安装)
-  - [绿联 NAS 安装](#方式四绿联-ugreennas-安装)
-  - [飞牛 OS 安装](#方式五飞牛-os-fnos-安装)
-  - [威联通 QNAP 安装](#方式六威联通-qnap-nas-安装)
-  - [极空间 NAS 安装](#方式七极空间-nas-安装)
-  - [ARM64 开发板安装](#方式八arm64-开发板安装rk3588rk3576rk3566-等)
+  - [群晖 NAS 安装](#方式三群�?synology-nas-安装)
+  - [绿联 NAS 安装](#方式四绿�?ugreennas-安装)
+  - [飞牛 OS 安装](#方式五飞�?os-fnos-安装)
+  - [威联�?QNAP 安装](#方式六威联�?qnap-nas-安装)
+  - [极空�?NAS 安装](#方式七极空间-nas-安装)
+  - [ARM64 开发板安装](#方式八arm64-开发板安装rk3588rk3576rk3566-�?
 - [API 接口](#-api-接口)
-- [快捷键](#️-快捷键)
+- [快捷键](#�?快捷�?
 - [常见问题](#-常见问题)
 - [更新日志](#-更新日志)
-- [许可证](#-许可证)
+- [许可证](#-许可�?
 
 ---
 
-## ✨ 功能特性
+## �?功能特�?
 
 ### 🏠 首页展示
 
-- **动态时钟**：实时显示时间（精确到秒），智能问候语（早安/午安/晚安等）
-- **天气显示** (NEW)：实时天气信息、温度显示、天气图标（基于 Open-Meteo API）
-- **农历日历** (NEW)：农历日期、节气、传统节日显示
+- **动态时�?*：实时显示时间（精确到秒），智能问候语（早�?午安/晚安等）
+- **天气显示** (NEW)：实时天气信息、温度显示、天气图标（基于 Open-Meteo API�?
+- **农历日历** (NEW)：农历日期、节气、传统节日显�?
 - **名言展示**：随机名言轮播，支持系统默认名言与自定义名言
 - **Aurora 极光背景**：沉浸式深空视觉效果
-- **流星特效**：随机生成的流星动画，增添科幻氛围
-- **系统监控仪表盘**：实时展示 CPU、内存、磁盘、网络、进程等硬件信息
-- **精简模式**：禁用动画和特效，大幅降低 CPU/GPU 占用，适合性能受限设备
-- **壁纸背景** (NEW)：自定义页面背景图片，支持上传/拖拽/URL/Picsum/Bing壁纸，可调模糊度和遮罩透明度
+- **流星特效**：随机生成的流星动画，增添科幻氛�?
+- **系统监控仪表�?*：实时展�?CPU、内存、磁盘、网络、进程等硬件信息
+- **精简模式**：禁用动画和特效，大幅降�?CPU/GPU 占用，适合性能受限设备
+- **壁纸背景** (NEW)：自定义页面背景图片，支持上�?拖拽/URL/Picsum/Bing壁纸，可调模糊度和遮罩透明�?
 
 ### 💻 系统监控 (NEW)
 
-- **引擎室（系统监控卡）**：CPU 使用率、内存占用、硬盘空间、运行时间
-- **硬件身份卡**：CPU 型号、主板信息、固件版本、内存大小、存储设备、显卡、操作系统
-- **核心脉搏（生命体征卡）**：CPU/内存实时仪表盘、温度监控、LIVE 状态指示
-- **网络遥测卡**：下载/上传速率、流量监控图表、IP 地址、连接状态
-- **服务蜂巢（进程矩阵卡）**：Docker 容器状态、运行时间计时器、服务健康监控
-- **Dock 迷你监控**：桌面端底部 SYSTEM ONLINE 状态栏，CPU/MEM/温度/网速实时显示
-- **Ticker 状态栏**：移动端底部滚动状态栏，集成于可拖拽能量球底部栏
-- **系统监控三形态**：迷你胶囊 / 状态栏 / 全功能仪表盘无缝切换，视图选择持久化
-- **Widget 尺寸预设 S/M/L**：迷你摘要 / 默认 / 全展开三档一键切换，设置自动持久化
-- **小部件可见性控制**：后台可单独控制每个监控组件的显示/隐藏
-- **小部件尺寸预设 S/M/L** (NEW)：一键切换所有监控 Widget 的显示尺寸
-  - S（迷你摘要）：所有 Widget 强制折叠，仅标题栏 + 关键指标摘要
+- **引擎室（系统监控卡）**：CPU 使用率、内存占用、硬盘空间、运行时�?
+- **硬件身份�?*：CPU 型号、主板信息、固件版本、内存大小、存储设备、显卡、操作系�?
+- **核心脉搏（生命体征卡�?*：CPU/内存实时仪表盘、温度监控、LIVE 状态指�?
+- **网络遥测�?*：下�?上传速率、流量监控图表、IP 地址、连接状�?
+- **服务蜂巢（进程矩阵卡�?*：Docker 容器状态、运行时间计时器、服务健康监�?
+- **Dock 迷你监控**：桌面端底部 SYSTEM ONLINE 状态栏，CPU/MEM/温度/网速实时显�?
+- **Ticker 状态栏**：移动端底部滚动状态栏，集成于可拖拽能量球底部�?
+- **系统监控三形�?*：迷你胶�?/ 状态栏 / 全功能仪表盘无缝切换，视图选择持久�?
+- **Widget 尺寸预设 S/M/L**：迷你摘�?/ 默认 / 全展开三档一键切换，设置自动持久�?
+- **小部件可见性控�?*：后台可单独控制每个监控组件的显�?隐藏
+- **小部件尺寸预�?S/M/L** (NEW)：一键切换所有监�?Widget 的显示尺�?
+  - S（迷你摘要）：所�?Widget 强制折叠，仅标题�?+ 关键指标摘要
   - M（默认）：用户可单独折叠/展开每个 Widget
-  - L（全展开）：所有 Widget 强制展开，完整内容展示
-- **菜单可见性控制** (NEW)：后台可控制多语言切换、主题切换按钮的显示/隐藏
+  - L（全展开）：所�?Widget 强制展开，完整内容展�?
+- **菜单可见性控�?* (NEW)：后台可控制多语言切换、主题切换按钮的显示/隐藏
 
 ### 🔍 Spotlight 搜索
 
-- **快捷键唤起**：`⌘/Ctrl + K` 全局呼出
-- **多搜索引擎**：Google、Bing、百度、DuckDuckGo 一键切换
-- **书签搜索**：快速搜索已收藏的书签
-- **快速添加**：直接在搜索框中添加新书签
+- **快捷键唤�?*：`�?Ctrl + K` 全局呼出
+- **多搜索引�?*：Google、Bing、百度、DuckDuckGo 一键切�?
+- **书签搜索**：快速搜索已收藏的书�?
+- **快速添�?*：直接在搜索框中添加新书�?
 
 ### 📚 书签管理
 
-- **智能元数据抓取**：自动获取网站标题、描述、Favicon、OG 图片
+- **智能元数据抓�?*：自动获取网站标题、描述、Favicon、OG 图片
 - **分类管理**：自定义分类名称、图标及颜色
-- **前端分类编辑** (NEW)：主页直接编辑/新建/删除分类，无需进入后台
-- **快速新增分类** (NEW)：添加书签时可直接创建新分类，内嵌分类表单支持 10 种预设颜色
+- **前端分类编辑** (NEW)：主页直接编�?新建/删除分类，无需进入后台
+- **快速新增分�?* (NEW)：添加书签时可直接创建新分类，内嵌分类表单支�?10 种预设颜�?
 - **快速导航侧边栏** (NEW)：自动显示分类导航，快速定位，智能高亮当前分类
-- **置顶功能**：常用书签置顶展示（Bento Grid 非对称布局）
-- **稍后阅读**：Hero 卡片展示待读内容，支持已读标记、3D 卡片效果
-- **拖拽排序**：基于 @dnd-kit 的流畅拖拽体验
-- **右键菜单**：登录后支持快捷操作（编辑/删除/置顶等）
-- **自定义图标**：支持三种图标模式（预设图标、自定义上传、URL 远程图片）
-- **虚拟滚动**：首页超过 50 个书签时自动启用，优化大量数据渲染性能
-- **链接健康检查** (NEW)：一键批量检测所有书签链接可访问性，支持死链识别与清理
-- **内外网链接切换** (NEW)：书签支持配置内网/外网双链接，自动检测网络环境智能切换访问地址
+- **置顶功能**：常用书签置顶展示（Bento Grid 非对称布局�?
+- **稍后阅读**：Hero 卡片展示待读内容，支持已读标记�?D 卡片效果
+- **拖拽排序**：基�?@dnd-kit 的流畅拖拽体�?
+- **右键菜单**：登录后支持快捷操作（编�?删除/置顶等）
+- **自定义图�?*：支持三种图标模式（预设图标、自定义上传、URL 远程图片�?
+- **虚拟滚动**：首页超�?50 个书签时自动启用，优化大量数据渲染性能
+- **链接健康检�?* (NEW)：一键批量检测所有书签链接可访问性，支持死链识别与清�?
+- **内外网链接切�?* (NEW)：书签支持配置内�?外网双链接，自动检测网络环境智能切换访问地址
 
 ### 🤖 AI 功能 (NEW)
 
 - **AI 智能标签**：添加书签时自动调用 AI 生成匹配标签
-  - URL 分析完成后自动触发 AI 魔法（无需手动点击）
+  - URL 分析完成后自动触�?AI 魔法（无需手动点击�?
   - 自动填充标签 + 分类 + 优化描述
-  - AI 设置面板、标签管理面板
+  - AI 设置面板、标签管理面�?
   - 支持自动触发开关（可在 AI 设置中关闭）
   - 支持自定义超时时间（本地模型建议 60-120 秒）
 - **批量 AI 智能分类**：批量为选中书签通过 AI 分配分类
-  - 无匹配分类时自动创建新分类
-  - 同时更新标签和描述
-  - 并发处理（2 个 worker），异步执行，实时进度轮询
-- **批量 AI 元数据 & 图标**：一键批量优化书签元数据
-  - 优化标题（去除 SEO 后缀、保留品牌名）
-  - 生成精炼描述，推荐 3-5 个标签
-  - 推荐 Iconify 图标（优先 simple-icons 品牌图标、mdi、lucide）
-  - 多语言输出：元数据跟随当前 UI 语言（中文/英文）
+  - 无匹配分类时自动创建新分�?
+  - 同时更新标签和描�?
+  - 并发处理�? �?worker），异步执行，实时进度轮�?
+- **批量 AI 元数�?& 图标**：一键批量优化书签元数据
+  - 优化标题（去�?SEO 后缀、保留品牌名�?
+  - 生成精炼描述，推�?3-5 个标�?
+  - 推荐 Iconify 图标（优�?simple-icons 品牌图标、mdi、lucide�?
+  - 多语言输出：元数据跟随当前 UI 语言（中�?英文�?
 - **AI 对话助手**：智能书签搜索与发现助手
   - 语义搜索全部书签
   - 上下文感知回复，带可点击书签卡片
 - **AI 名言生成** (NEW)：通过 AI 批量生成主题名言
-  - 支持自定义生成数量和主题关键词
-  - 生成结果可勾选后一键添加到名言库
+  - 支持自定义生成数量和主题关键�?
+  - 生成结果可勾选后一键添加到名言�?
 
 ### ⚙️ 后台管理
 
 | 模块           | 功能                                                                    |
 | -------------- | ----------------------------------------------------------------------- |
-| **书签管理**   | 增删改查、批量操作、分类筛选、多关键词分词搜索、数字分页、快速修改分类、批量 AI 标签/分类/元数据 |
-| **分类管理**   | 自定义分类名称、图标选择器、颜色选择器、拖拽排序                        |
-| **图标管理**   | 上传自定义图标、图标预览、删除管理                                      |
+| **书签管理**   | 增删改查、批量操作、分类筛选、多关键词分词搜索、数字分页、快速修改分类、批�?AI 标签/分类/元数�?|
+| **分类管理**   | 自定义分类名称、图标选择器、颜色选择器、拖拽排�?                       |
+| **图标管理**   | 上传自定义图标、图标预览、删除管�?                                     |
 | **名言管理**   | 自定义名言、系统默认名言开关、AI 生成名言                               |
-| **AI 设置**    | AI 服务商配置（OpenAI/Gemini/DeepSeek/Qwen/豆包/自定义）、API Key、模型选择、超时配置、自动触发开关、连接测试 |
-| **站点设置**   | 自定义网站名称和图标、精简模式开关、天气/农历开关、菜单可见性控制、底部备案信息配置 |
-| **主题设置**   | 8 款预设主题、明/暗模式、自动切换、日夜动画切换、圆圈扩散动画           |
-| **小部件设置** | 控制各监控组件的显示/隐藏、Beam 流光边框开关、Widget 尺寸预设 S/M/L    |
-| **壁纸设置**   | 自定义背景壁纸、图片来源选择（上传/URL/Picsum/Bing）、模糊度和遮罩调节  |
-| **安全设置**   | 密码修改、带强度指示器动画、首次登录强制改密、登录状态二次验证、管理员用户名修改 |
-| **数据管理**   | 导入导出 JSON/HTML 备份、恢复出厂设置、导入成功自动返回首页、嵌套对象支持、SunPanel 数据兼容导入、浏览器书签导入（合并/覆盖模式）、导入后自动抓取书签图标（≤50 条） |
-| **云备份**     | WebDAV 云端备份（支持坚果云/群晖/绿联/Alist）、自动定时备份（node-cron）、本地 JSON 下载/恢复、原始 .db 数据库文件下载/上传、备份最多保留 30 个 |
-| **系统日志**   | API 请求日志记录、操作日志、按级别/类型筛选、一键清除日志                       |
-| **标签管理**   | 书签标签统计、标签重命名、标签删除                                               |
-| **访问统计**   | 书签点击追踪、热门书签排行、访问趋势图、最近访问记录、数据清除          |
-| **链接健康检查** | 批量检测书签链接可访问性、4 种状态识别（正常/异常/超时/重定向）、一键删除死链 |
+| **AI 设置**    | AI 服务商配置（OpenAI/Gemini/DeepSeek/Qwen/豆包/自定义）、API Key、模型选择、超时配置、自动触发开关、连接测�?|
+| **站点设置**   | 自定义网站名称和图标、精简模式开关、天�?农历开关、菜单可见性控制、底部备案信息配�?|
+| **主题设置**   | 8 款预设主题、明/暗模式、自动切换、日夜动画切换、圆圈扩散动�?          |
+| **小部件设�?* | 控制各监控组件的显示/隐藏、Beam 流光边框开关、Widget 尺寸预设 S/M/L    |
+| **壁纸设置**   | 自定义背景壁纸、图片来源选择（上�?URL/Picsum/Bing）、模糊度和遮罩调�? |
+| **安全设置**   | 密码修改、带强度指示器动画、首次登录强制改密、登录状态二次验证、管理员用户名修�?|
+| **数据管理**   | 导入导出 JSON/HTML 备份、恢复出厂设置、导入成功自动返回首页、嵌套对象支持、SunPanel 数据兼容导入、浏览器书签导入（合�?覆盖模式）、导入后自动抓取书签图标（≤50 条） |
+| **云备�?*     | WebDAV 云端备份（支持坚果云/群晖/绿联/Alist）、自动定时备份（node-cron）、本�?JSON 下载/恢复、原�?.db 数据库文件下�?上传、备份最多保�?30 �?|
+| **系统日志**   | API 请求日志记录、操作日志、按级别/类型筛选、一键清除日�?                      |
+| **标签管理**   | 书签标签统计、标签重命名、标签删�?                                              |
+| **访问统计**   | 书签点击追踪、热门书签排行、访问趋势图、最近访问记录、数据清�?         |
+| **链接健康检�?* | 批量检测书签链接可访问性�? 种状态识别（正常/异常/超时/重定向）、一键删除死�?|
 
 ### 🎨 视觉设计
 
-- **玻璃态容器**：`backdrop-blur` + 透明边框的现代玻璃拟态
+- **玻璃态容�?*：`backdrop-blur` + 透明边框的现代玻璃拟�?
 - **Border Beam**：流光边框动画效果（可后台开关）
 - **3D 卡片**：鼠标追踪的 3D 透视效果
-- **Spotlight 聚光灯**：卡片悬停光效
-- **Toast 通知**：物理弹跳动画
-- **主题过渡**：圆圈扩散动画切换效果
-- **日间/夜间模式**：全面适配的双主题系统，Dock 菜单可快速切换
-- **移动端适配**：响应式设计、可自由拖拽能量球悬浮坞、花瓣式展开菜单、底部状态栏、单列 Bento 布局
-- **桌面端优化**：浮动 Dock 导航（可自由拖拽+位置记忆）、迷你监控小部件、磁性放大效果、侧边导航栏
+- **Spotlight 聚光�?*：卡片悬停光�?
+- **Toast 通知**：物理弹跳动�?
+- **主题过渡**：圆圈扩散动画切换效�?
+- **日间/夜间模式**：全面适配的双主题系统，Dock 菜单可快速切�?
+- **移动端适配**：响应式设计、可自由拖拽能量球悬浮坞、花瓣式展开菜单、底部状态栏、单�?Bento 布局
+- **桌面端优�?*：浮�?Dock 导航（可自由拖拽+位置记忆）、迷你监控小部件、磁性放大效果、侧边导航栏
 - **精简模式**：关闭所有动画特效，大幅降低资源占用
 
 ---
 
 ## 🎨 主题系统
 
-支持 **8 款精心设计的主题配色**，每款主题包含 20+ CSS 变量：
+支持 **8 款精心设计的主题配色**，每款主题包�?20+ CSS 变量�?
 
 ### 深色主题
 
 | 主题                     | 描述               |
 | ------------------------ | ------------------ |
-| 🌌 **星云夜空** (Nebula) | 默认主题，紫青渐变 |
-| 🔮 **极光幻影** (Aurora) | 极光色彩，神秘梦幻 |
-| 🌊 **深海迷境** (Ocean)  | 深蓝色调，宁静深邃 |
-| 🌲 **暗夜森林** (Forest) | 暗绿色调，自然沉稳 |
+| 🌌 **星云夜空** (Nebula) | 默认主题，紫青渐�?|
+| 🔮 **极光幻影** (Aurora) | 极光色彩，神秘梦�?|
+| 🌊 **深海迷境** (Ocean)  | 深蓝色调，宁静深�?|
+| 🌲 **暗夜森林** (Forest) | 暗绿色调，自然沉�?|
 
 ### 浅色主题
 
 | 主题                       | 描述               |
 | -------------------------- | ------------------ |
-| ☀️ **晴空白昼** (Daylight) | 明亮清新，专业简洁 |
-| 🌅 **日出暖阳** (Sunrise)  | 暖橙色调，温暖活力 |
+| ☀�?**晴空白昼** (Daylight) | 明亮清新，专业简�?|
+| 🌅 **日出暖阳** (Sunrise)  | 暖橙色调，温暖活�?|
 | 🌸 **樱花粉黛** (Sakura)   | 粉色系，浪漫优雅   |
 | 🍃 **薄荷清新** (Mint)     | 薄荷绿，清新自然   |
 
@@ -255,49 +255,49 @@
 - **手动切换**：后台设置页面选择
 - **跟随系统**：自动适应系统暗色模式偏好
 - **自动模式**：根据时间自动切换（6:00-18:00 浅色，其余深色）
-- **可见性控制**：后台可控制主题切换按钮的显示/隐藏
+- **可见性控�?*：后台可控制主题切换按钮的显�?隐藏
 
 ---
 
-## 🛠️ 技术栈
+## 🛠�?技术栈
 
 ### 前端
 
-| 技术                        | 版本   | 用途           |
+| 技�?                       | 版本   | 用�?          |
 | --------------------------- | ------ | -------------- |
 | **React**                   | 18.3.1 | UI 框架        |
 | **TypeScript**              | 5.6.2  | 类型安全       |
 | **Vite**                    | 6.0.3  | 构建工具       |
-| **Tailwind CSS**            | 3.4.16 | 原子化 CSS     |
+| **Tailwind CSS**            | 3.4.16 | 原子�?CSS     |
 | **Framer Motion**           | 11.15  | 动画效果       |
 | **@dnd-kit**                | 6.3    | 拖拽排序       |
 | **@tanstack/react-virtual** | 3.13   | 虚拟滚动       |
-| **Lucide Icons**            | 0.468  | 图标库         |
+| **Lucide Icons**            | 0.468  | 图标�?        |
 | **Zod**                     | 4.3    | 数据验证       |
-| **SWR**                     | 2.4    | 数据请求与缓存 |
+| **SWR**                     | 2.4    | 数据请求与缓�?|
 | **lunar-javascript**        | 1.7    | 农历计算       |
 
 ### 后端
 
-| 技术                  | 版本   | 用途                    |
+| 技�?                 | 版本   | 用�?                   |
 | --------------------- | ------ | ----------------------- |
 | **Express**           | 4.21.2 | Web 框架                |
 | **sql.js**            | 1.11.0 | SQLite (WebAssembly)    |
 | **systeminformation** | 5.23.5 | 系统硬件信息采集        |
-| **Cheerio**           | 1.0.0  | HTML 解析（元数据抓取） |
+| **Cheerio**           | 1.0.0  | HTML 解析（元数据抓取�?|
 | **bcryptjs**          | 3.0.3  | 密码加密                |
 | **webdav**            | 5.8.0  | WebDAV 云备份客户端     |
 | **node-cron**         | 3.0.3  | 定时自动备份            |
 | **Zod**               | 4.3.6  | 数据验证                |
-| **tsx**               | 4.19.2 | TypeScript 运行时       |
+| **tsx**               | 4.19.2 | TypeScript 运行�?      |
 
 ### 部署
 
-| 技术               | 用途                          |
+| 技�?              | 用�?                         |
 | ------------------ | ----------------------------- |
-| **Docker**         | 容器化（支持 amd64 + arm64） |
+| **Docker**         | 容器化（支持 amd64 + arm64�?|
 | **Docker Compose** | 编排                          |
-| **GitHub Actions** | CI/CD 自动构建推送            |
+| **GitHub Actions** | CI/CD 自动构建推�?           |
 | **Nginx**          | 反向代理                      |
 
 ---
@@ -307,118 +307,118 @@
 ```
 NOWEN/
 ├── src/                              # 前端源码
-│   ├── components/
-│   │   ├── ui/                       # UI 组件库
-│   │   │   ├── 3d-card.tsx           # 3D 卡片效果
-│   │   │   ├── aurora-background.tsx # 极光背景
-│   │   │   ├── bento-grid.tsx        # Bento 网格布局
-│   │   │   ├── floating-dock.tsx     # 浮动 Dock 导航（桌面端，支持自由拖拽+位置记忆）
-│   │   │   ├── mobile-floating-dock.tsx # 移动端悬浮坞（可拖拽能量球+花瓣菜单+底部状态栏）
-│   │   │   ├── spotlight-card.tsx    # 聚光灯卡片
-│   │   │   ├── spotlight-search.tsx  # Spotlight 搜索面板
-│   │   │   ├── effects.tsx           # 流星/星光特效
-│   │   │   ├── advanced-effects.tsx  # Border Beam 流光等
-│   │   │   ├── typewriter.tsx        # 打字机效果
-│   │   │   └── scroll-to-top.tsx     # 回到顶部按钮
-│   │   ├── admin/                    # 后台管理组件
-│   │   │   ├── AdminSidebar.tsx      # 侧边导航栏
-│   │   │   ├── SiteSettingsCard.tsx  # 站点设置
-│   │   │   ├── ThemeCard.tsx         # 主题选择器
-│   │   │   ├── WidgetSettingsCard.tsx # 小部件设置
-│   │   │   ├── WallpaperSettingsCard.tsx # 壁纸设置
-│   │   │   ├── SecurityCard.tsx      # 安全设置
-│   │   │   ├── DataManagementCard.tsx # 数据管理（导入/导出）
-│   │   │   ├── BackupCard.tsx        # 云备份与数据管理
-│   │   │   ├── QuotesCard.tsx        # 名言管理
-│   │   │   ├── AnalyticsCard.tsx     # 访问统计
-│   │   │   ├── HealthCheckCard.tsx   # 链接健康检查
-│   │   │   ├── TagsManageCard.tsx    # 标签管理
-│   │   │   ├── LogsCard.tsx          # 系统日志
-│   │   │   ├── AiSettingsCard.tsx    # AI 设置
-│   │   │   ├── DocsCard.tsx          # 说明文档
-│   │   │   ├── SettingsPanel.tsx     # 设置面板容器
-│   │   │   └── Toast.tsx             # 消息通知
-│   │   ├── monitor/                  # 系统监控组件
-│   │   │   ├── SystemMonitor.tsx     # 统一监控接口
-│   │   │   ├── MonitorDashboard.tsx  # 完整仪表盘（日间透明化）
-│   │   │   ├── MiniMonitor.tsx       # 迷你监控小部件（胶囊式设计）
-│   │   │   └── TickerMonitor.tsx     # 滚动状态栏（集成移动端底部栏）
-│   │   ├── SystemMonitorCard.tsx     # 系统监控卡
-│   │   ├── HardwareIdentityCard.tsx  # 硬件身份卡
-│   │   ├── VitalSignsCard.tsx        # 生命体征卡
-│   │   ├── NetworkTelemetryCard.tsx  # 网络遥测卡
-│   │   ├── ProcessMatrixCard.tsx     # 进程矩阵卡
-│   │   ├── AddBookmarkModal.tsx      # 添加书签弹窗
-│   │   ├── CategoryEditModal.tsx     # 分类编辑弹窗
-│   │   ├── AdminLogin.tsx            # 登录页面
-│   │   ├── ForcePasswordChange.tsx   # 强制修改密码
-│   │   ├── BentoCard.tsx             # Bento 书签卡片
-│   │   ├── BookmarkCard.tsx          # 书签卡片
-│   │   ├── IconManager.tsx           # 图标管理器
-│   │   ├── ContextMenu.tsx           # 右键菜单
-│   │   ├── VirtualBookmarkList.tsx   # 虚拟滚动列表
-│   │   ├── ErrorBoundary.tsx         # 错误边界
-│   │   └── CommandPalette.tsx        # 命令面板
-│   ├── hooks/                        # 自定义 Hooks
-│   │   ├── useBookmarkStore.ts       # 书签状态管理
-│   │   ├── useHashRouter.ts          # 轻量级 Hash 路由
-│   │   ├── useAuth.ts                # 认证与页面导航
-│   │   ├── useTheme.tsx              # 主题系统（8 款主题）
-│   │   ├── useTime.ts                # 时间、问候语、农历
-│   │   ├── useWeather.ts             # 天气信息
-│   │   └── useNetworkEnv.ts          # 网络环境检测（内外网切换）
-│   ├── contexts/
-│   │   └── AdminContext.tsx          # 后台管理上下文
-│   ├── lib/                          # 工具库
-│   │   ├── api.ts                    # API 封装
-│   │   ├── bookmarkParser.ts         # 浏览器书签 HTML 解析器
-│   │   ├── i18n.ts                   # 国际化配置
-│   │   ├── animation.ts              # 动画工具函数
-│   │   ├── icons.ts                  # 图标映射
-│   │   ├── env.ts                    # 环境变量
-│   │   ├── error-handling.ts         # 错误处理
-│   │   └── utils.ts                  # 工具函数
-│   ├── pages/
-│   │   └── Admin.tsx                 # 后台管理页面
-│   ├── types/
-│   │   └── bookmark.ts               # 类型定义
-│   ├── data/
-│   │   └── quotes.ts                 # 名言数据
-│   ├── __tests__/                    # 单元测试
-│   ├── App.tsx                       # 主应用
-│   └── index.css                     # 全局样式与 CSS 变量
+�?  ├── components/
+�?  �?  ├── ui/                       # UI 组件�?
+�?  �?  �?  ├── 3d-card.tsx           # 3D 卡片效果
+�?  �?  �?  ├── aurora-background.tsx # 极光背景
+�?  �?  �?  ├── bento-grid.tsx        # Bento 网格布局
+�?  �?  �?  ├── floating-dock.tsx     # 浮动 Dock 导航（桌面端，支持自由拖�?位置记忆�?
+�?  �?  �?  ├── mobile-floating-dock.tsx # 移动端悬浮坞（可拖拽能量�?花瓣菜单+底部状态栏�?
+�?  �?  �?  ├── spotlight-card.tsx    # 聚光灯卡�?
+�?  �?  �?  ├── spotlight-search.tsx  # Spotlight 搜索面板
+�?  �?  �?  ├── effects.tsx           # 流星/星光特效
+�?  �?  �?  ├── advanced-effects.tsx  # Border Beam 流光�?
+�?  �?  �?  ├── typewriter.tsx        # 打字机效�?
+�?  �?  �?  └── scroll-to-top.tsx     # 回到顶部按钮
+�?  �?  ├── admin/                    # 后台管理组件
+�?  �?  �?  ├── AdminSidebar.tsx      # 侧边导航�?
+�?  �?  �?  ├── SiteSettingsCard.tsx  # 站点设置
+�?  �?  �?  ├── ThemeCard.tsx         # 主题选择�?
+�?  �?  �?  ├── WidgetSettingsCard.tsx # 小部件设�?
+�?  �?  �?  ├── WallpaperSettingsCard.tsx # 壁纸设置
+�?  �?  �?  ├── SecurityCard.tsx      # 安全设置
+�?  �?  �?  ├── DataManagementCard.tsx # 数据管理（导�?导出�?
+�?  �?  �?  ├── BackupCard.tsx        # 云备份与数据管理
+�?  �?  �?  ├── QuotesCard.tsx        # 名言管理
+�?  �?  �?  ├── AnalyticsCard.tsx     # 访问统计
+�?  �?  �?  ├── HealthCheckCard.tsx   # 链接健康检�?
+�?  �?  �?  ├── TagsManageCard.tsx    # 标签管理
+�?  �?  �?  ├── LogsCard.tsx          # 系统日志
+�?  �?  �?  ├── AiSettingsCard.tsx    # AI 设置
+�?  �?  �?  ├── DocsCard.tsx          # 说明文档
+�?  �?  �?  ├── SettingsPanel.tsx     # 设置面板容器
+�?  �?  �?  └── Toast.tsx             # 消息通知
+�?  �?  ├── monitor/                  # 系统监控组件
+�?  �?  �?  ├── SystemMonitor.tsx     # 统一监控接口
+�?  �?  �?  ├── MonitorDashboard.tsx  # 完整仪表盘（日间透明化）
+�?  �?  �?  ├── MiniMonitor.tsx       # 迷你监控小部件（胶囊式设计）
+�?  �?  �?  └── TickerMonitor.tsx     # 滚动状态栏（集成移动端底部栏）
+�?  �?  ├── SystemMonitorCard.tsx     # 系统监控�?
+�?  �?  ├── HardwareIdentityCard.tsx  # 硬件身份�?
+�?  �?  ├── VitalSignsCard.tsx        # 生命体征�?
+�?  �?  ├── NetworkTelemetryCard.tsx  # 网络遥测�?
+�?  �?  ├── ProcessMatrixCard.tsx     # 进程矩阵�?
+�?  �?  ├── AddBookmarkModal.tsx      # 添加书签弹窗
+�?  �?  ├── CategoryEditModal.tsx     # 分类编辑弹窗
+�?  �?  ├── AdminLogin.tsx            # 登录页面
+�?  �?  ├── ForcePasswordChange.tsx   # 强制修改密码
+�?  �?  ├── BentoCard.tsx             # Bento 书签卡片
+�?  �?  ├── BookmarkCard.tsx          # 书签卡片
+�?  �?  ├── IconManager.tsx           # 图标管理�?
+�?  �?  ├── ContextMenu.tsx           # 右键菜单
+�?  �?  ├── VirtualBookmarkList.tsx   # 虚拟滚动列表
+�?  �?  ├── ErrorBoundary.tsx         # 错误边界
+�?  �?  └── CommandPalette.tsx        # 命令面板
+�?  ├── hooks/                        # 自定�?Hooks
+�?  �?  ├── useBookmarkStore.ts       # 书签状态管�?
+�?  �?  ├── useHashRouter.ts          # 轻量�?Hash 路由
+�?  �?  ├── useAuth.ts                # 认证与页面导�?
+�?  �?  ├── useTheme.tsx              # 主题系统�? 款主题）
+�?  �?  ├── useTime.ts                # 时间、问候语、农�?
+�?  �?  ├── useWeather.ts             # 天气信息
+�?  �?  └── useNetworkEnv.ts          # 网络环境检测（内外网切换）
+�?  ├── contexts/
+�?  �?  └── AdminContext.tsx          # 后台管理上下�?
+�?  ├── lib/                          # 工具�?
+�?  �?  ├── api.ts                    # API 封装
+�?  �?  ├── bookmarkParser.ts         # 浏览器书�?HTML 解析�?
+�?  �?  ├── i18n.ts                   # 国际化配�?
+�?  �?  ├── animation.ts              # 动画工具函数
+�?  �?  ├── icons.ts                  # 图标映射
+�?  �?  ├── env.ts                    # 环境变量
+�?  �?  ├── error-handling.ts         # 错误处理
+�?  �?  └── utils.ts                  # 工具函数
+�?  ├── pages/
+�?  �?  └── Admin.tsx                 # 后台管理页面
+�?  ├── types/
+�?  �?  └── bookmark.ts               # 类型定义
+�?  ├── data/
+�?  �?  └── quotes.ts                 # 名言数据
+�?  ├── __tests__/                    # 单元测试
+�?  ├── App.tsx                       # 主应�?
+�?  └── index.css                     # 全局样式�?CSS 变量
 ├── server/                           # 后端源码
-│   ├── src/
-│   │   ├── routes/                   # 路由模块
-│   │   │   ├── bookmarks.ts          # 书签路由
-│   │   │   ├── categories.ts         # 分类路由
-│   │   │   ├── quotes.ts             # 名言路由
-│   │   │   ├── admin.ts              # 管理员路由
-│   │   │   ├── settings.ts           # 设置路由
-│   │   │   ├── system.ts             # 系统监控路由
-│   │   │   ├── visits.ts             # 访问统计路由
-│   │   │   ├── health-check.ts       # 链接健康检查路由
-│   │   │   ├── ai.ts                 # AI 路由
-│   │   │   ├── logs.ts               # 系统日志路由
-│   │   │   ├── backup.ts             # 云备份路由
-│   │   │   └── data.ts               # 数据导入导出路由
-│   │   ├── services/
-│   │   │   ├── metadata.ts           # URL 元数据抓取
-│   │   │   ├── ai.ts                 # AI 智能服务
-│   │   │   └── backup.ts             # WebDAV 备份服务
-│   │   ├── middleware/               # 中间件
-│   │   ├── utils/                    # 工具函数
-│   │   ├── index.ts                  # 服务入口
-│   │   ├── db.ts                     # 数据库操作
-│   │   └── schemas.ts                # 请求验证
-│   └── data/
-│       └── zen-garden.db             # SQLite 数据库文件
+�?  ├── src/
+�?  �?  ├── routes/                   # 路由模块
+�?  �?  �?  ├── bookmarks.ts          # 书签路由
+�?  �?  �?  ├── categories.ts         # 分类路由
+�?  �?  �?  ├── quotes.ts             # 名言路由
+�?  �?  �?  ├── admin.ts              # 管理员路�?
+�?  �?  �?  ├── settings.ts           # 设置路由
+�?  �?  �?  ├── system.ts             # 系统监控路由
+�?  �?  �?  ├── visits.ts             # 访问统计路由
+�?  �?  �?  ├── health-check.ts       # 链接健康检查路�?
+�?  �?  �?  ├── ai.ts                 # AI 路由
+�?  �?  �?  ├── logs.ts               # 系统日志路由
+�?  �?  �?  ├── backup.ts             # 云备份路�?
+�?  �?  �?  └── data.ts               # 数据导入导出路由
+�?  �?  ├── services/
+�?  �?  �?  ├── metadata.ts           # URL 元数据抓�?
+�?  �?  �?  ├── ai.ts                 # AI 智能服务
+�?  �?  �?  └── backup.ts             # WebDAV 备份服务
+�?  �?  ├── middleware/               # 中间�?
+�?  �?  ├── utils/                    # 工具函数
+�?  �?  ├── index.ts                  # 服务入口
+�?  �?  ├── db.ts                     # 数据库操�?
+�?  �?  └── schemas.ts                # 请求验证
+�?  └── data/
+�?      └── zen-garden.db             # SQLite 数据库文�?
 ├── .github/
-│   └── workflows/
-│       └── docker-publish.yml        # GitHub Actions 自动构建
-├── Dockerfile                        # Docker 镜像配置（支持多架构）
+�?  └── workflows/
+�?      └── docker-publish.yml        # GitHub Actions 自动构建
+├── Dockerfile                        # Docker 镜像配置（支持多架构�?
 ├── docker-compose.yml                # Docker 编排配置
-├── build-multiarch.sh                # 多架构构建脚本（amd64 + arm64）
+├── build-multiarch.sh                # 多架构构建脚本（amd64 + arm64�?
 ├── nginx.conf                        # Nginx 配置
 ├── vite.config.ts                    # Vite 配置
 ├── tailwind.config.js                # Tailwind 配置
@@ -430,9 +430,9 @@ NOWEN/
 
 ## 🚀 安装部署
 
-### 默认管理员账号
+### 默认管理员账�?
 
-| 用户名 | 密码     |
+| 用户�?| 密码     |
 | ------ | -------- |
 | admin  | admin123 |
 
@@ -452,9 +452,9 @@ NOWEN/
 **第一步：安装 Node.js**
 
 1. 访问 https://nodejs.org/
-2. 下载 **LTS 版本**（推荐 20.x 或更高）
-3. 双击安装包，一路点击 **Next** 完成安装
-4. 验证安装：打开命令提示符（Win+R 输入 `cmd`），输入：
+2. 下载 **LTS 版本**（推�?20.x 或更高）
+3. 双击安装包，一路点�?**Next** 完成安装
+4. 验证安装：打开命令提示符（Win+R 输入 `cmd`），输入�?
    ```bash
    node -v
    npm -v
@@ -464,7 +464,7 @@ NOWEN/
 **第二步：下载项目**
 
 ```bash
-# 打开命令提示符，进入你想存放项目的目录
+# 打开命令提示符，进入你想存放项目的目�?
 cd D:\Projects
 
 # 克隆项目
@@ -490,7 +490,7 @@ cd ..
 
 需要打开 **两个** 命令提示符窗口：
 
-**窗口 1 - 启动后端服务：**
+**窗口 1 - 启动后端服务�?*
 
 ```bash
 cd D:\Projects\NOWEN\server
@@ -499,7 +499,7 @@ npm run dev
 
 看到 `Server running on port 3001` 表示后端启动成功
 
-**窗口 2 - 启动前端服务：**
+**窗口 2 - 启动前端服务�?*
 
 ```bash
 cd D:\Projects\NOWEN
@@ -512,17 +512,17 @@ npm run dev
 
 打开浏览器，访问 http://localhost:5173
 
-#### 🎉 完成！
+#### 🎉 完成�?
 
 现在你可以：
 
-1. 点击右下角 **管理** 图标进入后台
+1. 点击右下�?**管理** 图标进入后台
 2. 使用默认账号 `admin` / `admin123` 登录
 3. 开始添加你的书签！
 
-#### ❓ 常见问题
+#### �?常见问题
 
-**Q: npm install 报错？**
+**Q: npm install 报错�?*
 
 ```bash
 # 清除缓存重试
@@ -537,7 +537,7 @@ npm install
 netstat -ano | findstr :3001
 netstat -ano | findstr :5173
 
-# 关闭占用进程或修改端口
+# 关闭占用进程或修改端�?
 ```
 
 ---
@@ -547,14 +547,14 @@ netstat -ano | findstr :5173
 #### 📋 前置要求
 
 - **Docker**：[安装指南](https://docs.docker.com/get-docker/)
-- **Docker Compose**：通常随 Docker Desktop 一起安装
+- **Docker Compose**：通常�?Docker Desktop 一起安�?
 
 #### 🔧 安装步骤
 
-**方法 A：使用 Docker Hub 镜像（推荐）**
+**方法 A：使�?Docker Hub 镜像（推荐）**
 
 ```bash
-# 直接从 Docker Hub 拉取镜像
+# 直接�?Docker Hub 拉取镜像
 docker pull cropflre/nowen:latest
 
 # 创建 docker-compose.yml 文件
@@ -568,9 +568,9 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      # 🔑 数据持久化 — Named Volume，容器重建/更新后自动复用
+      # 🔑 数据持久�?�?Named Volume，容器重�?更新后自动复�?
       - nowen-data:/app/server/data
-      # 🔑 安全备份卷 — 额外数据保护层
+      # 🔑 安全备份�?�?额外数据保护�?
       - nowen-backup:/app/.data-backup
       # 系统监控相关挂载（可选）
       - /:/host:ro
@@ -583,7 +583,7 @@ services:
       - PROC_PATH=/host/proc
       - SYS_PATH=/host/sys
       - FS_PATH=/host
-    privileged: true  # 允许读取 CPU 温度等硬件信息
+    privileged: true  # 允许读取 CPU 温度等硬件信�?
 
 volumes:
   nowen-data:
@@ -599,21 +599,21 @@ docker-compose up -d
 docker-compose logs -f
 ```
 
-**方法 B：本地构建镜像**
+**方法 B：本地构建镜�?*
 
 ```bash
 # 1. 克隆项目
 git clone https://github.com/cropflre/NOWEN.git
 cd NOWEN
 
-# 2. 构建并启动
+# 2. 构建并启�?
 docker-compose up -d --build
 
 # 3. 查看日志
 docker-compose logs -f
 ```
 
-**方法 C：使用 Docker 命令**
+**方法 C：使�?Docker 命令**
 
 ```bash
 # 直接运行容器
@@ -651,11 +651,11 @@ docker-compose restart
 # 查看日志
 docker-compose logs -f
 
-# 更新到最新版本
+# 更新到最新版�?
 docker-compose pull
 docker-compose up -d
 
-# 查看容器状态
+# 查看容器状�?
 docker ps
 ```
 
@@ -663,12 +663,12 @@ docker ps
 
 要启用完整的系统监控功能，需要：
 
-1. 挂载宿主机文件系统（只读）
-2. 挂载 `/proc` 和 `/sys` 目录
+1. 挂载宿主机文件系统（只读�?
+2. 挂载 `/proc` �?`/sys` 目录
 3. 挂载 Docker socket（监控容器）
-4. 使用 `privileged` 模式（读取温度等硬件信息）
+4. 使用 `privileged` 模式（读取温度等硬件信息�?
 
-如果不需要系统监控功能，可以移除相关挂载和环境变量，仅保留数据目录挂载即可。
+如果不需要系统监控功能，可以移除相关挂载和环境变量，仅保留数据目录挂载即可�?
 
 ---
 
@@ -676,8 +676,8 @@ docker ps
 
 #### 📋 前置要求
 
-- 群晖 DSM 7.0 或更高版本
-- 已安装 **Container Manager**（原 Docker）套件
+- 群晖 DSM 7.0 或更高版�?
+- 已安�?**Container Manager**（原 Docker）套�?
 
 #### 🔧 安装步骤
 
@@ -689,29 +689,29 @@ docker ps
 
 **第二步：下载项目文件**
 
-1. 使用 File Station 在 `docker` 共享文件夹下创建 `nebula-portal` 目录
-2. 将项目文件上传到该目录，或使用 SSH：
+1. 使用 File Station �?`docker` 共享文件夹下创建 `nowen` 目录
+2. 将项目文件上传到该目录，或使�?SSH�?
 
    ```bash
-   # SSH 连接到 NAS
+   # SSH 连接�?NAS
    ssh admin@你的NAS地址
 
    # 进入 docker 目录
    cd /volume1/docker
 
    # 克隆项目
-   git clone https://github.com/cropflre/NOWEN.git nebula-portal
+   git clone https://github.com/cropflre/NOWEN.git nowen
    ```
 
 **第三步：使用 Container Manager 部署**
 
 1. 打开 **Container Manager**
-2. 点击左侧 **项目** → **新增**
-3. 填写项目信息：
-   - 项目名称：`nebula-portal`
-   - 路径：选择 `/docker/nebula-portal`
+2. 点击左侧 **项目** �?**新增**
+3. 填写项目信息�?
+   - 项目名称：`nowen`
+   - 路径：选择 `/docker/nowen`
    - 来源：选择 `docker-compose.yml`
-4. 点击 **下一步** → **完成**
+4. 点击 **下一�?* �?**完成**
 
 **第四步：访问应用**
 
@@ -719,13 +719,13 @@ docker ps
 
 #### 🔧 群晖 GUI 方式（不使用命令行）
 
-如果不想使用命令行，可以：
+如果不想使用命令行，可以�?
 
 1. 在电脑上下载项目 ZIP 文件
-2. 解压后通过 File Station 上传到 NAS 的 `/docker/nebula-portal` 目录
-3. 按上述步骤在 Container Manager 中创建项目
+2. 解压后通过 File Station 上传�?NAS �?`/docker/nowen` 目录
+3. 按上述步骤在 Container Manager 中创建项�?
 
-> ✅ **数据安全**：NOWEN v0.2.1+ 内置 Named Volume + 8 层防呆保护，通过 Container Manager 更新镜像时数据会自动保留。
+> �?**数据安全**：NOWEN v0.2.1+ 内置 Named Volume + 8 层防呆保护，通过 Container Manager 更新镜像时数据会自动保留�?
 
 ---
 
@@ -733,34 +733,34 @@ docker ps
 
 #### 📋 前置要求
 
-- 绿联 NAS 已开启 Docker 功能
+- 绿联 NAS 已开�?Docker 功能
 - UGOS Pro 系统
 
 #### 🔧 安装步骤
 
-**第一步：开启 Docker**
+**第一步：开�?Docker**
 
 1. 打开 **应用中心**
-2. 找到并安装 **Docker** 应用
+2. 找到并安�?**Docker** 应用
 
 **第二步：创建项目目录**
 
 1. 打开 **文件管理**
 2. 进入 `docker` 目录
-3. 创建新文件夹 `nebula-portal`
+3. 创建新文件夹 `nowen`
 
 **第三步：上传项目文件**
 
 1. 在电脑上下载项目：https://github.com/cropflre/NOWEN/archive/refs/heads/main.zip
 2. 解压文件
-3. 通过文件管理上传到 `/docker/nebula-portal` 目录
+3. 通过文件管理上传�?`/docker/nowen` 目录
 
 **第四步：使用 Docker Compose 部署**
 
 1. 打开 **Docker** 应用
-2. 点击 **Compose** → **添加**
-3. 选择 **本地路径**：`/docker/nebula-portal`
-4. 系统会自动读取 `docker-compose.yml`
+2. 点击 **Compose** �?**添加**
+3. 选择 **本地路径**：`/docker/nowen`
+4. 系统会自动读�?`docker-compose.yml`
 5. 点击 **部署**
 
 **第五步：访问应用**
@@ -769,24 +769,24 @@ docker ps
 
 #### 📝 手动配置（如果自动读取失败）
 
-在 Docker Compose 编辑器中填入：
+�?Docker Compose 编辑器中填入�?
 
 ```yaml
 services:
-  nebula-portal:
-    build: /docker/nebula-portal
-    container_name: nebula-portal
+  nowen:
+    build: /docker/nowen
+    container_name: nowen
     restart: unless-stopped
     ports:
       - "3000:3000"
     volumes:
       # 🔑 必须手动指定数据目录，否则更新容器会丢失数据
-      - /docker/nebula-portal/data:/app/server/data
+      - /docker/nowen/data:/app/server/data
     environment:
       - NODE_ENV=production
 ```
 
-> ⚠️ **更新提醒**：通过绿联 Docker 可视化界面更新镜像前，请务必先备份数据！绿联的「版本检测与更新」功能会删除旧容器并创建新容器，如果使用了「自动配置存储」，数据可能会丢失。建议使用上述固定路径挂载，并在更新前通过 NOWEN 管理面板导出备份。
+> ⚠️ **更新提醒**：通过绿联 Docker 可视化界面更新镜像前，请务必先备份数据！绿联的「版本检测与更新」功能会删除旧容器并创建新容器，如果使用了「自动配置存储」，数据可能会丢失。建议使用上述固定路径挂载，并在更新前通过 NOWEN 管理面板导出备份�?
 
 ---
 
@@ -795,35 +795,35 @@ services:
 #### 📋 前置要求
 
 - 飞牛 OS 系统
-- 已安装 Docker 套件
+- 已安�?Docker 套件
 
 #### 🔧 安装步骤
 
 **第一步：安装 Docker**
 
 1. 进入 **应用中心**
-2. 搜索并安装 **Docker**
+2. 搜索并安�?**Docker**
 
-**第二步：SSH 连接到 NAS**
+**第二步：SSH 连接�?NAS**
 
 ```bash
 # 使用 SSH 工具连接
 ssh root@你的NAS地址
 ```
 
-**第三步：下载并部署项目**
+**第三步：下载并部署项�?*
 
 ```bash
 # 进入 docker 存储目录
 cd /vol1/1000/docker  # 路径可能因配置不同而异
 
 # 克隆项目
-git clone https://github.com/cropflre/NOWEN.git nebula-portal
+git clone https://github.com/cropflre/NOWEN.git nowen
 
 # 进入项目目录
-cd nebula-portal
+cd nowen
 
-# 构建并启动
+# 构建并启�?
 docker-compose up -d --build
 ```
 
@@ -831,23 +831,23 @@ docker-compose up -d --build
 
 - 访问地址：`http://NAS的IP地址:3000`
 
-#### 🖥️ 通过飞牛 Web 界面部署
+#### 🖥�?通过飞牛 Web 界面部署
 
 1. 打开 **Docker** 应用
-2. 选择 **容器编排** 或 **Compose**
-3. 点击 **添加** → **从路径创建**
-4. 选择项目目录，点击部署
+2. 选择 **容器编排** �?**Compose**
+3. 点击 **添加** �?**从路径创�?*
+4. 选择项目目录，点击部�?
 
-> ✅ **数据安全**：NOWEN v0.2.1+ 内置 Named Volume + 8 层防呆保护，通过飞牛 Docker 界面更新镜像时数据会自动保留。
+> �?**数据安全**：NOWEN v0.2.1+ 内置 Named Volume + 8 层防呆保护，通过飞牛 Docker 界面更新镜像时数据会自动保留�?
 
 ---
 
-### 方式六：威联通 (QNAP) NAS 安装
+### 方式六：威联�?(QNAP) NAS 安装
 
 #### 📋 前置要求
 
-- QTS 5.0 或更高版本
-- 已安装 **Container Station** 套件
+- QTS 5.0 或更高版�?
+- 已安�?**Container Station** 套件
 
 #### 🔧 安装步骤
 
@@ -860,12 +860,12 @@ docker-compose up -d --build
 **第二步：创建项目目录**
 
 1. 打开 **File Station**
-2. 进入 `Container` 共享文件夹
-3. 创建 `nebula-portal` 目录
+2. 进入 `Container` 共享文件�?
+3. 创建 `nowen` 目录
 
 **第三步：上传项目文件**
 
-通过 File Station 上传项目文件，或使用 SSH：
+通过 File Station 上传项目文件，或使用 SSH�?
 
 ```bash
 # SSH 连接
@@ -875,38 +875,38 @@ ssh admin@你的NAS地址
 cd /share/Container
 
 # 克隆项目
-git clone https://github.com/cropflre/NOWEN.git nebula-portal
+git clone https://github.com/cropflre/NOWEN.git nowen
 ```
 
 **第四步：部署应用**
 
 1. 打开 **Container Station**
-2. 点击 **应用程序** → **创建**
+2. 点击 **应用程序** �?**创建**
 3. 选择 **Docker Compose**
-4. 路径选择：`/Container/nebula-portal`
+4. 路径选择：`/Container/nowen`
 5. 点击 **创建**
 
 **第五步：访问应用**
 
 - 访问地址：`http://NAS的IP地址:3000`
 
-> ✅ **数据安全**：NOWEN v0.2.1+ 内置 Named Volume + 8 层防呆保护，通过 Container Station 更新镜像时数据会自动保留。
+> �?**数据安全**：NOWEN v0.2.1+ 内置 Named Volume + 8 层防呆保护，通过 Container Station 更新镜像时数据会自动保留�?
 
 ---
 
-### 方式七：极空间 NAS 安装
+### 方式七：极空�?NAS 安装
 
 #### 📋 前置要求
 
-- 极空间 NAS 设备
-- 已开启 Docker 功能
+- 极空�?NAS 设备
+- 已开�?Docker 功能
 
 #### 🔧 安装步骤
 
-**第一步：开启 Docker**
+**第一步：开�?Docker**
 
 1. 进入 **系统设置**
-2. 开启 **Docker 服务**
+2. 开�?**Docker 服务**
 
 **第二步：通过 SSH 部署**
 
@@ -915,45 +915,45 @@ git clone https://github.com/cropflre/NOWEN.git nebula-portal
 ssh root@你的NAS地址
 
 # 进入 docker 目录
-cd /Volume1/docker  # 路径可能因配置不同
+cd /Volume1/docker  # 路径可能因配置不�?
 
 # 克隆项目
-git clone https://github.com/cropflre/NOWEN.git nebula-portal
+git clone https://github.com/cropflre/NOWEN.git nowen
 
 # 进入项目目录
-cd nebula-portal
+cd nowen
 
-# 构建并启动
+# 构建并启�?
 docker-compose up -d --build
 ```
 
-**第三步：通过极空间 App 部署（可选）**
+**第三步：通过极空�?App 部署（可选）**
 
-1. 打开极空间 Docker 管理应用
-2. 选择 **Compose** → **添加项目**
-3. 选择项目路径，点击部署
+1. 打开极空�?Docker 管理应用
+2. 选择 **Compose** �?**添加项目**
+3. 选择项目路径，点击部�?
 
 **第四步：访问应用**
 
 - 访问地址：`http://NAS的IP地址:3000`
 
-> ✅ **数据安全**：NOWEN v0.2.1+ 内置 Named Volume + 8 层防呆保护，通过极空间 Docker 界面更新镜像时数据会自动保留。
+> �?**数据安全**：NOWEN v0.2.1+ 内置 Named Volume + 8 层防呆保护，通过极空�?Docker 界面更新镜像时数据会自动保留�?
 
 ---
 
 ### 方式八：ARM64 开发板安装（RK3588/RK3576/RK3566 等）
 
-> 适用于瑞芯微 RK3588、RK3576、RK3566 等 ARM64 架构开发板/单板计算机，以及 Apple Silicon (M1/M2/M3) 设备
+> 适用于瑞芯微 RK3588、RK3576、RK3566 �?ARM64 架构开发板/单板计算机，以及 Apple Silicon (M1/M2/M3) 设备
 
 #### 📋 前置要求
 
 - ARM64 架构设备（`aarch64`），运行 Linux 系统（Ubuntu/Debian/Armbian 等）
-- 已安装 Docker 和 Docker Compose
+- 已安�?Docker �?Docker Compose
 
 ```bash
 # 验证架构
 uname -m
-# 应输出: aarch64
+# 应输�? aarch64
 
 # 安装 Docker（如果尚未安装）
 curl -fsSL https://get.docker.com | sh
@@ -962,10 +962,10 @@ sudo usermod -aG docker $USER
 
 #### 🔧 安装步骤
 
-**方法 A：使用 Docker Hub 镜像（推荐）**
+**方法 A：使�?Docker Hub 镜像（推荐）**
 
 ```bash
-# 拉取镜像（Docker 会自动拉取 arm64 版本）
+# 拉取镜像（Docker 会自动拉�?arm64 版本�?
 docker pull cropflre/nowen:latest
 
 # 创建项目目录
@@ -984,7 +984,7 @@ services:
     volumes:
       - nowen-data:/app/server/data
       - nowen-backup:/app/.data-backup
-      # 系统监控挂载（可选，推荐开启以发挥 ARM 设备监控能力）
+      # 系统监控挂载（可选，推荐开启以发挥 ARM 设备监控能力�?
       - /:/host:ro
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
@@ -1011,34 +1011,34 @@ docker compose up -d
 docker compose logs -f
 ```
 
-**方法 B：在 ARM64 设备上本地构建**
+**方法 B：在 ARM64 设备上本地构�?*
 
 ```bash
 # 克隆项目
 git clone https://github.com/cropflre/NOWEN.git
 cd NOWEN
 
-# 直接构建并启动（Docker 会自动为当前 arm64 架构构建）
+# 直接构建并启动（Docker 会自动为当前 arm64 架构构建�?
 docker compose up -d --build
 
 # 查看日志确认架构
 docker compose logs | grep "Architecture"
-# 应输出: Architecture: aarch64
+# 应输�? Architecture: aarch64
 ```
 
 **方法 C：跨平台构建 ARM64 镜像（在 x86 电脑上构建）**
 
-如果你想在 x86 电脑上构建 ARM64 镜像，然后传输到 ARM 设备：
+如果你想�?x86 电脑上构�?ARM64 镜像，然后传输到 ARM 设备�?
 
 ```bash
 # 克隆项目
 git clone https://github.com/cropflre/NOWEN.git
 cd NOWEN
 
-# 使用多架构构建脚本
+# 使用多架构构建脚�?
 chmod +x build-multiarch.sh
 
-# 构建并推送到 Docker Hub（需要先 docker login）
+# 构建并推送到 Docker Hub（需要先 docker login�?
 ./build-multiarch.sh --tag yourrepo/nowen
 
 # 或仅构建当前架构并加载到本地
@@ -1053,30 +1053,30 @@ chmod +x build-multiarch.sh
 
 | 设备 | 建议 |
 | --- | --- |
-| **RK3588**（8核/8GB+） | 全功能运行，可开启所有监控组件 |
-| **RK3576**（8核/4GB+） | 建议开启精简模式，关闭流星特效 |
-| **RK3566**（4核/2GB+） | 建议开启精简模式，关闭部分监控卡片 |
+| **RK3588**�?�?8GB+�?| 全功能运行，可开启所有监控组�?|
+| **RK3576**�?�?4GB+�?| 建议开启精简模式，关闭流星特�?|
+| **RK3566**�?�?2GB+�?| 建议开启精简模式，关闭部分监控卡�?|
 
-> 💡 **提示**：在后台管理 → 站点设置 中开启「精简模式」可大幅降低 CPU/GPU 占用，非常适合 ARM 设备。
+> 💡 **提示**：在后台管理 �?站点设置 中开启「精简模式」可大幅降低 CPU/GPU 占用，非常适合 ARM 设备�?
 
-#### ❓ ARM64 常见问题
+#### �?ARM64 常见问题
 
-**Q: `docker pull` 报错 `no matching manifest for linux/arm64`？**
+**Q: `docker pull` 报错 `no matching manifest for linux/arm64`�?*
 
-A: 说明镜像尚未发布 ARM64 版本，请使用方法 B 在设备上本地构建。
+A: 说明镜像尚未发布 ARM64 版本，请使用方法 B 在设备上本地构建�?
 
-**Q: 构建时 `npm install` 非常慢？**
+**Q: 构建�?`npm install` 非常慢？**
 
-A: ARM64 设备编译原生模块较慢是正常的，RK3588 约需 3-5 分钟，RK3566 约需 8-15 分钟。可以使用国内 npm 镜像加速：
+A: ARM64 设备编译原生模块较慢是正常的，RK3588 约需 3-5 分钟，RK3566 约需 8-15 分钟。可以使用国�?npm 镜像加速：
 
 ```bash
-# 在 Dockerfile 的 npm install 之前添加
+# �?Dockerfile �?npm install 之前添加
 RUN npm config set registry https://registry.npmmirror.com
 ```
 
-**Q: 系统监控读不到 CPU 温度？**
+**Q: 系统监控读不�?CPU 温度�?*
 
-A: 确保使用了 `privileged: true` 且挂载了 `/sys` 目录。部分开发板的温度节点路径不同，`systeminformation` 会自动适配大部分 ARM SoC。
+A: 确保使用�?`privileged: true` 且挂载了 `/sys` 目录。部分开发板的温度节点路径不同，`systeminformation` 会自动适配大部�?ARM SoC�?
 
 ---
 
@@ -1084,26 +1084,26 @@ A: 确保使用了 `privileged: true` 且挂载了 `/sys` 目录。部分开发�
 
 ### 端口映射说明
 
-| 端口 | 用途                            |
+| 端口 | 用�?                           |
 | ---- | ------------------------------- |
 | 3000 | Web 界面（Nginx 反代前后端）    |
-| 3001 | 后端 API（内部端口，无需暴露） |
+| 3001 | 后端 API（内部端口，无需暴露�?|
 
-> 💡 NOWEN 通过 Nginx 将前端和 API 统一在 3000 端口对外服务，**只需映射 3000 端口即可**。
+> 💡 NOWEN 通过 Nginx 将前端和 API 统一�?3000 端口对外服务�?*只需映射 3000 端口即可**�?
 
-### 数据持久化（防呆设计）
+### 数据持久化（防呆设计�?
 
 数据库文件位于容器内 `/app/server/data/zen-garden.db`
 
-**✅ 默认即安全**：NOWEN 使用 Docker Named Volume + 8 层防呆机制，**即使用户什么都不配置**，更新镜像后数据也不会丢失。
+**�?默认即安�?*：NOWEN 使用 Docker Named Volume + 8 层防呆机制，**即使用户什么都不配�?*，更新镜像后数据也不会丢失�?
 
 ```yaml
 volumes:
-  # ✅ 推荐：Named Volume（容器重建/更新后自动复用同一个卷）
+  # �?推荐：Named Volume（容器重�?更新后自动复用同一个卷�?
   - nowen-data:/app/server/data
   - nowen-backup:/app/.data-backup
 
-  # 或者手动指定宿主机路径（NAS 高级用户）
+  # 或者手动指定宿主机路径（NAS 高级用户�?
   # - /volume1/docker/nowen/data:/app/server/data
 
 volumes:
@@ -1113,67 +1113,67 @@ volumes:
     name: nowen-backup
 ```
 
-#### 🛡️ 8 层防呆数据保护机制
+#### 🛡�?8 层防呆数据保护机�?
 
 | 层级 | 保护措施 | 说明 |
 |------|----------|------|
 | 1 | **Named Volume** | 容器删除、重建、更新镜像后自动复用同一个卷 |
 | 2 | **双卷互备** | 主数据卷 + 安全备份卷，独立存储互为备份 |
-| 3 | **启动时自动备份** | 每次启动前将 db 备份到 `backups/`（保留 5 份） |
-| 4 | **运行时定期同步** | 每 5 分钟将 db 同步到安全备份卷 |
-| 5 | **安全备份自动恢复** | 主 db 丢失时自动从安全备份卷恢复 |
-| 6 | **宿主机路径扫描** | 扫描常见 NAS 路径寻找旧数据 |
-| 7 | **SQLite 完整性校验** | 检测 db 文件头魔数，损坏时自动从备份恢复 |
-| 8 | **优雅停止保存** | 容器停止时 `SIGTERM` 触发最终数据保存 |
+| 3 | **启动时自动备�?* | 每次启动前将 db 备份�?`backups/`（保�?5 份） |
+| 4 | **运行时定期同�?* | �?5 分钟�?db 同步到安全备份卷 |
+| 5 | **安全备份自动恢复** | �?db 丢失时自动从安全备份卷恢�?|
+| 6 | **宿主机路径扫�?* | 扫描常见 NAS 路径寻找旧数�?|
+| 7 | **SQLite 完整性校�?* | 检�?db 文件头魔数，损坏时自动从备份恢复 |
+| 8 | **优雅停止保存** | 容器停止�?`SIGTERM` 触发最终数据保�?|
 
-> 💡 **NAS 用户放心用**：无论你使用绿联、群晖、飞牛、威联通还是极空间，只要使用默认配置部署，更新镜像后数据会自动保留。启动时日志会打印 `📊 Data loaded: X bookmarks, Y categories, Z quotes`，一眼确认数据是否正常。
+> 💡 **NAS 用户放心�?*：无论你使用绿联、群晖、飞牛、威联通还是极空间，只要使用默认配置部署，更新镜像后数据会自动保留。启动时日志会打�?`📊 Data loaded: X bookmarks, Y categories, Z quotes`，一眼确认数据是否正常�?
 
 ### 系统监控配置
 
-要启用完整的硬件监控功能，需要以下挂载和配置：
+要启用完整的硬件监控功能，需要以下挂载和配置�?
 
 ```yaml
 volumes:
-  # 挂载宿主机根目录（只读），读取文件系统信息
+  # 挂载宿主机根目录（只读），读取文件系统信�?
   - /:/host:ro
-  # 挂载 proc 文件系统，读取 CPU、内存、进程信息
+  # 挂载 proc 文件系统，读�?CPU、内存、进程信�?
   - /proc:/host/proc:ro
-  # 挂载 sys 文件系统，读取温度、硬件信息
+  # 挂载 sys 文件系统，读取温度、硬件信�?
   - /sys:/host/sys:ro
-  # 挂载 Docker socket，监控容器状态
+  # 挂载 Docker socket，监控容器状�?
   - /var/run/docker.sock:/var/run/docker.sock
 
 environment:
-  # 告诉 systeminformation 从 /host 读取文件系统
+  # 告诉 systeminformation �?/host 读取文件系统
   - SI_FILESYSTEM_DISK_PREFIX=/host
   - PROC_PATH=/host/proc
   - SYS_PATH=/host/sys
   - FS_PATH=/host
 
-# 特权模式：允许读取 CPU 温度、SMART 磁盘信息
+# 特权模式：允许读�?CPU 温度、SMART 磁盘信息
 privileged: true
 ```
 
-**注意**：
+**注意**�?
 
 - 如果不需要系统监控功能，可以移除这些配置
-- Windows 和 macOS 的 Docker Desktop 由于运行在虚拟机中，只能读取虚拟机的信息
-- 最佳体验请在 Linux 宿主机上部署
+- Windows �?macOS �?Docker Desktop 由于运行在虚拟机中，只能读取虚拟机的信息
+- 最佳体验请�?Linux 宿主机上部署
 
 ### 环境变量
 
-| 变量                      | 默认值     | 说明                     |
+| 变量                      | 默认�?    | 说明                     |
 | ------------------------- | ---------- | ------------------------ |
 | NODE_ENV                  | production | 运行环境                 |
-| PORT                      | 3001       | 后端端口（一般无需修改） |
+| PORT                      | 3001       | 后端端口（一般无需修改�?|
 | SI_FILESYSTEM_DISK_PREFIX | /host      | 文件系统路径前缀         |
 | PROC_PATH                 | /host/proc | proc 文件系统路径        |
 | SYS_PATH                  | /host/sys  | sys 文件系统路径         |
-| FS_PATH                   | /host      | 文件系统根路径           |
+| FS_PATH                   | /host      | 文件系统根路�?          |
 
-### 反向代理配置（Nginx 示例）
+### 反向代理配置（Nginx 示例�?
 
-如果你在 NOWEN 容器前方使用额外的 Nginx 反向代理（例如域名转发），只需代理到容器的 3000 端口即可，因为容器内部 Nginx 已将前端和 API 统一在 3000 端口：
+如果你在 NOWEN 容器前方使用额外�?Nginx 反向代理（例如域名转发），只需代理到容器的 3000 端口即可，因为容器内�?Nginx 已将前端�?API 统一�?3000 端口�?
 
 ```nginx
 server {
@@ -1198,198 +1198,198 @@ server {
 
 | 方法   | 路径                       | 认证 | 说明         |
 | ------ | -------------------------- | ---- | ------------ |
-| GET    | `/api/bookmarks`           | ❌   | 获取所有书签 |
-| GET    | `/api/bookmarks/paginated` | ❌   | 分页获取书签 |
-| POST   | `/api/bookmarks`           | ✅   | 创建书签     |
-| PATCH  | `/api/bookmarks/:id`       | ✅   | 更新书签     |
-| DELETE | `/api/bookmarks/:id`       | ✅   | 删除书签     |
-| PATCH  | `/api/bookmarks/reorder`   | ✅   | 重排序书签   |
-| GET    | `/api/bookmarks/tags`        | ❌ | 获取标签列表 |
-| GET    | `/api/bookmarks/tags/stats`  | ❌ | 标签使用统计 |
-| PATCH  | `/api/bookmarks/tags/rename` | ✅ | 重命名标签   |
-| DELETE | `/api/bookmarks/tags/:name`  | ✅ | 删除标签     |
+| GET    | `/api/bookmarks`           | �?  | 获取所有书�?|
+| GET    | `/api/bookmarks/paginated` | �?  | 分页获取书签 |
+| POST   | `/api/bookmarks`           | �?  | 创建书签     |
+| PATCH  | `/api/bookmarks/:id`       | �?  | 更新书签     |
+| DELETE | `/api/bookmarks/:id`       | �?  | 删除书签     |
+| PATCH  | `/api/bookmarks/reorder`   | �?  | 重排序书�?  |
+| GET    | `/api/bookmarks/tags`        | �?| 获取标签列表 |
+| GET    | `/api/bookmarks/tags/stats`  | �?| 标签使用统计 |
+| PATCH  | `/api/bookmarks/tags/rename` | �?| 重命名标�?  |
+| DELETE | `/api/bookmarks/tags/:name`  | �?| 删除标签     |
 
 ### 分类 API
 
 | 方法   | 路径                     | 认证 | 说明         |
 | ------ | ------------------------ | ---- | ------------ |
-| GET    | `/api/categories`        | ❌   | 获取所有分类 |
-| POST   | `/api/categories`        | ✅   | 创建分类     |
-| PATCH  | `/api/categories/:id`    | ✅   | 更新分类     |
-| DELETE | `/api/categories/:id`    | ✅   | 删除分类     |
-| PATCH  | `/api/categories/reorder`| ✅   | 重排序分类   |
+| GET    | `/api/categories`        | �?  | 获取所有分�?|
+| POST   | `/api/categories`        | �?  | 创建分类     |
+| PATCH  | `/api/categories/:id`    | �?  | 更新分类     |
+| DELETE | `/api/categories/:id`    | �?  | 删除分类     |
+| PATCH  | `/api/categories/reorder`| �?  | 重排序分�?  |
 
 ### 名言 API
 
 | 方法 | 路径          | 认证 | 说明                           |
 | ---- | ------------- | ---- | ------------------------------ |
-| GET  | `/api/quotes` | ❌   | 获取名言列表与默认名言开关状态 |
-| PUT  | `/api/quotes` | ✅   | 更新名言列表与开关设置         |
+| GET  | `/api/quotes` | �?  | 获取名言列表与默认名言开关状�?|
+| PUT  | `/api/quotes` | �?  | 更新名言列表与开关设�?        |
 
-### 管理员 API
+### 管理�?API
 
 | 方法 | 路径                         | 认证 | 说明                   |
 | ---- | ---------------------------- | ---- | ---------------------- |
-| POST | `/api/admin/login`           | ❌   | 登录（返回 JWT Token） |
-| POST | `/api/admin/logout`          | ✅   | 退出登录               |
-| GET  | `/api/admin/verify`          | ✅   | 验证 Token 有效性      |
-| POST | `/api/admin/change-password` | ✅   | 修改密码               |
-| POST | `/api/admin/change-username` | ✅   | 修改用户名             |
+| POST | `/api/admin/login`           | �?  | 登录（返�?JWT Token�?|
+| POST | `/api/admin/logout`          | �?  | 退出登�?              |
+| GET  | `/api/admin/verify`          | �?  | 验证 Token 有效�?     |
+| POST | `/api/admin/change-password` | �?  | 修改密码               |
+| POST | `/api/admin/change-username` | �?  | 修改用户�?            |
 
 ### 访问统计 API
 
 | 方法   | 路径                 | 认证 | 说明                       |
 | ------ | -------------------- | ---- | -------------------------- |
-| POST   | `/api/visits/track`  | ❌   | 记录书签访问               |
-| GET    | `/api/visits/stats`  | ✅   | 获取访问统计概览           |
-| GET    | `/api/visits/top`    | ✅   | 获取热门书签排行           |
-| GET    | `/api/visits/trend`  | ✅   | 获取访问趋势（按天）       |
-| GET    | `/api/visits/recent` | ✅   | 获取最近访问记录           |
-| DELETE | `/api/visits/clear`  | ✅   | 清除所有访问数据           |
+| POST   | `/api/visits/track`  | �?  | 记录书签访问               |
+| GET    | `/api/visits/stats`  | �?  | 获取访问统计概览           |
+| GET    | `/api/visits/top`    | �?  | 获取热门书签排行           |
+| GET    | `/api/visits/trend`  | �?  | 获取访问趋势（按天）       |
+| GET    | `/api/visits/recent` | �?  | 获取最近访问记�?          |
+| DELETE | `/api/visits/clear`  | �?  | 清除所有访问数�?          |
 
-### 健康检查 API
+### 健康检�?API
 
 | 方法 | 路径                        | 认证 | 说明                           |
 | ---- | --------------------------- | ---- | ------------------------------ |
-| POST | `/api/health-check`         | ✅   | 批量检测书签链接健康状态       |
-| POST | `/api/health-check/single`  | ✅   | 单个链接健康检测               |
+| POST | `/api/health-check`         | �?  | 批量检测书签链接健康状�?      |
+| POST | `/api/health-check/single`  | �?  | 单个链接健康检�?              |
 
 ### AI API
 
 | 方法 | 路径                            | 认证 | 说明                           |
 | ---- | ------------------------------- | ---- | ------------------------------ |
-| GET  | `/api/ai/status`                | ❌   | 获取 AI 配置状态               |
-| POST | `/api/ai/categorize`            | ✅   | AI 智能分类单个书签            |
-| POST | `/api/ai/chat`                  | ✅   | AI 对话助手                    |
-| POST | `/api/ai/batch-tags`            | ✅   | 批量 AI 智能标签               |
-| GET  | `/api/ai/batch-tags-status`     | ✅   | 查询批量标签进度               |
-| POST | `/api/ai/batch-classify`        | ✅   | 批量 AI 智能分类               |
-| GET  | `/api/ai/batch-classify-status` | ✅   | 查询批量分类进度               |
-| POST | `/api/ai/batch-enrich`          | ✅   | 批量 AI 元数据 & 图标          |
-| GET  | `/api/ai/batch-enrich-status`   | ✅   | 查询批量元数据进度             |
-| GET  | `/api/ai/batch-status`          | ✅   | 统一查询所有批量任务状态       |
-| GET  | `/api/ai/config`                | ✅   | 获取 AI 配置（API Key 脱敏）   |
-| PUT  | `/api/ai/config`                | ✅   | 保存 AI 配置                   |
-| POST | `/api/ai/test`                  | ✅   | 测试 AI 连接                   |
-| POST | `/api/ai/generate-quotes`       | ✅   | AI 生成名言                    |
+| GET  | `/api/ai/status`                | �?  | 获取 AI 配置状�?              |
+| POST | `/api/ai/categorize`            | �?  | AI 智能分类单个书签            |
+| POST | `/api/ai/chat`                  | �?  | AI 对话助手                    |
+| POST | `/api/ai/batch-tags`            | �?  | 批量 AI 智能标签               |
+| GET  | `/api/ai/batch-tags-status`     | �?  | 查询批量标签进度               |
+| POST | `/api/ai/batch-classify`        | �?  | 批量 AI 智能分类               |
+| GET  | `/api/ai/batch-classify-status` | �?  | 查询批量分类进度               |
+| POST | `/api/ai/batch-enrich`          | �?  | 批量 AI 元数�?& 图标          |
+| GET  | `/api/ai/batch-enrich-status`   | �?  | 查询批量元数据进�?            |
+| GET  | `/api/ai/batch-status`          | �?  | 统一查询所有批量任务状�?      |
+| GET  | `/api/ai/config`                | �?  | 获取 AI 配置（API Key 脱敏�?  |
+| PUT  | `/api/ai/config`                | �?  | 保存 AI 配置                   |
+| POST | `/api/ai/test`                  | �?  | 测试 AI 连接                   |
+| POST | `/api/ai/generate-quotes`       | �?  | AI 生成名言                    |
 
 ### 备份 API
 
 | 方法   | 路径                          | 认证 | 说明                                    |
 | ------ | ----------------------------- | ---- | --------------------------------------- |
-| GET    | `/api/backup/config`          | ✅   | 获取 WebDAV 配置（密码脱敏）           |
-| POST   | `/api/backup/config`          | ✅   | 保存 WebDAV 配置                       |
-| POST   | `/api/backup/test`            | ✅   | 测试 WebDAV 连接                       |
-| POST   | `/api/backup/now`             | ✅   | 立即执行 WebDAV 备份                   |
-| GET    | `/api/backup/list`            | ✅   | 列出远程备份文件                       |
-| POST   | `/api/backup/restore`         | ✅   | 从远程备份恢复数据                     |
-| DELETE | `/api/backup/file/:filename`  | ✅   | 删除远程备份文件                       |
-| GET    | `/api/backup/status`          | ✅   | 获取自动备份状态                       |
-| GET    | `/api/backup/local/download`  | ✅   | 下载本地 JSON 备份                     |
-| GET    | `/api/backup/local/download-db` | ✅ | 下载原始 .db 数据库文件               |
-| POST   | `/api/backup/local/upload-db` | ✅   | 上传 .db 文件恢复（含校验和回滚）     |
+| GET    | `/api/backup/config`          | �?  | 获取 WebDAV 配置（密码脱敏）           |
+| POST   | `/api/backup/config`          | �?  | 保存 WebDAV 配置                       |
+| POST   | `/api/backup/test`            | �?  | 测试 WebDAV 连接                       |
+| POST   | `/api/backup/now`             | �?  | 立即执行 WebDAV 备份                   |
+| GET    | `/api/backup/list`            | �?  | 列出远程备份文件                       |
+| POST   | `/api/backup/restore`         | �?  | 从远程备份恢复数�?                    |
+| DELETE | `/api/backup/file/:filename`  | �?  | 删除远程备份文件                       |
+| GET    | `/api/backup/status`          | �?  | 获取自动备份状�?                      |
+| GET    | `/api/backup/local/download`  | �?  | 下载本地 JSON 备份                     |
+| GET    | `/api/backup/local/download-db` | �?| 下载原始 .db 数据库文�?              |
+| POST   | `/api/backup/local/upload-db` | �?  | 上传 .db 文件恢复（含校验和回滚）     |
 
 ### 日志 API
 
 | 方法   | 路径                 | 认证 | 说明                   |
 | ------ | -------------------- | ---- | ---------------------- |
-| GET    | `/api/logs`          | ✅   | 获取系统日志（分页）   |
-| DELETE | `/api/logs`          | ✅   | 清除所有日志           |
+| GET    | `/api/logs`          | �?  | 获取系统日志（分页）   |
+| DELETE | `/api/logs`          | �?  | 清除所有日�?          |
 
 ### 其他 API
 
 | 方法  | 路径                    | 认证 | 说明                           |
 | ----- | ----------------------- | ---- | ------------------------------ |
-| POST  | `/api/metadata`         | ❌   | 抓取 URL 元数据                |
-| GET   | `/api/settings`         | ❌   | 获取站点设置（含小部件可见性） |
-| PATCH | `/api/settings`         | ✅   | 更新站点设置（含小部件可见性） |
-| GET   | `/api/system/info`      | ❌   | 获取系统基本信息               |
-| GET   | `/api/system/stats`     | ❌   | 获取实时系统统计               |
-| GET   | `/api/system/network`   | ❌   | 获取网络信息                   |
-| GET   | `/api/system/processes` | ❌   | 获取进程列表                   |
-| GET   | `/api/export`           | ✅   | 导出全部数据 (JSON)            |
-| POST  | `/api/import`           | ✅   | 导入数据 (JSON)                |
-| GET   | `/api/import/enrich-status` | ✅ | 查询导入后图标抓取进度         |
-| POST  | `/api/factory-reset`    | ✅   | 恢复出厂设置                   |
+| POST  | `/api/metadata`         | �?  | 抓取 URL 元数�?               |
+| GET   | `/api/settings`         | �?  | 获取站点设置（含小部件可见性） |
+| PATCH | `/api/settings`         | �?  | 更新站点设置（含小部件可见性） |
+| GET   | `/api/system/info`      | �?  | 获取系统基本信息               |
+| GET   | `/api/system/stats`     | �?  | 获取实时系统统计               |
+| GET   | `/api/system/network`   | �?  | 获取网络信息                   |
+| GET   | `/api/system/processes` | �?  | 获取进程列表                   |
+| GET   | `/api/export`           | �?  | 导出全部数据 (JSON)            |
+| POST  | `/api/import`           | �?  | 导入数据 (JSON)                |
+| GET   | `/api/import/enrich-status` | �?| 查询导入后图标抓取进�?        |
+| POST  | `/api/factory-reset`    | �?  | 恢复出厂设置                   |
 
 ---
 
-## ⌨️ 快捷键
+## ⌨️ 快捷�?
 
-| 快捷键       | 功能                    |
+| 快捷�?      | 功能                    |
 | ------------ | ----------------------- |
-| `⌘/Ctrl + K` | 打开 Spotlight 搜索面板 |
-| `⌘/Ctrl + N` | 快速新建书签            |
+| `�?Ctrl + K` | 打开 Spotlight 搜索面板 |
+| `�?Ctrl + N` | 快速新建书�?           |
 | `Esc`        | 关闭当前弹窗            |
-| `↑/↓`        | 搜索结果导航            |
+| `�?↓`        | 搜索结果导航            |
 | `Enter`      | 确认选择/打开书签       |
 
 ---
 
 ## 🎯 核心亮点
 
-### 1. **专业级主题系统**
+### 1. **专业级主题系�?*
 
-- 8 款精心设计的预设主题（4 深色 + 4 浅色）
+- 8 款精心设计的预设主题�? 深色 + 4 浅色�?
 - 20+ CSS 变量精准控制每个视觉元素
-- 圆圈扩散动画的丝滑主题切换
+- 圆圈扩散动画的丝滑主题切�?
 - 自动模式：跟随系统偏好或根据时间自动切换
 
 ### 2. **实时硬件监控**
 
 - 基于 `systeminformation` 采集真实系统数据
-- CPU、内存、磁盘、网络、进程完整监控
-- 支持 CPU 温度、SMART 磁盘健康检测
+- CPU、内存、磁盘、网络、进程完整监�?
+- 支持 CPU 温度、SMART 磁盘健康检�?
 - Docker 容器化部署仍可读取宿主机信息
 - 可单独控制每个监控组件的显示/隐藏
-- Widget 尺寸预设 S/M/L 一键切换（迷你摘要 / 默认 / 全展开）
+- Widget 尺寸预设 S/M/L 一键切换（迷你摘要 / 默认 / 全展开�?
 
 ### 3. **极致交互体验**
 
 - Bento Grid 非对称布局
 - 3D 卡片鼠标追踪效果
-- Spotlight 聚光灯卡片
+- Spotlight 聚光灯卡�?
 - Border Beam 流光边框
-- 流星特效与极光背景
+- 流星特效与极光背�?
 - 物理弹跳动画 Toast
-- 桌面端 Dock 支持自由拖拽定位 + 位置记忆
+- 桌面�?Dock 支持自由拖拽定位 + 位置记忆
 - 移动端可自由拖拽能量球悬浮坞 + 花瓣式展开菜单 + 底部状态栏
-- 侧边栏快速导航（自动高亮、可折叠）
+- 侧边栏快速导航（自动高亮、可折叠�?
 - 前端直接编辑分类（无需进后台）
-- 精简模式可关闭所有动画（性能优先）
+- 精简模式可关闭所有动画（性能优先�?
 
 ### 4. **智能书签管理**
 
-- 自动抓取网站元数据（标题、描述、图标、OG 图片）
-- 拖拽排序、右键菜单、虚拟滚动（50+书签自动启用）
+- 自动抓取网站元数据（标题、描述、图标、OG 图片�?
+- 拖拽排序、右键菜单、虚拟滚动（50+书签自动启用�?
 - 置顶、稍后阅读（Hero 卡片 + 3D 效果）、自定义图标
-- 分类管理、前端直接编辑分类
-- **快速新增分类**：添加书签时可直接创建新分类
+- 分类管理、前端直接编辑分�?
+- **快速新增分�?*：添加书签时可直接创建新分类
 - 快速导航侧边栏
 - 三种图标模式：预设图标、自定义上传、URL 远程图片
-- 数据导入导出（支持嵌套对象、SunPanel 兼容导入、导入后自动抓取图标（≤50条））
-- **链接健康检查**：批量检测死链，一键清理失效书签
-- **内外网链接切换**：支持配置内网/外网双链接，自动检测网络环境智能切换
+- 数据导入导出（支持嵌套对象、SunPanel 兼容导入、导入后自动抓取图标（≤50条）�?
+- **链接健康检�?*：批量检测死链，一键清理失效书�?
+- **内外网链接切�?*：支持配置内�?外网双链接，自动检测网络环境智能切�?
 - **底部备案信息**：系统设置配置备案文本，首页底部展示
 - **壁纸背景**：自定义页面背景壁纸，支持五种图源、模糊遮罩可调，叠加极光光束效果
 
-- **系统监控三形态切换**：迷你胶囊 / 状态栏 / 全功能仪表盘三种模式无缝切换，视图选择持久化
-- **移动端能量球导航**：独立可拖拽悬浮球 + 花瓣式弹出菜单 + 底部实时状态栏，位置持久化，触觉振动反馈
+- **系统监控三形态切�?*：迷你胶�?/ 状态栏 / 全功能仪表盘三种模式无缝切换，视图选择持久�?
+- **移动端能量球导航**：独立可拖拽悬浮�?+ 花瓣式弹出菜�?+ 底部实时状态栏，位置持久化，触觉振动反�?
 
-### 5. **容器化部署**
+### 5. **容器化部�?*
 
-- Docker 一键部署
+- Docker 一键部�?
 - 多架构支持：linux/amd64 + linux/arm64（RK3588/RK3576/RK3566 等）
-- GitHub Actions 自动构建推送
+- GitHub Actions 自动构建推�?
 - Docker Hub 官方镜像：`cropflre/nowen`
-- 支持群晖、绿联、飞牛、威联通、极空间等 NAS
-- 支持 ARM64 开发板和 Apple Silicon 设备
+- 支持群晖、绿联、飞牛、威联通、极空间�?NAS
+- 支持 ARM64 开发板�?Apple Silicon 设备
 
 ---
 
-## 💾 数据库结构
+## 💾 数据库结�?
 
-### bookmarks 表
+### bookmarks �?
 
 ```sql
 CREATE TABLE bookmarks (
@@ -1413,7 +1413,7 @@ CREATE TABLE bookmarks (
 );
 ```
 
-### categories 表
+### categories �?
 
 ```sql
 CREATE TABLE categories (
@@ -1425,7 +1425,7 @@ CREATE TABLE categories (
 );
 ```
 
-### quotes 表
+### quotes �?
 
 ```sql
 CREATE TABLE quotes (
@@ -1436,7 +1436,7 @@ CREATE TABLE quotes (
 );
 ```
 
-### visits 表
+### visits �?
 
 ```sql
 CREATE TABLE visits (
@@ -1447,7 +1447,7 @@ CREATE TABLE visits (
 );
 ```
 
-### settings 表 (键值对)
+### settings �?(键值对)
 
 ```sql
 CREATE TABLE settings (
@@ -1457,7 +1457,7 @@ CREATE TABLE settings (
 );
 ```
 
-### admins 表
+### admins �?
 
 ```sql
 CREATE TABLE admins (
@@ -1472,23 +1472,23 @@ CREATE TABLE admins (
 
 ---
 
-## ❓ 常见问题
+## �?常见问题
 
 ### 安装相关
 
-**Q: Docker 构建失败？**
+**Q: Docker 构建失败�?*
 
-A: 国内网络可能无法访问 Docker Hub，建议直接使用已构建好的镜像：
+A: 国内网络可能无法访问 Docker Hub，建议直接使用已构建好的镜像�?
 
 ```bash
 docker pull cropflre/nowen:latest
 ```
 
-或者配置 GitHub Actions 自动构建推送。
+或者配�?GitHub Actions 自动构建推送�?
 
 **Q: 容器启动后无法访问？**
 
-A: 检查端口是否被占用：
+A: 检查端口是否被占用�?
 
 ```bash
 # Linux/Mac
@@ -1500,13 +1500,13 @@ netstat -ano | findstr :3000
 netstat -ano | findstr :3001
 ```
 
-**Q: 数据丢失？**
+**Q: 数据丢失�?*
 
-A: 确保正确配置了数据卷映射，数据库文件在 `/app/server/data` 目录。
+A: 确保正确配置了数据卷映射，数据库文件�?`/app/server/data` 目录�?
 
 ### 系统监控相关
 
-**Q: 为什么看不到硬件监控数据？**
+**Q: 为什么看不到硬件监控数据�?*
 
 A: 确保 docker-compose.yml 中配置了正确的挂载：
 
@@ -1524,54 +1524,54 @@ environment:
 privileged: true
 ```
 
-**Q: Windows/macOS Docker Desktop 能看到真实硬件信息吗？**
+**Q: Windows/macOS Docker Desktop 能看到真实硬件信息吗�?*
 
-A: 不能。Windows 和 macOS 的 Docker Desktop 运行在虚拟机中，只能读取虚拟机的信息。建议在 Linux 宿主机上部署以获得最佳体验。
+A: 不能。Windows �?macOS �?Docker Desktop 运行在虚拟机中，只能读取虚拟机的信息。建议在 Linux 宿主机上部署以获得最佳体验�?
 
-**Q: 如何关闭系统监控功能？**
+**Q: 如何关闭系统监控功能�?*
 
-A: 在后台管理 → 站点设置 → 小部件设置 中，可以单独关闭每个监控组件。或者移除 docker-compose.yml 中的监控相关挂载。
+A: 在后台管�?�?站点设置 �?小部件设�?中，可以单独关闭每个监控组件。或者移�?docker-compose.yml 中的监控相关挂载�?
 
 ### 使用相关
 
 **Q: 忘记管理员密码？**
 
-A: 使用恢复出厂设置功能，或直接删除数据库文件重新初始化。
+A: 使用恢复出厂设置功能，或直接删除数据库文件重新初始化�?
 
 **Q: 书签图标不显示？**
 
-A: 部分网站可能有防盗链设置，可以手动上传自定义图标。
+A: 部分网站可能有防盗链设置，可以手动上传自定义图标�?
 
-**Q: 如何备份数据？**
+**Q: 如何备份数据�?*
 
 A:
 
-1. 后台管理 → 数据管理 → 导出 JSON 备份 或 下载 .db 数据库文件
-2. 配置 WebDAV 云备份实现自动定时备份（支持坚果云/群晖/绿联/Alist）
-3. 或直接复制宿主机上挂载目录中的 `zen-garden.db` 文件
+1. 后台管理 �?数据管理 �?导出 JSON 备份 �?下载 .db 数据库文�?
+2. 配置 WebDAV 云备份实现自动定时备份（支持坚果�?群晖/绿联/Alist�?
+3. 或直接复制宿主机上挂载目录中�?`zen-garden.db` 文件
 
 **Q: 更新容器后数据丢失？**
 
-A: 确保创建容器时手动指定了数据卷挂载路径，例如 `-v /your/path:/app/server/data`。绿联等 NAS 的「自动配置存储」可能在更新时不复用旧卷，务必使用固定宿主机路径。
+A: 确保创建容器时手动指定了数据卷挂载路径，例如 `-v /your/path:/app/server/data`。绿联等 NAS 的「自动配置存储」可能在更新时不复用旧卷，务必使用固定宿主机路径�?
 
-> ⚠️ **NAS 用户特别警告**：通过 NAS 自带的 Docker 可视化管理软件（如绿联 Docker、群晖 Container Manager、威联通 Container Station、飞牛 Docker、极空间 Docker 等）更新镜像时，**务必先备份数据**！这些 NAS 的 Docker GUI 在「更新镜像」或「重新创建容器」时，可能会删除旧容器并创建新容器，导致未正确挂载的数据卷丢失。建议更新前：
-> 1. 通过 NOWEN 管理面板的「数据管理」导出 JSON 备份
-> 2. 或通过 WebDAV 云备份手动触发一次备份
-> 3. 或直接复制宿主机上 `nowen-data/zen-garden.db` 文件
+> ⚠️ **NAS 用户特别警告**：通过 NAS 自带�?Docker 可视化管理软件（如绿�?Docker、群�?Container Manager、威联�?Container Station、飞�?Docker、极空间 Docker 等）更新镜像时，**务必先备份数�?*！这�?NAS �?Docker GUI 在「更新镜像」或「重新创建容器」时，可能会删除旧容器并创建新容器，导致未正确挂载的数据卷丢失。建议更新前�?
+> 1. 通过 NOWEN 管理面板的「数据管理」导�?JSON 备份
+> 2. 或通过 WebDAV 云备份手动触发一次备�?
+> 3. 或直接复制宿主机�?`nowen-data/zen-garden.db` 文件
 
 **Q: 如何更新到最新版本？**
 
 A:
 
 ```bash
-# 拉取最新镜像
+# 拉取最新镜�?
 docker-compose pull
 
-# 重启容器（Named Volume 数据自动保留）
+# 重启容器（Named Volume 数据自动保留�?
 docker-compose up -d
 ```
 
-> 💡 v0.2.1+ 使用 Named Volume + 8 层防呆保护，正常更新不会丢数据。启动后查看日志确认 `📊 Data loaded:` 数据量即可。
+> 💡 v0.2.1+ 使用 Named Volume + 8 层防呆保护，正常更新不会丢数据。启动后查看日志确认 `📊 Data loaded:` 数据量即可�?
 
 ---
 
@@ -1579,153 +1579,153 @@ docker-compose up -d
 
 ### v0.2.2 (2026-03-09)
 
-#### ✨ 新功能
+#### �?新功�?
 
-- **监控 Widget 尺寸预设 S/M/L**：一键切换所有监控 Widget 的显示尺寸
-  - S（迷你摘要）：所有 Widget 强制折叠，仅标题栏 + 关键指标摘要行，BentoGrid rowSpan=1
+- **监控 Widget 尺寸预设 S/M/L**：一键切换所有监�?Widget 的显示尺�?
+  - S（迷你摘要）：所�?Widget 强制折叠，仅标题�?+ 关键指标摘要行，BentoGrid rowSpan=1
   - M（默认）：不干预用户操作，可单独折叠/展开每个 Widget，BentoGrid rowSpan=2
-  - L（全展开）：所有 Widget 强制展开完整内容，BentoGrid rowSpan=2
+  - L（全展开）：所�?Widget 强制展开完整内容，BentoGrid rowSpan=2
   - 切换按钮位于 Widget 区域标题栏右侧，使用 Minimize2/Square/Maximize2 图标
-  - 设置通过 API 持久化到数据库，刷新页面后保持
-- **AI 自动触发开关**：后台 AI 设置新增「自动 AI 分类」开关
-  - 控制添加书签时是否自动触发 AI 智能分类和标签生成
-  - 默认开启（保持向后兼容），可在设置中关闭
+  - 设置通过 API 持久化到数据库，刷新页面后保�?
+- **AI 自动触发开�?*：后�?AI 设置新增「自�?AI 分类」开�?
+  - 控制添加书签时是否自动触�?AI 智能分类和标签生�?
+  - 默认开启（保持向后兼容），可在设置中关�?
 - **AI 超时时间配置**：AI 设置面板新增超时时间参数
   - 支持 10-300 秒自定义设置
-  - 本地模型（如 Ollama）建议 60-120 秒，云端 API 默认 30 秒
-- **后台搜索分词**：书签管理搜索支持多关键词 AND 搜索
-  - 按空格拆分关键词，每个关键词都必须匹配
+  - 本地模型（如 Ollama）建�?60-120 秒，云端 API 默认 30 �?
+- **后台搜索分词**：书签管理搜索支持多关键�?AND 搜索
+  - 按空格拆分关键词，每个关键词都必须匹�?
   - 支持在标题、URL、描述、标签中联合搜索
-- **批量任务进度恢复**：页面刷新后自动恢复正在运行的 AI 批量任务进度
-  - 新增 `GET /api/ai/batch-status` 统一查询所有批量任务状态
+- **批量任务进度恢复**：页面刷新后自动恢复正在运行�?AI 批量任务进度
+  - 新增 `GET /api/ai/batch-status` 统一查询所有批量任务状�?
   - 前端加载时自动检测并恢复轮询
-- **Tags 工具函数统一**：抽取 `tags.ts` 工具模块统一处理标签解析和序列化
+- **Tags 工具函数统一**：抽�?`tags.ts` 工具模块统一处理标签解析和序列化
   - 兼容旧的 JSON 数组格式和新的逗号分隔格式
-  - 合并标签去重（`mergeTags`）
+  - 合并标签去重（`mergeTags`�?
 
 #### 🔒 安全增强
 
-- **AI 接口认证保护**：`/api/ai/categorize` 和 `/api/ai/chat` 从公开改为需认证
-  - 防止未授权用户滥用 AI API 额度
+- **AI 接口认证保护**：`/api/ai/categorize` �?`/api/ai/chat` 从公开改为需认证
+  - 防止未授权用户滥�?AI API 额度
   - 防止未登录用户通过 AI 对话暴露书签数据
 
 #### 🐛 Bug 修复
 
 - 修复刷新页面后管理员登录态丢失的问题（`isLoggedIn` 初始值从 localStorage 同步读取，避免竞态跳转）
-- 修复公开接口返回 401 时误清已有 Token 的问题（仅在 `requireAuth` 请求中清除登录状态）
-- 修复删除书签时未级联删除关联访问记录的问题
+- 修复公开接口返回 401 时误清已�?Token 的问题（仅在 `requireAuth` 请求中清除登录状态）
+- 修复删除书签时未级联删除关联访问记录的问�?
 
 ### v0.2.1 (2026-03-03)
 
-#### ✨ 新功能
+#### �?新功�?
 
-- **WebDAV 云备份**：支持 WebDAV 协议的云端数据备份与恢复
-  - 支持坚果云、群晖、绿联、Alist 等 WebDAV 服务
-  - 可配置自动定时备份（基于 node-cron）
-  - 支持一键备份、远程备份列表查看、远程恢复、远程删除
-  - 支持下载本地 JSON 备份和原始 .db 数据库文件
+- **WebDAV 云备�?*：支�?WebDAV 协议的云端数据备份与恢复
+  - 支持坚果云、群晖、绿联、Alist �?WebDAV 服务
+  - 可配置自动定时备份（基于 node-cron�?
+  - 支持一键备份、远程备份列表查看、远程恢复、远程删�?
+  - 支持下载本地 JSON 备份和原�?.db 数据库文�?
   - 支持上传 .db 文件恢复（含验证与回滚机制）
 - **数据管理合并**：将数据管理功能整合到备份页面，统一管理入口
-- **NAS 更新备份提醒**：数据管理页面新增 NAS Docker 更新警告横幅，提醒用户更新前备份数据
-- **数据持久化增强**：三重数据保护机制
-  - 启动时自动备份数据库（保留最近 5 份），数据库缺失时自动从备份恢复
-  - 进程退出时自动保存（SIGINT/SIGTERM/uncaughtException）
-  - 每 30 秒脏数据自动刷盘
+- **NAS 更新备份提醒**：数据管理页面新�?NAS Docker 更新警告横幅，提醒用户更新前备份数据
+- **数据持久化增�?*：三重数据保护机�?
+  - 启动时自动备份数据库（保留最�?5 份），数据库缺失时自动从备份恢复
+  - 进程退出时自动保存（SIGINT/SIGTERM/uncaughtException�?
+  - �?30 秒脏数据自动刷盘
 - **使用说明文档**：后台管理新增使用说明卡片（DocsCard），内嵌项目文档
 - **AI 名言生成**：名言管理支持通过 AI 批量生成主题名言
-  - 自定义生成数量和主题关键词
-  - 生成结果可勾选后一键添加到名言库
+  - 自定义生成数量和主题关键�?
+  - 生成结果可勾选后一键添加到名言�?
   - 新增 `POST /api/ai/generate-quotes` API 端点
 - **Hash 路由**：后台管理采用轻量级 Hash 路由方案
   - 基于 `window.location.hash` 的零依赖路由
-  - 支持浏览器前进/后退导航、地址栏直接输入
-  - 路由映射：`#/admin` → 书签管理、`#/admin/{tab}` → 对应后台标签页
+  - 支持浏览器前�?后退导航、地址栏直接输�?
+  - 路由映射：`#/admin` �?书签管理、`#/admin/{tab}` �?对应后台标签�?
   - 新增 `useHashRouter.ts` Hook，统一 `AdminTabType` 类型定义
 
 #### 🐛 Bug 修复
 
 - 修复 Docker 容器更新后数据丢失问题（Named Volume + 8 层防呆保护）
-- 修复 Docker 容器内缺少 `webdav` 和 `node-cron` 依赖导致启动失败
-- 修复反向代理 Nginx 示例配置错误（无需单独代理 `/api` 到 3001 端口）
+- 修复 Docker 容器内缺�?`webdav` �?`node-cron` 依赖导致启动失败
+- 修复反向代理 Nginx 示例配置错误（无需单独代理 `/api` �?3001 端口�?
 
 ### v0.2.0 (2026-02-26)
 
-#### ✨ 新功能
+#### �?新功�?
 
-- **ARM64 多架构支持**：Docker 镜像同时支持 linux/amd64 和 linux/arm64
-  - 适配瑞芯微 RK3588、RK3576、RK3566 等 ARM64 开发板
+- **ARM64 多架构支�?*：Docker 镜像同时支持 linux/amd64 �?linux/arm64
+  - 适配瑞芯�?RK3588、RK3576、RK3566 �?ARM64 开发板
   - 支持 Apple Silicon (M1/M2/M3) 设备
-  - Dockerfile 自动安装 ARM64 原生模块编译工具链（python3/make/g++），构建完成后自动清理
-  - 新增 `build-multiarch.sh` 多架构一键构建脚本
-  - 启动时打印当前 CPU 架构，便于确认运行环境
+  - Dockerfile 自动安装 ARM64 原生模块编译工具链（python3/make/g++），构建完成后自动清�?
+  - 新增 `build-multiarch.sh` 多架构一键构建脚�?
+  - 启动时打印当�?CPU 架构，便于确认运行环�?
 - **AI 智能标签**：添加书签时自动调用 AI 生成适配标签
-  - URL 分析完成后自动触发 AI 魔法（无需手动点击）
+  - URL 分析完成后自动触�?AI 魔法（无需手动点击�?
   - 自动填充标签 + 分类 + 优化描述
-  - 新增 AI 设置面板、标签管理面板
+  - 新增 AI 设置面板、标签管理面�?
 - **批量 AI 智能分类**：批量为选中书签通过 AI 分配分类
-  - 无匹配分类时自动创建新分类
-  - 同时更新标签和描述
-  - 并发处理（2 个 worker），异步执行，实时进度轮询
-- **批量 AI 元数据 & 图标**：一键批量优化书签元数据
-  - 优化标题（去除 SEO 后缀、保留品牌名）
-  - 生成精炼描述，推荐 3-5 个标签
-  - 推荐 Iconify 图标（优先 simple-icons 品牌图标、mdi、lucide）
-  - 多语言输出：元数据跟随当前 UI 语言（中文/英文）
+  - 无匹配分类时自动创建新分�?
+  - 同时更新标签和描�?
+  - 并发处理�? �?worker），异步执行，实时进度轮�?
+- **批量 AI 元数�?& 图标**：一键批量优化书签元数据
+  - 优化标题（去�?SEO 后缀、保留品牌名�?
+  - 生成精炼描述，推�?3-5 个标�?
+  - 推荐 Iconify 图标（优�?simple-icons 品牌图标、mdi、lucide�?
+  - 多语言输出：元数据跟随当前 UI 语言（中�?英文�?
 - **AI 对话助手**：智能书签搜索与发现助手
   - 语义搜索全部书签
   - 上下文感知回复，带可点击书签卡片
 - **书签标签展示**：书签卡片上展示彩色标签药丸
-  - 基于标签名哈希生成 8 种柔和彩色（蓝/绿/橙/红/紫/粉/青/黄绿）
+  - 基于标签名哈希生�?8 种柔和彩色（�?�?�?�?�?�?�?黄绿�?
   - 分类区域和置顶区域卡片均展示标签
-  - 最多显示 3 个标签，超出显示 +N
+  - 最多显�?3 个标签，超出显示 +N
 
 #### 🔒 安全增强
 
 - **书签/分类 API 认证保护**：所有写操作（POST/PATCH/DELETE）均需登录认证
-  - 后端 10 个路由添加 authMiddleware（书签 6 个 + 分类 4 个）
-  - 前端 10 个 API 函数添加 requireAuth，GET 读取接口保持公开
+  - 后端 10 个路由添�?authMiddleware（书�?6 �?+ 分类 4 个）
+  - 前端 10 �?API 函数添加 requireAuth，GET 读取接口保持公开
 - **前端权限控制**：未登录用户仅可浏览，写操作入口全部隐藏
-  - 隐藏 Dock「添加书签」和「AI 助手」按钮
+  - 隐藏 Dock「添加书签」和「AI 助手」按�?
   - 隐藏分类标题旁的编辑按钮（铅笔图标）
-  - 隐藏空状态页「添加第一个书签」按钮
-  - 禁用 Ctrl+N（新增书签）和 Ctrl+J（AI 助手）快捷键
-  - 禁止未登录用户拖拽排序书签
+  - 隐藏空状态页「添加第一个书签」按�?
+  - 禁用 Ctrl+N（新增书签）�?Ctrl+J（AI 助手）快捷键
+  - 禁止未登录用户拖拽排序书�?
 
 #### 🐛 Bug 修复
 
-- 修复 AI 智能标签存储格式不一致导致显示为 `#["Google"]` 的问题
-- 修复导入备份时 tags 字段类型校验失败（兼容 string 和 array 两种格式）
-- 修复导出 HTML 再导入时所有书签归到站点名分类的问题（跳过 PERSONAL_TOOLBAR_FOLDER 层级）
-- 修复新增书签成功后页面未刷新的问题（保存后自动调用 refreshData）
-- 修复 DndContext sensors 数组大小变化导致 React 警告的问题
+- 修复 AI 智能标签存储格式不一致导致显示为 `#["Google"]` 的问�?
+- 修复导入备份�?tags 字段类型校验失败（兼�?string �?array 两种格式�?
+- 修复导出 HTML 再导入时所有书签归到站点名分类的问题（跳过 PERSONAL_TOOLBAR_FOLDER 层级�?
+- 修复新增书签成功后页面未刷新的问题（保存后自动调�?refreshData�?
+- 修复 DndContext sensors 数组大小变化导致 React 警告的问�?
 
 ### v0.1.9 (2026-02-25)
 
-#### ✨ 新功能
+#### �?新功�?
 
 - **移动端能量球自由拖拽**：移动端悬浮导航球支持自由拖拽到屏幕任意位置
-  - 基于 Pointer Events 实现原生拖拽，6px 阈值精准区分拖拽与点击
+  - 基于 Pointer Events 实现原生拖拽�?px 阈值精准区分拖拽与点击
   - 位置通过 localStorage 持久化，下次打开自动恢复
-  - 拖拽时蓝色光晕 + 微放大视觉反馈
-  - 点击展开花瓣式菜单，菜单项支持触觉振动反馈 (`navigator.vibrate`)
-- **移动端底部状态栏**：新增固定底部状态栏，集成系统监控 Ticker
-  - 通过 `leftSlot` 插槽渲染实时系统状态（CPU/内存/网速等）
-  - 玻璃模糊背景效果，支持 iOS 安全区域适配（`safe-area-inset-bottom`）
+  - 拖拽时蓝色光�?+ 微放大视觉反�?
+  - 点击展开花瓣式菜单，菜单项支持触觉振动反�?(`navigator.vibrate`)
+- **移动端底部状态栏**：新增固定底部状态栏，集成系统监�?Ticker
+  - 通过 `leftSlot` 插槽渲染实时系统状态（CPU/内存/网速等�?
+  - 玻璃模糊背景效果，支�?iOS 安全区域适配（`safe-area-inset-bottom`�?
   - 能量球与底部栏完全独立，互不干扰
-- **桌面端 Dock 自由拖拽**：桌面端浮动 Dock 支持拖拽到任意位置
+- **桌面�?Dock 自由拖拽**：桌面端浮动 Dock 支持拖拽到任意位�?
   - 位置通过 localStorage 持久化（key: `desktop-dock-pos`），默认居中靠底
   - 拖拽时边框发光反馈，鼠标变为 `grabbing`
-  - macOS 风格磁性放大效果（鱼眼缩放）
-- **移动端 Bento 单列布局**：移动端书签网格从两列改为单列，阅读更舒适
-- **系统监控三形态切换**：迷你胶囊 / 状态栏 / 全功能仪表盘三种模式无缝切换
-  - 视图模式通过 localStorage 持久化
+  - macOS 风格磁性放大效果（鱼眼缩放�?
+- **移动�?Bento 单列布局**：移动端书签网格从两列改为单列，阅读更舒�?
+- **系统监控三形态切�?*：迷你胶�?/ 状态栏 / 全功能仪表盘三种模式无缝切换
+  - 视图模式通过 localStorage 持久�?
   - 形态切换带 scale + fade + slide 平滑动画
-- **仪表盘日间模式透明化**：日间模式下监控仪表盘背景完全透明，与页面融为一体
-  - 子卡片 DataBlock 背景同步透明化，边框降低至 30% 透明度
+- **仪表盘日间模式透明�?*：日间模式下监控仪表盘背景完全透明，与页面融为一�?
+  - 子卡�?DataBlock 背景同步透明化，边框降低�?30% 透明�?
 
 #### 🐛 Bug 修复
 
-- 修复移动端能量球点击无法展开菜单的问题（去除 `preventDefault` 干扰）
+- 修复移动端能量球点击无法展开菜单的问题（去除 `preventDefault` 干扰�?
 - 修复移动端迷你模式状态栏未居中的问题
 - 优化进度条动画性能，从 Framer Motion 改为原生 CSS Transition
 
@@ -1733,43 +1733,43 @@ docker-compose up -d
 
 ### v0.1.8 (2026-02-24)
 
-#### ✨ 新功能
+#### �?新功�?
 
-- **SunPanel 数据兼容导入**：支持直接导入 SunPanel 导出的 JSON 配置文件
-  - 自动检测 SunPanel 格式（`appName: "Sun-Panel-Config"`）
-  - SunPanel 分类 → NOWEN 分类，自动分配颜色
+- **SunPanel 数据兼容导入**：支持直接导�?SunPanel 导出�?JSON 配置文件
+  - 自动检�?SunPanel 格式（`appName: "Sun-Panel-Config"`�?
+  - SunPanel 分类 �?NOWEN 分类，自动分配颜�?
   - 书签字段映射：`title`/`url`/`lanUrl`(→`internalUrl`)/`description`/`icon.src`(→`iconUrl`)
-  - SunPanel 专属确认弹窗，显示版本号和导出时间
+  - SunPanel 专属确认弹窗，显示版本号和导出时�?
   - 完整中英文国际化支持
-- **导入后自动抓取书签图标**：导入数据时自动检测缺少 favicon 的书签
-  - 导入完成后异步批量抓取 metadata（favicon/ogImage），不阻塞页面
+- **导入后自动抓取书签图�?*：导入数据时自动检测缺�?favicon 的书�?
+  - 导入完成后异步批量抓�?metadata（favicon/ogImage），不阻塞页�?
   - 并发限制 3 个请求，避免对目标站点造成压力
   - 前端实时轮询抓取进度，完成后自动刷新页面
-  - Toast 提示抓取进度和结果
-  - 导入书签超过 50 条时自动跳过图标抓取，避免大量请求
-- **管理员用户名修改**：后台安全设置支持修改 admin 账户用户名
-- **分类折叠阈值优化**：超过 100 个书签的分类默认只显示前 8 个，附带"展开更多"按钮
-- **后台书签管理数字分页**：书签管理页面由滚动分页改为数字分页，每页 20 条，支持页码导航
+  - Toast 提示抓取进度和结�?
+  - 导入书签超过 50 条时自动跳过图标抓取，避免大量请�?
+- **管理员用户名修改**：后台安全设置支持修�?admin 账户用户�?
+- **分类折叠阈值优�?*：超�?100 个书签的分类默认只显示前 8 个，附带"展开更多"按钮
+- **后台书签管理数字分页**：书签管理页面由滚动分页改为数字分页，每�?20 条，支持页码导航
 
 #### 🐛 Bug 修复
 
-- 修复导入数据时 `internalUrl` 字段未写入数据库的问题
-- 修复导入 schema 中 `createdAt`/`updatedAt` 不兼容 number 类型的问题
-- 修复 `validateBody` 中 `result.error.errors.map()` 缺少防御性检查导致崩溃的问题
-- 修复暗色模式主题切换不同步需刷新的问题（统一使用 ThemeContext）
-- 优化引擎室/生命体征卡片文字清晰度和暗色适配
+- 修复导入数据�?`internalUrl` 字段未写入数据库的问�?
+- 修复导入 schema �?`createdAt`/`updatedAt` 不兼�?number 类型的问�?
+- 修复 `validateBody` �?`result.error.errors.map()` 缺少防御性检查导致崩溃的问题
+- 修复暗色模式主题切换不同步需刷新的问题（统一使用 ThemeContext�?
+- 优化引擎�?生命体征卡片文字清晰度和暗色适配
 
 ---
 
 ### v0.1.7 (2026-02-11)
 
-#### ✨ 新功能
+#### �?新功�?
 
 - **壁纸背景功能**：自定义页面背景图片
-  - 支持五种图片来源：本地上传/拖拽、URL 链接、Picsum 随机、Lorem Picsum、Bing 每日壁纸
+  - 支持五种图片来源：本地上�?拖拽、URL 链接、Picsum 随机、Lorem Picsum、Bing 每日壁纸
   - 模糊度滑块（0-20px），通过 CSS `filter: blur()` 实现
-  - 遮罩透明度滑块（0-100%），半透明黑色覆盖层
-  - 实时预览（含模糊 + 遮罩效果）
+  - 遮罩透明度滑块（0-100%），半透明黑色覆盖�?
+  - 实时预览（含模糊 + 遮罩效果�?
   - 壁纸层独立渲染，极光/光束效果叠加可见
   - 后台管理新增壁纸设置 Tab（紫色渐变图标）
   - 默认关闭，不影响现有部署
@@ -1777,26 +1777,26 @@ docker-compose up -d
 
 #### 🐛 Bug 修复
 
-- 修复滚动到页面底部时背景光束效果消失的问题（背景效果层改用 `fixed` 定位）
-- 恢复光束碰撞底部爆炸粒子效果（使用 `useAnimationFrame` 精确检测碰撞位置）
+- 修复滚动到页面底部时背景光束效果消失的问题（背景效果层改�?`fixed` 定位�?
+- 恢复光束碰撞底部爆炸粒子效果（使�?`useAnimationFrame` 精确检测碰撞位置）
 - 替换已停服的 `source.unsplash.com` 图源为可用的 Picsum/Bing 图源
 
 ---
 
 ### v0.1.6 (2026-02-11)
 
-#### ✨ 新功能
+#### �?新功�?
 
-- **底部备案信息展示**：系统设置新增底部备案文本配置
+- **底部备案信息展示**：系统设置新增底部备案文本配�?
   - 站点设置中新增备案信息文本输入框
-  - 支持 HTML 渲染（如 ICP 备案号带链接）
-  - 首页底部自动展示，未配置时隐藏
+  - 支持 HTML 渲染（如 ICP 备案号带链接�?
+  - 首页底部自动展示，未配置时隐�?
   - 完整中英文国际化支持
-- **内外网链接自动切换**：书签支持配置内网/外网双链接
+- **内外网链接自动切�?*：书签支持配置内�?外网双链�?
   - 书签新增内网 URL 字段，支持折叠式输入
-  - 自动检测当前网络环境（内网/外网）
-  - 基于 hostname 判断：私有 IP 段（10.x / 172.16-31.x / 192.168.x）及内网域名后缀（.local / .lan / .internal / .corp / .home）
-  - 全局所有书签打开入口自动适配双链接逻辑（15 个组件、18+ 处 window.open 调用）
+  - 自动检测当前网络环境（内网/外网�?
+  - 基于 hostname 判断：私�?IP 段（10.x / 172.16-31.x / 192.168.x）及内网域名后缀�?local / .lan / .internal / .corp / .home�?
+  - 全局所有书签打开入口自动适配双链接逻辑�?5 个组件�?8+ �?window.open 调用�?
   - 编辑已有内网链接的书签时自动展开输入区域
   - 完整中英文国际化支持
 
@@ -1804,16 +1804,16 @@ docker-compose up -d
 
 ### v0.1.5 (2026-02-11)
 
-#### ✨ 新功能
+#### �?新功�?
 
-- **链接健康检查（死链检测）**：完整的书签链接可访问性检测
-  - 一键批量检测所有书签链接（并发 5 个，10s 超时）
-  - 4 种状态识别：正常 / 异常 / 超时 / 重定向
-  - 智能请求策略：先 HEAD 后 GET，自动处理 405/403 回退
-  - 统计概览卡片：总计、各状态数量、平均响应时间
-  - 按状态筛选过滤查看
-  - 响应时间彩色指示（绿色 <1s / 黄色 <3s / 红色 >3s）
-  - HTTP 状态码彩色标签（2xx/3xx/4xx/5xx）
+- **链接健康检查（死链检测）**：完整的书签链接可访问性检�?
+  - 一键批量检测所有书签链接（并发 5 个，10s 超时�?
+  - 4 种状态识别：正常 / 异常 / 超时 / 重定�?
+  - 智能请求策略：先 HEAD �?GET，自动处�?405/403 回退
+  - 统计概览卡片：总计、各状态数量、平均响应时�?
+  - 按状态筛选过滤查�?
+  - 响应时间彩色指示（绿�?<1s / 黄色 <3s / 红色 >3s�?
+  - HTTP 状态码彩色标签�?xx/3xx/4xx/5xx�?
   - 一键删除死链（异常和超时书签，带确认弹窗）
   - 完整中英文国际化支持
 
@@ -1821,95 +1821,95 @@ docker-compose up -d
 
 ### v0.1.4 (2026-02-10)
 
-#### ✨ 新功能
+#### �?新功�?
 
 - **访问统计功能**：完整的书签访问数据分析
   - 书签点击自动追踪记录
   - 总访问次数、今日访问、活跃书签数统计
-  - 热门书签排行榜（支持按天/周/月/全部筛选）
-  - 7 天访问趋势图表
-  - 最近访问记录列表
-  - 一键清除所有访问数据
+  - 热门书签排行榜（支持按天/�?�?全部筛选）
+  - 7 天访问趋势图�?
+  - 最近访问记录列�?
+  - 一键清除所有访问数�?
 
 #### 🐛 Bug 修复
 
-- 修复 sql.js 参数绑定问题，使用 queryAll/queryOne/run 工具函数
+- 修复 sql.js 参数绑定问题，使�?queryAll/queryOne/run 工具函数
 - 优化日间模式下访问统计卡片的样式显示
 
 ---
 
 ### v0.1.3 (2026-02-10)
 
-#### ✨ 新功能
+#### �?新功�?
 
-- **添加书签时快速新增分类**：在添加/编辑书签弹窗中可直接创建新分类
+- **添加书签时快速新增分�?*：在添加/编辑书签弹窗中可直接创建新分�?
   - 内嵌分类创建表单，无需跳转
-  - 10 种预设颜色选择器
-  - 创建后自动选中新分类
+  - 10 种预设颜色选择�?
+  - 创建后自动选中新分�?
   - 分类列表实时刷新
 
 #### 🐛 Bug 修复
 
 - 修复导入备份成功后书签管理页面显示空白的问题
 - 导入备份成功后自动跳转到首页
-- 修复恢复出厂设置后登录状态未清除的问题
+- 修复恢复出厂设置后登录状态未清除的问�?
 - 修复 Docker 更新后数据库被重置的问题（使用绝对路径）
-- 修复日间模式下创建分类按钮样式问题
+- 修复日间模式下创建分类按钮样式问�?
 
 ---
 
 ### v0.1.2 (2026-02-05)
 
-#### ✨ 新功能
+#### �?新功�?
 
-- **菜单可见性控制**：后台站点设置新增菜单显示/隐藏开关
+- **菜单可见性控�?*：后台站点设置新增菜单显�?隐藏开�?
   - 多语言切换按钮：控制前台菜单栏的中英文切换按钮显示/隐藏
-  - 主题切换按钮：控制前台菜单栏的日间/夜间模式切换按钮显示/隐藏
-  - 支持桌面端 Dock 和移动端悬浮坞
+  - 主题切换按钮：控制前台菜单栏的日�?夜间模式切换按钮显示/隐藏
+  - 支持桌面�?Dock 和移动端悬浮�?
 
 ---
 
 ### v0.1.1 (2026-02-04)
 
-#### ✨ 新功能
+#### �?新功�?
 
-- **前端分类编辑**：主页支持直接编辑/新建/删除分类，无需进入后台
+- **前端分类编辑**：主页支持直接编�?新建/删除分类，无需进入后台
   - 分类标题旁显示编辑按钮（hover 时可见）
-  - 新增「新建分类」入口按钮
+  - 新增「新建分类」入口按�?
   - 分类编辑模态框支持图标、颜色选择
-- **侧边栏快速导航**：自动显示分类导航，快速定位，智能高亮当前分类
+- **侧边栏快速导�?*：自动显示分类导航，快速定位，智能高亮当前分类
   - 支持折叠/展开模式
   - 页面内容足够长时自动显示
-  - 仅在桌面端显示
-- **天气显示**：基于 Open-Meteo API 的实时天气信息
-  - 显示当前温度和天气状况
-  - 动态天气图标
-  - 后台可开关
-- **农历日历**：显示农历日期、节气、传统节日
+  - 仅在桌面端显�?
+- **天气显示**：基�?Open-Meteo API 的实时天气信�?
+  - 显示当前温度和天气状�?
+  - 动态天气图�?
+  - 后台可开�?
+- **农历日历**：显示农历日期、节气、传统节�?
   - 基于 lunar-javascript 准确计算
-  - 后台可开关
-- **精简模式**：性能优先的禅意体验
+  - 后台可开�?
+- **精简模式**：性能优先的禅意体�?
   - 关闭所有动画和特效
   - 大幅降低 CPU/GPU 占用
   - 适合性能受限设备
-- **主题快速切换**：Dock 菜单新增日间/夜间模式切换图标
-  - 动态显示 Sun/Moon 图标
-  - 一键切换主题
+- **主题快速切�?*：Dock 菜单新增日间/夜间模式切换图标
+  - 动态显�?Sun/Moon 图标
+  - 一键切换主�?
 
 #### 🔒 安全增强
 
 - 后台管理页面增加二次登录验证
-- 强制密码修改页面增加登录状态检查
-- 未登录用户无法进入后台管理区域
-- 书签/分类写操作 API 均需登录认证
-- 未登录时隐藏添加书签、编辑分类、AI 助手等操作入口
+- 强制密码修改页面增加登录状态检�?
+- 未登录用户无法进入后台管理区�?
+- 书签/分类写操�?API 均需登录认证
+- 未登录时隐藏添加书签、编辑分类、AI 助手等操作入�?
 
 #### 🐛 Bug 修复
 
-- 修复侧边栏折叠功能按钮被截断的问题
-- 修复 Zod v4 导入书签 schema 兼容性问题
+- 修复侧边栏折叠功能按钮被截断的问�?
+- 修复 Zod v4 导入书签 schema 兼容性问�?
 - 修复导入数据时嵌套对象设置无法存储的问题
-- 修复 CPU/GPU 过热问题（精简模式）
+- 修复 CPU/GPU 过热问题（精简模式�?
 
 ### v0.1.0 (2026-02-03)
 
@@ -1917,63 +1917,63 @@ docker-compose up -d
 
 **核心功能**
 
-- ✨ 书签管理（增删改查、拖拽排序、虚拟滚动）
-- ✨ 分类管理（自定义名称、图标、颜色）
-- ✨ 图标管理（自定义图标上传）
-- ✨ 名言管理（自定义名言 + 系统默认名言开关）
-- ✨ Spotlight 搜索（多搜索引擎、书签搜索）
-- ✨ 稍后阅读（Hero 卡片展示、已读标记）
-- ✨ 置顶功能（Bento Grid 非对称布局）
-- ✨ 右键菜单（快捷操作）
+- �?书签管理（增删改查、拖拽排序、虚拟滚动）
+- �?分类管理（自定义名称、图标、颜色）
+- �?图标管理（自定义图标上传�?
+- �?名言管理（自定义名言 + 系统默认名言开关）
+- �?Spotlight 搜索（多搜索引擎、书签搜索）
+- �?稍后阅读（Hero 卡片展示、已读标记）
+- �?置顶功能（Bento Grid 非对称布局�?
+- �?右键菜单（快捷操作）
 
 **系统监控**
 
-- ✨ 实时硬件监控（CPU、内存、磁盘、网络、进程）
-- ✨ 5 款监控卡片（系统监控、硬件身份、生命体征、网络遥测、进程矩阵）
-- ✨ Dock 迷你监控小部件（桌面端）
-- ✨ Ticker 滚动状态栏（移动端）
-- ✨ 小部件可见性控制（后台单独开关）
+- �?实时硬件监控（CPU、内存、磁盘、网络、进程）
+- �?5 款监控卡片（系统监控、硬件身份、生命体征、网络遥测、进程矩阵）
+- �?Dock 迷你监控小部件（桌面端）
+- �?Ticker 滚动状态栏（移动端�?
+- �?小部件可见性控制（后台单独开关）
 
 **主题系统**
 
-- ✨ 8 款预设主题（4 深色 + 4 浅色）
-- ✨ 圆圈扩散动画切换
-- ✨ 自动模式（跟随系统或根据时间）
-- ✨ 20+ CSS 变量精准控制
+- �?8 款预设主题（4 深色 + 4 浅色�?
+- �?圆圈扩散动画切换
+- �?自动模式（跟随系统或根据时间�?
+- �?20+ CSS 变量精准控制
 
 **后台管理**
 
-- ✨ 完整的后台管理系统
-- ✨ 站点设置（自定义网站名称和图标）
-- ✨ 主题设置（8 款主题切换）
-- ✨ 小部件设置（控制显示/隐藏、Beam 开关）
-- ✨ 安全设置（密码修改、强度指示器、首次登录强制改密）
-- ✨ 数据管理（导入导出、恢复出厂设置）
+- �?完整的后台管理系�?
+- �?站点设置（自定义网站名称和图标）
+- �?主题设置�? 款主题切换）
+- �?小部件设置（控制显示/隐藏、Beam 开关）
+- �?安全设置（密码修改、强度指示器、首次登录强制改密）
+- �?数据管理（导入导出、恢复出厂设置）
 
 **视觉设计**
 
-- ✨ 日间/夜间双模式全面适配
-- ✨ 玻璃态设计
-- ✨ Border Beam 流光边框
-- ✨ 3D 卡片鼠标追踪
-- ✨ Spotlight 聚光灯效果
-- ✨ 流星与极光特效
-- ✨ 物理弹跳 Toast
+- �?日间/夜间双模式全面适配
+- �?玻璃态设�?
+- �?Border Beam 流光边框
+- �?3D 卡片鼠标追踪
+- �?Spotlight 聚光灯效�?
+- �?流星与极光特�?
+- �?物理弹跳 Toast
 
 **交互优化**
 
-- ✨ 桌面端浮动 Dock 支持拖拽定位
-- ✨ 移动端可展开悬浮坞
-- ✨ 回到顶部按钮
-- ✨ 错误边界处理
+- �?桌面端浮�?Dock 支持拖拽定位
+- �?移动端可展开悬浮�?
+- �?回到顶部按钮
+- �?错误边界处理
 
 **部署支持**
 
-- ✨ Docker 容器化部署（amd64 + arm64 多架构）
-- ✨ GitHub Actions CI/CD 自动构建
-- ✨ Docker Hub 官方镜像
-- ✨ 支持各类 NAS 平台
-- ✨ 支持 ARM64 开发板（RK3588/RK3576/RK3566）
+- �?Docker 容器化部署（amd64 + arm64 多架构）
+- �?GitHub Actions CI/CD 自动构建
+- �?Docker Hub 官方镜像
+- �?支持各类 NAS 平台
+- �?支持 ARM64 开发板（RK3588/RK3576/RK3566�?
 
 ---
 
@@ -1982,43 +1982,43 @@ docker-compose up -d
 #### 🔜 近期规划
 
 - [ ] 浏览器扩展（Chrome/Firefox/Edge，一键收藏当前页面、快速搜索书签）
-- [ ] PWA 离线支持（离线访问书签、Service Worker 缓存、安装到桌面）
+- [ ] PWA 离线支持（离线访问书签、Service Worker 缓存、安装到桌面�?
 - [ ] 书签收藏夹与分组嵌套（多级文件夹、面包屑导航、树形结构拖拽）
-- [ ] 书签分享功能（生成分享链接、公开分类页面、二维码分享）
+- [ ] 书签分享功能（生成分享链接、公开分类页面、二维码分享�?
 
 #### 📋 中期规划
 
 - [ ] 多用户支持与权限管理（角色分级、独立书签库、共享分类）
-- [ ] RSS / 站点更新监控（订阅书签站点 RSS、新内容推送、未读计数徽标）
-- [ ] 系统监控告警（CPU/内存/温度阈值告警、邮件/Webhook/Telegram 通知）
+- [ ] RSS / 站点更新监控（订阅书签站�?RSS、新内容推送、未读计数徽标）
+- [ ] 系统监控告警（CPU/内存/温度阈值告警、邮�?Webhook/Telegram 通知�?
 - [ ] AI 智能推荐（基于浏览习惯推荐相似书签、发现新站点、智能去重）
-- [ ] 自定义监控指标（自定义 API 探针、端口检测、SSL 证书到期提醒）
+- [ ] 自定义监控指标（自定�?API 探针、端口检测、SSL 证书到期提醒�?
 
 #### 🔮 远期展望
 
-- [ ] 移动端 App（React Native / Flutter，推送通知、Widget 快捷方式）
+- [ ] 移动�?App（React Native / Flutter，推送通知、Widget 快捷方式�?
 - [ ] 团队协作空间（团队共享书签库、评论与标注、操作日志审计）
-- [ ] 插件系统（第三方插件市场、自定义组件挂载、API Hook 扩展）
+- [ ] 插件系统（第三方插件市场、自定义组件挂载、API Hook 扩展�?
 - [ ] 更多主题配色（社区主题商店、自定义 CSS 变量编辑器）
-- [ ] 更多语言扩展（法语/德语/西班牙语等社区翻译、i18n 贡献指南）
+- [ ] 更多语言扩展（法�?德语/西班牙语等社区翻译、i18n 贡献指南�?
 
-#### ✅ 已实现
+#### �?已实�?
 
-- [x] ~~访问统计分析~~ ✅ v0.1.4
-- [x] ~~链接健康检查~~ ✅ v0.1.5
-- [x] ~~自定义壁纸背景~~ ✅ v0.1.7
-- [x] ~~书签标签系统~~ ✅ v0.2.0（AI 智能标签 + 彩色标签药丸）
-- [x] ~~AI 智能分类与元数据~~ ✅ v0.2.0（批量 AI 分类/元数据/图标）
-- [x] ~~AI 对话助手~~ ✅ v0.2.0（语义搜索 + 书签卡片）
-- [x] ~~WebDAV 云备份~~ ✅ v0.2.1（WebDAV 云端 + 本地备份 + 定时自动备份）
-- [x] ~~AI 名言生成~~ ✅ v0.2.2（智能生成个性化名言）
-- [x] ~~AI 导入刮削~~ ✅ v0.2.2（导入时 AI 自动优化标题/描述/图标/标签）
-- [x] ~~监控尺寸预设~~ ✅ v0.2.2（S/M/L 三档 Widget 尺寸切换）
-- [x] ~~多语言扩展~~ ✅ v0.2.3（日语 + 韩语，四语言完整支持）
+- [x] ~~访问统计分析~~ �?v0.1.4
+- [x] ~~链接健康检查~~ �?v0.1.5
+- [x] ~~自定义壁纸背景~~ �?v0.1.7
+- [x] ~~书签标签系统~~ �?v0.2.0（AI 智能标签 + 彩色标签药丸�?
+- [x] ~~AI 智能分类与元数据~~ �?v0.2.0（批�?AI 分类/元数�?图标�?
+- [x] ~~AI 对话助手~~ �?v0.2.0（语义搜�?+ 书签卡片�?
+- [x] ~~WebDAV 云备份~~ �?v0.2.1（WebDAV 云端 + 本地备份 + 定时自动备份�?
+- [x] ~~AI 名言生成~~ �?v0.2.2（智能生成个性化名言�?
+- [x] ~~AI 导入刮削~~ �?v0.2.2（导入时 AI 自动优化标题/描述/图标/标签�?
+- [x] ~~监控尺寸预设~~ �?v0.2.2（S/M/L 三档 Widget 尺寸切换�?
+- [x] ~~多语言扩展~~ �?v0.2.3（日�?+ 韩语，四语言完整支持�?
 
 ---
 
-## 🚀 快速开始
+## 🚀 快速开�?
 
 ```bash
 # 使用 Docker Hub 镜像（推荐）
@@ -2028,14 +2028,14 @@ docker run -d -p 3000:3000 -v ./nowen-data:/app/server/data --name nowen cropflr
 # 访问应用
 # http://localhost:3000
 
-# 默认管理员账号
-# 用户名: admin
+# 默认管理员账�?
+# 用户�? admin
 # 密码: admin123
 ```
 
 ---
 
-## 📄 许可证
+## 📄 许可�?
 
 MIT License
 
@@ -2043,10 +2043,10 @@ MIT License
 
 ## 🤝 贡献指南
 
-欢迎提交 Issue 和 Pull Request！
+欢迎提交 Issue �?Pull Request�?
 
-1. Fork 本仓库
-2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
+1. Fork 本仓�?
+2. 创建特性分�?(`git checkout -b feature/AmazingFeature`)
 3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
 4. 推送到分支 (`git push origin feature/AmazingFeature`)
 5. 提交 Pull Request
@@ -2067,7 +2067,7 @@ MIT License
 
 ## 🌟 Star History
 
-如果这个项目对你有帮助，请给个 ⭐ Star 支持一下！
+如果这个项目对你有帮助，请给�?�?Star 支持一下！
 
 ---
 

@@ -273,7 +273,7 @@ export function DataManagementCard({
       
       const a = document.createElement('a')
       a.href = url
-      a.download = `nebula-portal-backup-${new Date().toISOString().split('T')[0]}.json`
+      a.download = `nowen-backup-${new Date().toISOString().split('T')[0]}.json`
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
