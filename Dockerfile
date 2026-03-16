@@ -26,8 +26,14 @@ LABEL org.opencontainers.image.licenses="MIT"
 
 WORKDIR /app
 
-# Install nginx and docker-cli
-RUN apk add --no-cache nginx docker-cli
+# 🔑 强制覆盖 apk 仓库源为官方源
+# 绿联/飞牛等 NAS 系统可能向容器注入自定义仓库配置（如 openresty），导致依赖解析失败
+RUN echo "https://dl-cdn.alpinelinux.org/alpine/v$(cut -d. -f1,2 /etc/alpine-release)/main" > /etc/apk/repositories && \
+    echo "https://dl-cdn.alpinelinux.org/alpine/v$(cut -d. -f1,2 /etc/alpine-release)/community" >> /etc/apk/repositories && \
+    apk update && \
+    apk add --no-cache ca-certificates nginx && \
+    # docker-cli 为可选依赖（仅用于系统监控 fallback），安装失败不阻断构建
+    (apk add --no-cache docker-cli || echo "⚠️ docker-cli not available, skipping (optional)")
 
 # Install production dependencies for backend
 # server 使用 bcryptjs（纯 JS）而非 bcrypt，无需编译工具
