@@ -1,6 +1,5 @@
-// API 基础地址 - 使用环境变量验证
-import { getApiBase } from './env'
-const API_BASE = getApiBase()
+// API 基础地址 - 前端与后端同源，通过 nginx 反向代理转发 /api/ 请求
+const API_BASE = ''
 
 import type { Bookmark, Category } from '../types/bookmark'
 import { ApiError, NetworkError, getHttpErrorMessage } from './error-handling'
