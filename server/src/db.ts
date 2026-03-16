@@ -4,6 +4,37 @@ import path from 'path'
 import crypto from 'crypto'
 import bcrypt from 'bcryptjs';
 
+// 🔑 自动检测是否在 Docker 容器内运行
+// 即使用户忘记设置 NODE_ENV=production（NAS GUI 部署常见），也能自动识别
+const isRunningInDocker = (): boolean => {
+  try {
+    // 方法1：检查 /.dockerenv 文件（Docker 容器标志文件）
+    if (fs.existsSync('/.dockerenv')) return true
+    // 方法2：检查 /app/start.sh（NOWEN 镜像特征文件）
+    if (fs.existsSync('/app/start.sh')) return true
+    // 方法3：检查 cgroup 中是否包含 docker/containerd 标识
+    if (fs.existsSync('/proc/1/cgroup')) {
+      const cgroup = fs.readFileSync('/proc/1/cgroup', 'utf8')
+      if (cgroup.includes('docker') || cgroup.includes('containerd') || cgroup.includes('kubepods')) return true
+    }
+    // 方法4：检查 /proc/1/sched 的进程名是否非 init/systemd
+    // 在容器内 PID 1 通常是应用进程而非 init
+  } catch {
+    // 检测失败时不影响启动
+  }
+  return false
+}
+
+const isDocker = isRunningInDocker()
+
+// 🔑 防呆：如果检测到 Docker 环境但 NODE_ENV 未设置，自动修正
+if (isDocker && !process.env.NODE_ENV) {
+  process.env.NODE_ENV = 'production'
+  console.log('🔧 Auto-detected Docker environment, setting NODE_ENV=production')
+}
+
+const isProduction = process.env.NODE_ENV === 'production' || isDocker
+
 // 数据库路径：优先使用环境变量，否则使用 /app/server/data（Docker）或当前目录下的 data
 const getDbPath = () => {
   // 优先使用环境变量指定的路径
@@ -11,8 +42,9 @@ const getDbPath = () => {
     return process.env.DB_PATH
   }
   
-  // Docker 环境下使用绝对路径
-  if (process.env.NODE_ENV === 'production') {
+  // Docker 环境下使用绝对路径（同时检测 NODE_ENV 和 Docker 环境标志）
+  // 🔑 即使用户忘记设置 NODE_ENV=production，只要检测到在容器内就使用正确路径
+  if (isProduction) {
     return '/app/server/data/zen-garden.db'
   }
   
@@ -47,11 +79,11 @@ export async function initDatabase() {
   // 安全备份路径 — 使用镜像层内路径，NAS 不会为它创建独立存储目录
   // 🔑 关键：不能用 /app/.data-backup（如果 Dockerfile 声明了 VOLUME 或 NAS 自动挂载了它，
   // 更新容器时备份也会一起丢失）
-  const safeBackupDir = process.env.NODE_ENV === 'production' ? '/app/.nowen-safe' : path.join(process.cwd(), '.data-backup')
+  const safeBackupDir = isProduction ? '/app/.nowen-safe' : path.join(process.cwd(), '.data-backup')
   const safeDbFile = path.join(safeBackupDir, 'zen-garden.db.safe')
   
   // 兼容旧版安全备份路径
-  const legacySafeFile = process.env.NODE_ENV === 'production' ? '/app/.data-backup/zen-garden.db.safe' : ''
+  const legacySafeFile = isProduction ? '/app/.data-backup/zen-garden.db.safe' : ''
   
   // 检查数据库文件是否存在
   let isNewDatabase = !fs.existsSync(dbPath)
@@ -82,7 +114,7 @@ export async function initDatabase() {
     }
     
     // 🔑 扫描宿主机旧容器目录（Node.js 层面二次保障，与 start.sh 互补）
-    if (isNewDatabase && process.env.NODE_ENV === 'production') {
+    if (isNewDatabase && isProduction) {
       console.log('🔍 [Node.js] Scanning host for existing data...')
       const scanPaths = [
         // 绿联 NAS 旧容器目录（通过 /host 只读挂载）
@@ -435,7 +467,7 @@ export function saveDatabase() {
     // 使用 /app/.nowen-safe 而非 /app/.data-backup，
     // 因为后者可能被 NAS Docker GUI 挂载为独立卷
     try {
-      const safeBackupDir = process.env.NODE_ENV === 'production' ? '/app/.nowen-safe' : path.join(process.cwd(), '.data-backup')
+      const safeBackupDir = isProduction ? '/app/.nowen-safe' : path.join(process.cwd(), '.data-backup')
       const safeDbFile = path.join(safeBackupDir, 'zen-garden.db.safe')
       if (!fs.existsSync(safeBackupDir)) {
         fs.mkdirSync(safeBackupDir, { recursive: true })
@@ -447,7 +479,7 @@ export function saveDatabase() {
     
     // 兼容：也写到旧的备份路径（如果目录存在）
     try {
-      if (process.env.NODE_ENV === 'production' && fs.existsSync('/app/.data-backup')) {
+      if (isProduction && fs.existsSync('/app/.data-backup')) {
         fs.writeFileSync('/app/.data-backup/zen-garden.db.safe', buffer)
       }
     } catch {

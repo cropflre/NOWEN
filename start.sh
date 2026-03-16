@@ -6,6 +6,47 @@ echo "Architecture: $(uname -m)"
 echo ""
 
 # ============================================================
+# 🔑 防呆自动配置 — 自动检测 Docker 环境并设置关键环境变量
+# ============================================================
+# 绿联/飞牛等 NAS 的 Docker GUI 用户通常不会手动设置环境变量
+# 所以我们在启动时自动检测并设置，确保即使什么都不配也能正常工作
+
+# 自动设置 NODE_ENV=production（如果未设置且检测到在 Docker 容器内）
+if [ -z "${NODE_ENV}" ]; then
+  if [ -f "/.dockerenv" ] || [ -f "/app/start.sh" ] || grep -qsE 'docker|containerd|kubepods' /proc/1/cgroup 2>/dev/null; then
+    export NODE_ENV=production
+    echo "🔧 Auto-set NODE_ENV=production (Docker detected)"
+  fi
+fi
+
+# 自动设置 SI_FILESYSTEM_DISK_PREFIX（如果未设置且 /host 挂载存在）
+if [ -z "${SI_FILESYSTEM_DISK_PREFIX}" ] && [ -d "/host/proc" ]; then
+  export SI_FILESYSTEM_DISK_PREFIX=/host
+  echo "🔧 Auto-set SI_FILESYSTEM_DISK_PREFIX=/host"
+fi
+
+# 自动设置 PROC_PATH（如果未设置且 /host/proc 存在）
+if [ -z "${PROC_PATH}" ] && [ -d "/host/proc" ]; then
+  export PROC_PATH=/host/proc
+  echo "🔧 Auto-set PROC_PATH=/host/proc"
+fi
+
+# 自动设置 SYS_PATH（如果未设置且 /host/sys 存在）
+if [ -z "${SYS_PATH}" ] && [ -d "/host/sys" ]; then
+  export SYS_PATH=/host/sys
+  echo "🔧 Auto-set SYS_PATH=/host/sys"
+fi
+
+# 自动设置 FS_PATH（如果未设置且 /host 存在）
+if [ -z "${FS_PATH}" ] && [ -d "/host" ]; then
+  export FS_PATH=/host
+  echo "🔧 Auto-set FS_PATH=/host"
+fi
+
+echo "   NODE_ENV=${NODE_ENV:-not set}"
+echo ""
+
+# ============================================================
 # 🔑 数据持久化 — 终极防呆设计（兼容绿联/飞牛等 NAS）
 # ============================================================
 # 

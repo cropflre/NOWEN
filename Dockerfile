@@ -61,6 +61,12 @@ RUN mkdir -p /app/server/data /app/.nowen-safe
 # 不声明 VOLUME，让用户通过 docker-compose.yml 中的 volumes 手动挂载，
 # 或者 NAS GUI 的存储配置来指定固定路径。
 
+# 🔑 防呆设计：直接在镜像内设置 NODE_ENV=production
+# 这样即使用户通过 NAS GUI 部署时忘记配置环境变量，
+# 数据库路径也能正确指向 /app/server/data/zen-garden.db
+# 用户在 docker-compose.yml 或 GUI 中设置的环境变量会覆盖此默认值
+ENV NODE_ENV=production
+
 # 暴露端口
 EXPOSE 3000 3001
 
