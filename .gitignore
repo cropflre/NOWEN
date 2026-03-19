@@ -29,3 +29,5 @@ coverage/
 *.tmp
 *.temp
 server/data/zen-garden.db
+server/.data-backup/zen-garden.db.safe
+server/server/data/zen-garden.db

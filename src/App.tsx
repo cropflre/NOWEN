@@ -1105,6 +1105,18 @@ function CategorySection({
   const baseShowCount = initialShowCount || 8;
   const needsCollapse = collapseThreshold > 0 && categoryBookmarks.length > collapseThreshold;
   const [displayCount, setDisplayCount] = useState(needsCollapse ? baseShowCount : categoryBookmarks.length);
+
+  // 当书签数量变化时（如新增/删除书签），自动更新显示数量
+  useEffect(() => {
+    if (!needsCollapse) {
+      // 不需要折叠时，显示全部
+      setDisplayCount(categoryBookmarks.length);
+    } else {
+      // 需要折叠时，确保 displayCount 不超过实际数量
+      setDisplayCount(prev => Math.min(prev, categoryBookmarks.length));
+    }
+  }, [categoryBookmarks.length, needsCollapse]);
+
   const isFullyExpanded = displayCount >= categoryBookmarks.length;
   const visibleBookmarks = isFullyExpanded ? categoryBookmarks : categoryBookmarks.slice(0, displayCount);
   const hiddenCount = categoryBookmarks.length - displayCount;
