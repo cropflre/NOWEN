@@ -1,4 +1,4 @@
-# NOWEN
+# NOWEN - Nebula Portal
 
 > A minimalist personal navigation hub combining bookmark management and system monitoring, featuring deep space aesthetics and glassmorphism design, supporting day/night dual modes with complete real-time hardware monitoring capabilities
 
@@ -21,14 +21,14 @@
 
 | Language    | Document                                 |
 | ----------- | ---------------------------------------- |
-| 🇨🇳 简体中�?| [README.md](./README.md)                 |
+| 🇨🇳 简体中文 | [README.md](./README.md)                 |
 | 🇬🇧 English  | [README_EN.md](./README_EN.md) (Current) |
 
 ---
 
 ## 📸 Screenshots
 
-### ☀�?Light Mode
+### ☀️ Light Mode
 
 <table>
   <tr>
@@ -63,7 +63,7 @@
   </tr>
 </table>
 
-### 🎛�?Feature Highlights
+### 🎛️ Feature Highlights
 
 | Feature                  | Description                                                                                |
 | ------------------------ | ------------------------------------------------------------------------------------------ |
@@ -81,7 +81,7 @@
 | **Network Switching**    | Dual URLs per bookmark (Internal/External) · Auto network detection · Smart URL switching              |
 | **Footer Filing Info**   | Configure footer text in settings · HTML rendering support · Homepage bottom display                   |
 | **Wallpaper**            | Custom background wallpaper · Upload/Drag/URL/Picsum/Bing · Adjustable blur and overlay · Beam effects layered |
-| **Data Management**      | Import/Export JSON/HTML · Factory reset · Auto redirect to home after import · SunPanel data import compatible · Browser bookmark import (merge/overwrite) · Auto-fetch icons after import (�?0 bookmarks) |
+| **Data Management**      | Import/Export JSON/HTML · Factory reset · Auto redirect to home after import · SunPanel data import compatible · Browser bookmark import (merge/overwrite) · Auto-fetch icons after import (≤50 bookmarks) |
 | **Cloud Backup**         | WebDAV cloud backup (Nutstore/Synology/UGREEN/Alist) · Auto scheduled backup (daily/12h/weekly/hourly) · Local JSON download/restore · Raw DB file download/upload · Keep up to 30 backups |
 | **System Logs**          | Operation logging · Filter by level/type · One-click clear logs                                        |
 | **ARM64 Support**        | Multi-arch Docker images · RK3588/RK3576/RK3566 SBCs · Apple Silicon · One-click build script |
@@ -93,7 +93,7 @@
 - [Screenshots](#-screenshots)
 - [Features](#-features)
 - [Theme System](#-theme-system)
-- [Tech Stack](#�?tech-stack)
+- [Tech Stack](#️-tech-stack)
 - [Project Structure](#-project-structure)
 - [Installation](#-installation)
   - [Windows Local](#option-1-windows-local-installation)
@@ -105,14 +105,14 @@
   - [Extreme Space NAS](#option-7-extreme-space-nas)
   - [ARM64 SBC](#option-8-arm64-sbc-rk3588rk3576rk3566)
 - [API Reference](#-api-reference)
-- [Keyboard Shortcuts](#�?keyboard-shortcuts)
+- [Keyboard Shortcuts](#️-keyboard-shortcuts)
 - [FAQ](#-faq)
 - [Changelog](#-changelog)
 - [License](#-license)
 
 ---
 
-## �?Features
+## ✨ Features
 
 ### 🏠 Homepage Display
 
@@ -145,7 +145,7 @@
 
 ### 🔍 Spotlight Search
 
-- **Hotkey Activation**: `�?Ctrl + K` global trigger
+- **Hotkey Activation**: `⌘/Ctrl + K` global trigger
 - **Multi-Search Engines**: Google, Bing, Baidu, DuckDuckGo one-click switch
 - **Bookmark Search**: Quick search saved bookmarks
 - **Quick Add**: Add new bookmarks directly in search box
@@ -202,7 +202,7 @@
 | **Widget Settings** | Control each monitor component visibility, Beam border toggle, Widget Size Preset S/M/L  |
 | **Wallpaper Settings** | Custom background wallpaper, image source selection (Upload/URL/Picsum/Bing), blur and overlay control |
 | **Security**        | Password change with strength indicator, first login force change, login state verification, admin username change |
-| **Data Management** | JSON/HTML import/export backup, factory reset, auto redirect to home after import, nested object support, SunPanel data compatible import, browser bookmark import (merge/overwrite modes), auto-fetch bookmark icons after import (�?0) |
+| **Data Management** | JSON/HTML import/export backup, factory reset, auto redirect to home after import, nested object support, SunPanel data compatible import, browser bookmark import (merge/overwrite modes), auto-fetch bookmark icons after import (≤50) |
 | **Cloud Backup**    | WebDAV cloud backup (Nutstore/Synology/UGREEN/Alist), auto scheduled backup (node-cron), local JSON download/restore, raw .db database file download/upload, keep up to 30 backups |
 | **System Logs**     | API request logging, operation logs, filter by level/type, one-click clear logs                           |
 | **Tag Management**  | Bookmark tag statistics, tag rename, tag delete                                                           |
@@ -241,7 +241,7 @@ Supports **8 carefully designed theme colors**, each with 20+ CSS variables:
 
 | Theme           | Description                              |
 | --------------- | ---------------------------------------- |
-| ☀�?**Daylight** | Bright and fresh, professional and clean |
+| ☀️ **Daylight** | Bright and fresh, professional and clean |
 | 🌅 **Sunrise**  | Warm orange tones, warm and vibrant      |
 | 🌸 **Sakura**   | Pink series, romantic and elegant        |
 | 🍃 **Mint**     | Mint green, fresh and natural            |
@@ -255,7 +255,7 @@ Supports **8 carefully designed theme colors**, each with 20+ CSS variables:
 
 ---
 
-## 🛠�?Tech Stack
+## 🛠️ Tech Stack
 
 ### Frontend
 
@@ -303,115 +303,115 @@ Supports **8 carefully designed theme colors**, each with 20+ CSS variables:
 ```
 NOWEN/
 ├── src/                              # Frontend Source
-�?  ├── components/
-�?  �?  ├── ui/                       # UI Components
-�?  �?  �?  ├── 3d-card.tsx           # 3D Card Effect
-�?  �?  �?  ├── aurora-background.tsx # Aurora Background
-�?  �?  �?  ├── bento-grid.tsx        # Bento Grid Layout
-�?  �?  �?  ├── floating-dock.tsx     # Floating Dock Nav (Desktop, freely draggable + position memory)
-�?  �?  �?  ├── mobile-floating-dock.tsx # Mobile Floating Dock (draggable orb + petal menu + bottom bar)
-�?  �?  �?  ├── spotlight-card.tsx    # Spotlight Card
-�?  �?  �?  ├── spotlight-search.tsx  # Spotlight Search Panel
-�?  �?  �?  ├── effects.tsx           # Meteor/Starlight Effects
-�?  �?  �?  ├── advanced-effects.tsx  # Border Beam etc.
-�?  �?  �?  ├── typewriter.tsx        # Typewriter Effect
-�?  �?  �?  └── scroll-to-top.tsx     # Scroll to Top Button
-�?  �?  ├── admin/                    # Admin Components
-�?  �?  �?  ├── AdminSidebar.tsx      # Admin Sidebar Nav
-�?  �?  �?  ├── SiteSettingsCard.tsx  # Site Settings
-�?  �?  �?  ├── ThemeCard.tsx         # Theme Picker
-�?  �?  �?  ├── WidgetSettingsCard.tsx # Widget Settings
-�?  �?  �?  ├── WallpaperSettingsCard.tsx # Wallpaper Settings
-�?  �?  �?  ├── SecurityCard.tsx      # Security Settings
-�?  �?  �?  ├── DataManagementCard.tsx # Data Management
-�?  �?  �?  ├── BackupCard.tsx        # Cloud Backup & Data Management
-�?  �?  �?  ├── DocsCard.tsx          # Documentation Card
-�?  �?  �?  ├── SettingsPanel.tsx     # Settings Panel
-�?  �?  �?  ├── QuotesCard.tsx        # Quote Management
-�?  �?  �?  ├── AnalyticsCard.tsx     # Visit Analytics
-�?  �?  �?  ├── HealthCheckCard.tsx   # Link Health Check
-�?  �?  �?  ├── TagsManageCard.tsx    # Tag Management
-�?  �?  �?  ├── LogsCard.tsx          # System Logs
-�?  �?  �?  ├── AiSettingsCard.tsx    # AI Settings
-�?  �?  �?  └── Toast.tsx             # Notifications
-�?  �?  ├── monitor/                  # System Monitor Components
-�?  �?  �?  ├── SystemMonitor.tsx     # Unified Monitor Interface
-�?  �?  �?  ├── MonitorDashboard.tsx  # Full Dashboard (light mode transparent)
-�?  �?  �?  ├── MiniMonitor.tsx       # Mini Monitor Widget (capsule design)
-�?  �?  �?  └── TickerMonitor.tsx     # Scrolling Status Bar (mobile bottom bar)
-�?  �?  ├── SystemMonitorCard.tsx     # System Monitor Card
-�?  �?  ├── HardwareIdentityCard.tsx  # Hardware Identity Card
-�?  �?  ├── VitalSignsCard.tsx        # Vital Signs Card
-�?  �?  ├── NetworkTelemetryCard.tsx  # Network Telemetry Card
-�?  �?  ├── ProcessMatrixCard.tsx     # Process Matrix Card
-�?  �?  ├── AddBookmarkModal.tsx      # Add Bookmark Modal
-�?  �?  ├── CategoryEditModal.tsx     # Category Edit Modal
-�?  �?  ├── AdminLogin.tsx            # Login Page
-�?  �?  ├── ForcePasswordChange.tsx   # Force Password Change
-�?  �?  ├── BentoCard.tsx             # Bento Bookmark Card
-�?  �?  ├── BookmarkCard.tsx          # Bookmark Card
-�?  �?  ├── IconManager.tsx           # Icon Manager
-�?  �?  ├── ContextMenu.tsx           # Context Menu
-�?  �?  ├── VirtualBookmarkList.tsx   # Virtual Scroll List
-�?  �?  ├── ErrorBoundary.tsx         # Error Boundary
-�?  �?  └── CommandPalette.tsx        # Command Palette
-�?  ├── hooks/                        # Custom Hooks
-�?  �?  ├── useBookmarkStore.ts       # Bookmark State Management
-�?  �?  ├── useHashRouter.ts          # Lightweight Hash Router
-�?  �?  ├── useAuth.ts                # Authentication & Page Navigation
-�?  �?  ├── useTheme.tsx              # Theme System (8 themes)
-�?  �?  ├── useTime.ts                # Time, Greeting, Lunar
-�?  �?  ├── useWeather.ts             # Weather Info
-�?  �?  └── useNetworkEnv.ts          # Network Environment Detection
-�?  ├── contexts/
-�?  �?  └── AdminContext.tsx          # Admin Context
-�?  ├── lib/                          # Utility Library
-�?  �?  ├── api.ts                    # API Wrapper
-�?  �?  ├── icons.ts                  # Icon Mapping
-�?  �?  ├── env.ts                    # Environment Variables
-�?  �?  ├── error-handling.ts         # Error Handling
-�?  �?  ├── bookmarkParser.ts         # Bookmark File Parser
-�?  �?  ├── i18n.ts                   # Internationalization
-�?  �?  ├── animation.ts              # Animation Utilities
-�?  �?  └── utils.ts                  # Utility Functions
-�?  ├── pages/
-�?  �?  └── Admin.tsx                 # Admin Page
-�?  ├── types/
-�?  �?  └── bookmark.ts               # Type Definitions
-�?  ├── data/
-�?  �?  └── quotes.ts                 # Quotes Data
-�?  ├── __tests__/                    # Unit Tests
-�?  ├── App.tsx                       # Main App
-�?  └── index.css                     # Global Styles & CSS Variables
+│   ├── components/
+│   │   ├── ui/                       # UI Components
+│   │   │   ├── 3d-card.tsx           # 3D Card Effect
+│   │   │   ├── aurora-background.tsx # Aurora Background
+│   │   │   ├── bento-grid.tsx        # Bento Grid Layout
+│   │   │   ├── floating-dock.tsx     # Floating Dock Nav (Desktop, freely draggable + position memory)
+│   │   │   ├── mobile-floating-dock.tsx # Mobile Floating Dock (draggable orb + petal menu + bottom bar)
+│   │   │   ├── spotlight-card.tsx    # Spotlight Card
+│   │   │   ├── spotlight-search.tsx  # Spotlight Search Panel
+│   │   │   ├── effects.tsx           # Meteor/Starlight Effects
+│   │   │   ├── advanced-effects.tsx  # Border Beam etc.
+│   │   │   ├── typewriter.tsx        # Typewriter Effect
+│   │   │   └── scroll-to-top.tsx     # Scroll to Top Button
+│   │   ├── admin/                    # Admin Components
+│   │   │   ├── AdminSidebar.tsx      # Admin Sidebar Nav
+│   │   │   ├── SiteSettingsCard.tsx  # Site Settings
+│   │   │   ├── ThemeCard.tsx         # Theme Picker
+│   │   │   ├── WidgetSettingsCard.tsx # Widget Settings
+│   │   │   ├── WallpaperSettingsCard.tsx # Wallpaper Settings
+│   │   │   ├── SecurityCard.tsx      # Security Settings
+│   │   │   ├── DataManagementCard.tsx # Data Management
+│   │   │   ├── BackupCard.tsx        # Cloud Backup & Data Management
+│   │   │   ├── DocsCard.tsx          # Documentation Card
+│   │   │   ├── SettingsPanel.tsx     # Settings Panel
+│   │   │   ├── QuotesCard.tsx        # Quote Management
+│   │   │   ├── AnalyticsCard.tsx     # Visit Analytics
+│   │   │   ├── HealthCheckCard.tsx   # Link Health Check
+│   │   │   ├── TagsManageCard.tsx    # Tag Management
+│   │   │   ├── LogsCard.tsx          # System Logs
+│   │   │   ├── AiSettingsCard.tsx    # AI Settings
+│   │   │   └── Toast.tsx             # Notifications
+│   │   ├── monitor/                  # System Monitor Components
+│   │   │   ├── SystemMonitor.tsx     # Unified Monitor Interface
+│   │   │   ├── MonitorDashboard.tsx  # Full Dashboard (light mode transparent)
+│   │   │   ├── MiniMonitor.tsx       # Mini Monitor Widget (capsule design)
+│   │   │   └── TickerMonitor.tsx     # Scrolling Status Bar (mobile bottom bar)
+│   │   ├── SystemMonitorCard.tsx     # System Monitor Card
+│   │   ├── HardwareIdentityCard.tsx  # Hardware Identity Card
+│   │   ├── VitalSignsCard.tsx        # Vital Signs Card
+│   │   ├── NetworkTelemetryCard.tsx  # Network Telemetry Card
+│   │   ├── ProcessMatrixCard.tsx     # Process Matrix Card
+│   │   ├── AddBookmarkModal.tsx      # Add Bookmark Modal
+│   │   ├── CategoryEditModal.tsx     # Category Edit Modal
+│   │   ├── AdminLogin.tsx            # Login Page
+│   │   ├── ForcePasswordChange.tsx   # Force Password Change
+│   │   ├── BentoCard.tsx             # Bento Bookmark Card
+│   │   ├── BookmarkCard.tsx          # Bookmark Card
+│   │   ├── IconManager.tsx           # Icon Manager
+│   │   ├── ContextMenu.tsx           # Context Menu
+│   │   ├── VirtualBookmarkList.tsx   # Virtual Scroll List
+│   │   ├── ErrorBoundary.tsx         # Error Boundary
+│   │   └── CommandPalette.tsx        # Command Palette
+│   ├── hooks/                        # Custom Hooks
+│   │   ├── useBookmarkStore.ts       # Bookmark State Management
+│   │   ├── useHashRouter.ts          # Lightweight Hash Router
+│   │   ├── useAuth.ts                # Authentication & Page Navigation
+│   │   ├── useTheme.tsx              # Theme System (8 themes)
+│   │   ├── useTime.ts                # Time, Greeting, Lunar
+│   │   ├── useWeather.ts             # Weather Info
+│   │   └── useNetworkEnv.ts          # Network Environment Detection
+│   ├── contexts/
+│   │   └── AdminContext.tsx          # Admin Context
+│   ├── lib/                          # Utility Library
+│   │   ├── api.ts                    # API Wrapper
+│   │   ├── icons.ts                  # Icon Mapping
+│   │   ├── env.ts                    # Environment Variables
+│   │   ├── error-handling.ts         # Error Handling
+│   │   ├── bookmarkParser.ts         # Bookmark File Parser
+│   │   ├── i18n.ts                   # Internationalization
+│   │   ├── animation.ts              # Animation Utilities
+│   │   └── utils.ts                  # Utility Functions
+│   ├── pages/
+│   │   └── Admin.tsx                 # Admin Page
+│   ├── types/
+│   │   └── bookmark.ts               # Type Definitions
+│   ├── data/
+│   │   └── quotes.ts                 # Quotes Data
+│   ├── __tests__/                    # Unit Tests
+│   ├── App.tsx                       # Main App
+│   └── index.css                     # Global Styles & CSS Variables
 ├── server/                           # Backend Source
-�?  ├── src/
-�?  �?  ├── routes/                   # Route Modules
-�?  �?  �?  ├── bookmarks.ts          # Bookmark Routes
-�?  �?  �?  ├── categories.ts         # Category Routes
-�?  �?  �?  ├── quotes.ts             # Quote Routes
-�?  �?  �?  ├── admin.ts              # Admin Routes
-�?  �?  �?  ├── settings.ts           # Settings Routes
-�?  �?  �?  ├── system.ts             # System Monitor Routes
-�?  �?  �?  ├── visits.ts             # Visit Analytics Routes
-�?  �?  �?  ├── health-check.ts       # Link Health Check Routes
-�?  �?  �?  ├── ai.ts                 # AI Routes
-�?  �?  �?  ├── logs.ts               # System Logs Routes
-�?  �?  �?  ├── backup.ts             # Cloud Backup Routes
-�?  �?  �?  └── data.ts               # Data Import/Export Routes
-�?  �?  ├── services/
-�?  �?  �?  ├── metadata.ts           # URL Metadata Fetching
-�?  �?  �?  ├── ai.ts                 # AI Service
-�?  �?  �?  └── backup.ts             # WebDAV Backup Service
-�?  �?  ├── middleware/               # Middleware
-�?  �?  ├── utils/                    # Utilities
-�?  �?  ├── index.ts                  # Server Entry
-�?  �?  ├── db.ts                     # Database Operations
-�?  �?  └── schemas.ts                # Request Validation
-�?  └── data/
-�?      └── zen-garden.db             # SQLite Database
+│   ├── src/
+│   │   ├── routes/                   # Route Modules
+│   │   │   ├── bookmarks.ts          # Bookmark Routes
+│   │   │   ├── categories.ts         # Category Routes
+│   │   │   ├── quotes.ts             # Quote Routes
+│   │   │   ├── admin.ts              # Admin Routes
+│   │   │   ├── settings.ts           # Settings Routes
+│   │   │   ├── system.ts             # System Monitor Routes
+│   │   │   ├── visits.ts             # Visit Analytics Routes
+│   │   │   ├── health-check.ts       # Link Health Check Routes
+│   │   │   ├── ai.ts                 # AI Routes
+│   │   │   ├── logs.ts               # System Logs Routes
+│   │   │   ├── backup.ts             # Cloud Backup Routes
+│   │   │   └── data.ts               # Data Import/Export Routes
+│   │   ├── services/
+│   │   │   ├── metadata.ts           # URL Metadata Fetching
+│   │   │   ├── ai.ts                 # AI Service
+│   │   │   └── backup.ts             # WebDAV Backup Service
+│   │   ├── middleware/               # Middleware
+│   │   ├── utils/                    # Utilities
+│   │   ├── index.ts                  # Server Entry
+│   │   ├── db.ts                     # Database Operations
+│   │   └── schemas.ts                # Request Validation
+│   └── data/
+│       └── zen-garden.db             # SQLite Database
 ├── .github/
-�?  └── workflows/
-�?      └── docker-publish.yml        # GitHub Actions Auto Build
+│   └── workflows/
+│       └── docker-publish.yml        # GitHub Actions Auto Build
 ├── Dockerfile                        # Docker Config (Multi-arch)
 ├── docker-compose.yml                # Docker Compose
 ├── build-multiarch.sh                # Multi-arch Build Script (amd64 + arm64)
@@ -618,7 +618,7 @@ If system monitoring is not needed, remove the related mounts and environment va
 1. Install **Container Manager** from Package Center
 2. Create `/docker/nowen` directory
 3. Clone or upload project files
-4. In Container Manager: Projects �?Add �?Select `docker-compose.yml`
+4. In Container Manager: Projects → Add → Select `docker-compose.yml`
 5. Access: `http://NAS_IP:3000`
 
 > ⚠️ **Update Reminder**: Always backup your data before updating images through Synology Container Manager!
@@ -630,10 +630,10 @@ If system monitoring is not needed, remove the related mounts and environment va
 1. Enable Docker in App Center
 2. Create `/docker/nowen` directory
 3. Upload project files via File Manager
-4. In Docker app: Compose �?Add �?Select project path
+4. In Docker app: Compose → Add → Select project path
 5. Access: `http://NAS_IP:3000`
 
-> **Important**: When configuring Docker, manually specify the data volume path (e.g., `/docker/nowen/data:/app/server/data`). Do NOT rely on "auto configure storage" �?it may not reuse old volumes during container updates, causing data loss.
+> **Important**: When configuring Docker, manually specify the data volume path (e.g., `/docker/nowen/data:/app/server/data`). Do NOT rely on "auto configure storage" — it may not reuse old volumes during container updates, causing data loss.
 
 > ⚠️ **Update Reminder**: Always backup your data before updating images through UGREEN Docker GUI! The "Version Check & Update" feature deletes the old container and creates a new one, which may cause data loss if using "auto configure storage".
 
@@ -658,7 +658,7 @@ Access: `http://NAS_IP:3000`
 1. Install **Container Station** from App Center
 2. Create `/Container/nowen` directory
 3. Upload project files
-4. In Container Station: Applications �?Create �?Docker Compose
+4. In Container Station: Applications → Create → Docker Compose
 5. Access: `http://NAS_IP:3000`
 
 > ⚠️ **Update Reminder**: Always backup your data before updating images through QNAP Container Station!
@@ -787,7 +787,7 @@ chmod +x build-multiarch.sh
 | **RK3576** (8-core/4GB+) | Enable Lite Mode, disable meteor effects |
 | **RK3566** (4-core/2GB+) | Enable Lite Mode, disable some monitoring cards |
 
-> 💡 **Tip**: Enable "Lite Mode" in Admin �?Site Settings to significantly reduce CPU/GPU usage, ideal for ARM devices.
+> 💡 **Tip**: Enable "Lite Mode" in Admin → Site Settings to significantly reduce CPU/GPU usage, ideal for ARM devices.
 
 #### ARM64 FAQ
 
@@ -890,111 +890,111 @@ privileged: true
 
 | Method | Path                       | Auth | Description             |
 | ------ | -------------------------- | ---- | ----------------------- |
-| GET    | `/api/bookmarks`           | �?  | Get all bookmarks       |
-| GET    | `/api/bookmarks/paginated` | �?  | Get paginated bookmarks |
-| POST   | `/api/bookmarks`           | �?  | Create bookmark         |
-| PATCH  | `/api/bookmarks/:id`       | �?  | Update bookmark         |
-| DELETE | `/api/bookmarks/:id`       | �?  | Delete bookmark         |
-| PATCH  | `/api/bookmarks/reorder`   | �?  | Reorder bookmarks       |
-| GET    | `/api/bookmarks/tags`        | �?| Get all tags            |
-| GET    | `/api/bookmarks/tags/stats`  | �?| Get tag usage stats     |
-| PATCH  | `/api/bookmarks/tags/rename` | �?| Rename tag              |
-| DELETE | `/api/bookmarks/tags/:name`  | �?| Delete tag              |
+| GET    | `/api/bookmarks`           | ❌   | Get all bookmarks       |
+| GET    | `/api/bookmarks/paginated` | ❌   | Get paginated bookmarks |
+| POST   | `/api/bookmarks`           | ✅   | Create bookmark         |
+| PATCH  | `/api/bookmarks/:id`       | ✅   | Update bookmark         |
+| DELETE | `/api/bookmarks/:id`       | ✅   | Delete bookmark         |
+| PATCH  | `/api/bookmarks/reorder`   | ✅   | Reorder bookmarks       |
+| GET    | `/api/bookmarks/tags`        | ❌ | Get all tags            |
+| GET    | `/api/bookmarks/tags/stats`  | ❌ | Get tag usage stats     |
+| PATCH  | `/api/bookmarks/tags/rename` | ✅ | Rename tag              |
+| DELETE | `/api/bookmarks/tags/:name`  | ✅ | Delete tag              |
 
 ### Categories API
 
 | Method | Path                     | Auth | Description        |
 | ------ | ------------------------ | ---- | ------------------ |
-| GET    | `/api/categories`        | �?  | Get all categories |
-| POST   | `/api/categories`        | �?  | Create category    |
-| PATCH  | `/api/categories/:id`    | �?  | Update category    |
-| DELETE | `/api/categories/:id`    | �?  | Delete category    |
-| PATCH  | `/api/categories/reorder`| �?  | Reorder categories |
+| GET    | `/api/categories`        | ❌   | Get all categories |
+| POST   | `/api/categories`        | ✅   | Create category    |
+| PATCH  | `/api/categories/:id`    | ✅   | Update category    |
+| DELETE | `/api/categories/:id`    | ✅   | Delete category    |
+| PATCH  | `/api/categories/reorder`| ✅   | Reorder categories |
 
 ### Admin API
 
 | Method | Path                         | Auth | Description         |
 | ------ | ---------------------------- | ---- | ------------------- |
-| POST   | `/api/admin/login`           | �?  | Login (returns JWT) |
-| POST   | `/api/admin/logout`          | �?  | Logout              |
-| GET    | `/api/admin/verify`          | �?  | Verify token        |
-| POST   | `/api/admin/change-password` | �?  | Change password     |
-| POST   | `/api/admin/change-username` | �?  | Change username     |
+| POST   | `/api/admin/login`           | ❌   | Login (returns JWT) |
+| POST   | `/api/admin/logout`          | ✅   | Logout              |
+| GET    | `/api/admin/verify`          | ✅   | Verify token        |
+| POST   | `/api/admin/change-password` | ✅   | Change password     |
+| POST   | `/api/admin/change-username` | ✅   | Change username     |
 
 ### Visit Analytics API
 
 | Method | Path                 | Auth | Description              |
 | ------ | -------------------- | ---- | ------------------------ |
-| POST   | `/api/visits/track`  | �?  | Track bookmark visit     |
-| GET    | `/api/visits/stats`  | �?  | Get visit stats overview |
-| GET    | `/api/visits/top`    | �?  | Get top bookmarks        |
-| GET    | `/api/visits/trend`  | �?  | Get visit trend by day   |
-| GET    | `/api/visits/recent` | �?  | Get recent visits        |
-| DELETE | `/api/visits/clear`  | �?  | Clear all visit data     |
+| POST   | `/api/visits/track`  | ❌   | Track bookmark visit     |
+| GET    | `/api/visits/stats`  | ✅   | Get visit stats overview |
+| GET    | `/api/visits/top`    | ✅   | Get top bookmarks        |
+| GET    | `/api/visits/trend`  | ✅   | Get visit trend by day   |
+| GET    | `/api/visits/recent` | ✅   | Get recent visits        |
+| DELETE | `/api/visits/clear`  | ✅   | Clear all visit data     |
 
 ### Health Check API
 
 | Method | Path                 | Auth | Description                          |
 | ------ | -------------------- | ---- | ------------------------------------ |
-| POST   | `/api/health-check`  | �?  | Batch check bookmark link health     |
-| POST   | `/api/health-check/single`  | �?  | Single link health check             |
+| POST   | `/api/health-check`  | ✅   | Batch check bookmark link health     |
+| POST   | `/api/health-check/single`  | ✅   | Single link health check             |
 
 ### AI API
 
 | Method | Path                          | Auth | Description                        |
 | ------ | ----------------------------- | ---- | ---------------------------------- |
-| GET    | `/api/ai/status`              | �?  | Get AI configuration status        |
-| POST   | `/api/ai/categorize`          | �?  | AI smart categorize single bookmark |
-| POST   | `/api/ai/chat`                | �?  | AI chat assistant                  |
-| POST   | `/api/ai/batch-tags`          | �?  | Batch AI smart tags                |
-| GET    | `/api/ai/batch-tags-status`   | �?  | Query batch tags progress          |
-| POST   | `/api/ai/batch-classify`      | �?  | Batch AI smart classify            |
-| GET    | `/api/ai/batch-classify-status` | �?| Query batch classify progress      |
-| POST   | `/api/ai/batch-enrich`        | �?  | Batch AI metadata & icons          |
-| GET    | `/api/ai/batch-enrich-status` | �?  | Query batch enrich progress        |
-| GET    | `/api/ai/config`              | �?  | Get AI config (API key masked)     |
-| PUT    | `/api/ai/config`              | �?  | Save AI config                     |
-| POST   | `/api/ai/test`                | �?  | Test AI connection                 |
-| POST   | `/api/ai/generate-quotes`     | �?  | AI generate quotes                 |
+| GET    | `/api/ai/status`              | ❌   | Get AI configuration status        |
+| POST   | `/api/ai/categorize`          | ❌   | AI smart categorize single bookmark |
+| POST   | `/api/ai/chat`                | ❌   | AI chat assistant                  |
+| POST   | `/api/ai/batch-tags`          | ✅   | Batch AI smart tags                |
+| GET    | `/api/ai/batch-tags-status`   | ✅   | Query batch tags progress          |
+| POST   | `/api/ai/batch-classify`      | ✅   | Batch AI smart classify            |
+| GET    | `/api/ai/batch-classify-status` | ✅ | Query batch classify progress      |
+| POST   | `/api/ai/batch-enrich`        | ✅   | Batch AI metadata & icons          |
+| GET    | `/api/ai/batch-enrich-status` | ✅   | Query batch enrich progress        |
+| GET    | `/api/ai/config`              | ✅   | Get AI config (API key masked)     |
+| PUT    | `/api/ai/config`              | ✅   | Save AI config                     |
+| POST   | `/api/ai/test`                | ✅   | Test AI connection                 |
+| POST   | `/api/ai/generate-quotes`     | ✅   | AI generate quotes                 |
 
 ### Other APIs
 
 | Method | Path                 | Auth | Description         |
 | ------ | -------------------- | ---- | ------------------- |
-| POST   | `/api/metadata`      | �?  | Fetch URL metadata  |
-| GET    | `/api/settings`      | �?  | Get site settings   |
-| PATCH  | `/api/settings`      | �?  | Update settings     |
-| GET    | `/api/system/info`   | �?  | Get system info     |
-| GET    | `/api/system/stats`  | �?  | Get real-time stats |
-| GET    | `/api/system/network`| �?  | Get network info    |
-| GET    | `/api/system/processes` | �?| Get process list    |
-| GET    | `/api/export`        | �?  | Export data (JSON)  |
-| POST   | `/api/import`        | �?  | Import data (JSON)  |
-| GET    | `/api/import/enrich-status` | �?| Query icon fetch progress after import |
-| POST   | `/api/factory-reset` | �?  | Factory reset       |
+| POST   | `/api/metadata`      | ❌   | Fetch URL metadata  |
+| GET    | `/api/settings`      | ❌   | Get site settings   |
+| PATCH  | `/api/settings`      | ✅   | Update settings     |
+| GET    | `/api/system/info`   | ❌   | Get system info     |
+| GET    | `/api/system/stats`  | ❌   | Get real-time stats |
+| GET    | `/api/system/network`| ❌   | Get network info    |
+| GET    | `/api/system/processes` | ❌ | Get process list    |
+| GET    | `/api/export`        | ✅   | Export data (JSON)  |
+| POST   | `/api/import`        | ✅   | Import data (JSON)  |
+| GET    | `/api/import/enrich-status` | ✅ | Query icon fetch progress after import |
+| POST   | `/api/factory-reset` | ✅   | Factory reset       |
 
 ### Backup API
 
 | Method | Path                          | Auth | Description                              |
 | ------ | ----------------------------- | ---- | ---------------------------------------- |
-| GET    | `/api/backup/config`          | �?  | Get WebDAV config (password masked)      |
-| POST   | `/api/backup/config`          | �?  | Save WebDAV config                       |
-| POST   | `/api/backup/test`            | �?  | Test WebDAV connection                   |
-| POST   | `/api/backup/now`             | �?  | Execute WebDAV backup immediately        |
-| GET    | `/api/backup/list`            | �?  | List remote backup files                 |
-| POST   | `/api/backup/restore`         | �?  | Restore data from remote backup          |
-| DELETE | `/api/backup/file/:filename`  | �?  | Delete remote backup file                |
-| GET    | `/api/backup/status`          | �?  | Get auto backup status                   |
-| GET    | `/api/backup/local/download`  | �?  | Download local JSON backup               |
-| GET    | `/api/backup/local/download-db` | �?| Download raw .db database file           |
-| POST   | `/api/backup/local/upload-db` | �?  | Upload .db file restore (with validation and rollback) |
+| GET    | `/api/backup/config`          | ✅   | Get WebDAV config (password masked)      |
+| POST   | `/api/backup/config`          | ✅   | Save WebDAV config                       |
+| POST   | `/api/backup/test`            | ✅   | Test WebDAV connection                   |
+| POST   | `/api/backup/now`             | ✅   | Execute WebDAV backup immediately        |
+| GET    | `/api/backup/list`            | ✅   | List remote backup files                 |
+| POST   | `/api/backup/restore`         | ✅   | Restore data from remote backup          |
+| DELETE | `/api/backup/file/:filename`  | ✅   | Delete remote backup file                |
+| GET    | `/api/backup/status`          | ✅   | Get auto backup status                   |
+| GET    | `/api/backup/local/download`  | ✅   | Download local JSON backup               |
+| GET    | `/api/backup/local/download-db` | ✅ | Download raw .db database file           |
+| POST   | `/api/backup/local/upload-db` | ✅   | Upload .db file restore (with validation and rollback) |
 
 ### Logs API
 
 | Method | Path          | Auth | Description              |
 | ------ | ------------- | ---- | ------------------------ |
-| GET    | `/api/logs`   | �?  | Get system logs (paged)  |
-| DELETE | `/api/logs`   | �?  | Clear all logs           |
+| GET    | `/api/logs`   | ✅   | Get system logs (paged)  |
+| DELETE | `/api/logs`   | ✅   | Clear all logs           |
 
 ---
 
@@ -1002,15 +1002,15 @@ privileged: true
 
 | Shortcut     | Function                |
 | ------------ | ----------------------- |
-| `�?Ctrl + K` | Open Spotlight search   |
-| `�?Ctrl + N` | Quick add bookmark      |
+| `⌘/Ctrl + K` | Open Spotlight search   |
+| `⌘/Ctrl + N` | Quick add bookmark      |
 | `Esc`        | Close current modal     |
-| `�?↓`        | Navigate search results |
+| `↑/↓`        | Navigate search results |
 | `Enter`      | Confirm selection       |
 
 ---
 
-## �?FAQ
+## ❓ FAQ
 
 ### Installation Issues
 
@@ -1032,7 +1032,7 @@ lsof -i :3000
 
 **Q: Data lost after update?**
 
-A: Ensure you have configured the data volume mount correctly. The database is in `/app/server/data`. Use a bind mount like `./nowen-data:/app/server/data`. NAS Docker UI "auto configure storage" may not reuse old volumes during container updates �?always manually specify the host path.
+A: Ensure you have configured the data volume mount correctly. The database is in `/app/server/data`. Use a bind mount like `./nowen-data:/app/server/data`. NAS Docker UI "auto configure storage" may not reuse old volumes during container updates — always manually specify the host path.
 
 ### System Monitoring Issues
 
@@ -1067,16 +1067,16 @@ A: Some sites have hotlink protection. Upload custom icons instead.
 
 A:
 
-1. Admin �?Data Management �?Export JSON backup or download .db database file
+1. Admin → Data Management → Export JSON backup or download .db database file
 2. Configure WebDAV cloud backup for automatic scheduled backups (supports Nutstore/Synology/UGREEN/Alist)
 3. Or directly copy the `zen-garden.db` file from the mounted data directory on host
 
 **Q: Data lost after container update?**
 
-A: Make sure you manually specified the data volume mount path when creating the container, e.g., `-v /your/path:/app/server/data`. UGREEN and other NAS "auto configure storage" may not reuse old volumes during updates �?always use a fixed host path.
+A: Make sure you manually specified the data volume mount path when creating the container, e.g., `-v /your/path:/app/server/data`. UGREEN and other NAS "auto configure storage" may not reuse old volumes during updates — always use a fixed host path.
 
 > ⚠️ **NAS Docker Update Warning**: When updating images through NAS built-in Docker GUI tools (UGREEN Docker, Synology Container Manager, QNAP Container Station, fnOS Docker, Extreme Space Docker, etc.), **always backup your data first!** These tools may delete the old container and create a new one during the update process, which can result in data loss if volumes are not properly mounted to a fixed host path. Before updating:
-> 1. Export a JSON backup via NOWEN's Admin Panel �?Data Management
+> 1. Export a JSON backup via NOWEN's Admin Panel → Data Management
 > 2. Or trigger a manual WebDAV cloud backup
 > 3. Or directly copy the `zen-garden.db` file from your host data directory
 
@@ -1103,7 +1103,7 @@ docker-compose up -d
 
 ### v0.2.2 (2026-03-09)
 
-#### �?New Features
+#### ✨ New Features
 
 - **Monitor Widget Size Preset S/M/L**: One-click switch all monitor widget display sizes
   - S (Mini Summary): All widgets force-collapsed, showing only title bar + key metrics summary, BentoGrid rowSpan=1
@@ -1141,7 +1141,7 @@ docker-compose up -d
 
 ### v0.2.1 (2026-03-03)
 
-#### �?New Features
+#### ✨ New Features
 
 - **WebDAV Cloud Backup**: Cloud data backup & restore via WebDAV protocol
   - Supports Nutstore, Synology, UGREEN, Alist and other WebDAV services
@@ -1163,7 +1163,7 @@ docker-compose up -d
 - **Hash Router**: Lightweight hash-based routing for admin panel
   - Zero-dependency routing based on `window.location.hash`
   - Supports browser forward/back navigation and direct URL entry
-  - Route mapping: `#/admin` �?bookmarks, `#/admin/{tab}` �?specific admin tab
+  - Route mapping: `#/admin` → bookmarks, `#/admin/{tab}` → specific admin tab
   - New `useHashRouter.ts` hook with unified `AdminTabType` type definition
 
 #### 🐛 Bug Fixes
@@ -1174,7 +1174,7 @@ docker-compose up -d
 
 ### v0.2.0 (2026-02-26)
 
-#### �?New Features
+#### ✨ New Features
 
 - **ARM64 Multi-Architecture Support**: Docker images now support both linux/amd64 and linux/arm64
   - Compatible with Rockchip RK3588, RK3576, RK3566 ARM64 SBCs
@@ -1225,7 +1225,7 @@ docker-compose up -d
 
 ### v0.1.9 (2026-02-25)
 
-#### �?New Features
+#### ✨ New Features
 
 - **Mobile Energy Orb Free Dragging**: Mobile floating navigation orb supports free dragging to any screen position
   - Native drag via Pointer Events with 6px threshold to distinguish drag from click
@@ -1258,11 +1258,11 @@ docker-compose up -d
 
 ### v0.1.8 (2026-02-24)
 
-#### �?New Features
+#### ✨ New Features
 
 - **SunPanel Data Import Compatibility**: Support direct import of SunPanel exported JSON configuration files
   - Auto-detect SunPanel format (`appName: "Sun-Panel-Config"`)
-  - SunPanel categories �?NOWEN categories with auto-assigned colors
+  - SunPanel categories → NOWEN categories with auto-assigned colors
   - Bookmark field mapping: `title`/`url`/`lanUrl`(→`internalUrl`)/`description`/`icon.src`(→`iconUrl`)
   - SunPanel-specific confirmation dialog showing version and export time
   - Full i18n support (Chinese/English)
@@ -1288,7 +1288,7 @@ docker-compose up -d
 
 ### v0.1.7 (2026-02-11)
 
-#### �?New Features
+#### ✨ New Features
 
 - **Wallpaper Background**: Custom page background image
   - 5 image sources: local upload/drag, URL, Picsum random, Lorem Picsum, Bing daily wallpaper
@@ -1310,7 +1310,7 @@ docker-compose up -d
 
 ### v0.1.6 (2026-02-11)
 
-#### �?New Features
+#### ✨ New Features
 
 - **Footer Filing Information Display**: New footer text configuration in site settings
   - Text input in site settings for ICP filing info
@@ -1329,7 +1329,7 @@ docker-compose up -d
 
 ### v0.1.5 (2026-02-11)
 
-#### �?New Features
+#### ✨ New Features
 
 - **Link Health Check (Dead Link Detection)**: Complete bookmark link accessibility check
   - Batch check all bookmark links (concurrency 5, 10s timeout)
@@ -1346,7 +1346,7 @@ docker-compose up -d
 
 ### v0.1.4 (2026-02-10)
 
-#### �?New Features
+#### ✨ New Features
 
 - **Visit Analytics**: Complete bookmark visit data analysis
   - Automatic bookmark click tracking
@@ -1365,7 +1365,7 @@ docker-compose up -d
 
 ### v0.1.3 (2026-02-10)
 
-#### �?New Features
+#### ✨ New Features
 
 - **Quick Add Category in Bookmark Modal**: Create new categories directly while adding/editing bookmarks
   - Inline category creation form, no navigation needed
@@ -1385,7 +1385,7 @@ docker-compose up -d
 
 ### v0.1.2 (2026-02-05)
 
-#### �?New Features
+#### ✨ New Features
 
 - **Menu Visibility Control**: Backend site settings now include menu show/hide toggles
   - Language toggle button visibility
@@ -1396,7 +1396,7 @@ docker-compose up -d
 
 ### v0.1.1 (2026-02-04)
 
-#### �?New Features
+#### ✨ New Features
 
 - **Frontend Category Editing**: Edit/create/delete categories directly on homepage
 - **Quick Navigation Sidebar**: Auto-display category nav with smart highlighting
@@ -1427,57 +1427,57 @@ docker-compose up -d
 
 **Core Features**
 
-- �?Bookmark management (CRUD, drag sort, virtual scroll)
-- �?Category management (custom names, icons, colors)
-- �?Icon management (custom icon upload)
-- �?Quote management (custom + system default toggle)
-- �?Spotlight search (multi-engine, bookmark search)
-- �?Read later (Hero card, read mark)
-- �?Pin feature (Bento Grid layout)
-- �?Context menu (quick operations)
+- ✨ Bookmark management (CRUD, drag sort, virtual scroll)
+- ✨ Category management (custom names, icons, colors)
+- ✨ Icon management (custom icon upload)
+- ✨ Quote management (custom + system default toggle)
+- ✨ Spotlight search (multi-engine, bookmark search)
+- ✨ Read later (Hero card, read mark)
+- ✨ Pin feature (Bento Grid layout)
+- ✨ Context menu (quick operations)
 
 **System Monitoring**
 
-- �?Real-time hardware monitoring (CPU, RAM, Disk, Network, Processes)
-- �?5 monitor cards (System, Hardware ID, Vital Signs, Network, Process Matrix)
-- �?Dock mini monitor (Desktop, freely draggable + position memory)
-- �?Ticker scroll bar (Mobile, integrated into energy orb bottom bar)
-- �?Monitor tri-mode switching (mini capsule / ticker / full dashboard)
-- �?Widget visibility control
+- ✨ Real-time hardware monitoring (CPU, RAM, Disk, Network, Processes)
+- ✨ 5 monitor cards (System, Hardware ID, Vital Signs, Network, Process Matrix)
+- ✨ Dock mini monitor (Desktop, freely draggable + position memory)
+- ✨ Ticker scroll bar (Mobile, integrated into energy orb bottom bar)
+- ✨ Monitor tri-mode switching (mini capsule / ticker / full dashboard)
+- ✨ Widget visibility control
 
 **Theme System**
 
-- �?8 preset themes (4 dark + 4 light)
-- �?Circle expand transition animation
-- �?Auto mode (follow system or time-based)
-- �?20+ CSS variables
+- ✨ 8 preset themes (4 dark + 4 light)
+- ✨ Circle expand transition animation
+- ✨ Auto mode (follow system or time-based)
+- ✨ 20+ CSS variables
 
 **Admin Panel**
 
-- �?Complete admin system
-- �?Site settings (custom name and icon)
-- �?Theme settings (8 themes)
-- �?Widget settings (visibility, Beam toggle)
-- �?Security (password change with strength indicator)
-- �?Data management (import/export, factory reset)
+- ✨ Complete admin system
+- ✨ Site settings (custom name and icon)
+- ✨ Theme settings (8 themes)
+- ✨ Widget settings (visibility, Beam toggle)
+- ✨ Security (password change with strength indicator)
+- ✨ Data management (import/export, factory reset)
 
 **Visual Design**
 
-- �?Day/Night dual mode
-- �?Glassmorphism design
-- �?Border Beam effect
-- �?3D card mouse tracking
-- �?Spotlight effect
-- �?Meteor and Aurora effects
-- �?Physics bounce Toast
+- ✨ Day/Night dual mode
+- ✨ Glassmorphism design
+- ✨ Border Beam effect
+- ✨ 3D card mouse tracking
+- ✨ Spotlight effect
+- ✨ Meteor and Aurora effects
+- ✨ Physics bounce Toast
 
 **Deployment**
 
-- �?Docker containerization (amd64 + arm64 multi-arch)
-- �?GitHub Actions CI/CD
-- �?Docker Hub official image
-- �?Multi-NAS platform support
-- �?ARM64 SBC support (RK3588/RK3576/RK3566)
+- ✨ Docker containerization (amd64 + arm64 multi-arch)
+- ✨ GitHub Actions CI/CD
+- ✨ Docker Hub official image
+- ✨ Multi-NAS platform support
+- ✨ ARM64 SBC support (RK3588/RK3576/RK3566)
 
 ---
 
@@ -1507,15 +1507,15 @@ docker-compose up -d
 - [ ] Plugin system (third-party plugin marketplace, custom component mounting, API Hook extensions)
 - [ ] Multi-language expansion (Japanese/Korean/French community translations, i18n contribution guide)
 
-#### �?Implemented
+#### ✅ Implemented
 
-- [x] ~~Access statistics~~ �?v0.1.4 Implemented
-- [x] ~~Link health check~~ �?v0.1.5 Implemented
-- [x] ~~Custom wallpaper background~~ �?v0.1.7 Implemented
-- [x] ~~Bookmark tag system~~ �?v0.2.0 Implemented (AI smart tags + colorful tag pills)
-- [x] ~~AI smart classify & metadata~~ �?v0.2.0 Implemented (batch AI classify/metadata/icons)
-- [x] ~~AI chat assistant~~ �?v0.2.0 Implemented (semantic search + bookmark cards)
-- [x] ~~WebDAV cloud backup~~ �?v0.2.1 Implemented (WebDAV cloud + local backup + scheduled auto backup)
+- [x] ~~Access statistics~~ ✅ v0.1.4 Implemented
+- [x] ~~Link health check~~ ✅ v0.1.5 Implemented
+- [x] ~~Custom wallpaper background~~ ✅ v0.1.7 Implemented
+- [x] ~~Bookmark tag system~~ ✅ v0.2.0 Implemented (AI smart tags + colorful tag pills)
+- [x] ~~AI smart classify & metadata~~ ✅ v0.2.0 Implemented (batch AI classify/metadata/icons)
+- [x] ~~AI chat assistant~~ ✅ v0.2.0 Implemented (semantic search + bookmark cards)
+- [x] ~~WebDAV cloud backup~~ ✅ v0.2.1 Implemented (WebDAV cloud + local backup + scheduled auto backup)
 
 ---
 
@@ -1568,7 +1568,7 @@ Contributions are welcome! Please feel free to submit Issues and Pull Requests.
 
 ## 🌟 Star History
 
-If this project helps you, please give it a �?Star!
+If this project helps you, please give it a ⭐ Star!
 
 ---
 
