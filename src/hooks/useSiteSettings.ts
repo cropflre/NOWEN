@@ -36,6 +36,8 @@ export const defaultSiteSettings: SiteSettings = {
   },
   cardViewMode: 'standard',
   widgetSizeMode: 'M',
+  accessMode: 'public',
+  defaultBookmarkVisibility: 'public',
 };
 
 // 默认小部件可见性（加载前隐藏避免闪烁）
@@ -70,6 +72,12 @@ export function useSiteSettings() {
 
   // 监控 Widget 尺寸模式
   const widgetSizeMode = siteSettings.widgetSizeMode ?? 'M';
+
+  // 访问模式
+  const accessMode = siteSettings.accessMode ?? 'public';
+
+  // 新书签默认可见性
+  const defaultBookmarkVisibility = siteSettings.defaultBookmarkVisibility ?? 'public';
 
   // 菜单可见性
   const menuVisibility = siteSettings.menuVisibility || {
@@ -134,5 +142,7 @@ export function useSiteSettings() {
     categoryInitialShowCount,
     cardViewMode,
     widgetSizeMode,
+    accessMode,
+    defaultBookmarkVisibility,
   };
 }

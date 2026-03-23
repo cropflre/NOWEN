@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ExternalLink, Pin, BookMarked, Edit2, Trash2 } from "lucide-react";
+import { ExternalLink, Pin, BookMarked, Edit2, Trash2, Lock } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Bookmark } from "../types/bookmark";
 import { cn } from "../lib/utils";
 import { IconRenderer } from "./IconRenderer";
@@ -44,10 +45,11 @@ export function BookmarkCardContent({
   onDelete,
 }: BookmarkCardContentProps) {
   const [showActions, setShowActions] = useState(false);
+  const { t } = useTranslation();
 
   return (
     <div
-      className="h-full flex flex-col"
+      className="relative h-full flex flex-col"
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
     >
@@ -228,10 +230,31 @@ export function BookmarkCardContent({
         <ExternalLink className="w-3.5 h-3.5" />
       </div>
 
+      {/* 私人书签标识 - 右上角小锁图标 */}
+      {bookmark.visibility === 'private' && (
+        <div
+          className="absolute top-3 right-3 z-10 transition-transform duration-200 hover:scale-110"
+          title={t('bookmark.private_tooltip')}
+        >
+          <div
+            className="w-5 h-5 rounded-full flex items-center justify-center"
+            style={{
+              background: 'var(--private-badge-bg, rgba(245, 158, 11, 0.15))',
+              border: '1px solid var(--private-badge-border, rgba(245, 158, 11, 0.3))',
+            }}
+          >
+            <Lock className="w-2.5 h-2.5" style={{ color: 'var(--private-badge-icon, rgb(217, 119, 6))' }} />
+          </div>
+        </div>
+      )}
+
       {/* New Badge */}
       {isNew && (
         <motion.div
-          className="absolute top-3 right-3 px-2 py-1 rounded-full bg-nebula-cyan/20 text-nebula-cyan text-xs"
+          className={cn(
+            "absolute top-3 px-2 py-1 rounded-full bg-nebula-cyan/20 text-nebula-cyan text-xs",
+            bookmark.visibility === 'private' ? "right-10" : "right-3"
+          )}
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: "spring" }}

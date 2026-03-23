@@ -51,6 +51,10 @@
     "visit": "읽기 시작",
     "open_in_new_tab": "새 탭에서 열기",
     "copy_link": "링크 복사",
+    "set_public": "공개로 설정",
+    "set_private": "비공개로 설정",
+    "private_tooltip": "이 북마크는 로그인한 사용자만 볼 수 있습니다",
+    "public_tooltip": "이 북마크는 모든 사람이 볼 수 있습니다",
     "collapse": "접기",
     "show_more": "더 보기",
     "view_compact": "컴팩트 보기",
@@ -89,7 +93,10 @@
       "ai_applied": "AI 적용됨",
       "ai_error": "AI 분류에 실패했습니다. 나중에 다시 시도해주세요",
       "tags": "태그",
-      "tags_placeholder": "태그를 입력하고 Enter, 쉼표로 구분..."
+      "tags_placeholder": "태그를 입력하고 Enter, 쉼표로 구분...",
+      "visibility": "가시성",
+      "visibility_public": "공개",
+      "visibility_private": "비공개"
     }
   },
   "category": {
@@ -217,6 +224,10 @@
       "deleted_count": "{{count}}개의 북마크를 삭제했습니다",
       "batch_move_to": "카테고리로 이동...",
       "batch_moved": "{{count}}개의 북마크를 「{{category}}」로 이동했습니다",
+      "batch_visibility": "가시성 변경...",
+      "batch_visibility_changed": "{{count}}개의 북마크를 「{{visibility}}」로 설정했습니다",
+      "visibility_public": "공개",
+      "visibility_private": "비공개",
       "batch_enrich": "일괄 가져오기...",
       "batch_enrich_metadata": "메타데이터만 (제목/설명)",
       "batch_enrich_icon": "누락된 아이콘만",
@@ -437,6 +448,16 @@
         "category_collapse_threshold": "접기 임계값 (0=비활성화)",
         "category_collapse_show_count": "기본 표시 수",
         "category_collapse_hint": "예: 임계값 12, 표시 8이면, 12개 이상인 카테고리는 처음 8개만 표시",
+        "access_mode": "액세스 모드",
+        "access_mode_title": "사이트 액세스 제어",
+        "access_mode_desc": "비로그인 사용자가 북마크를 볼 수 있는지 제어",
+        "access_mode_public": "공개 액세스",
+        "access_mode_private": "프라이벗 모드",
+        "access_mode_public_hint": "누구나 북마크를 열람할 수 있습니다. 관리 작업에는 로그인이 필요합니다",
+        "access_mode_private_hint": "로그인한 사용자만 볼 수 있습니다. 방문자에게는 로그인 페이지가 표시됩니다",
+        "default_visibility": "기본 가시성",
+        "default_visibility_title": "새 북마크 기본 가시성",
+        "default_visibility_desc": "새 북마크는 이 가시성 설정을 기본으로 사용합니다",
         "preview": "실시간 미리보기",
         "preview_subtitle": "엄선된 사이트 내비게이션 탐색",
         "save": "설정 저장",
@@ -929,5 +950,12 @@
     "quick_2": "학습 리소스를 추천해줘",
     "quick_3": "내 북마크 전체를 요약해줘",
     "clear_history": "대화 지우기"
+  },
+  "access": {
+    "private_hint": "이것은 개인 북마크 공간입니다. 로그인하여 콘텐츠를 확인하세요.",
+    "go_login": "로그인",
+    "private_mode": "프라이벗 모드·로그인 필요",
+    "guest_label": "방문자",
+    "logged_in_label": "로그인됨"
   }
 }

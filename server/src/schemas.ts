@@ -15,6 +15,7 @@ export const createBookmarkSchema = z.object({
   category: z.string().max(50).optional().nullable(),
   tags: z.union([z.string().max(500), z.array(z.string().max(50))]).optional().nullable(),
   isReadLater: z.boolean().optional(),
+  visibility: z.enum(['public', 'private']).optional(),
 })
 
 export const updateBookmarkSchema = z.object({
@@ -32,6 +33,7 @@ export const updateBookmarkSchema = z.object({
   isPinned: z.boolean().optional(),
   isReadLater: z.boolean().optional(),
   isRead: z.boolean().optional(),
+  visibility: z.enum(['public', 'private']).optional(),
 })
 
 export const reorderBookmarksSchema = z.object({
@@ -114,6 +116,7 @@ export const importDataSchema = z.object({
     isPinned: z.boolean().optional(),
     isReadLater: z.boolean().optional(),
     isRead: z.boolean().optional(),
+    visibility: z.enum(['public', 'private']).optional(),
     createdAt: z.union([z.string(), z.number()]).optional(),
     updatedAt: z.union([z.string(), z.number()]).optional(),
   })),

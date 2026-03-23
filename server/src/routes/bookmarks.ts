@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express'
 import { generateId } from '../db.js'
 import { queryAll, queryOne, run, runBatch, booleanize, parseBookmarkTags, serializeTags, parseTags } from '../utils/index.js'
-import { authMiddleware } from '../middleware/index.js'
+import { authMiddleware, optionalAuthMiddleware } from '../middleware/index.js'
 import {
   validateBody,
   validateParams,
@@ -116,10 +116,19 @@ router.delete('/tags/:name', authMiddleware, (req: Request, res: Response) => {
 })
 
 // 获取所有书签（兼容旧版）
-router.get('/', (req, res) => {
+router.get('/', optionalAuthMiddleware, (req, res) => {
   try {
+    // 私人模式检查：未登录用户无法获取书签
+    const accessMode = queryOne('SELECT value FROM settings WHERE key = ?', ['accessMode'])
+    if (accessMode?.value === 'private' && !(req as any).user) {
+      return res.json([])
+    }
+
+    const isLoggedIn = !!(req as any).user
+
     const bookmarks = queryAll(`
       SELECT * FROM bookmarks 
+      ${!isLoggedIn ? "WHERE (visibility IS NULL OR visibility = 'public')" : ''}
       ORDER BY isPinned DESC, orderIndex ASC, createdAt DESC
     `)
     
@@ -131,14 +140,30 @@ router.get('/', (req, res) => {
 })
 
 // 分页获取书签
-router.get('/paginated', validateQuery(paginationQuerySchema), (req, res) => {
+router.get('/paginated', optionalAuthMiddleware, validateQuery(paginationQuerySchema), (req, res) => {
   try {
+    // 私人模式检查：未登录用户无法获取书签
+    const accessMode = queryOne('SELECT value FROM settings WHERE key = ?', ['accessMode'])
+    if (accessMode?.value === 'private' && !(req as any).user) {
+      return res.json({
+        items: [],
+        pagination: { page: 1, pageSize: 20, total: 0, totalPages: 0, hasMore: false }
+      })
+    }
+
+    const isLoggedIn = !!(req as any).user
+
     const query = (req as any).validatedQuery as PaginationQuery
     const { page, pageSize, search, category, tag, isPinned, isReadLater, sortBy, sortOrder } = query
     
     // 构建 WHERE 条件
     const conditions: string[] = []
     const params: any[] = []
+
+    // 未登录用户只能看到公开书签
+    if (!isLoggedIn) {
+      conditions.push("(visibility IS NULL OR visibility = 'public')")
+    }
     
     if (search) {
       // 分词搜索：按空格拆分关键词，每个关键词都必须在 title/url/description/tags 中匹配
@@ -230,7 +255,16 @@ router.get('/paginated', validateQuery(paginationQuerySchema), (req, res) => {
 // 创建书签
 router.post('/', authMiddleware, validateBody(createBookmarkSchema), (req, res) => {
   try {
-    const { url, internalUrl, title, description, favicon, ogImage, icon, iconUrl, category, tags, isReadLater } = req.body
+    const { url, internalUrl, title, description, favicon, ogImage, icon, iconUrl, category, tags, isReadLater, visibility } = req.body
+    
+    // 获取默认可见性设置
+    let bookmarkVisibility = visibility || 'public'
+    if (!visibility) {
+      const defaultVis = queryOne('SELECT value FROM settings WHERE key = ?', ['defaultBookmarkVisibility'])
+      if (defaultVis?.value === 'private') {
+        bookmarkVisibility = 'private'
+      }
+    }
     
     const maxOrder = queryOne('SELECT MAX(orderIndex) as max FROM bookmarks')
     const newOrderIndex = (maxOrder?.max ?? -1) + 1
@@ -239,9 +273,9 @@ router.post('/', authMiddleware, validateBody(createBookmarkSchema), (req, res) 
     const now = new Date().toISOString()
     
     run(`
-      INSERT INTO bookmarks (id, url, internalUrl, title, description, favicon, ogImage, icon, iconUrl, category, tags, orderIndex, isReadLater, createdAt, updatedAt)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `, [id, url, internalUrl || null, title, description || null, favicon || null, ogImage || null, icon || null, iconUrl || null, category || null, serializeTags(tags), newOrderIndex, isReadLater ? 1 : 0, now, now])
+      INSERT INTO bookmarks (id, url, internalUrl, title, description, favicon, ogImage, icon, iconUrl, category, tags, orderIndex, isReadLater, visibility, createdAt, updatedAt)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [id, url, internalUrl || null, title, description || null, favicon || null, ogImage || null, icon || null, iconUrl || null, category || null, serializeTags(tags), newOrderIndex, isReadLater ? 1 : 0, bookmarkVisibility, now, now])
     
     const bookmark = queryOne('SELECT * FROM bookmarks WHERE id = ?', [id])
     
@@ -292,12 +326,12 @@ router.patch('/:id', authMiddleware, validateParams(idParamSchema), validateBody
       UPDATE bookmarks SET 
         url = ?, internalUrl = ?, title = ?, description = ?, favicon = ?, ogImage = ?, icon = ?, iconUrl = ?,
         category = ?, tags = ?, orderIndex = ?, isPinned = ?, 
-        isReadLater = ?, isRead = ?, updatedAt = ?
+        isReadLater = ?, isRead = ?, visibility = ?, updatedAt = ?
       WHERE id = ?
     `, [
       merged.url, merged.internalUrl || null, merged.title, merged.description, merged.favicon, merged.ogImage, merged.icon, merged.iconUrl,
       merged.category, merged.tags, merged.orderIndex, merged.isPinned ? 1 : 0,
-      merged.isReadLater ? 1 : 0, merged.isRead ? 1 : 0, now, id
+      merged.isReadLater ? 1 : 0, merged.isRead ? 1 : 0, merged.visibility || 'public', now, id
     ])
     
     const bookmark = queryOne('SELECT * FROM bookmarks WHERE id = ?', [id])

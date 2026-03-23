@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Plus, Loader2, Check, AlertCircle, Sparkles, BookmarkPlus, ChevronDown, Settings, Link2, Image, FolderPlus, Search, Network } from 'lucide-react'
+import { X, Plus, Loader2, Check, AlertCircle, Sparkles, BookmarkPlus, ChevronDown, Settings, Link2, Image, FolderPlus, Search, Network, Globe, Lock } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Bookmark, Category, CustomIcon } from '../types/bookmark'
 import { metadataApi, categoryApi, aiApi, bookmarkApi } from '../lib/api'
@@ -21,6 +21,7 @@ interface AddBookmarkModalProps {
   onOpenIconManager?: () => void
   onCategoryAdded?: (category: Category) => void
   enableAutoAi?: boolean  // 是否自动触发 AI 分类（默认 true，可在设置中关闭）
+  defaultVisibility?: 'public' | 'private'  // 新书签默认可见性
 }
 
 // 骨架屏组件
@@ -41,6 +42,7 @@ export function AddBookmarkModal({
   onOpenIconManager,
   onCategoryAdded,
   enableAutoAi = true,
+  defaultVisibility = 'public',
 }: AddBookmarkModalProps) {
   const { t, i18n } = useTranslation()
   const [url, setUrl] = useState(initialUrl)
@@ -56,6 +58,7 @@ export function AddBookmarkModal({
   const [internalUrl, setInternalUrl] = useState('')  // 内网链接
   const [showInternalUrl, setShowInternalUrl] = useState(false)  // 是否展开内网链接输入
   const [isReadLater, setIsReadLater] = useState(false)
+  const [visibility, setVisibility] = useState<'public' | 'private'>(defaultVisibility)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [hasAnalyzed, setHasAnalyzed] = useState(false)
   const [error, setError] = useState('')
@@ -100,6 +103,7 @@ export function AddBookmarkModal({
       setInternalUrl(editBookmark.internalUrl || '')
       setShowInternalUrl(!!editBookmark.internalUrl)
       setIsReadLater(editBookmark.isReadLater || false)
+      setVisibility(editBookmark.visibility || 'public')
       setTags(editBookmark.tags || [])
       setHasAnalyzed(true)
       // 判断使用哪个 tab
@@ -146,6 +150,7 @@ export function AddBookmarkModal({
       setInternalUrl('')
       setShowInternalUrl(false)
       setIsReadLater(false)
+      setVisibility(defaultVisibility)
       setError('')
       setHasAnalyzed(false)
       setShowIconPicker(false)
@@ -312,6 +317,7 @@ export function AddBookmarkModal({
       category: category || undefined,
       tags: tags.length > 0 ? tags : undefined,
       isReadLater,
+      visibility,
     })
 
     onClose()
@@ -1166,17 +1172,74 @@ export function AddBookmarkModal({
                   onClick={() => setIsReadLater(!isReadLater)}
                   className={cn(
                     'relative w-11 h-6 rounded-full transition-colors',
-                    isReadLater 
-                      ? 'bg-gradient-to-r from-[var(--gradient-1)] to-[var(--gradient-2)]' 
-                      : 'bg-white/10'
+                    !isReadLater && 'bg-black/10 dark:bg-white/10'
                   )}
+                  style={isReadLater ? { background: 'linear-gradient(to right, var(--gradient-1), var(--gradient-2))' } : undefined}
                 >
                   <motion.div
-                    className="absolute top-1 w-4 h-4 rounded-full bg-white shadow"
+                    className={cn(
+                      "absolute top-1 w-4 h-4 rounded-full shadow",
+                      isReadLater
+                        ? "bg-white"
+                        : "bg-white dark:bg-white border border-black/10 dark:border-transparent"
+                    )}
                     animate={{ left: isReadLater ? 'calc(100% - 20px)' : '4px' }}
                     transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                   />
                 </button>
+              </div>
+
+              {/* 可见性选择 */}
+              <div className="flex items-center justify-between">
+                <label 
+                  className="text-sm flex items-center gap-1.5"
+                  style={{ color: 'var(--text-secondary)' }}
+                >
+                  {visibility === 'private' ? (
+                    <Lock className="w-3.5 h-3.5" style={{ color: 'rgb(251, 191, 36)' }} />
+                  ) : (
+                    <Globe className="w-3.5 h-3.5" style={{ color: 'rgb(34, 211, 238)' }} />
+                  )}
+                  {t('bookmark.modal.visibility')}
+                </label>
+                <div className="flex items-center gap-1 p-0.5 rounded-lg" style={{ background: 'var(--color-bg-tertiary, rgba(255,255,255,0.05))' }}>
+                  <button
+                    type="button"
+                    onClick={() => setVisibility('public')}
+                    className={cn(
+                      'px-2.5 py-1 rounded-md text-xs font-medium transition-all flex items-center gap-1',
+                      visibility === 'public'
+                        ? 'shadow-sm'
+                        : 'opacity-50 hover:opacity-80'
+                    )}
+                    style={{
+                      background: visibility === 'public' ? 'rgba(6, 182, 212, 0.2)' : 'transparent',
+                      color: visibility === 'public' ? 'rgb(34, 211, 238)' : 'var(--text-muted)',
+                      border: visibility === 'public' ? '1px solid rgba(6, 182, 212, 0.3)' : '1px solid transparent',
+                    }}
+                  >
+                    <Globe className="w-3 h-3" />
+                    {t('bookmark.modal.visibility_public')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setVisibility('private')}
+                    className={cn(
+                      'px-2.5 py-1 rounded-md text-xs font-medium transition-all flex items-center gap-1',
+                      visibility === 'private'
+                        ? 'shadow-sm'
+                        : 'opacity-50 hover:opacity-80'
+                    )}
+                    style={{
+                      background: visibility === 'private' ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
+                      color: visibility === 'private' ? 'rgb(251, 191, 36)' : 'var(--text-muted)',
+                      border: visibility === 'private' ? '1px solid rgba(245, 158, 11, 0.3)' : '1px solid transparent',
+                    }}
+                  >
+                    <Lock className="w-3 h-3" />
+                    {t('bookmark.modal.visibility_private')}
+                  </button>
+                </div>
               </div>
 
               {/* 预览卡片 */}

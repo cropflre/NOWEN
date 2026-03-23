@@ -230,8 +230,8 @@ router.post('/import', authMiddleware, validateBody(importDataSchema), (req: Req
     for (const bookmark of bookmarks) {
       const id = bookmark.id || generateId()
       db.run(`
-        INSERT OR REPLACE INTO bookmarks (id, url, internalUrl, title, description, favicon, ogImage, icon, iconUrl, category, tags, orderIndex, isPinned, isReadLater, isRead, createdAt, updatedAt)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT OR REPLACE INTO bookmarks (id, url, internalUrl, title, description, favicon, ogImage, icon, iconUrl, category, tags, orderIndex, isPinned, isReadLater, isRead, visibility, createdAt, updatedAt)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [
         id,
         bookmark.url,
@@ -248,6 +248,7 @@ router.post('/import', authMiddleware, validateBody(importDataSchema), (req: Req
         bookmark.isPinned ? 1 : 0,
         bookmark.isReadLater ? 1 : 0,
         bookmark.isRead ? 1 : 0,
+        bookmark.visibility || 'public',
         bookmark.createdAt || new Date().toISOString(),
         bookmark.updatedAt || new Date().toISOString(),
       ])

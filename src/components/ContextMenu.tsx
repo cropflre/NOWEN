@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Edit2, Trash2, Pin, BookMarked, ExternalLink, Copy } from 'lucide-react'
+import { Edit2, Trash2, Pin, BookMarked, ExternalLink, Copy, Globe, Lock } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '../lib/utils'
 import { visitsApi } from '../lib/api'
@@ -135,12 +135,13 @@ export function useBookmarkContextMenu() {
   
   return {
     getMenuItems: (
-      bookmark: { id: string; url: string; internalUrl?: string; isPinned?: boolean; isReadLater?: boolean },
+      bookmark: { id: string; url: string; internalUrl?: string; isPinned?: boolean; isReadLater?: boolean; visibility?: string },
       options: {
         onEdit: () => void
         onDelete: () => void
         onTogglePin: () => void
         onToggleReadLater: () => void
+        onToggleVisibility?: () => void
       }
     ): ContextMenuItem[] => [
       {
@@ -172,6 +173,14 @@ export function useBookmarkContextMenu() {
         onClick: options.onToggleReadLater,
         active: bookmark.isReadLater,
       },
+      ...(options.onToggleVisibility ? [{
+        id: 'visibility',
+        label: bookmark.visibility === 'private' ? t('bookmark.set_public') : t('bookmark.set_private'),
+        icon: bookmark.visibility === 'private' ? <Globe className="w-4 h-4" /> : <Lock className="w-4 h-4" />,
+        onClick: options.onToggleVisibility,
+        active: bookmark.visibility === 'private',
+        divider: true,
+      }] : []),
       {
         id: 'edit',
         label: t('bookmark.edit'),

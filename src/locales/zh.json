@@ -51,6 +51,10 @@
     "visit": "开始阅读",
     "open_in_new_tab": "在新标签页打开",
     "copy_link": "复制链接",
+    "set_public": "设为公开",
+    "set_private": "设为私人",
+    "private_tooltip": "此书签仅登录用户可见",
+    "public_tooltip": "此书签所有人可见",
     "collapse": "收起",
     "show_more": "展开更多",
     "view_compact": "紧凑视图",
@@ -89,7 +93,10 @@
       "ai_applied": "AI 已填充",
       "ai_error": "AI 分类失败，请稍后重试",
       "tags": "标签",
-      "tags_placeholder": "输入标签后按 Enter，逗号分隔..."
+      "tags_placeholder": "输入标签后按 Enter，逗号分隔...",
+      "visibility": "可见性",
+      "visibility_public": "公开",
+      "visibility_private": "私人"
     }
   },
   "category": {
@@ -217,6 +224,10 @@
       "deleted_count": "已删除 {{count}} 个书签",
       "batch_move_to": "移动到分类...",
       "batch_moved": "已将 {{count}} 个书签移动到「{{category}}」",
+      "batch_visibility": "修改可见性...",
+      "batch_visibility_changed": "已将 {{count}} 个书签设为「{{visibility}}」",
+      "visibility_public": "公开",
+      "visibility_private": "私人",
       "batch_enrich": "批量抓取...",
       "batch_enrich_metadata": "仅抓取元数据（标题/描述）",
       "batch_enrich_icon": "仅抓取缺失图标",
@@ -437,6 +448,16 @@
         "category_collapse_threshold": "折叠阈值（0=不折叠）",
         "category_collapse_show_count": "默认显示数量",
         "category_collapse_hint": "例如：阈值 12、显示 8，则超过 12 个书签的分类默认只显示前 8 个",
+        "access_mode": "访问模式",
+        "access_mode_title": "站点访问权限",
+        "access_mode_desc": "控制未登录用户是否可以查看书签内容",
+        "access_mode_public": "公开访问",
+        "access_mode_private": "私人模式",
+        "access_mode_public_hint": "任何人都可以浏览书签，管理操作仍需登录",
+        "access_mode_private_hint": "仅登录用户可见，未登录访客将看到登录引导页",
+        "default_visibility": "默认可见性",
+        "default_visibility_title": "新书签默认可见性",
+        "default_visibility_desc": "新创建的书签默认使用此可见性设置",
         "preview": "实时预览",
         "preview_subtitle": "探索精选网站导航",
         "save": "保存配置",
@@ -929,5 +950,12 @@
     "quick_2": "推荐一些学习资源",
     "quick_3": "总结一下我的书签库",
     "clear_history": "清空对话"
+  },
+  "access": {
+    "private_hint": "这是一个私人书签空间，请登录后查看内容",
+    "go_login": "登录账户",
+    "private_mode": "私人模式·需要登录访问",
+    "guest_label": "游客",
+    "logged_in_label": "已登录"
   }
 }

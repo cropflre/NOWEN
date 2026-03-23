@@ -51,6 +51,10 @@
     "visit": "読み始める",
     "open_in_new_tab": "新しいタブで開く",
     "copy_link": "リンクをコピー",
+    "set_public": "公開に設定",
+    "set_private": "プライベートに設定",
+    "private_tooltip": "このブックマークはログインユーザーのみ閲覧可能です",
+    "public_tooltip": "このブックマークは全員に公開されています",
     "collapse": "折りたたむ",
     "show_more": "もっと見る",
     "view_compact": "コンパクト表示",
@@ -89,7 +93,10 @@
       "ai_applied": "AI適用済み",
       "ai_error": "AI分類に失敗しました。後でもう一度お試しください",
       "tags": "タグ",
-      "tags_placeholder": "タグを入力してEnterキー、カンマ区切り..."
+      "tags_placeholder": "タグを入力してEnterキー、カンマ区切り...",
+      "visibility": "可視性",
+      "visibility_public": "公開",
+      "visibility_private": "プライベート"
     }
   },
   "category": {
@@ -217,6 +224,10 @@
       "deleted_count": "{{count}} 件のブックマークを削除しました",
       "batch_move_to": "カテゴリに移動...",
       "batch_moved": "{{count}} 件のブックマークを「{{category}}」に移動しました",
+      "batch_visibility": "可視性を変更...",
+      "batch_visibility_changed": "{{count}} 件のブックマークを「{{visibility}}」に設定しました",
+      "visibility_public": "公開",
+      "visibility_private": "プライベート",
       "batch_enrich": "一括取得...",
       "batch_enrich_metadata": "メタデータのみ（タイトル/説明）",
       "batch_enrich_icon": "不足アイコンのみ",
@@ -437,6 +448,16 @@
         "category_collapse_threshold": "折りたたみしきい値（0=無効）",
         "category_collapse_show_count": "デフォルト表示件数",
         "category_collapse_hint": "例：しきい値12、表示8の場合、12件以上のカテゴリは最初の8件のみ表示",
+        "access_mode": "アクセスモード",
+        "access_mode_title": "サイトアクセス制御",
+        "access_mode_desc": "未ログインユーザーがブックマークを閲覧できるかを制御",
+        "access_mode_public": "公開アクセス",
+        "access_mode_private": "プライベートモード",
+        "access_mode_public_hint": "誰でもブックマークを閲覧できます。管理操作にはログインが必要です",
+        "access_mode_private_hint": "ログインユーザーのみ閲覧可能。ゲストにはログインページが表示されます",
+        "default_visibility": "デフォルト可視性",
+        "default_visibility_title": "新規ブックマークのデフォルト可視性",
+        "default_visibility_desc": "新しいブックマークはこの可視性設定をデフォルトで使用します",
         "preview": "ライブプレビュー",
         "preview_subtitle": "厳選サイトナビゲーションを探索",
         "save": "設定を保存",
@@ -929,5 +950,12 @@
     "quick_2": "学習リソースをおすすめして",
     "quick_3": "ブックマーク全体をまとめて",
     "clear_history": "チャットをクリア"
+  },
+  "access": {
+    "private_hint": "こちらはプライベートブックマークスペースです。ログインしてコンテンツをご覧ください",
+    "go_login": "ログイン",
+    "private_mode": "プライベートモード·ログインが必要",
+    "guest_label": "ゲスト",
+    "logged_in_label": "ログイン済み"
   }
 }

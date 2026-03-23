@@ -15,6 +15,7 @@ import {
   Minimize2,
   Maximize2,
   Square,
+  Lock,
 } from "lucide-react";
 
 // API
@@ -138,6 +139,8 @@ function App() {
     categoryInitialShowCount,
     cardViewMode,
     widgetSizeMode,
+    accessMode,
+    defaultBookmarkVisibility,
   } = useSiteSettings();
 
   // 认证状态
@@ -426,6 +429,7 @@ function App() {
           onOpenIconManager={() => setIsIconManagerOpen(true)}
           onCategoryAdded={(newCategory) => appendCategory(newCategory)}
           enableAutoAi={enableAutoAi}
+          defaultVisibility={defaultBookmarkVisibility}
         />
         <IconManager
           isOpen={isIconManagerOpen}
@@ -435,6 +439,96 @@ function App() {
           onDeleteIcon={deleteCustomIcon}
         />
       </>
+    );
+  }
+
+  // ========== 私人模式：未登录时显示登录引导 ==========
+  if (accessMode === 'private' && !isLoggedIn) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'var(--color-bg-primary, #0a0a0f)' }}>
+        {/* 背景效果 */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute top-1/4 left-1/3 w-96 h-96 rounded-full blur-3xl" style={{ background: 'rgba(102, 126, 234, 0.08)' }} />
+          <div className="absolute bottom-1/3 right-1/4 w-96 h-96 rounded-full blur-3xl" style={{ background: 'rgba(236, 72, 153, 0.08)' }} />
+        </div>
+
+        <motion.div
+          className="relative w-full max-w-md text-center"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <div
+            className="relative p-8 rounded-3xl backdrop-blur-xl overflow-hidden"
+            style={{
+              background: 'var(--color-glass, rgba(255,255,255,0.03))',
+              border: '1px solid var(--color-glass-border, rgba(255,255,255,0.08))',
+            }}
+          >
+            {/* 图标 */}
+            <motion.div
+              className="w-20 h-20 mx-auto mb-6 rounded-2xl flex items-center justify-center"
+              style={{ background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(236, 72, 153, 0.2))' }}
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.2, type: 'spring' }}
+            >
+              <Pin className="w-10 h-10" style={{ color: 'var(--color-primary, #667eea)' }} />
+            </motion.div>
+
+            {/* 站点标题 */}
+            <motion.h1
+              className="text-2xl font-bold mb-2"
+              style={{ color: 'var(--color-text-primary, #fff)' }}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              {siteSettings.siteTitle || 'NOWEN'}
+            </motion.h1>
+
+            {/* 提示文字 */}
+            <motion.p
+              className="text-sm mb-8"
+              style={{ color: 'var(--color-text-muted, rgba(255,255,255,0.4))' }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
+            >
+              {t('access.private_hint')}
+            </motion.p>
+
+            {/* 登录按钮 */}
+            <motion.button
+              onClick={() => setCurrentPage('admin-login')}
+              className="w-full py-3.5 rounded-xl text-white font-medium relative overflow-hidden group"
+              style={{ background: 'linear-gradient(135deg, #667eea, #ec4899)' }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+            >
+              <span className="relative z-10 flex items-center justify-center gap-2">
+                {t('access.go_login')}
+              </span>
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: 'linear-gradient(135deg, #ec4899, #667eea)' }} />
+            </motion.button>
+
+            {/* 访问模式标识 */}
+            <motion.div
+              className="mt-6 flex items-center justify-center gap-2 text-xs"
+              style={{ color: 'var(--color-text-muted, rgba(255,255,255,0.3))' }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.7 }}
+            >
+              <div className="w-2 h-2 rounded-full bg-amber-500/60" />
+              {t('access.private_mode')}
+            </motion.div>
+          </div>
+        </motion.div>
+      </div>
     );
   }
 
@@ -732,9 +826,10 @@ function App() {
         initialUrl={pendingUrl}
         editBookmark={editingBookmark}
         onOpenIconManager={() => setIsIconManagerOpen(true)}
-        onCategoryAdded={(newCategory) => appendCategory(newCategory)}
-        enableAutoAi={enableAutoAi}
-      />
+          onCategoryAdded={(newCategory) => appendCategory(newCategory)}
+          enableAutoAi={enableAutoAi}
+          defaultVisibility={defaultBookmarkVisibility}
+        />
 
       <IconManager
         isOpen={isIconManagerOpen}
@@ -771,6 +866,14 @@ function App() {
             onDelete: () => handleDelete(contextMenu.bookmark!.id),
             onTogglePin: () => togglePin(contextMenu.bookmark!.id),
             onToggleReadLater: () => toggleReadLater(contextMenu.bookmark!.id),
+            ...(isLoggedIn ? {
+              onToggleVisibility: async () => {
+                const bk = contextMenu.bookmark!;
+                const newVisibility = bk.visibility === 'private' ? 'public' : 'private';
+                await updateBookmark(bk.id, { visibility: newVisibility });
+                refreshData();
+              },
+            } : {}),
           })}
         />
       )}
@@ -855,7 +958,24 @@ const MemoizedBookmarkItem = React.memo(function MemoizedBookmarkItem({
       onClick={() => { visitsApi.track(bookmark.id).catch(console.error); window.open(getBookmarkUrl(bookmark, isInternal), "_blank") }}
       onContextMenu={(e) => onContextMenu(e, bookmark)}
     >
-      <div className={`flex ${isCompact ? 'flex-row items-center gap-3' : 'flex-col'} h-full`}>
+      <div className={`relative flex ${isCompact ? 'flex-row items-center gap-3' : 'flex-col'} h-full`}>
+        {/* 私人书签标识 - 右上角小锁图标 */}
+        {bookmark.visibility === 'private' && (
+          <div
+            className="absolute top-0 right-0 z-10 transition-transform duration-200 hover:scale-110"
+            title="私人书签"
+          >
+            <div
+              className="w-5 h-5 rounded-full flex items-center justify-center"
+              style={{
+                background: 'var(--private-badge-bg, rgba(245, 158, 11, 0.15))',
+                border: '1px solid var(--private-badge-border, rgba(245, 158, 11, 0.3))',
+              }}
+            >
+              <Lock className="w-2.5 h-2.5" style={{ color: 'var(--private-badge-icon, rgb(217, 119, 6))' }} />
+            </div>
+          </div>
+        )}
         <div
           className={`${isCompact ? 'w-8 h-8' : 'w-10 h-10'} rounded-xl flex items-center justify-center ${isCompact ? '' : 'mb-4'} flex-shrink-0`}
           style={{ background: "var(--color-bg-tertiary)" }}

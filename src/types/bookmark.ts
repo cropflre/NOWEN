@@ -16,6 +16,7 @@ export interface Bookmark {
   isPinned?: boolean
   isReadLater?: boolean
   isRead?: boolean
+  visibility?: 'public' | 'private'  // 书签可见性：public=公开，private=仅登录用户可见
 }
 
 // 用户自定义图标库

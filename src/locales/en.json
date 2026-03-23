@@ -51,6 +51,10 @@
     "visit": "Start Reading",
     "open_in_new_tab": "Open in New Tab",
     "copy_link": "Copy Link",
+    "set_public": "Set as Public",
+    "set_private": "Set as Private",
+    "private_tooltip": "This bookmark is only visible to logged-in users",
+    "public_tooltip": "This bookmark is visible to everyone",
     "collapse": "Collapse",
     "show_more": "Show More",
     "view_compact": "Compact View",
@@ -89,7 +93,10 @@
       "ai_applied": "AI Applied",
       "ai_error": "AI categorization failed, please try again",
       "tags": "Tags",
-      "tags_placeholder": "Type tag and press Enter, or use comma..."
+      "tags_placeholder": "Type tag and press Enter, or use comma...",
+      "visibility": "Visibility",
+      "visibility_public": "Public",
+      "visibility_private": "Private"
     }
   },
   "category": {
@@ -217,6 +224,10 @@
       "deleted_count": "Deleted {{count}} bookmarks",
       "batch_move_to": "Move to category...",
       "batch_moved": "Moved {{count}} bookmarks to \"{{category}}\"",
+      "batch_visibility": "Change visibility...",
+      "batch_visibility_changed": "Set {{count}} bookmarks to \"{{visibility}}\"",
+      "visibility_public": "Public",
+      "visibility_private": "Private",
       "batch_enrich": "Batch Fetch...",
       "batch_enrich_metadata": "Metadata only (title/description)",
       "batch_enrich_icon": "Missing icons only",
@@ -437,6 +448,16 @@
         "category_collapse_threshold": "Collapse threshold (0=disabled)",
         "category_collapse_show_count": "Initial show count",
         "category_collapse_hint": "e.g. threshold 12, show 8: categories with more than 12 bookmarks will only show the first 8",
+        "access_mode": "Access Mode",
+        "access_mode_title": "Site Access Control",
+        "access_mode_desc": "Control whether unauthenticated users can view bookmark content",
+        "access_mode_public": "Public Access",
+        "access_mode_private": "Private Mode",
+        "access_mode_public_hint": "Anyone can browse bookmarks, management operations still require login",
+        "access_mode_private_hint": "Only logged-in users can view content, guests will see a login prompt",
+        "default_visibility": "Default Visibility",
+        "default_visibility_title": "Default Bookmark Visibility",
+        "default_visibility_desc": "New bookmarks will use this visibility setting by default",
         "preview": "Live Preview",
         "preview_subtitle": "Explore curated website navigation",
         "save": "Save Settings",
@@ -929,5 +950,12 @@
     "quick_2": "Recommend learning resources",
     "quick_3": "Summarize my bookmark collection",
     "clear_history": "Clear chat"
+  },
+  "access": {
+    "private_hint": "This is a private bookmark space. Please log in to view content.",
+    "go_login": "Log In",
+    "private_mode": "Private Mode · Login Required",
+    "guest_label": "Guest",
+    "logged_in_label": "Logged In"
   }
 }

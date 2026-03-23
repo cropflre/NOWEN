@@ -585,6 +585,10 @@ function applyTheme(theme: Theme) {
   root.style.setProperty('--color-glow', colors.glow)
   root.style.setProperty('--color-glow-secondary', colors.glowSecondary)
 
+  // 设置渐变色变量（供组件中 var(--gradient-1/2) 使用）
+  root.style.setProperty('--gradient-1', colors.primary)
+  root.style.setProperty('--gradient-2', colors.accent)
+
   // 设置主题 class
   if (mode === 'dark') {
     root.classList.add('dark')

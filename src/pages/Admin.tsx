@@ -43,6 +43,7 @@ import {
   X,
   ScanSearch,
   Globe,
+  Lock,
   Copy,
 } from 'lucide-react'
 import { Bookmark, Category, CustomIcon } from '../types/bookmark'
@@ -621,6 +622,14 @@ function AdminContent() {
       ? t('admin.bookmark.uncategorized')
       : categories.find(c => c.id === categoryId)?.name || ''
     showToast('success', t('admin.bookmark.batch_moved', { count, category: categoryName }))
+  }
+
+  // 批量修改可见性
+  const batchChangeVisibility = (visibility: 'public' | 'private') => {
+    const count = selectedIds.size
+    selectedIds.forEach(id => onUpdateBookmark(id, { visibility }))
+    setSelectedIds(new Set())
+    showToast('success', t('admin.bookmark.batch_visibility_changed', { count, visibility: t(`admin.bookmark.visibility_${visibility}`) }))
   }
 
   // 批量抓取
@@ -1345,6 +1354,28 @@ function AdminContent() {
                           ))}
                         </select>
                       </div>
+                      {/* 批量修改可见性 */}
+                      <div className="flex items-center gap-2">
+                        <select
+                          defaultValue=""
+                          onChange={e => {
+                            if (e.target.value) {
+                              batchChangeVisibility(e.target.value as 'public' | 'private')
+                              e.target.value = ''
+                            }
+                          }}
+                          className="appearance-none px-3 py-2 rounded-lg text-sm focus:outline-none cursor-pointer transition-colors"
+                          style={{
+                            background: 'color-mix(in srgb, var(--color-primary) 15%, transparent)',
+                            border: '1px solid color-mix(in srgb, var(--color-primary) 30%, transparent)',
+                            color: 'var(--color-text-secondary)',
+                          }}
+                        >
+                          <option value="" disabled style={{ background: 'var(--color-bg-secondary)' }}>{t('admin.bookmark.batch_visibility')}</option>
+                          <option value="public" style={{ background: 'var(--color-bg-secondary)' }}>{t('admin.bookmark.visibility_public')}</option>
+                          <option value="private" style={{ background: 'var(--color-bg-secondary)' }}>{t('admin.bookmark.visibility_private')}</option>
+                        </select>
+                      </div>
                       {/* 批量抓取 - 下拉选项 */}
                       <div className="flex items-center gap-2">
                         <ImageDown className={cn('w-4 h-4', isEnriching && 'animate-pulse')} style={{ color: 'var(--color-primary)' }} />
@@ -1971,6 +2002,23 @@ function AdminContent() {
                                     )}
                                     {bookmark.isReadLater && (
                                       <span className="px-2 py-0.5 rounded text-xs bg-orange-500/20 text-orange-400">{t('admin.bookmark.read_later_short')}</span>
+                                    )}
+                                    {bookmark.visibility === 'private' ? (
+                                      <span 
+                                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-amber-500/15 text-amber-400 border border-amber-500/25 cursor-default transition-colors hover:bg-amber-500/25" 
+                                        title={t('bookmark.private_tooltip')}
+                                      >
+                                        <Lock className="w-3 h-3" />
+                                        {t('admin.bookmark.visibility_private')}
+                                      </span>
+                                    ) : (
+                                      <span 
+                                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-cyan-500/10 text-cyan-400/70 border border-cyan-500/15 cursor-default transition-colors hover:bg-cyan-500/20" 
+                                        title={t('bookmark.public_tooltip')}
+                                      >
+                                        <Globe className="w-3 h-3" />
+                                        {t('admin.bookmark.visibility_public')}
+                                      </span>
                                     )}
                                   </div>
                                   <div className="flex items-center gap-2">

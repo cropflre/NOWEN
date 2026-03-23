@@ -18,6 +18,8 @@ import {
   SunMoon,
   FileText,
   LayoutGrid,
+  Shield,
+  Users,
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { SiteSettings } from '../../lib/api'
@@ -299,6 +301,164 @@ export function SiteSettingsCard({
                     )}
                   />
                 </button>
+              </div>
+            </div>
+
+            {/* 天气显示开关 */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--color-text-muted)' }}>
+                <Shield className="w-4 h-4" />
+                {t('admin.settings.site.access_mode')}
+              </label>
+              <div 
+                className="px-4 py-3 rounded-xl space-y-3 transition-colors duration-300"
+                style={{
+                  background: settings.accessMode === 'private'
+                    ? 'rgba(245, 158, 11, 0.1)' 
+                    : 'var(--color-bg-tertiary)',
+                  border: settings.accessMode === 'private'
+                    ? '1px solid rgba(245, 158, 11, 0.2)'
+                    : '1px solid var(--color-glass-border)',
+                }}
+              >
+                <div>
+                  <p className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>
+                    {t('admin.settings.site.access_mode_title')}
+                  </p>
+                  <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                    {t('admin.settings.site.access_mode_desc')}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => onChange({ ...settings, accessMode: 'public' })}
+                    className={cn(
+                      'flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-300',
+                      settings.accessMode !== 'private'
+                        ? 'ring-2 ring-cyan-500/40 shadow-sm'
+                        : 'hover:bg-white/5'
+                    )}
+                    style={{
+                      background: settings.accessMode !== 'private'
+                        ? 'rgba(6, 182, 212, 0.15)'
+                        : 'var(--color-bg-secondary)',
+                      color: settings.accessMode !== 'private'
+                        ? 'rgb(34, 211, 238)'
+                        : 'var(--color-text-muted)',
+                      border: settings.accessMode !== 'private'
+                        ? '1px solid rgba(6, 182, 212, 0.3)'
+                        : '1px solid var(--color-glass-border)',
+                    }}
+                  >
+                    <Users className="w-4 h-4" />
+                    {t('admin.settings.site.access_mode_public')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onChange({ ...settings, accessMode: 'private' })}
+                    className={cn(
+                      'flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-300',
+                      settings.accessMode === 'private'
+                        ? 'ring-2 ring-amber-500/40 shadow-sm'
+                        : 'hover:bg-white/5'
+                    )}
+                    style={{
+                      background: settings.accessMode === 'private'
+                        ? 'rgba(245, 158, 11, 0.15)'
+                        : 'var(--color-bg-secondary)',
+                      color: settings.accessMode === 'private'
+                        ? 'rgb(251, 191, 36)'
+                        : 'var(--color-text-muted)',
+                      border: settings.accessMode === 'private'
+                        ? '1px solid rgba(245, 158, 11, 0.3)'
+                        : '1px solid var(--color-glass-border)',
+                    }}
+                  >
+                    <Shield className="w-4 h-4" />
+                    {t('admin.settings.site.access_mode_private')}
+                  </button>
+                </div>
+                <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                  {settings.accessMode === 'private'
+                    ? t('admin.settings.site.access_mode_private_hint')
+                    : t('admin.settings.site.access_mode_public_hint')
+                  }
+                </p>
+              </div>
+            </div>
+
+            {/* 新书签默认可见性 */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--color-text-muted)' }}>
+                <Shield className="w-4 h-4" />
+                {t('admin.settings.site.default_visibility')}
+              </label>
+              <div 
+                className="px-4 py-3 rounded-xl space-y-3 transition-colors duration-300"
+                style={{
+                  background: 'var(--color-bg-tertiary)',
+                  border: '1px solid var(--color-glass-border)',
+                }}
+              >
+                <div>
+                  <p className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>
+                    {t('admin.settings.site.default_visibility_title')}
+                  </p>
+                  <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                    {t('admin.settings.site.default_visibility_desc')}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => onChange({ ...settings, defaultBookmarkVisibility: 'public' })}
+                    className={cn(
+                      'flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-300',
+                      settings.defaultBookmarkVisibility !== 'private'
+                        ? 'ring-2 ring-cyan-500/40 shadow-sm'
+                        : 'hover:bg-white/5'
+                    )}
+                    style={{
+                      background: settings.defaultBookmarkVisibility !== 'private'
+                        ? 'rgba(6, 182, 212, 0.15)'
+                        : 'var(--color-bg-secondary)',
+                      color: settings.defaultBookmarkVisibility !== 'private'
+                        ? 'rgb(34, 211, 238)'
+                        : 'var(--color-text-muted)',
+                      border: settings.defaultBookmarkVisibility !== 'private'
+                        ? '1px solid rgba(6, 182, 212, 0.3)'
+                        : '1px solid var(--color-glass-border)',
+                    }}
+                  >
+                    <Users className="w-4 h-4" />
+                    {t('admin.settings.site.access_mode_public')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onChange({ ...settings, defaultBookmarkVisibility: 'private' })}
+                    className={cn(
+                      'flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-300',
+                      settings.defaultBookmarkVisibility === 'private'
+                        ? 'ring-2 ring-amber-500/40 shadow-sm'
+                        : 'hover:bg-white/5'
+                    )}
+                    style={{
+                      background: settings.defaultBookmarkVisibility === 'private'
+                        ? 'rgba(245, 158, 11, 0.15)'
+                        : 'var(--color-bg-secondary)',
+                      color: settings.defaultBookmarkVisibility === 'private'
+                        ? 'rgb(251, 191, 36)'
+                        : 'var(--color-text-muted)',
+                      border: settings.defaultBookmarkVisibility === 'private'
+                        ? '1px solid rgba(245, 158, 11, 0.3)'
+                        : '1px solid var(--color-glass-border)',
+                    }}
+                  >
+                    <Shield className="w-4 h-4" />
+                    {t('admin.settings.site.access_mode_private')}
+                  </button>
+                </div>
               </div>
             </div>
 

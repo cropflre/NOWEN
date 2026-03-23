@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { MoreHorizontal, Pin, Edit3, Trash2, ExternalLink, BookOpen, CheckCircle2 } from 'lucide-react'
+import { MoreHorizontal, Pin, Edit3, Trash2, ExternalLink, BookOpen, CheckCircle2, Lock } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Bookmark } from '../types/bookmark'
 import { cn } from '../lib/utils'
@@ -176,6 +176,27 @@ export function BookmarkCard({
         </div>
       )}
 
+      {/* 私人书签标识 - 右上角小锁图标 */}
+      {bookmark.visibility === 'private' && (
+        <div
+          className={cn(
+            "absolute top-3 z-10 transition-transform duration-200 hover:scale-110",
+            bookmark.isReadLater && !bookmark.isRead ? "right-12" : bookmark.isRead ? "right-9" : "right-3"
+          )}
+          title={t('bookmark.private_tooltip')}
+        >
+          <div
+            className="w-5 h-5 rounded-full flex items-center justify-center"
+            style={{
+              background: 'var(--private-badge-bg, rgba(245, 158, 11, 0.15))',
+              border: '1px solid var(--private-badge-border, rgba(245, 158, 11, 0.3))',
+            }}
+          >
+            <Lock className="w-2.5 h-2.5" style={{ color: 'var(--private-badge-icon, rgb(217, 119, 6))' }} />
+          </div>
+        </div>
+      )}
+
       {/* 操作菜单 */}
       <motion.div
         initial={{ opacity: 0, scale: 0.8 }}
@@ -323,11 +344,11 @@ export function BookmarkCard({
           {/* 文本内容 */}
           <div className="flex-1 min-w-0 flex flex-col h-full">
             <h3 
-              className="font-medium text-base truncate flex items-center gap-2"
+              className="font-medium text-base flex items-center gap-1.5 min-w-0"
               style={{ color: 'var(--text-primary)' }}
             >
-              {bookmark.title}
-              <ExternalLink 
+              <span className="truncate">{bookmark.title}</span>
+              <ExternalLink
                 className="w-3.5 h-3.5 opacity-0 group-hover:opacity-50 transition-opacity flex-shrink-0" 
               />
             </h3>

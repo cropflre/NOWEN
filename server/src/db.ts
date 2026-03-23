@@ -256,6 +256,14 @@ export async function initDatabase() {
   } catch (e) {
     // 字段已存在，忽略错误
   }
+
+  // 数据库迁移：添加 visibility 字段（如果不存在）
+  // 可选值: 'public'（默认，公开可见）| 'private'（仅登录用户可见）
+  try {
+    db.run("ALTER TABLE bookmarks ADD COLUMN visibility TEXT DEFAULT 'public'")
+  } catch (e) {
+    // 字段已存在，忽略错误
+  }
   
   db.run(`
     CREATE TABLE IF NOT EXISTS categories (

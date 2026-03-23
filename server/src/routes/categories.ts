@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { generateId } from '../db.js'
 import { queryAll, queryOne, run, runBatch } from '../utils/index.js'
-import { authMiddleware } from '../middleware/index.js'
+import { authMiddleware, optionalAuthMiddleware } from '../middleware/index.js'
 import {
   validateBody,
   validateParams,
@@ -13,8 +13,14 @@ import {
 const router = Router()
 
 // 获取所有分类
-router.get('/', (req, res) => {
+router.get('/', optionalAuthMiddleware, (req, res) => {
   try {
+    // 私人模式检查：未登录用户无法获取分类
+    const accessMode = queryOne('SELECT value FROM settings WHERE key = ?', ['accessMode'])
+    if (accessMode?.value === 'private' && !(req as any).user) {
+      return res.json([])
+    }
+
     const categories = queryAll('SELECT * FROM categories ORDER BY orderIndex ASC')
     res.json(categories)
   } catch (error) {

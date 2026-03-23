@@ -19,6 +19,7 @@ export interface CreateBookmarkParams {
   category?: string
   tags?: string[]
   isReadLater?: boolean
+  visibility?: 'public' | 'private'
 }
 
 // 更新书签请求参数
@@ -37,6 +38,7 @@ export interface UpdateBookmarkParams {
   isReadLater?: boolean
   isRead?: boolean
   orderIndex?: number
+  visibility?: 'public' | 'private'
 }
 
 // 创建分类请求参数
@@ -196,7 +198,11 @@ async function request<T>(
 // ========== 书签 API ==========
 
 export async function fetchBookmarks(): Promise<Bookmark[]> {
-  return request<Bookmark[]>('/api/bookmarks')
+  // 自动携带 Token（如果已登录），以支持私人模式下获取书签
+  const token = getToken()
+  return request<Bookmark[]>('/api/bookmarks', {
+    ...(token ? { requireAuth: true } : {}),
+  })
 }
 
 // 分页查询参数
@@ -241,7 +247,11 @@ export async function fetchBookmarksPaginated(params: PaginationParams = {}): Pr
   const queryString = searchParams.toString()
   const endpoint = `/api/bookmarks/paginated${queryString ? `?${queryString}` : ''}`
   
-  return request<PaginatedResponse<Bookmark>>(endpoint)
+  // 自动携带 Token（如果已登录），以支持私人模式下获取书签
+  const token = getToken()
+  return request<PaginatedResponse<Bookmark>>(endpoint, {
+    ...(token ? { requireAuth: true } : {}),
+  })
 }
 
 export async function createBookmark(data: CreateBookmarkParams): Promise<Bookmark> {
@@ -311,7 +321,11 @@ export async function deleteTag(name: string): Promise<{ success: boolean; updat
 // ========== 分类 API ==========
 
 export async function fetchCategories(): Promise<Category[]> {
-  return request<Category[]>('/api/categories')
+  // 自动携带 Token（如果已登录），以支持私人模式下获取分类
+  const token = getToken()
+  return request<Category[]>('/api/categories', {
+    ...(token ? { requireAuth: true } : {}),
+  })
 }
 
 export async function createCategory(data: CreateCategoryParams): Promise<Category> {
@@ -741,6 +755,8 @@ export interface SiteSettings {
   cardViewMode?: 'compact' | 'standard' | 'comfortable'  // 书签卡片视图模式
   widgetSizeMode?: 'S' | 'M' | 'L'  // 监控 Widget 尺寸预设（S=迷你摘要, M=用户自控, L=全展开）
   enableAiEnrichOnImport?: boolean  // 导入时启用 AI 刮削元数据/标题/图标
+  accessMode?: 'public' | 'private'  // 访问模式：public=公开访问，private=私人模式（需登录）
+  defaultBookmarkVisibility?: 'public' | 'private'  // 新书签默认可见性
 }
 
 // 转换设置值类型（后端存储为字符串）
@@ -821,6 +837,8 @@ function parseSettings(raw: Record<string, string>): SiteSettings {
     cardViewMode: (raw.cardViewMode as SiteSettings['cardViewMode']) || 'standard',
     widgetSizeMode: (['S', 'M', 'L'].includes(raw.widgetSizeMode) ? raw.widgetSizeMode : 'M') as SiteSettings['widgetSizeMode'],
     enableAiEnrichOnImport: raw.enableAiEnrichOnImport === 'true' || raw.enableAiEnrichOnImport === '1',
+    accessMode: (raw.accessMode === 'private' ? 'private' : 'public') as SiteSettings['accessMode'],
+    defaultBookmarkVisibility: (raw.defaultBookmarkVisibility === 'private' ? 'private' : 'public') as SiteSettings['defaultBookmarkVisibility'],
   }
 }
 
@@ -849,6 +867,8 @@ export async function updateSettings(settings: SiteSettings): Promise<SiteSettin
     cardViewMode: settings.cardViewMode || 'standard',
     widgetSizeMode: settings.widgetSizeMode || 'M',
     enableAiEnrichOnImport: settings.enableAiEnrichOnImport ? 'true' : 'false',
+    accessMode: settings.accessMode || 'public',
+    defaultBookmarkVisibility: settings.defaultBookmarkVisibility || 'public',
   }
   const raw = await request<Record<string, string>>('/api/settings', {
     method: 'PATCH',
