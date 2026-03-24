@@ -100,7 +100,7 @@ export interface AdminProps {
   onAddCustomIcon: (icon: Omit<CustomIcon, 'id' | 'createdAt'>) => void
   onDeleteCustomIcon: (id: string) => void
   onRefreshData?: () => void
-  onQuotesUpdate?: (quotes: string[], useDefault: boolean) => void
+  onQuotesUpdate?: (quotes: string[], useDefault: boolean, showQuotes?: boolean) => void
   onSettingsChange?: (settings: SiteSettings) => void
 }
 
@@ -504,6 +504,7 @@ function AdminContent() {
   // 名言状态
   const [quotes, setQuotes] = useState<string[]>([])
   const [useDefaultQuotes, setUseDefaultQuotes] = useState(true)
+  const [showQuotes, setShowQuotes] = useState(true)
 
   // 加载站点设置和名言
   useEffect(() => {
@@ -518,17 +519,19 @@ function AdminContent() {
     fetchQuotes().then(data => {
       setQuotes(data.quotes)
       setUseDefaultQuotes(data.useDefaultQuotes)
+      setShowQuotes(data.showQuotes !== false)
     }).catch(console.error)
   }, [])
 
   // 更新名言
-  const handleUpdateQuotes = async (newQuotes: string[], newUseDefault: boolean) => {
+  const handleUpdateQuotes = async (newQuotes: string[], newUseDefault: boolean, newShowQuotes: boolean) => {
     try {
-      await updateQuotes(newQuotes, newUseDefault)
+      await updateQuotes(newQuotes, newUseDefault, newShowQuotes)
       setQuotes(newQuotes)
       setUseDefaultQuotes(newUseDefault)
+      setShowQuotes(newShowQuotes)
       // 通知父组件更新名言
-      onQuotesUpdate?.(newQuotes, newUseDefault)
+      onQuotesUpdate?.(newQuotes, newUseDefault, newShowQuotes)
     } catch (error) {
       console.error('Failed to update quotes:', error)
     }
@@ -2852,6 +2855,7 @@ function AdminContent() {
                 <QuotesCard
                   quotes={quotes}
                   useDefaultQuotes={useDefaultQuotes}
+                  showQuotes={showQuotes}
                   onUpdate={handleUpdateQuotes}
                 />
               </>

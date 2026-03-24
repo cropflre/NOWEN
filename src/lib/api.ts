@@ -990,6 +990,7 @@ export const dataApi = {
 export interface QuotesData {
   quotes: string[]
   useDefaultQuotes: boolean
+  showQuotes: boolean
 }
 
 export interface QuotesUpdateResponse {
@@ -1001,10 +1002,10 @@ export async function fetchQuotes(): Promise<QuotesData> {
   return request<QuotesData>('/api/quotes')
 }
 
-export async function updateQuotes(quotes: string[], useDefaultQuotes?: boolean): Promise<QuotesUpdateResponse> {
+export async function updateQuotes(quotes: string[], useDefaultQuotes?: boolean, showQuotes?: boolean): Promise<QuotesUpdateResponse> {
   return request<QuotesUpdateResponse>('/api/quotes', {
     method: 'PUT',
-    body: JSON.stringify({ quotes, useDefaultQuotes }),
+    body: JSON.stringify({ quotes, useDefaultQuotes, showQuotes }),
     requireAuth: true,
   })
 }

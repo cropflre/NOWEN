@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { Sparkles } from '../ui/effects';
 import { Typewriter } from '../ui/typewriter';
-import { getRandomWisdom } from '../../data/quotes';
+import { getRandomWisdom, isQuotesVisible } from '../../data/quotes';
 import { WeatherDisplay } from './WeatherDisplay';
 import { SearchHint } from './SearchHint';
 import { WeatherData } from '../../hooks/useWeather';
@@ -107,36 +107,38 @@ export function HeroSection({
       </motion.div>
 
       {/* Greeting with Typewriter */}
-      <motion.h1
-        className="text-base sm:text-lg lg:text-xl font-serif font-medium mb-8 tracking-wide min-h-[3.5em] flex items-center justify-center"
-        style={{ 
-          color: hasWallpaper ? 'rgba(255, 255, 255, 0.95)' : 'var(--color-text-secondary)',
-          ...(hasWallpaper ? wallpaperTextShadow.secondary : {}),
-        }}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.4 }}
-        layout
-      >
-        {isLiteMode ? (
-          // 精简模式：静态文字，无 Sparkles 特效
-          <Typewriter
-            getNextWord={getRandomWisdom}
-            initialWord={greeting}
-            delayBetweenWords={5000}
-            fullSentence
-          />
-        ) : (
-          <Sparkles>
+      {isQuotesVisible() && (
+        <motion.h1
+          className="text-base sm:text-lg lg:text-xl font-serif font-medium mb-8 tracking-wide min-h-[3.5em] flex items-center justify-center"
+          style={{ 
+            color: hasWallpaper ? 'rgba(255, 255, 255, 0.95)' : 'var(--color-text-secondary)',
+            ...(hasWallpaper ? wallpaperTextShadow.secondary : {}),
+          }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.4 }}
+          layout
+        >
+          {isLiteMode ? (
+            // 精简模式：静态文字，无 Sparkles 特效
             <Typewriter
               getNextWord={getRandomWisdom}
               initialWord={greeting}
               delayBetweenWords={5000}
               fullSentence
             />
-          </Sparkles>
-        )}
-      </motion.h1>
+          ) : (
+            <Sparkles>
+              <Typewriter
+                getNextWord={getRandomWisdom}
+                initialWord={greeting}
+                delayBetweenWords={5000}
+                fullSentence
+              />
+            </Sparkles>
+          )}
+        </motion.h1>
+      )}
 
       {/* Search Hint */}
       <SearchHint isLiteMode={isLiteMode} onOpenSearch={onOpenSearch} />

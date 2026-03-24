@@ -23,13 +23,15 @@ import { aiGenerateQuotes, getAiStatus } from '../../lib/api'
 interface QuotesCardProps {
   quotes: string[]
   useDefaultQuotes: boolean
-  onUpdate: (quotes: string[], useDefaultQuotes: boolean) => void
+  showQuotes: boolean
+  onUpdate: (quotes: string[], useDefaultQuotes: boolean, showQuotes: boolean) => void
 }
 
-export function QuotesCard({ quotes, useDefaultQuotes, onUpdate }: QuotesCardProps) {
+export function QuotesCard({ quotes, useDefaultQuotes, showQuotes, onUpdate }: QuotesCardProps) {
   const { t } = useTranslation()
   const [localQuotes, setLocalQuotes] = useState<string[]>(quotes)
   const [localUseDefault, setLocalUseDefault] = useState(useDefaultQuotes)
+  const [localShowQuotes, setLocalShowQuotes] = useState(showQuotes)
   const [editingIndex, setEditingIndex] = useState<number | null>(null)
   const [editValue, setEditValue] = useState('')
   const [newQuote, setNewQuote] = useState('')
@@ -52,6 +54,10 @@ export function QuotesCard({ quotes, useDefaultQuotes, onUpdate }: QuotesCardPro
   useEffect(() => {
     setLocalUseDefault(useDefaultQuotes)
   }, [useDefaultQuotes])
+
+  useEffect(() => {
+    setLocalShowQuotes(showQuotes)
+  }, [showQuotes])
 
   // 检查 AI 是否已配置
   useEffect(() => {
@@ -100,7 +106,7 @@ export function QuotesCard({ quotes, useDefaultQuotes, onUpdate }: QuotesCardPro
     if (newQuotes.length === 0) return
     const updated = [...localQuotes, ...newQuotes]
     setLocalQuotes(updated)
-    onUpdate(updated, localUseDefault)
+    onUpdate(updated, localUseDefault, localShowQuotes)
     setSuccess(t('admin.quotes.ai_added', { count: newQuotes.length }))
     setTimeout(() => setSuccess(null), 3000)
     setAiResults([])
@@ -110,11 +116,20 @@ export function QuotesCard({ quotes, useDefaultQuotes, onUpdate }: QuotesCardPro
 
   const { i18n } = useTranslation()
 
+  // 切换名言展示开关
+  const handleToggleShowQuotes = () => {
+    const newValue = !localShowQuotes
+    setLocalShowQuotes(newValue)
+    onUpdate(localQuotes, localUseDefault, newValue)
+    setSuccess(newValue ? t('admin.quotes.show_enabled') : t('admin.quotes.show_disabled'))
+    setTimeout(() => setSuccess(null), 2000)
+  }
+
   // 切换默认名言开关
   const handleToggleDefault = () => {
     const newValue = !localUseDefault
     setLocalUseDefault(newValue)
-    onUpdate(localQuotes, newValue)
+    onUpdate(localQuotes, newValue, localShowQuotes)
     setSuccess(newValue ? t('admin.quotes.enabled_default') : t('admin.quotes.disabled_default'))
     setTimeout(() => setSuccess(null), 2000)
   }
@@ -136,7 +151,7 @@ export function QuotesCard({ quotes, useDefaultQuotes, onUpdate }: QuotesCardPro
     }
     const updated = [...localQuotes, newQuote.trim()]
     setLocalQuotes(updated)
-    onUpdate(updated, localUseDefault)
+    onUpdate(updated, localUseDefault, localShowQuotes)
     setNewQuote('')
     setIsAdding(false)
     setSuccess(t('admin.quotes.added'))
@@ -147,7 +162,7 @@ export function QuotesCard({ quotes, useDefaultQuotes, onUpdate }: QuotesCardPro
   const handleDelete = (index: number) => {
     const updated = localQuotes.filter((_, i) => i !== index)
     setLocalQuotes(updated)
-    onUpdate(updated, localUseDefault)
+    onUpdate(updated, localUseDefault, localShowQuotes)
     setSuccess(t('admin.quotes.deleted'))
     setTimeout(() => setSuccess(null), 2000)
   }
@@ -168,7 +183,7 @@ export function QuotesCard({ quotes, useDefaultQuotes, onUpdate }: QuotesCardPro
     const updated = [...localQuotes]
     updated[editingIndex] = editValue.trim()
     setLocalQuotes(updated)
-    onUpdate(updated, localUseDefault)
+    onUpdate(updated, localUseDefault, localShowQuotes)
     setEditingIndex(null)
     setEditValue('')
     setSuccess(t('admin.quotes.updated'))
@@ -245,6 +260,36 @@ export function QuotesCard({ quotes, useDefaultQuotes, onUpdate }: QuotesCardPro
               {t('admin.quotes.add')}
             </motion.button>
           </div>
+        </div>
+
+        {/* 名言展示开关 */}
+        <div 
+          className="flex items-center justify-between p-4 rounded-xl mb-4"
+          style={{
+            background: 'var(--color-bg-tertiary)',
+            border: '1px solid var(--color-glass-border)',
+          }}
+        >
+          <div className="flex-1">
+            <p className="font-medium" style={{ color: 'var(--color-text-primary)' }}>
+              {t('admin.quotes.show_quotes')}
+            </p>
+            <p className="text-sm mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+              {localShowQuotes ? t('admin.quotes.show_quotes_enabled') : t('admin.quotes.show_quotes_disabled')}
+            </p>
+          </div>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleToggleShowQuotes}
+            className="flex-shrink-0"
+          >
+            {localShowQuotes ? (
+              <ToggleRight className="w-10 h-10 text-amber-500" />
+            ) : (
+              <ToggleLeft className="w-10 h-10" style={{ color: 'var(--color-text-muted)' }} />
+            )}
+          </motion.button>
         </div>
 
         {/* 系统默认名言开关 */}

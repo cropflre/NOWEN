@@ -95,6 +95,7 @@ export const updateSettingsSchema = z.object({
 export const updateQuotesSchema = z.object({
   quotes: z.array(z.string().min(1, '名言内容不能为空').max(500, '单条名言不能超过500字符')),
   useDefaultQuotes: z.boolean().optional(),
+  showQuotes: z.boolean().optional(),
 })
 
 // ========== 数据导入 Schema ==========

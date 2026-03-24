@@ -295,11 +295,20 @@ export const wisdomQuotes = wisdomQuotesData.map(q => q.zh);
 // 当前使用的名言列表（可被后端数据覆盖）
 let customQuotesList: string[] = [];
 let useDefaultQuotes = true;
+let showQuotesEnabled = true;
 
 // 设置名言列表
-export function setActiveQuotes(customQuotes: string[], useDefault: boolean) {
+export function setActiveQuotes(customQuotes: string[], useDefault: boolean, showQuotes?: boolean) {
   customQuotesList = customQuotes || [];
   useDefaultQuotes = useDefault;
+  if (typeof showQuotes === 'boolean') {
+    showQuotesEnabled = showQuotes;
+  }
+}
+
+// 获取名言展示开关状态
+export function isQuotesVisible(): boolean {
+  return showQuotesEnabled;
 }
 
 // 获取活跃的名言列表（根据当前语言）
@@ -335,6 +344,6 @@ export function getRandomWisdom(): string {
 }
 
 // 处理名言更新的回调（供外部组件调用）
-export function handleQuotesChange(customQuotes: string[], useDefault: boolean) {
-  setActiveQuotes(customQuotes, useDefault);
+export function handleQuotesChange(customQuotes: string[], useDefault: boolean, showQuotes?: boolean) {
+  setActiveQuotes(customQuotes, useDefault, showQuotes);
 }

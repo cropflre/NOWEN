@@ -40,7 +40,7 @@ export interface AdminContextValue {
   
   // 其他操作
   refreshData: () => Promise<void> | void
-  updateQuotes: (quotes: string[], useDefault: boolean) => void
+  updateQuotes: (quotes: string[], useDefault: boolean, showQuotes?: boolean) => void
   updateSettings: (settings: SiteSettings) => void
   
   // 模态框状态
@@ -86,7 +86,7 @@ export interface AdminProviderProps {
   onDeleteCustomIcon: (id: string) => void
   // 其他回调
   onRefreshData?: () => Promise<void> | void
-  onQuotesUpdate?: (quotes: string[], useDefault: boolean) => void
+  onQuotesUpdate?: (quotes: string[], useDefault: boolean, showQuotes?: boolean) => void
   onSettingsChange?: (settings: SiteSettings) => void
 }
 
@@ -139,8 +139,8 @@ export function AdminProvider({
     await onRefreshData?.()
   }, [onRefreshData])
 
-  const handleUpdateQuotes = useCallback((quotes: string[], useDefault: boolean) => {
-    onQuotesUpdate?.(quotes, useDefault)
+  const handleUpdateQuotes = useCallback((quotes: string[], useDefault: boolean, showQuotes?: boolean) => {
+    onQuotesUpdate?.(quotes, useDefault, showQuotes)
   }, [onQuotesUpdate])
 
   const handleUpdateSettings = useCallback((settings: SiteSettings) => {

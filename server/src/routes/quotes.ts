@@ -12,10 +12,13 @@ router.get('/', (req, res) => {
     const quotes = queryAll('SELECT * FROM quotes ORDER BY orderIndex ASC')
     const useDefaultSetting = queryOne('SELECT value FROM settings WHERE key = ?', ['useDefaultQuotes'])
     const useDefaultQuotes = useDefaultSetting?.value !== 'false'
+    const showQuotesSetting = queryOne('SELECT value FROM settings WHERE key = ?', ['showQuotes'])
+    const showQuotes = showQuotesSetting?.value !== 'false'
     
     res.json({
       quotes: quotes.map((q: any) => q.content),
-      useDefaultQuotes
+      useDefaultQuotes,
+      showQuotes
     })
   } catch (error) {
     console.error('获取名言失败:', error)
@@ -26,13 +29,21 @@ router.get('/', (req, res) => {
 // 更新名言列表（需要认证）
 router.put('/', authMiddleware, validateBody(updateQuotesSchema), (req, res) => {
   try {
-    const { quotes, useDefaultQuotes } = req.body
+    const { quotes, useDefaultQuotes, showQuotes } = req.body
     
     // 更新 useDefaultQuotes 设置
     if (typeof useDefaultQuotes === 'boolean') {
       run(
         'INSERT OR REPLACE INTO settings (key, value, updatedAt) VALUES (?, ?, ?)',
         ['useDefaultQuotes', useDefaultQuotes.toString(), new Date().toISOString()]
+      )
+    }
+
+    // 更新 showQuotes 设置
+    if (typeof showQuotes === 'boolean') {
+      run(
+        'INSERT OR REPLACE INTO settings (key, value, updatedAt) VALUES (?, ?, ?)',
+        ['showQuotes', showQuotes.toString(), new Date().toISOString()]
       )
     }
     

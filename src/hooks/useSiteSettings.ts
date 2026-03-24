@@ -122,7 +122,7 @@ export function useSiteSettings() {
     // 加载名言
     fetchQuotes()
       .then((data) => {
-        setActiveQuotes(data.quotes, data.useDefaultQuotes);
+        setActiveQuotes(data.quotes, data.useDefaultQuotes, data.showQuotes);
       })
       .catch(console.error);
   }, []);
