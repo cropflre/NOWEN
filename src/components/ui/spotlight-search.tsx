@@ -1,11 +1,12 @@
-import { useRef, useState, useEffect } from 'react'
+import { useRef, useState, useEffect, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Search, Command, ArrowRight, Globe, Github, Plus, ChevronDown } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { Bookmark } from '../../types/bookmark'
+import type { SearchEngineConfig, SearchEngineSettings } from '../../lib/api'
 
-// 搜索引擎配置
-interface SearchEngine {
+// 搜索引擎配置（纯数据，不含 icon）
+interface SearchEngineDisplay {
   id: string
   name: string
   icon: React.ReactNode
@@ -13,7 +14,8 @@ interface SearchEngine {
   shortcut: string
 }
 
-const SEARCH_ENGINES: SearchEngine[] = [
+// 预置搜索引擎（内置默认列表）
+const BUILTIN_SEARCH_ENGINES: SearchEngineDisplay[] = [
   {
     id: 'google',
     name: 'Google',
@@ -58,13 +60,23 @@ const SEARCH_ENGINES: SearchEngine[] = [
   },
 ]
 
-const STORAGE_KEY = 'spotlight_default_engine'
+// 将后端自定义引擎转化为带 icon 的展示引擎
+function customToDisplay(engine: SearchEngineConfig): SearchEngineDisplay {
+  return {
+    id: engine.id,
+    name: engine.name,
+    icon: <Globe className="w-4 h-4 text-emerald-400" />,
+    url: engine.url,
+    shortcut: engine.shortcut,
+  }
+}
 
 interface SpotlightSearchProps {
   isOpen: boolean
   onClose: () => void
   bookmarks: Bookmark[]
   onAddBookmark: (url: string) => void
+  searchEngineSettings?: SearchEngineSettings
 }
 
 export function SpotlightSearch({
@@ -72,28 +84,39 @@ export function SpotlightSearch({
   onClose,
   bookmarks,
   onAddBookmark,
+  searchEngineSettings,
 }: SpotlightSearchProps) {
   const [query, setQuery] = useState('')
   const [selectedIndex, setSelectedIndex] = useState(0)
   const [isVanishing, setIsVanishing] = useState(false)
   const [showEngineSelector, setShowEngineSelector] = useState(false)
-  const [defaultEngine, setDefaultEngine] = useState<SearchEngine>(SEARCH_ENGINES[0])
   const inputRef = useRef<HTMLInputElement>(null)
   const engineSelectorRef = useRef<HTMLDivElement>(null)
 
-  // 加载保存的默认搜索引擎
-  useEffect(() => {
-    const savedEngineId = localStorage.getItem(STORAGE_KEY)
-    if (savedEngineId) {
-      const engine = SEARCH_ENGINES.find(e => e.id === savedEngineId)
-      if (engine) setDefaultEngine(engine)
-    }
-  }, [])
+  // 合并内置引擎和自定义引擎
+  const SEARCH_ENGINES = useMemo<SearchEngineDisplay[]>(() => {
+    const custom = (searchEngineSettings?.customEngines || []).map(customToDisplay)
+    return [...BUILTIN_SEARCH_ENGINES, ...custom]
+  }, [searchEngineSettings?.customEngines])
 
-  // 保存默认搜索引擎
-  const handleSelectEngine = (engine: SearchEngine) => {
-    setDefaultEngine(engine)
-    localStorage.setItem(STORAGE_KEY, engine.id)
+  // 根据服务端设置确定默认搜索引擎
+  const defaultEngine = useMemo<SearchEngineDisplay>(() => {
+    const configuredId = searchEngineSettings?.defaultEngineId || 'google'
+    return SEARCH_ENGINES.find(e => e.id === configuredId) || SEARCH_ENGINES[0]
+  }, [searchEngineSettings?.defaultEngineId, SEARCH_ENGINES])
+
+  // 本地临时切换默认引擎（仅当前会话内有效）
+  const [localEngineId, setLocalEngineId] = useState<string | null>(null)
+  const activeEngine = useMemo(() => {
+    if (localEngineId) {
+      return SEARCH_ENGINES.find(e => e.id === localEngineId) || defaultEngine
+    }
+    return defaultEngine
+  }, [localEngineId, defaultEngine, SEARCH_ENGINES])
+
+  // 切换搜索引擎（本地会话级）
+  const handleSelectEngine = (engine: SearchEngineDisplay) => {
+    setLocalEngineId(engine.id)
     setShowEngineSelector(false)
   }
 
@@ -210,11 +233,11 @@ export function SpotlightSearch({
       results.push({
         id: 'default-search',
         type: 'command',
-        title: `在 ${defaultEngine.name} 搜索 "${q}"`,
+        title: `在 ${activeEngine.name} 搜索 "${q}"`,
         subtitle: 'Enter 确认',
-        icon: defaultEngine.icon,
+        icon: activeEngine.icon,
         action: () => {
-          window.open(defaultEngine.url.replace('{query}', encodeURIComponent(q)), '_blank')
+          window.open(activeEngine.url.replace('{query}', encodeURIComponent(q)), '_blank')
           onClose()
         },
       })
@@ -386,8 +409,8 @@ export function SpotlightSearch({
                     className="flex items-center gap-1.5 px-2 py-1 rounded-lg transition-colors"
                     style={{ color: 'var(--color-text-secondary)' }}
                   >
-                    {defaultEngine.icon}
-                    <span>{defaultEngine.name}</span>
+                    {activeEngine.icon}
+                    <span>{activeEngine.name}</span>
                     <ChevronDown className={cn(
                       "w-3 h-3 transition-transform",
                       showEngineSelector && "rotate-180"
@@ -422,13 +445,13 @@ export function SpotlightSearch({
                             onClick={() => handleSelectEngine(engine)}
                             className={cn(
                               "w-full px-3 py-2 flex items-center gap-2 text-left transition-colors",
-                              engine.id === defaultEngine.id && "bg-[var(--color-glass-hover)]"
+                              engine.id === activeEngine.id && "bg-[var(--color-glass-hover)]"
                             )}
                             style={{ color: 'var(--color-text-secondary)' }}
                           >
                             {engine.icon}
                             <span className="text-sm">{engine.name}</span>
-                            {engine.id === defaultEngine.id && (
+                            {engine.id === activeEngine.id && (
                               <span className="ml-auto text-green-400 text-xs">✓</span>
                             )}
                           </button>

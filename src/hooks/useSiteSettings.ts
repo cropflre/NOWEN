@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { fetchSettings, fetchQuotes, SiteSettings } from '../lib/api';
+import { fetchSettings, fetchQuotes, SiteSettings, SearchEngineSettings } from '../lib/api';
 import { setActiveQuotes } from '../data/quotes';
 
 // 默认站点设置
@@ -79,6 +79,9 @@ export function useSiteSettings() {
   // 新书签默认可见性
   const defaultBookmarkVisibility = siteSettings.defaultBookmarkVisibility ?? 'public';
 
+  // 搜索引擎配置
+  const searchEngine: SearchEngineSettings = siteSettings.searchEngine ?? { defaultEngineId: 'google', customEngines: [] };
+
   // 菜单可见性
   const menuVisibility = siteSettings.menuVisibility || {
     languageToggle: true,
@@ -144,5 +147,6 @@ export function useSiteSettings() {
     widgetSizeMode,
     accessMode,
     defaultBookmarkVisibility,
+    searchEngine,
   };
 }

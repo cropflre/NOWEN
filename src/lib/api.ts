@@ -737,6 +737,21 @@ export interface WallpaperSettings {
   overlay?: number          // 遮罩透明度 0-100
 }
 
+// 搜索引擎配置
+export interface SearchEngineConfig {
+  id: string
+  name: string
+  url: string      // 搜索URL模板，{query} 会被替换为搜索词
+  shortcut: string  // 快捷键前缀
+  builtin?: boolean // 是否为预置搜索引擎（不可删除）
+}
+
+// 搜索引擎设置
+export interface SearchEngineSettings {
+  defaultEngineId?: string           // 默认搜索引擎 ID
+  customEngines?: SearchEngineConfig[] // 用户自定义的搜索引擎列表
+}
+
 export interface SiteSettings {
   siteTitle?: string
   siteFavicon?: string
@@ -757,6 +772,7 @@ export interface SiteSettings {
   enableAiEnrichOnImport?: boolean  // 导入时启用 AI 刮削元数据/标题/图标
   accessMode?: 'public' | 'private'  // 访问模式：public=公开访问，private=私人模式（需登录）
   defaultBookmarkVisibility?: 'public' | 'private'  // 新书签默认可见性
+  searchEngine?: SearchEngineSettings  // 搜索引擎设置
 }
 
 // 转换设置值类型（后端存储为字符串）
@@ -839,6 +855,13 @@ function parseSettings(raw: Record<string, string>): SiteSettings {
     enableAiEnrichOnImport: raw.enableAiEnrichOnImport === 'true' || raw.enableAiEnrichOnImport === '1',
     accessMode: (raw.accessMode === 'private' ? 'private' : 'public') as SiteSettings['accessMode'],
     defaultBookmarkVisibility: (raw.defaultBookmarkVisibility === 'private' ? 'private' : 'public') as SiteSettings['defaultBookmarkVisibility'],
+    searchEngine: raw.searchEngine ? (() => {
+      try {
+        return JSON.parse(raw.searchEngine) as SearchEngineSettings
+      } catch {
+        return { defaultEngineId: 'google', customEngines: [] }
+      }
+    })() : { defaultEngineId: 'google', customEngines: [] },
   }
 }
 
@@ -869,6 +892,7 @@ export async function updateSettings(settings: SiteSettings): Promise<SiteSettin
     enableAiEnrichOnImport: settings.enableAiEnrichOnImport ? 'true' : 'false',
     accessMode: settings.accessMode || 'public',
     defaultBookmarkVisibility: settings.defaultBookmarkVisibility || 'public',
+    searchEngine: settings.searchEngine ? JSON.stringify(settings.searchEngine) : undefined,
   }
   const raw = await request<Record<string, string>>('/api/settings', {
     method: 'PATCH',

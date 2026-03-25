@@ -20,9 +20,23 @@ import {
   LayoutGrid,
   Shield,
   Users,
+  Search,
+  Plus,
+  Trash2,
+  ChevronDown,
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
-import { SiteSettings } from '../../lib/api'
+import { SiteSettings, SearchEngineConfig } from '../../lib/api'
+
+// 预置搜索引擎列表
+const BUILTIN_SEARCH_ENGINES: SearchEngineConfig[] = [
+  { id: 'google', name: 'Google', url: 'https://www.google.com/search?q={query}', shortcut: 'g', builtin: true },
+  { id: 'bing', name: 'Bing', url: 'https://www.bing.com/search?q={query}', shortcut: 'b', builtin: true },
+  { id: 'baidu', name: '百度', url: 'https://www.baidu.com/s?wd={query}', shortcut: 'bd', builtin: true },
+  { id: 'github', name: 'GitHub', url: 'https://github.com/search?q={query}', shortcut: 'gh', builtin: true },
+  { id: 'duckduckgo', name: 'DuckDuckGo', url: 'https://duckduckgo.com/?q={query}', shortcut: 'dd', builtin: true },
+  { id: 'bilibili', name: 'Bilibili', url: 'https://search.bilibili.com/all?keyword={query}', shortcut: 'bili', builtin: true },
+]
 
 interface SiteSettingsCardProps {
   settings: SiteSettings
@@ -789,6 +803,9 @@ export function SiteSettingsCard({
                 </p>
               </div>
             </div>
+
+            {/* 搜索引擎设置 */}
+            <SearchEngineSettingsSection settings={settings} onChange={onChange} />
           </div>
 
           {/* Right: Live Preview */}
@@ -951,5 +968,245 @@ export function SiteSettingsCard({
         </motion.button>
       </div>
     </motion.div>
+  )
+}
+
+// ========== 搜索引擎设置子组件 ==========
+
+function SearchEngineSettingsSection({ settings, onChange }: { settings: SiteSettings; onChange: (s: SiteSettings) => void }) {
+  const { t } = useTranslation()
+  const [showAddForm, setShowAddForm] = useState(false)
+  const [newEngine, setNewEngine] = useState({ name: '', url: '', shortcut: '' })
+  const [addError, setAddError] = useState('')
+
+  // 合并预置引擎和自定义引擎
+  const customEngines = settings.searchEngine?.customEngines || []
+  const allEngines = [...BUILTIN_SEARCH_ENGINES, ...customEngines]
+  const defaultEngineId = settings.searchEngine?.defaultEngineId || 'google'
+
+  const handleSetDefault = (id: string) => {
+    onChange({
+      ...settings,
+      searchEngine: {
+        ...settings.searchEngine,
+        defaultEngineId: id,
+        customEngines,
+      },
+    })
+  }
+
+  const handleAddEngine = () => {
+    setAddError('')
+    if (!newEngine.name.trim()) {
+      setAddError(t('admin.settings.site.search_engine.name_required'))
+      return
+    }
+    if (!newEngine.url.trim() || !newEngine.url.includes('{query}')) {
+      setAddError(t('admin.settings.site.search_engine.url_invalid'))
+      return
+    }
+    if (!newEngine.shortcut.trim()) {
+      setAddError(t('admin.settings.site.search_engine.shortcut_required'))
+      return
+    }
+    // 检查快捷键冲突
+    if (allEngines.some(e => e.shortcut === newEngine.shortcut.trim())) {
+      setAddError(t('admin.settings.site.search_engine.shortcut_conflict'))
+      return
+    }
+    const id = `custom_${Date.now()}`
+    const engine: SearchEngineConfig = {
+      id,
+      name: newEngine.name.trim(),
+      url: newEngine.url.trim(),
+      shortcut: newEngine.shortcut.trim(),
+    }
+    onChange({
+      ...settings,
+      searchEngine: {
+        ...settings.searchEngine,
+        defaultEngineId,
+        customEngines: [...customEngines, engine],
+      },
+    })
+    setNewEngine({ name: '', url: '', shortcut: '' })
+    setShowAddForm(false)
+  }
+
+  const handleDeleteEngine = (id: string) => {
+    const updated = customEngines.filter(e => e.id !== id)
+    onChange({
+      ...settings,
+      searchEngine: {
+        defaultEngineId: defaultEngineId === id ? 'google' : defaultEngineId,
+        customEngines: updated,
+      },
+    })
+  }
+
+  return (
+    <div className="space-y-2">
+      <label className="flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--color-text-muted)' }}>
+        <Search className="w-4 h-4" />
+        {t('admin.settings.site.search_engine.label')}
+      </label>
+      <div
+        className="px-4 py-3 rounded-xl space-y-3"
+        style={{
+          background: 'var(--color-bg-tertiary)',
+          border: '1px solid var(--color-glass-border)',
+        }}
+      >
+        <div>
+          <p className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>
+            {t('admin.settings.site.search_engine.title')}
+          </p>
+          <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+            {t('admin.settings.site.search_engine.desc')}
+          </p>
+        </div>
+
+        {/* 搜索引擎列表 */}
+        <div className="space-y-1.5">
+          {allEngines.map(engine => (
+            <div
+              key={engine.id}
+              className={cn(
+                'flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 cursor-pointer group',
+                engine.id === defaultEngineId
+                  ? 'ring-1 ring-cyan-500/40'
+                  : 'hover:bg-white/5'
+              )}
+              style={{
+                background: engine.id === defaultEngineId
+                  ? 'rgba(6, 182, 212, 0.1)'
+                  : 'transparent',
+              }}
+              onClick={() => handleSetDefault(engine.id)}
+            >
+              <Globe className="w-4 h-4 shrink-0" style={{ color: engine.id === defaultEngineId ? 'rgb(34, 211, 238)' : 'var(--color-text-muted)' }} />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium truncate" style={{ color: 'var(--color-text-primary)' }}>
+                    {engine.name}
+                  </span>
+                  <kbd
+                    className="px-1.5 py-0.5 text-[10px] rounded"
+                    style={{
+                      background: 'var(--color-bg-secondary)',
+                      color: 'var(--color-text-muted)',
+                      border: '1px solid var(--color-glass-border)',
+                    }}
+                  >
+                    {engine.shortcut}
+                  </kbd>
+                  {engine.id === defaultEngineId && (
+                    <span className="text-[10px] text-cyan-400 font-medium">
+                      {t('admin.settings.site.search_engine.default_badge')}
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs truncate" style={{ color: 'var(--color-text-muted)' }}>
+                  {engine.url}
+                </p>
+              </div>
+              {/* 自定义引擎可删除 */}
+              {!engine.builtin && (
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); handleDeleteEngine(engine.id) }}
+                  className="p-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500/20"
+                  style={{ color: 'var(--color-text-muted)' }}
+                >
+                  <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* 添加自定义搜索引擎 */}
+        {!showAddForm ? (
+          <button
+            type="button"
+            onClick={() => setShowAddForm(true)}
+            className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm transition-colors hover:bg-white/5"
+            style={{ color: 'var(--color-text-muted)', border: '1px dashed var(--color-glass-border)' }}
+          >
+            <Plus className="w-4 h-4" />
+            {t('admin.settings.site.search_engine.add_custom')}
+          </button>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="space-y-2 p-3 rounded-lg"
+            style={{ background: 'var(--color-bg-secondary)', border: '1px solid var(--color-glass-border)' }}
+          >
+            <input
+              type="text"
+              value={newEngine.name}
+              onChange={e => setNewEngine({ ...newEngine, name: e.target.value })}
+              placeholder={t('admin.settings.site.search_engine.name_placeholder')}
+              className="w-full px-3 py-1.5 text-sm rounded-lg outline-none"
+              style={{
+                background: 'var(--color-bg-tertiary)',
+                color: 'var(--color-text-primary)',
+                border: '1px solid var(--color-glass-border)',
+              }}
+            />
+            <input
+              type="text"
+              value={newEngine.url}
+              onChange={e => setNewEngine({ ...newEngine, url: e.target.value })}
+              placeholder={t('admin.settings.site.search_engine.url_placeholder')}
+              className="w-full px-3 py-1.5 text-sm rounded-lg outline-none"
+              style={{
+                background: 'var(--color-bg-tertiary)',
+                color: 'var(--color-text-primary)',
+                border: '1px solid var(--color-glass-border)',
+              }}
+            />
+            <input
+              type="text"
+              value={newEngine.shortcut}
+              onChange={e => setNewEngine({ ...newEngine, shortcut: e.target.value })}
+              placeholder={t('admin.settings.site.search_engine.shortcut_placeholder')}
+              className="w-full px-3 py-1.5 text-sm rounded-lg outline-none"
+              style={{
+                background: 'var(--color-bg-tertiary)',
+                color: 'var(--color-text-primary)',
+                border: '1px solid var(--color-glass-border)',
+              }}
+            />
+            {addError && (
+              <p className="text-xs text-red-400">{addError}</p>
+            )}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={handleAddEngine}
+                className="flex-1 px-3 py-1.5 text-sm rounded-lg font-medium transition-colors"
+                style={{ background: 'rgba(6, 182, 212, 0.2)', color: 'rgb(34, 211, 238)', border: '1px solid rgba(6, 182, 212, 0.3)' }}
+              >
+                {t('admin.settings.site.search_engine.confirm_add')}
+              </button>
+              <button
+                type="button"
+                onClick={() => { setShowAddForm(false); setNewEngine({ name: '', url: '', shortcut: '' }); setAddError('') }}
+                className="px-3 py-1.5 text-sm rounded-lg transition-colors hover:bg-white/5"
+                style={{ color: 'var(--color-text-muted)', border: '1px solid var(--color-glass-border)' }}
+              >
+                {t('common.cancel')}
+              </button>
+            </div>
+            <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+              {t('admin.settings.site.search_engine.url_hint')}
+            </p>
+          </motion.div>
+        )}
+      </div>
+    </div>
   )
 }

@@ -141,6 +141,7 @@ function App() {
     widgetSizeMode,
     accessMode,
     defaultBookmarkVisibility,
+    searchEngine,
   } = useSiteSettings();
 
   // 认证状态
@@ -804,6 +805,7 @@ function App() {
         onClose={() => setIsSpotlightOpen(false)}
         bookmarks={bookmarks}
         onAddBookmark={handleAddFromSpotlight}
+        searchEngineSettings={searchEngine}
       />
 
       {isLoggedIn && widgetVisibility.aiAssistant !== false && (
