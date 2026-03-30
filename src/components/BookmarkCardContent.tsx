@@ -67,6 +67,15 @@ export function BookmarkCardContent({
               src={bookmark.iconUrl}
               alt=""
               className={cn(isLarge ? "w-7 h-7" : "w-6 h-6", "object-contain")}
+              onError={(e) => {
+                const img = e.target as HTMLImageElement;
+                if (bookmark.favicon) {
+                  img.src = bookmark.favicon;
+                  img.onerror = () => { img.style.display = 'none'; };
+                } else {
+                  img.style.display = 'none';
+                }
+              }}
             />
           ) : bookmark.icon ? (
             <IconRenderer
@@ -79,6 +88,9 @@ export function BookmarkCardContent({
               src={bookmark.favicon}
               alt=""
               className={isLarge ? "w-7 h-7" : "w-6 h-6"}
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = 'none';
+              }}
             />
           ) : (
             <ExternalLink

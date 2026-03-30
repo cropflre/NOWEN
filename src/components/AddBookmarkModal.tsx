@@ -306,6 +306,9 @@ export function AddBookmarkModal({
       return
     }
 
+    // 如果用户在 URL tab 中输入了图片 URL 但未点击"使用此图片"，自动同步
+    const finalIconUrl = (iconTab === 'url' && iconUrlInput && !iconUrl) ? iconUrlInput : iconUrl
+
     await onAdd({
       url,
       internalUrl: internalUrl || undefined,
@@ -313,7 +316,7 @@ export function AddBookmarkModal({
       description: description || undefined,
       favicon: favicon || undefined,
       icon: icon || undefined,
-      iconUrl: iconUrl || undefined,
+      iconUrl: finalIconUrl || undefined,
       category: category || undefined,
       tags: tags.length > 0 ? tags : undefined,
       isReadLater,

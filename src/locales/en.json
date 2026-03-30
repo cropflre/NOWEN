@@ -520,7 +520,11 @@
         "mobile_ticker_desc": "Status indicator above mobile Dock",
         "ai_assistant": "AI Assistant",
         "ai_assistant_desc": "AI assistant entry in Dock & shortcut (⌘J)",
-        "hint": "💡 Tip: Hiding widgets can reduce homepage data requests and improve loading speed. Save to apply changes.",
+        "access_public_label": "Public",
+        "access_private_label": "Private",
+        "access_public_tip": "Currently public, visible to everyone. Click to switch to private",
+        "access_private_tip": "Currently private, visible to logged-in users only. Click to switch to public",
+        "hint": "💡 Tip: Hiding widgets can reduce homepage data requests and improve loading speed. Widgets set to 'Private' are only visible to logged-in users. Save to apply changes.",
         "save": "Save Settings",
         "saving": "Saving...",
         "saved": "Settings saved successfully"

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Search, Command, ArrowRight, Globe, Github, Plus, ChevronDown } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { Bookmark } from '../../types/bookmark'
+import { IconRenderer } from '../IconRenderer'
 import type { SearchEngineConfig, SearchEngineSettings } from '../../lib/api'
 
 // 搜索引擎配置（纯数据，不含 icon）
@@ -167,6 +168,14 @@ export function SpotlightSearch({
         type: 'bookmark',
         title: b.title,
         subtitle: new URL(b.url).hostname,
+        icon: b.iconUrl ? (
+          <img src={b.iconUrl} alt="" className="w-5 h-5 rounded object-contain" onError={(e) => {
+            const img = e.target as HTMLImageElement;
+            if (b.favicon) { img.src = b.favicon; img.onerror = () => { img.style.display = 'none'; }; } else { img.style.display = 'none'; }
+          }} />
+        ) : b.icon ? (
+          <IconRenderer icon={b.icon} className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />
+        ) : undefined,
         favicon: b.favicon,
         action: () => {
           window.open(b.url, '_blank')
@@ -220,6 +229,14 @@ export function SpotlightSearch({
         type: 'bookmark',
         title: b.title,
         subtitle: new URL(b.url).hostname,
+        icon: b.iconUrl ? (
+          <img src={b.iconUrl} alt="" className="w-5 h-5 rounded object-contain" onError={(e) => {
+            const img = e.target as HTMLImageElement;
+            if (b.favicon) { img.src = b.favicon; img.onerror = () => { img.style.display = 'none'; }; } else { img.style.display = 'none'; }
+          }} />
+        ) : b.icon ? (
+          <IconRenderer icon={b.icon} className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />
+        ) : undefined,
         favicon: b.favicon,
         action: () => {
           window.open(b.url, '_blank')

@@ -43,11 +43,21 @@ export function BookmarkDragOverlay({ activeBookmark, cardViewMode = 'standard' 
                 style={{ background: 'var(--color-bg-tertiary)' }}
               >
                 {activeBookmark.iconUrl ? (
-                  <img src={activeBookmark.iconUrl} alt="" className={`${isCompact ? 'w-4 h-4' : 'w-5 h-5'} object-contain`} />
+                  <img src={activeBookmark.iconUrl} alt="" className={`${isCompact ? 'w-4 h-4' : 'w-5 h-5'} object-contain`} onError={(e) => {
+                    const img = e.target as HTMLImageElement;
+                    if (activeBookmark.favicon) {
+                      img.src = activeBookmark.favicon;
+                      img.onerror = () => { img.style.display = 'none'; };
+                    } else {
+                      img.style.display = 'none';
+                    }
+                  }} />
                 ) : activeBookmark.icon ? (
                   <IconRenderer icon={activeBookmark.icon} className={isCompact ? 'w-4 h-4' : 'w-5 h-5'} style={{ color: 'var(--color-primary)' }} />
                 ) : activeBookmark.favicon ? (
-                  <img src={activeBookmark.favicon} alt="" className={isCompact ? 'w-4 h-4' : 'w-5 h-5'} />
+                  <img src={activeBookmark.favicon} alt="" className={isCompact ? 'w-4 h-4' : 'w-5 h-5'} onError={(e) => {
+                    (e.target as HTMLImageElement).style.display = 'none';
+                  }} />
                 ) : (
                   <ExternalLink className={isCompact ? 'w-4 h-4' : 'w-5 h-5'} style={{ color: 'var(--color-text-muted)' }} />
                 )}

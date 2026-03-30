@@ -236,8 +236,25 @@ function App() {
     i18n.changeLanguage(nextLang);
   }, [i18n]);
 
+  // 根据每个组件的访问模式和登录状态计算有效的仪表可见性
+  const effectiveWidgetVisibility = useMemo(() => {
+    if (isLoggedIn) return widgetVisibility
+    // 未登录时，将设置为 private 的组件隐藏
+    return {
+      ...widgetVisibility,
+      systemMonitor: widgetVisibility.systemMonitorAccess === 'private' ? false : widgetVisibility.systemMonitor,
+      hardwareIdentity: widgetVisibility.hardwareIdentityAccess === 'private' ? false : widgetVisibility.hardwareIdentity,
+      vitalSigns: widgetVisibility.vitalSignsAccess === 'private' ? false : widgetVisibility.vitalSigns,
+      networkTelemetry: widgetVisibility.networkTelemetryAccess === 'private' ? false : widgetVisibility.networkTelemetry,
+      processMatrix: widgetVisibility.processMatrixAccess === 'private' ? false : widgetVisibility.processMatrix,
+      dockMiniMonitor: widgetVisibility.dockMiniMonitorAccess === 'private' ? false : widgetVisibility.dockMiniMonitor,
+      mobileTicker: widgetVisibility.mobileTickerAccess === 'private' ? false : widgetVisibility.mobileTicker,
+      aiAssistant: widgetVisibility.aiAssistantAccess === 'private' ? false : widgetVisibility.aiAssistant,
+    }
+  }, [widgetVisibility, isLoggedIn])
+
   const dockItems = createDockItems(isDark, toggleDarkMode, t, toggleLanguage);
-  const filteredDockItems = filterDockItems(dockItems, menuVisibility, widgetVisibility, isLoggedIn);
+  const filteredDockItems = filterDockItems(dockItems, menuVisibility, effectiveWidgetVisibility, isLoggedIn);
 
   // ========== 全局快捷键 ==========
   useEffect(() => {
@@ -252,7 +269,7 @@ function App() {
       }
       if ((e.metaKey || e.ctrlKey) && e.key === "j") {
         e.preventDefault();
-        if (isLoggedIn && widgetVisibility.aiAssistant !== false) {
+        if (isLoggedIn && effectiveWidgetVisibility.aiAssistant !== false) {
           setIsAiAssistantOpen(prev => !prev);
         }
       }
@@ -272,7 +289,7 @@ function App() {
         setIsSpotlightOpen(true);
         break;
       case "ai":
-        if (isLoggedIn && widgetVisibility.aiAssistant !== false) {
+        if (isLoggedIn && effectiveWidgetVisibility.aiAssistant !== false) {
           setIsAiAssistantOpen(true);
         }
         break;
@@ -646,7 +663,7 @@ function App() {
                   {pinnedBookmarks.length}
                 </span>
                 {/* Widget 尺寸 S/M/L 切换 */}
-                {(widgetVisibility.systemMonitor !== false || widgetVisibility.hardwareIdentity !== false || widgetVisibility.vitalSigns !== false || widgetVisibility.networkTelemetry !== false || widgetVisibility.processMatrix !== false) && (
+                {(effectiveWidgetVisibility.systemMonitor !== false || effectiveWidgetVisibility.hardwareIdentity !== false || effectiveWidgetVisibility.vitalSigns !== false || effectiveWidgetVisibility.networkTelemetry !== false || effectiveWidgetVisibility.processMatrix !== false) && (
                   <div className="ml-auto">
                     <WidgetSizeModeToggle widgetSizeMode={widgetSizeMode} onChange={handleWidgetSizeModeChange} />
                   </div>
@@ -655,27 +672,27 @@ function App() {
 
               <BentoGrid>
                 {/* System Monitor Cards */}
-                {widgetVisibility.systemMonitor !== false && (
+                {effectiveWidgetVisibility.systemMonitor !== false && (
                   <BentoGridItem key="system-monitor" colSpan={2} rowSpan={widgetSizeMode === 'S' ? 1 : 2} spotlightColor={isLiteMode ? undefined : "rgba(6, 182, 212, 0.15)"} delay={0}>
                     <SystemMonitorCard forceCollapsed={widgetSizeMode === 'S' ? true : widgetSizeMode === 'L' ? false : undefined} />
                   </BentoGridItem>
                 )}
-                {widgetVisibility.hardwareIdentity !== false && (
+                {effectiveWidgetVisibility.hardwareIdentity !== false && (
                   <BentoGridItem key="hardware-specs" colSpan={2} rowSpan={widgetSizeMode === 'S' ? 1 : 2} spotlightColor={isLiteMode ? undefined : "rgba(6, 182, 212, 0.1)"} delay={0.1}>
                     <HardwareIdentityCard forceCollapsed={widgetSizeMode === 'S' ? true : widgetSizeMode === 'L' ? false : undefined} />
                   </BentoGridItem>
                 )}
-                {widgetVisibility.vitalSigns !== false && (
+                {effectiveWidgetVisibility.vitalSigns !== false && (
                   <BentoGridItem key="vital-signs" colSpan={2} rowSpan={widgetSizeMode === 'S' ? 1 : 2} spotlightColor={isLiteMode ? undefined : "rgba(6, 182, 212, 0.12)"} delay={0.15}>
                     <VitalSignsCard forceCollapsed={widgetSizeMode === 'S' ? true : widgetSizeMode === 'L' ? false : undefined} />
                   </BentoGridItem>
                 )}
-                {widgetVisibility.networkTelemetry !== false && (
+                {effectiveWidgetVisibility.networkTelemetry !== false && (
                   <BentoGridItem key="network-telemetry" colSpan={2} rowSpan={widgetSizeMode === 'S' ? 1 : 2} spotlightColor={isLiteMode ? undefined : "rgba(168, 85, 247, 0.12)"} delay={0.2}>
                     <NetworkTelemetryCard forceCollapsed={widgetSizeMode === 'S' ? true : widgetSizeMode === 'L' ? false : undefined} />
                   </BentoGridItem>
                 )}
-                {widgetVisibility.processMatrix !== false && (
+                {effectiveWidgetVisibility.processMatrix !== false && (
                   <BentoGridItem key="process-matrix" colSpan={2} rowSpan={widgetSizeMode === 'S' ? 1 : 2} spotlightColor={isLiteMode ? undefined : "rgba(34, 197, 94, 0.12)"} delay={0.25}>
                     <ProcessMatrixCard forceCollapsed={widgetSizeMode === 'S' ? true : widgetSizeMode === 'L' ? false : undefined} />
                   </BentoGridItem>
@@ -712,33 +729,33 @@ function App() {
             /* 独立显示系统监控卡片 */
             <motion.section className="mb-12" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }}>
               {/* Widget 尺寸 S/M/L 切换 */}
-              {(widgetVisibility.systemMonitor !== false || widgetVisibility.hardwareIdentity !== false || widgetVisibility.vitalSigns !== false || widgetVisibility.networkTelemetry !== false || widgetVisibility.processMatrix !== false) && (
+              {(effectiveWidgetVisibility.systemMonitor !== false || effectiveWidgetVisibility.hardwareIdentity !== false || effectiveWidgetVisibility.vitalSigns !== false || effectiveWidgetVisibility.networkTelemetry !== false || effectiveWidgetVisibility.processMatrix !== false) && (
                 <div className="flex items-center justify-end mb-4">
                   <WidgetSizeModeToggle widgetSizeMode={widgetSizeMode} onChange={handleWidgetSizeModeChange} />
                 </div>
               )}
               <BentoGrid>
-                {widgetVisibility.systemMonitor !== false && (
+                {effectiveWidgetVisibility.systemMonitor !== false && (
                   <BentoGridItem key="system-monitor-standalone" colSpan={2} rowSpan={widgetSizeMode === 'S' ? 1 : 2} spotlightColor={isLiteMode ? undefined : "rgba(6, 182, 212, 0.15)"} delay={0}>
                     <SystemMonitorCard forceCollapsed={widgetSizeMode === 'S' ? true : widgetSizeMode === 'L' ? false : undefined} />
                   </BentoGridItem>
                 )}
-                {widgetVisibility.hardwareIdentity !== false && (
+                {effectiveWidgetVisibility.hardwareIdentity !== false && (
                   <BentoGridItem key="hardware-specs-standalone" colSpan={2} rowSpan={widgetSizeMode === 'S' ? 1 : 2} spotlightColor={isLiteMode ? undefined : "rgba(6, 182, 212, 0.1)"} delay={0.1}>
                     <HardwareIdentityCard forceCollapsed={widgetSizeMode === 'S' ? true : widgetSizeMode === 'L' ? false : undefined} />
                   </BentoGridItem>
                 )}
-                {widgetVisibility.vitalSigns !== false && (
+                {effectiveWidgetVisibility.vitalSigns !== false && (
                   <BentoGridItem key="vital-signs-standalone" colSpan={2} rowSpan={widgetSizeMode === 'S' ? 1 : 2} spotlightColor={isLiteMode ? undefined : "rgba(6, 182, 212, 0.12)"} delay={0.15}>
                     <VitalSignsCard forceCollapsed={widgetSizeMode === 'S' ? true : widgetSizeMode === 'L' ? false : undefined} />
                   </BentoGridItem>
                 )}
-                {widgetVisibility.networkTelemetry !== false && (
+                {effectiveWidgetVisibility.networkTelemetry !== false && (
                   <BentoGridItem key="network-telemetry-standalone" colSpan={2} rowSpan={widgetSizeMode === 'S' ? 1 : 2} spotlightColor={isLiteMode ? undefined : "rgba(168, 85, 247, 0.12)"} delay={0.2}>
                     <NetworkTelemetryCard forceCollapsed={widgetSizeMode === 'S' ? true : widgetSizeMode === 'L' ? false : undefined} />
                   </BentoGridItem>
                 )}
-                {widgetVisibility.processMatrix !== false && (
+                {effectiveWidgetVisibility.processMatrix !== false && (
                   <BentoGridItem key="process-matrix-standalone" colSpan={2} rowSpan={widgetSizeMode === 'S' ? 1 : 2} spotlightColor={isLiteMode ? undefined : "rgba(34, 197, 94, 0.12)"} delay={0.25}>
                     <ProcessMatrixCard forceCollapsed={widgetSizeMode === 'S' ? true : widgetSizeMode === 'L' ? false : undefined} />
                   </BentoGridItem>
@@ -808,7 +825,7 @@ function App() {
         searchEngineSettings={searchEngine}
       />
 
-      {isLoggedIn && widgetVisibility.aiAssistant !== false && (
+      {isLoggedIn && effectiveWidgetVisibility.aiAssistant !== false && (
         <AiAssistant
           isOpen={isAiAssistantOpen}
           onClose={() => setIsAiAssistantOpen(false)}
@@ -896,7 +913,7 @@ function App() {
     </div>
 
     {/* 桌面端迷你监控 — 固定位置 */}
-    {widgetVisibility.dockMiniMonitor !== false && (
+    {effectiveWidgetVisibility.dockMiniMonitor !== false && (
       <div className="hidden md:flex fixed bottom-6 left-1/2 -translate-x-1/2 z-40">
         <SystemMonitor initialMode="mini" size="sm" showLoading={false} />
       </div>
@@ -915,7 +932,7 @@ function App() {
             isActive: item.id === "home",
           }))}
         leftSlot={
-          widgetVisibility.mobileTicker !== false
+          effectiveWidgetVisibility.mobileTicker !== false
             ? <SystemMonitor initialMode="inline" compact showLoading={false} />
             : undefined
         }
@@ -983,11 +1000,22 @@ const MemoizedBookmarkItem = React.memo(function MemoizedBookmarkItem({
           style={{ background: "var(--color-bg-tertiary)" }}
         >
           {bookmark.iconUrl ? (
-            <img src={bookmark.iconUrl} alt="" className={`${isCompact ? 'w-4 h-4' : 'w-5 h-5'} object-contain`} loading="lazy" />
+            <img src={bookmark.iconUrl} alt="" className={`${isCompact ? 'w-4 h-4' : 'w-5 h-5'} object-contain`} loading="lazy" onError={(e) => {
+              const img = e.target as HTMLImageElement;
+              // iconUrl 加载失败时，尝试回退到 favicon
+              if (bookmark.favicon) {
+                img.src = bookmark.favicon;
+                img.onerror = () => { img.style.display = 'none'; };
+              } else {
+                img.style.display = 'none';
+              }
+            }} />
           ) : bookmark.icon ? (
             <IconRenderer icon={bookmark.icon} className={isCompact ? 'w-4 h-4' : 'w-5 h-5'} style={{ color: "var(--color-primary)" }} />
           ) : bookmark.favicon ? (
-            <img src={bookmark.favicon} alt="" className={`${isCompact ? 'w-4 h-4' : 'w-5 h-5'}`} loading="lazy" />
+            <img src={bookmark.favicon} alt="" className={`${isCompact ? 'w-4 h-4' : 'w-5 h-5'}`} loading="lazy" onError={(e) => {
+              (e.target as HTMLImageElement).style.display = 'none';
+            }} />
           ) : (
             <ExternalLink className={isCompact ? 'w-4 h-4' : 'w-5 h-5'} style={{ color: "var(--color-text-muted)" }} />
           )}

@@ -520,7 +520,11 @@
         "mobile_ticker_desc": "移动端底部 Dock 上方的状态指示条",
         "ai_assistant": "AI 助手",
         "ai_assistant_desc": "Dock 栏 AI 助手入口及快捷键（⌘J）",
-        "hint": "💡 提示：隐藏仪表可以减少首页数据请求，提升加载速度。修改后需保存才能生效。",
+        "access_public_label": "公开",
+        "access_private_label": "私人",
+        "access_public_tip": "当前为公开模式，所有人可见。点击切换为私人模式",
+        "access_private_tip": "当前为私人模式，仅登录用户可见。点击切换为公开模式",
+        "hint": "💡 提示：隐藏仪表可以减少首页数据请求，提升加载速度。设为「私人」的组件仅登录用户可见。修改后需保存才能生效。",
         "save": "保存配置",
         "saving": "保存中...",
         "saved": "设置保存成功"

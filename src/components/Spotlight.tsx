@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { Bookmark } from '../types/bookmark'
 import { cn } from '../lib/utils'
+import { IconRenderer } from './IconRenderer'
 
 interface SpotlightProps {
   isOpen: boolean
@@ -63,7 +64,7 @@ export function Spotlight({
     const q = query.trim()
 
     if (!q) {
-      // 显示最近访问的书签
+    // 显示最近访问的书签
       const recentBookmarks = bookmarks.slice(0, 5)
       recentBookmarks.forEach(b => {
         results.push({
@@ -71,6 +72,14 @@ export function Spotlight({
           type: 'bookmark',
           title: b.title,
           subtitle: new URL(b.url).hostname,
+          icon: b.iconUrl ? (
+            <img src={b.iconUrl} alt="" className="w-5 h-5 rounded object-contain" onError={(e) => {
+              const img = e.target as HTMLImageElement;
+              if (b.favicon) { img.src = b.favicon; img.onerror = () => { img.style.display = 'none'; }; } else { img.style.display = 'none'; }
+            }} />
+          ) : b.icon ? (
+            <IconRenderer icon={b.icon} className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />
+          ) : undefined,
           favicon: b.favicon,
           action: () => {
             window.open(b.url, '_blank')
@@ -145,6 +154,14 @@ export function Spotlight({
         type: 'bookmark',
         title: b.title,
         subtitle: new URL(b.url).hostname,
+        icon: b.iconUrl ? (
+          <img src={b.iconUrl} alt="" className="w-5 h-5 rounded object-contain" onError={(e) => {
+            const img = e.target as HTMLImageElement;
+            if (b.favicon) { img.src = b.favicon; img.onerror = () => { img.style.display = 'none'; }; } else { img.style.display = 'none'; }
+          }} />
+        ) : b.icon ? (
+          <IconRenderer icon={b.icon} className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />
+        ) : undefined,
         favicon: b.favicon,
         action: () => {
           window.open(b.url, '_blank')

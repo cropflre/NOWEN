@@ -21,6 +21,14 @@ export const defaultSiteSettings: SiteSettings = {
     dockMiniMonitor: false,
     mobileTicker: false,
     aiAssistant: true,
+    systemMonitorAccess: 'public',
+    hardwareIdentityAccess: 'public',
+    vitalSignsAccess: 'public',
+    networkTelemetryAccess: 'public',
+    processMatrixAccess: 'public',
+    dockMiniMonitorAccess: 'public',
+    mobileTickerAccess: 'public',
+    aiAssistantAccess: 'public',
   },
   menuVisibility: {
     languageToggle: true,
@@ -50,6 +58,14 @@ const hiddenWidgetVisibility = {
   dockMiniMonitor: false,
   mobileTicker: false,
   aiAssistant: true,
+  systemMonitorAccess: 'public' as const,
+  hardwareIdentityAccess: 'public' as const,
+  vitalSignsAccess: 'public' as const,
+  networkTelemetryAccess: 'public' as const,
+  processMatrixAccess: 'public' as const,
+  dockMiniMonitorAccess: 'public' as const,
+  mobileTickerAccess: 'public' as const,
+  aiAssistantAccess: 'public' as const,
 };
 
 export function useSiteSettings() {

@@ -520,7 +520,11 @@
         "mobile_ticker_desc": "모바일 Dock 위의 상태 인디케이터",
         "ai_assistant": "AI 어시스턴트",
         "ai_assistant_desc": "Dock바의 AI 어시스턴트 입구 및 단축키 (⌘J)",
-        "hint": "💡 힌트: 위젯을 숨기면 데이터 요청이 줄어 로딩 속도가 향상됩니다. 저장 후 적용됩니다.",
+        "access_public_label": "공개",
+        "access_private_label": "비공개",
+        "access_public_tip": "현재 공개 모드입니다. 클릭하여 비공개로 전환",
+        "access_private_tip": "현재 비공개 모드입니다. 클릭하여 공개로 전환",
+        "hint": "💡 힌트: 위젯을 숨기면 데이터 요청이 줄어 로딩 속도가 향상됩니다. '비공개'로 설정된 위젯은 로그인한 사용자만 볼 수 있습니다. 저장 후 적용됩니다.",
         "save": "설정 저장",
         "saving": "저장 중...",
         "saved": "설정을 저장했습니다"

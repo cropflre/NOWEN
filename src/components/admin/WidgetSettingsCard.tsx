@@ -12,13 +12,22 @@ import {
   EyeOff,
   MonitorSmartphone,
   Monitor,
-  Sparkles
+  Sparkles,
+  Users,
+  Shield
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { WidgetVisibility } from '../../lib/api'
 
+// 仅包含布尔开关的组件 ID 类型
+type WidgetToggleId = 'systemMonitor' | 'hardwareIdentity' | 'vitalSigns' | 'networkTelemetry' | 'processMatrix' | 'dockMiniMonitor' | 'mobileTicker' | 'aiAssistant'
+
+// 访问模式 key 类型
+type WidgetAccessId = 'systemMonitorAccess' | 'hardwareIdentityAccess' | 'vitalSignsAccess' | 'networkTelemetryAccess' | 'processMatrixAccess' | 'dockMiniMonitorAccess' | 'mobileTickerAccess' | 'aiAssistantAccess'
+
 interface WidgetConfig {
-  id: keyof WidgetVisibility
+  id: WidgetToggleId
+  accessId: WidgetAccessId
   labelKey: string
   descKey: string
   icon: React.ComponentType<{ className?: string }>
@@ -29,6 +38,7 @@ interface WidgetConfig {
 const widgetConfigs: WidgetConfig[] = [
   {
     id: 'systemMonitor',
+    accessId: 'systemMonitorAccess',
     labelKey: 'admin.settings.widget.system_monitor',
     descKey: 'admin.settings.widget.system_monitor_desc',
     icon: Gauge,
@@ -37,6 +47,7 @@ const widgetConfigs: WidgetConfig[] = [
   },
   {
     id: 'hardwareIdentity',
+    accessId: 'hardwareIdentityAccess',
     labelKey: 'admin.settings.widget.hardware_identity',
     descKey: 'admin.settings.widget.hardware_identity_desc',
     icon: Cpu,
@@ -45,6 +56,7 @@ const widgetConfigs: WidgetConfig[] = [
   },
   {
     id: 'vitalSigns',
+    accessId: 'vitalSignsAccess',
     labelKey: 'admin.settings.widget.vital_signs',
     descKey: 'admin.settings.widget.vital_signs_desc',
     icon: Activity,
@@ -53,6 +65,7 @@ const widgetConfigs: WidgetConfig[] = [
   },
   {
     id: 'networkTelemetry',
+    accessId: 'networkTelemetryAccess',
     labelKey: 'admin.settings.widget.network_telemetry',
     descKey: 'admin.settings.widget.network_telemetry_desc',
     icon: Network,
@@ -61,6 +74,7 @@ const widgetConfigs: WidgetConfig[] = [
   },
   {
     id: 'processMatrix',
+    accessId: 'processMatrixAccess',
     labelKey: 'admin.settings.widget.process_matrix',
     descKey: 'admin.settings.widget.process_matrix_desc',
     icon: ListTree,
@@ -69,6 +83,7 @@ const widgetConfigs: WidgetConfig[] = [
   },
   {
     id: 'dockMiniMonitor',
+    accessId: 'dockMiniMonitorAccess',
     labelKey: 'admin.settings.widget.dock_mini',
     descKey: 'admin.settings.widget.dock_mini_desc',
     icon: CircleDot,
@@ -77,6 +92,7 @@ const widgetConfigs: WidgetConfig[] = [
   },
   {
     id: 'mobileTicker',
+    accessId: 'mobileTickerAccess',
     labelKey: 'admin.settings.widget.mobile_ticker',
     descKey: 'admin.settings.widget.mobile_ticker_desc',
     icon: BarChart3,
@@ -85,6 +101,7 @@ const widgetConfigs: WidgetConfig[] = [
   },
   {
     id: 'aiAssistant',
+    accessId: 'aiAssistantAccess',
     labelKey: 'admin.settings.widget.ai_assistant',
     descKey: 'admin.settings.widget.ai_assistant_desc',
     icon: Sparkles,
@@ -112,18 +129,27 @@ export function WidgetSettingsCard({
 }: WidgetSettingsCardProps) {
   const { t } = useTranslation()
   
-  const toggleWidget = (id: keyof WidgetVisibility) => {
+  const toggleWidget = (id: WidgetToggleId) => {
     onChange({
       ...visibility,
       [id]: !visibility[id],
     })
   }
 
+  const toggleAccess = (accessId: WidgetAccessId, e: React.MouseEvent) => {
+    e.stopPropagation()
+    const current = visibility[accessId]
+    onChange({
+      ...visibility,
+      [accessId]: current === 'private' ? 'public' : 'private',
+    })
+  }
+
   const dashboardWidgets = widgetConfigs.filter(w => w.category === 'dashboard')
   const dockWidgets = widgetConfigs.filter(w => w.category === 'dock')
 
-  // 计算显示数量
-  const visibleCount = Object.values(visibility).filter(Boolean).length
+  // 计算显示数量（只统计布尔开关字段）
+  const visibleCount = widgetConfigs.filter(w => visibility[w.id] !== false).length
   const totalCount = widgetConfigs.length
 
   return (
@@ -188,6 +214,7 @@ export function WidgetSettingsCard({
             {dashboardWidgets.map((widget) => {
               const Icon = widget.icon
               const isVisible = visibility[widget.id] !== false
+              const isPrivate = visibility[widget.accessId] === 'private'
               
               return (
                 <motion.div
@@ -235,6 +262,30 @@ export function WidgetSettingsCard({
                       {t(widget.descKey)}
                     </div>
                   </div>
+
+                  {/* 私人/公共切换按钮 */}
+                  <button
+                    type="button"
+                    onClick={(e) => toggleAccess(widget.accessId, e)}
+                    className={cn(
+                      'flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-all duration-300 flex-shrink-0',
+                      isPrivate
+                        ? 'ring-1 ring-amber-500/30'
+                        : 'ring-1 ring-cyan-500/30'
+                    )}
+                    style={{
+                      background: isPrivate
+                        ? 'rgba(245, 158, 11, 0.12)'
+                        : 'rgba(6, 182, 212, 0.12)',
+                      color: isPrivate
+                        ? 'rgb(251, 191, 36)'
+                        : 'rgb(34, 211, 238)',
+                    }}
+                    title={isPrivate ? t('admin.settings.widget.access_private_tip') : t('admin.settings.widget.access_public_tip')}
+                  >
+                    {isPrivate ? <Shield className="w-3 h-3" /> : <Users className="w-3 h-3" />}
+                    {isPrivate ? t('admin.settings.widget.access_private_label') : t('admin.settings.widget.access_public_label')}
+                  </button>
                   
                   {/* 开关按钮 */}
                   <div 
@@ -280,6 +331,7 @@ export function WidgetSettingsCard({
             {dockWidgets.map((widget) => {
               const Icon = widget.icon
               const isVisible = visibility[widget.id] !== false
+              const isPrivate = visibility[widget.accessId] === 'private'
               
               return (
                 <motion.div
@@ -327,6 +379,30 @@ export function WidgetSettingsCard({
                       {t(widget.descKey)}
                     </div>
                   </div>
+
+                  {/* 私人/公共切换按钮 */}
+                  <button
+                    type="button"
+                    onClick={(e) => toggleAccess(widget.accessId, e)}
+                    className={cn(
+                      'flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-all duration-300 flex-shrink-0',
+                      isPrivate
+                        ? 'ring-1 ring-amber-500/30'
+                        : 'ring-1 ring-cyan-500/30'
+                    )}
+                    style={{
+                      background: isPrivate
+                        ? 'rgba(245, 158, 11, 0.12)'
+                        : 'rgba(6, 182, 212, 0.12)',
+                      color: isPrivate
+                        ? 'rgb(251, 191, 36)'
+                        : 'rgb(34, 211, 238)',
+                    }}
+                    title={isPrivate ? t('admin.settings.widget.access_private_tip') : t('admin.settings.widget.access_public_tip')}
+                  >
+                    {isPrivate ? <Shield className="w-3 h-3" /> : <Users className="w-3 h-3" />}
+                    {isPrivate ? t('admin.settings.widget.access_private_label') : t('admin.settings.widget.access_public_label')}
+                  </button>
                   
                   {/* 状态图标 */}
                   <div className="flex-shrink-0">

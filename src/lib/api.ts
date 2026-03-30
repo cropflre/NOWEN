@@ -719,6 +719,15 @@ export interface WidgetVisibility {
   dockMiniMonitor?: boolean    // Dock 迷你监控
   mobileTicker?: boolean       // 移动端状态栏
   aiAssistant?: boolean        // AI 助手
+  // 每个组件的访问模式：public=所有人可见，private=仅登录用户可见
+  systemMonitorAccess?: 'public' | 'private'
+  hardwareIdentityAccess?: 'public' | 'private'
+  vitalSignsAccess?: 'public' | 'private'
+  networkTelemetryAccess?: 'public' | 'private'
+  processMatrixAccess?: 'public' | 'private'
+  dockMiniMonitorAccess?: 'public' | 'private'
+  mobileTickerAccess?: 'public' | 'private'
+  aiAssistantAccess?: 'public' | 'private'
 }
 
 // 菜单项可见性配置
@@ -786,6 +795,14 @@ function parseSettings(raw: Record<string, string>): SiteSettings {
     processMatrix: false,
     dockMiniMonitor: false,
     mobileTicker: false,
+    systemMonitorAccess: 'public',
+    hardwareIdentityAccess: 'public',
+    vitalSignsAccess: 'public',
+    networkTelemetryAccess: 'public',
+    processMatrixAccess: 'public',
+    dockMiniMonitorAccess: 'public',
+    mobileTickerAccess: 'public',
+    aiAssistantAccess: 'public',
   }
   
   if (raw.widgetVisibility) {
