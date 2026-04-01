@@ -135,6 +135,7 @@
     "search": "Search",
     "ai": "AI Assistant",
     "add": "Add",
+    "view": "View",
     "theme_light": "Switch to Light Mode",
     "theme_dark": "Switch to Dark Mode",
     "admin": "Admin",
@@ -438,6 +439,9 @@
         "lunar": "Lunar Calendar",
         "lunar_title": "Lunar Date",
         "lunar_desc": "Show lunar calendar, solar terms, and festivals",
+        "quick_notes": "Quick Notes",
+        "quick_notes_title": "Quick Notes Widget",
+        "quick_notes_desc": "Show quick notes area on homepage",
         "language_toggle": "Language Toggle",
         "language_toggle_title": "Language Switch Button",
         "language_toggle_desc": "Show language switch button in frontend menu bar (Chinese/English/Japanese/Korean)",
@@ -982,5 +986,20 @@
     "private_mode": "Private Mode · Login Required",
     "guest_label": "Guest",
     "logged_in_label": "Logged In"
+  },
+  "quickNotes": {
+    "title": "Quick Notes",
+    "placeholder": "Capture an idea, thought, or snippet...",
+    "add": "Save",
+    "shortcut": "Ctrl + Enter to save",
+    "edit": "Edit",
+    "delete": "Delete",
+    "confirmDelete": "Click again to confirm",
+    "autoSave": "Auto-saving...",
+    "empty": "No notes yet",
+    "justNow": "Just now",
+    "minutesAgo": "{{count}} min ago",
+    "hoursAgo": "{{count}} hr ago",
+    "daysAgo": "{{count}} days ago"
   }
 }

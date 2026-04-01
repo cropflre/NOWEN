@@ -135,6 +135,7 @@
     "search": "検索",
     "ai": "AIアシスタント",
     "add": "追加",
+    "view": "表示",
     "theme_light": "ライトモードに切替",
     "theme_dark": "ダークモードに切替",
     "admin": "管理",
@@ -438,6 +439,9 @@
         "lunar": "旧暦表示",
         "lunar_title": "旧暦日付",
         "lunar_desc": "日付の横に旧暦、節気、伝統行事を表示",
+        "quick_notes": "クイックノート",
+        "quick_notes_title": "クイックノートウィジェット",
+        "quick_notes_desc": "ホームページにメモエリアを表示",
         "language_toggle": "多言語切替",
         "language_toggle_title": "言語切替ボタン",
         "language_toggle_desc": "フロントメニューバーに言語切替ボタンを表示",
@@ -982,5 +986,20 @@
     "private_mode": "プライベートモード·ログインが必要",
     "guest_label": "ゲスト",
     "logged_in_label": "ログイン済み"
+  },
+  "quickNotes": {
+    "title": "クイックノート",
+    "placeholder": "アイデアやメモを記録...",
+    "add": "保存",
+    "shortcut": "Ctrl + Enter で保存",
+    "edit": "編集",
+    "delete": "削除",
+    "confirmDelete": "もう一度クリックで削除",
+    "autoSave": "自動保存中...",
+    "empty": "ノートはまだありません",
+    "justNow": "たった今",
+    "minutesAgo": "{{count}}分前",
+    "hoursAgo": "{{count}}時間前",
+    "daysAgo": "{{count}}日前"
   }
 }

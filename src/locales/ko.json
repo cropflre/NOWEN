@@ -135,6 +135,7 @@
     "search": "검색",
     "ai": "AI 어시스턴트",
     "add": "추가",
+    "view": "보기",
     "theme_light": "라이트 모드로 전환",
     "theme_dark": "다크 모드로 전환",
     "admin": "관리",
@@ -438,6 +439,9 @@
         "lunar": "음력 표시",
         "lunar_title": "음력 날짜",
         "lunar_desc": "날짜 옆에 음력, 절기, 전통 명절을 표시",
+        "quick_notes": "빠른 메모",
+        "quick_notes_title": "빠른 메모 위젯",
+        "quick_notes_desc": "홈페이지에 빠른 메모 영역 표시",
         "language_toggle": "다국어 전환",
         "language_toggle_title": "언어 전환 버튼",
         "language_toggle_desc": "프론트 메뉴바에 언어 전환 버튼 표시",
@@ -982,5 +986,20 @@
     "private_mode": "프라이벗 모드·로그인 필요",
     "guest_label": "방문자",
     "logged_in_label": "로그인됨"
+  },
+  "quickNotes": {
+    "title": "빠른 메모",
+    "placeholder": "아이디어나 메모를 기록하세요...",
+    "add": "저장",
+    "shortcut": "Ctrl + Enter로 저장",
+    "edit": "편집",
+    "delete": "삭제",
+    "confirmDelete": "다시 클릭하여 삭제 확인",
+    "autoSave": "자동 저장 중...",
+    "empty": "메모가 없습니다",
+    "justNow": "방금",
+    "minutesAgo": "{{count}}분 전",
+    "hoursAgo": "{{count}}시간 전",
+    "daysAgo": "{{count}}일 전"
   }
 }

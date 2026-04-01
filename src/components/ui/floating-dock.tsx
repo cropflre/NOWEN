@@ -15,6 +15,8 @@ interface DockItemType {
   icon: React.ReactNode;
   href?: string;
   onClick?: () => void;
+  subItems?: DockItemType[];
+  isActive?: boolean;
 }
 
 interface FloatingDockProps {
@@ -326,6 +328,8 @@ interface DockItemProps {
   icon: React.ReactNode;
   href?: string;
   onClick?: () => void;
+  subItems?: DockItemType[];
+  isActive?: boolean;
   mouseX: ReturnType<typeof useMotionValue<number>>;
   isDark: boolean;
   isDragging: boolean;
@@ -336,12 +340,15 @@ function DockItem({
   icon,
   href,
   onClick,
+  subItems,
   mouseX,
   isDark,
   isDragging,
 }: DockItemProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [isHovered, setIsHovered] = useState(false);
+  const [showSubmenu, setShowSubmenu] = useState(false);
+  const submenuTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const distance = useTransform(mouseX, (val) => {
     const bounds = ref.current?.getBoundingClientRect() ?? { x: 0, width: 0 };
@@ -364,6 +371,11 @@ function DockItem({
 
   const handleClick = () => {
     if (isDragging) return;
+    // 有子菜单时切换子菜单显示
+    if (subItems && subItems.length > 0) {
+      setShowSubmenu(prev => !prev);
+      return;
+    }
     if (onClick) {
       onClick();
     } else if (href) {
@@ -371,16 +383,45 @@ function DockItem({
     }
   };
 
+  const handleMouseEnterSubmenu = () => {
+    if (submenuTimeoutRef.current) {
+      clearTimeout(submenuTimeoutRef.current);
+      submenuTimeoutRef.current = null;
+    }
+  };
+
+  const handleMouseLeaveSubmenu = () => {
+    submenuTimeoutRef.current = setTimeout(() => {
+      setShowSubmenu(false);
+    }, 200);
+  };
+
   return (
     <motion.div
       ref={ref}
       style={{ width, height }}
       className="relative flex items-center justify-center"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={() => {
+        setIsHovered(true);
+        if (subItems && subItems.length > 0) {
+          if (submenuTimeoutRef.current) {
+            clearTimeout(submenuTimeoutRef.current);
+            submenuTimeoutRef.current = null;
+          }
+          setShowSubmenu(true);
+        }
+      }}
+      onMouseLeave={() => {
+        setIsHovered(false);
+        if (subItems && subItems.length > 0) {
+          submenuTimeoutRef.current = setTimeout(() => {
+            setShowSubmenu(false);
+          }, 200);
+        }
+      }}
     >
       <AnimatePresence>
-        {isHovered && !isDragging && (
+        {isHovered && !isDragging && !showSubmenu && (
           <motion.div
             className="absolute -top-12 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-lg whitespace-nowrap"
             style={{
@@ -399,6 +440,87 @@ function DockItem({
             >
               {title}
             </span>
+            <div
+              className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 rotate-45"
+              style={{
+                background: "var(--color-bg-secondary)",
+                borderRight: "1px solid var(--color-glass-border)",
+                borderBottom: "1px solid var(--color-glass-border)",
+              }}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 子菜单弹出层 */}
+      <AnimatePresence>
+        {showSubmenu && subItems && subItems.length > 0 && !isDragging && (
+          <motion.div
+            className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 p-2 rounded-xl z-50"
+            style={{
+              background: "var(--color-bg-secondary)",
+              backdropFilter: "blur(24px) saturate(180%)",
+              WebkitBackdropFilter: "blur(24px) saturate(180%)",
+              border: "1px solid var(--color-glass-border)",
+              boxShadow: isDark
+                ? "0 -8px 32px rgba(0,0,0,0.4)"
+                : "0 -8px 32px rgba(0,0,0,0.1)",
+            }}
+            initial={{ opacity: 0, y: 10, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.9 }}
+            transition={{ type: "spring", stiffness: 400, damping: 25 }}
+            onMouseEnter={handleMouseEnterSubmenu}
+            onMouseLeave={handleMouseLeaveSubmenu}
+          >
+            <div className="flex flex-col gap-1 min-w-[120px]">
+              {subItems.map((subItem) => (
+                <motion.button
+                  key={subItem.id}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    subItem.onClick?.();
+                  }}
+                  className={cn(
+                    "px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap",
+                    "flex items-center gap-2.5 transition-all duration-200",
+                    "cursor-pointer"
+                  )}
+                  style={{
+                    background: subItem.isActive
+                      ? isDark ? "rgba(34, 211, 238, 0.15)" : "rgba(59, 130, 246, 0.1)"
+                      : "transparent",
+                    color: subItem.isActive
+                      ? isDark ? "rgb(34, 211, 238)" : "rgb(59, 130, 246)"
+                      : "var(--color-text-secondary)",
+                  }}
+                  whileHover={{
+                    background: subItem.isActive
+                      ? isDark ? "rgba(34, 211, 238, 0.2)" : "rgba(59, 130, 246, 0.15)"
+                      : "var(--color-glass-hover)",
+                    scale: 1.02,
+                  }}
+                  whileTap={{ scale: 0.97 }}
+                >
+                  <span className="w-4 h-4 flex items-center justify-center">{subItem.icon}</span>
+                  <span>{subItem.title}</span>
+                  {subItem.isActive && (
+                    <motion.div
+                      className="ml-auto w-1.5 h-1.5 rounded-full"
+                      style={{
+                        background: isDark ? "rgb(34, 211, 238)" : "rgb(59, 130, 246)",
+                        boxShadow: isDark
+                          ? "0 0 6px rgba(34, 211, 238, 0.5)"
+                          : "0 0 6px rgba(59, 130, 246, 0.5)",
+                      }}
+                      layoutId="activeViewIndicator"
+                      transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                    />
+                  )}
+                </motion.button>
+              ))}
+            </div>
+            {/* 底部箭头 */}
             <div
               className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 rotate-45"
               style={{

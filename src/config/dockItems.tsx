@@ -8,6 +8,10 @@ import {
   LayoutDashboard,
   Github,
   Sparkles,
+  Grid3X3,
+  LayoutGrid,
+  StretchHorizontal,
+  Eye,
 } from "lucide-react";
 import { TFunction } from "i18next";
 
@@ -18,14 +22,41 @@ export interface DockItem {
   IconComponent: React.FC<{ className?: string }>;
   href?: string;
   onClick?: () => void;
+  subItems?: DockItem[];
+  isActive?: boolean;
 }
+
+// 视图模式配置
+const VIEW_MODES = [
+  { id: 'view-compact', key: 'compact' as const, icon: Grid3X3, titleKey: 'bookmark.view_compact' },
+  { id: 'view-standard', key: 'standard' as const, icon: LayoutGrid, titleKey: 'bookmark.view_standard' },
+  { id: 'view-comfortable', key: 'comfortable' as const, icon: StretchHorizontal, titleKey: 'bookmark.view_comfortable' },
+];
+
+// 创建视图子菜单
+const createViewSubmenu = (
+  t: TFunction,
+  onViewModeChange?: (mode: 'compact' | 'standard' | 'comfortable') => void,
+  currentViewMode?: 'compact' | 'standard' | 'comfortable'
+): DockItem[] => {
+  return VIEW_MODES.map((mode) => ({
+    id: mode.id,
+    title: t(mode.titleKey),
+    icon: <mode.icon className="w-4 h-4" />,
+    IconComponent: mode.icon,
+    onClick: () => onViewModeChange?.(mode.key),
+    isActive: currentViewMode === mode.key,
+  }));
+};
 
 // Dock 导航项生成函数
 export const createDockItems = (
   isDark: boolean,
   onToggleTheme: () => void,
   t: TFunction,
-  onToggleLanguage: () => void
+  onToggleLanguage: () => void,
+  onViewModeChange?: (mode: 'compact' | 'standard' | 'comfortable') => void,
+  currentViewMode?: 'compact' | 'standard' | 'comfortable'
 ): DockItem[] => [
   {
     id: "home",
@@ -50,6 +81,14 @@ export const createDockItems = (
     title: t("dock.add"),
     icon: <Plus className="w-5 h-5" />,
     IconComponent: Plus,
+  },
+  // 视图切换菜单
+  {
+    id: "view",
+    title: t("dock.view"),
+    icon: <Eye className="w-5 h-5" />,
+    IconComponent: Eye,
+    subItems: createViewSubmenu(t, onViewModeChange, currentViewMode),
   },
   {
     id: "language",

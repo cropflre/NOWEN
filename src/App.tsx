@@ -49,6 +49,7 @@ import {
   ReadLaterSection,
   EmptyState,
   BookmarkDragOverlay,
+  QuickNotes,
 } from "./components/home";
 
 // 监控组件
@@ -142,6 +143,7 @@ function App() {
     accessMode,
     defaultBookmarkVisibility,
     searchEngine,
+    enableQuickNotes,
   } = useSiteSettings();
 
   // 认证状态
@@ -253,7 +255,7 @@ function App() {
     }
   }, [widgetVisibility, isLoggedIn])
 
-  const dockItems = createDockItems(isDark, toggleDarkMode, t, toggleLanguage);
+  const dockItems = createDockItems(isDark, toggleDarkMode, t, toggleLanguage, handleCardViewModeChange, cardViewMode);
   const filteredDockItems = filterDockItems(dockItems, menuVisibility, effectiveWidgetVisibility, isLoggedIn);
 
   // ========== 全局快捷键 ==========
@@ -641,6 +643,11 @@ function App() {
             onMarkRead={toggleRead}
             onRemove={toggleReadLater}
           />
+
+          {/* Quick Notes / 灵感速记 */}
+          {enableQuickNotes && (
+            <QuickNotes isLoggedIn={isLoggedIn} />
+          )}
 
           {/* Pinned Bookmarks - Bento Grid */}
           {pinnedBookmarks.length > 0 ? (
@@ -1321,12 +1328,7 @@ function CategorySection({
             <Edit2 className="w-4 h-4" />
           </button>
         )}
-        {/* 视图切换 - 仅首个分类显示 */}
-        {catIndex === 0 && onViewModeChange && (
-          <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
-            <ViewModeToggle cardViewMode={cardViewMode} onChange={onViewModeChange} />
-          </div>
-        )}
+        {/* 视图切换已迁移到菜单栏 */}
       </div>
 
       <SortableContext items={visibleBookmarks.map(b => b.id)} strategy={rectSortingStrategy}>

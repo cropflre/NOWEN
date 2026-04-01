@@ -8,3 +8,4 @@ export { ReadLaterHero } from './ReadLaterHero';
 export { ReadLaterSection } from './ReadLaterSection';
 export { EmptyState } from './EmptyState';
 export { BookmarkDragOverlay } from './BookmarkDragOverlay';
+export { QuickNotes } from './QuickNotes';

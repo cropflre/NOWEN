@@ -2,7 +2,7 @@
 
 > A minimalist personal navigation hub combining bookmark management and system monitoring, featuring deep space aesthetics and glassmorphism design, supporting day/night dual modes with complete real-time hardware monitoring capabilities
 
-![Version](https://img.shields.io/badge/version-0.2.1-blue)
+![Version](https://img.shields.io/badge/version-0.2.2-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Node](https://img.shields.io/badge/node-%3E%3D20-brightgreen)
 ![React](https://img.shields.io/badge/React-18.3-61dafb)
@@ -166,15 +166,19 @@
 - **Link Health Check** (NEW): Batch check all bookmark links accessibility, dead link detection and cleanup
 - **Internal/External URL Switching** (NEW): Configure dual URLs per bookmark, auto-detect network environment for smart URL switching
 
-### 🤖 AI Features (NEW)
+### 🤖 AI Features (Enhanced v0.2.x)
 
-- **AI Smart Tags**: Auto-generate matching tags when adding bookmarks via AI analysis
+- **AI Smart Tags**: Automatically generate matching tags when adding bookmarks via AI analysis
   - Auto-triggers after URL analysis (no manual click needed)
   - Auto-fills tags + category + optimized description
   - AI settings panel and tag management panel
   - Auto-trigger toggle (can be disabled in AI settings)
   - Customizable timeout (60-120s recommended for local models)
-- **Batch AI Smart Classify**: Batch assign categories to selected bookmarks via AI
+- **Multiple AI Providers**: Support for OpenAI, Gemini, DeepSeek, Qwen, Doubao, and custom APIs
+  - Smart title optimization (removes SEO suffixes, preserves brand names)
+  - Intelligent description generation (concise and professional for bookmarks)
+  - Auto-recommends 3-5 accurate tags
+  - Multi-language output (follows system language automatically)- **Batch AI Smart Classify**: Batch assign categories to selected bookmarks via AI
   - Auto-create new categories if no match exists
   - Concurrent processing (2 workers), async with real-time progress
 - **Batch AI Metadata & Icons**: Batch optimize bookmark title, description, tags and icons via AI
@@ -259,19 +263,22 @@ Supports **8 carefully designed theme colors**, each with 20+ CSS variables:
 
 ### Frontend
 
-| Tech                        | Version | Purpose                 |
-| --------------------------- | ------- | ----------------------- |
-| **React**                   | 18.3.1  | UI Framework            |
-| **TypeScript**              | 5.6.2   | Type Safety             |
-| **Vite**                    | 6.0.3   | Build Tool              |
-| **Tailwind CSS**            | 3.4.16  | Atomic CSS              |
-| **Framer Motion**           | 11.15   | Animations              |
-| **@dnd-kit**                | 6.3     | Drag & Drop             |
-| **@tanstack/react-virtual** | 3.13    | Virtual Scroll          |
-| **Lucide Icons**            | 0.468   | Icon Library            |
-| **Zod**                     | 4.3     | Data Validation         |
-| **SWR**                     | 2.4     | Data Fetching & Caching |
-| **lunar-javascript**        | 1.7     | Lunar Calculation       |
+| Tech                        | Version | Purpose                         |
+| --------------------------- | ------- | ------------------------------- |
+| **React**                   | 18.3.1  | UI Framework                    |
+| **TypeScript**              | 5.6.2   | Type Safety                     |
+| **Vite**                    | 6.0.3   | Build Tool                      |
+| **Tailwind CSS**            | 3.4.16  | Atomic CSS                      |
+| **Framer Motion**           | 11.15   | Animations                      |
+| **@dnd-kit**                | 6.3     | Drag & Drop                     |
+| **@tanstack/react-virtual** | 3.13    | Virtual Scroll                  |
+| **Lucide Icons**            | 0.468   | Icon Library                    |
+| **@iconify/react**          | 6.0.2   | Iconify Icon Support            |
+| **Zod**                     | 4.3     | Data Validation                 |
+| **SWR**                     | 2.4     | Data Fetching & Caching         |
+| **i18next**                 | 25.8.3  | Internationalization (CN/EN/JP/KR) |
+| **lunar-javascript**        | 1.7     | Lunar Calendar Calculation      |
+| **react-spring**            | 10.0.3  | Physics Animation Engine        |
 
 ### Backend
 
@@ -514,24 +521,45 @@ services:
     image: cropflre/nowen:latest
     container_name: nowen
     restart: unless-stopped
+    stop_grace_period: 15s  # Grace period for data save on shutdown
     ports:
-      - "3000:3000"
+      - "3000:3000"        # Web UI port, can change to "8080:3000" etc.
     volumes:
-      # Data persistence (REQUIRED!) - prevents data loss on container update
-      - ./nowen-data:/app/server/data
-      # System monitoring mounts (optional)
-      - /:/host:ro
-      - /proc:/host/proc:ro
-      - /sys:/host/sys:ro
-      - /var/run/docker.sock:/var/run/docker.sock
+      # Data persistence (REQUIRED!) - Named Volume, auto-reused after update
+      - nowen-data:/app/server/data
+      # Backup layer - extra protection, auto-syncs every 5 minutes
+      - nowen-backup:/app/.data-backup
+      # System monitoring mounts (optional, remove if not needed)
+      - /:/host:ro                   # Host filesystem (read-only) for disk info
+      - /proc:/host/proc:ro          # Process info for CPU/Memory/Processes
+      - /sys:/host/sys:ro            # System info for temperature/hardware
+      - /var/run/docker.sock:/var/run/docker.sock  # Docker container monitoring
     environment:
       - NODE_ENV=production
       - SI_FILESYSTEM_DISK_PREFIX=/host
       - PROC_PATH=/host/proc
       - SYS_PATH=/host/sys
       - FS_PATH=/host
-    privileged: true  # Required for CPU temperature and hardware info
+    privileged: true  # Required for temperature and SMART disk info
+
+volumes:
+  nowen-data:
+    name: nowen-data
+  nowen-backup:
+    name: nowen-backup
 EOF
+
+```
+
+**Configuration Notes:**
+
+| Option | Required | Description |
+|--------|----------|-------------|
+| `volumes: nowen-data` | ✅ Required | Main data volume storing SQLite database |
+| `volumes: nowen-backup` | ⚡ Recommended | Backup layer for data protection, auto-syncs every 5 min |
+| System monitoring mounts | 🖥️ Optional | Configure if hardware monitoring is needed |
+| `privileged: true` | 🌡️ Optional | Enable for CPU temperature monitoring |
+| `stop_grace_period` | 📝 Recommended | Ensures graceful data save on container stop |
 
 # Start service
 docker-compose up -d
@@ -1012,7 +1040,21 @@ privileged: true
 
 ## ❓ FAQ
 
-### Installation Issues
+### 🔧 Installation & Deployment
+
+**Q: What are the hardware requirements?**
+
+A: NOWEN has low hardware requirements. Recommended configurations:
+
+| Device Type  | Recommended Config | Description |
+|--------------|-------------------|-------------|
+| x86 Server   | 2 cores/4GB+      | Full features, all effects and monitoring supported |
+| ARM64 (RK3588) | 8 cores/8GB+    | Full features, sufficient SBC performance |
+| ARM64 (RK3576) | 8 cores/4GB+    | Lite mode recommended, disable complex animations |
+| ARM64 (RK3566) | 4 cores/2GB+    | Lite mode required, can disable some monitor cards |
+| Raspberry Pi 4B | 4 cores/4GB+   | Runs smoothly in lite mode |
+
+> 💡 **Performance Tip**: Admin → Site Settings → Lite Mode can reduce CPU/GPU usage by 60%+
 
 **Q: Docker build fails?**
 

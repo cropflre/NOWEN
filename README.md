@@ -168,9 +168,14 @@
 - **链接健康检查** (NEW)：一键批量检测所有书签链接可访问性，支持死链识别与清理
 - **内外网链接切换** (NEW)：书签支持配置内网/外网双链接，自动检测网络环境智能切换访问地址
 
-### 🤖 AI 功能 (NEW)
+### 🤖 AI 功能 (增强版 v0.2.x)
 
 - **AI 智能标签**：添加书签时自动调用 AI 生成匹配标签
+  - 支持多种 AI 服务商：OpenAI、Gemini、DeepSeek、通义千问、豆包及自定义 API
+  - 自动标题优化（去除 SEO 后缀、保留品牌名）
+  - 智能描述生成（简洁专业，符合书签场景）
+  - 自动推荐 3-5 个精准标签
+  - 支持多语言输出（跟随系统语言自动切换）
   - URL 分析完成后自动触发 AI 魔法（无需手动点击）
   - 自动填充标签 + 分类 + 优化描述
   - AI 设置面板、标签管理面板
@@ -263,19 +268,22 @@
 
 ### 前端
 
-| 技术                        | 版本   | 用途           |
-| --------------------------- | ------ | -------------- |
-| **React**                   | 18.3.1 | UI 框架        |
-| **TypeScript**              | 5.6.2  | 类型安全       |
-| **Vite**                    | 6.0.3  | 构建工具       |
-| **Tailwind CSS**            | 3.4.16 | 原子化 CSS     |
-| **Framer Motion**           | 11.15  | 动画效果       |
-| **@dnd-kit**                | 6.3    | 拖拽排序       |
-| **@tanstack/react-virtual** | 3.13   | 虚拟滚动       |
-| **Lucide Icons**            | 0.468  | 图标库         |
-| **Zod**                     | 4.3    | 数据验证       |
-| **SWR**                     | 2.4    | 数据请求与缓存 |
-| **lunar-javascript**        | 1.7    | 农历计算       |
+| 技术                        | 版本    | 用途                      |
+| --------------------------- | ------- | ------------------------- |
+| **React**                   | 18.3.1  | UI 框架                   |
+| **TypeScript**              | 5.6.2   | 类型安全                  |
+| **Vite**                    | 6.0.3   | 构建工具                  |
+| **Tailwind CSS**            | 3.4.16  | 原子化 CSS                |
+| **Framer Motion**           | 11.15   | 动画效果                  |
+| **@dnd-kit**                | 6.3     | 拖拽排序                  |
+| **@tanstack/react-virtual** | 3.13    | 虚拟滚动                  |
+| **Lucide Icons**            | 0.468   | 图标库                    |
+| **@iconify/react**          | 6.0.2   | Iconify 图标支持          |
+| **Zod**                     | 4.3     | 数据验证                  |
+| **SWR**                     | 2.4     | 数据请求与缓存            |
+| **i18next**                 | 25.8.3  | 国际化（中/英/日/韩）     |
+| **lunar-javascript**        | 1.7     | 农历计算                  |
+| **react-spring**            | 10.0.3  | 物理动画引擎              |
 
 ### 后端
 
@@ -559,38 +567,61 @@ docker pull cropflre/nowen:latest
 
 # 创建 docker-compose.yml 文件
 cat > docker-compose.yml << 'EOF'
+```yaml
 services:
   nowen:
     image: cropflre/nowen:latest
     container_name: nowen
     restart: unless-stopped
-    stop_grace_period: 15s
+    stop_grace_period: 15s  # 优雅关闭等待时间，确保数据保存
     ports:
-      - "3000:3000"
+      - "3000:3000"        # 访问端口，可修改为其他端口如 "8080:3000"
     volumes:
       # 🔑 数据持久化 — Named Volume，容器重建/更新后自动复用
+      # 数据库文件存储在 /app/server/data/zen-garden.db
       - nowen-data:/app/server/data
-      # 🔑 安全备份卷 — 额外数据保护层
+      # 🔑 安全备份卷 — 额外数据保护层，每5分钟自动同步
       - nowen-backup:/app/.data-backup
-      # 系统监控相关挂载（可选）
-      - /:/host:ro
-      - /proc:/host/proc:ro
-      - /sys:/host/sys:ro
-      - /var/run/docker.sock:/var/run/docker.sock
+      # 🖥️ 系统监控相关挂载（可选，不启用监控可移除）
+      - /:/host:ro                   # 宿主机根目录（只读），用于读取文件系统信息
+      - /proc:/host/proc:ro          # 进程信息，CPU/内存/进程数据
+      - /sys:/host/sys:ro            # 系统信息，温度/硬件监控
+      - /var/run/docker.sock:/var/run/docker.sock  # Docker 容器监控
     environment:
-      - NODE_ENV=production
-      - SI_FILESYSTEM_DISK_PREFIX=/host
-      - PROC_PATH=/host/proc
-      - SYS_PATH=/host/sys
-      - FS_PATH=/host
-    privileged: true  # 允许读取 CPU 温度等硬件信息
+      - NODE_ENV=production                    # 生产环境
+      - SI_FILESYSTEM_DISK_PREFIX=/host        # systeminformation 文件系统前缀
+      - PROC_PATH=/host/proc                   # proc 文件系统路径
+      - SYS_PATH=/host/sys                     # sys 文件系统路径
+      - FS_PATH=/host                          # 文件系统根路径
+      # - PORT=3001                            # 后端内部端口（一般无需修改）
+    privileged: true  # 特权模式：允许读取 CPU 温度、SMART 磁盘信息等硬件数据
+    # 资源限制（可选）
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: '2.0'
+    #       memory: 2G
+    #     reservations:
+    #       cpus: '0.5'
+    #       memory: 512M
 
+# Docker 卷定义
 volumes:
   nowen-data:
-    name: nowen-data
+    name: nowen-data      # 主数据卷，存储 SQLite 数据库
   nowen-backup:
-    name: nowen-backup
-EOF
+    name: nowen-backup    # 备份数据卷，周期性同步保护
+```
+
+**配置说明**：
+
+| 配置项 | 必要 | 说明 |
+|--------|------|------|
+| `volumes: nowen-data` | ✅ | 主数据卷，必须配置 |
+| `volumes: nowen-backup` | 推荐 | 备份层，建议保留 |
+| 系统监控挂载 | 可选 | 需要硬件监控时配置 |
+| `privileged: true` | 可选 | 需要温度监控时启用 |
+| `stop_grace_period` | 推荐 | 确保数据优雅保存 |EOF
 
 # 启动服务
 docker-compose up -d
@@ -1474,7 +1505,21 @@ CREATE TABLE admins (
 
 ## ❓ 常见问题
 
-### 安装相关
+### 🔧 安装与部署
+
+**Q: 项目运行对硬件有什么要求？**
+
+A: NOWEN 对硬件要求较低，推荐配置如下：
+
+| 设备类型 | 推荐配置 | 说明 |
+|---------|---------|------|
+| x86 服务器 | 2核/4GB+ | 全功能运行，支持所有特效和监控 |
+| ARM64 (RK3588) | 8核/8GB+ | 全功能运行，开发板性能充足 |
+| ARM64 (RK3576) | 8核/4GB+ | 建议开启精简模式，关闭复杂动画 |
+| ARM64 (RK3566) | 4核/2GB+ | 必须开启精简模式，可关闭部分监控卡片 |
+| 树莓派 4B | 4核/4GB+ | 精简模式运行流畅 |
+
+> 💡 **性能提示**：后台管理 → 站点设置 → 精简模式 可一键降低 CPU/GPU 占用 60%+
 
 **Q: Docker 构建失败？**
 

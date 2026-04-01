@@ -98,6 +98,16 @@ export const updateQuotesSchema = z.object({
   showQuotes: z.boolean().optional(),
 })
 
+// ========== 灵感速记相关 Schema ==========
+
+export const createNoteSchema = z.object({
+  content: z.string().min(1, '内容不能为空').max(5000, '内容不能超过5000字符'),
+})
+
+export const updateNoteSchema = z.object({
+  content: z.string().min(1, '内容不能为空').max(5000, '内容不能超过5000字符'),
+})
+
 // ========== 数据导入 Schema ==========
 
 export const importDataSchema = z.object({
@@ -245,4 +255,6 @@ export type ChangePasswordInput = z.infer<typeof changePasswordSchema>
 export type MetadataInput = z.infer<typeof metadataSchema>
 export type UpdateQuotesInput = z.infer<typeof updateQuotesSchema>
 export type ImportDataInput = z.infer<typeof importDataSchema>
+export type CreateNoteInput = z.infer<typeof createNoteSchema>
+export type UpdateNoteInput = z.infer<typeof updateNoteSchema>
 export type PaginationQuery = z.infer<typeof paginationQuerySchema>

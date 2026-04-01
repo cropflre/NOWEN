@@ -135,6 +135,7 @@
     "search": "搜索",
     "ai": "AI 助手",
     "add": "添加",
+    "view": "视图",
     "theme_light": "切换日间模式",
     "theme_dark": "切换夜间模式",
     "admin": "管理",
@@ -438,6 +439,9 @@
         "lunar": "农历显示",
         "lunar_title": "农历日期",
         "lunar_desc": "在日期旁显示农历、节气和传统节日",
+        "quick_notes": "灵感速记",
+        "quick_notes_title": "灵感速记工具",
+        "quick_notes_desc": "在首页显示快速灵感记录区域",
         "language_toggle": "多语言切换",
         "language_toggle_title": "语言切换按钮",
         "language_toggle_desc": "在前台菜单栏显示语言切换按钮（支持中/英/日/韩）",
@@ -982,5 +986,20 @@
     "private_mode": "私人模式·需要登录访问",
     "guest_label": "游客",
     "logged_in_label": "已登录"
+  },
+  "quickNotes": {
+    "title": "灵感速记",
+    "placeholder": "记录一个灵感、想法或碎片笔记...",
+    "add": "记录",
+    "shortcut": "Ctrl + Enter 快速保存",
+    "edit": "编辑",
+    "delete": "删除",
+    "confirmDelete": "再次点击确认删除",
+    "autoSave": "自动保存中...",
+    "empty": "还没有灵感记录",
+    "justNow": "刚刚",
+    "minutesAgo": "{{count}}分钟前",
+    "hoursAgo": "{{count}}小时前",
+    "daysAgo": "{{count}}天前"
   }
 }

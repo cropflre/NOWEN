@@ -782,6 +782,7 @@ export interface SiteSettings {
   accessMode?: 'public' | 'private'  // 访问模式：public=公开访问，private=私人模式（需登录）
   defaultBookmarkVisibility?: 'public' | 'private'  // 新书签默认可见性
   searchEngine?: SearchEngineSettings  // 搜索引擎设置
+  enableQuickNotes?: boolean           // 灵感速记开关
 }
 
 // 转换设置值类型（后端存储为字符串）
@@ -879,6 +880,8 @@ function parseSettings(raw: Record<string, string>): SiteSettings {
         return { defaultEngineId: 'google', customEngines: [] }
       }
     })() : { defaultEngineId: 'google', customEngines: [] },
+    // 灵感速记：默认开启
+    enableQuickNotes: raw.enableQuickNotes === undefined ? true : raw.enableQuickNotes === 'true' || raw.enableQuickNotes === '1',
   }
 }
 
@@ -910,6 +913,7 @@ export async function updateSettings(settings: SiteSettings): Promise<SiteSettin
     accessMode: settings.accessMode || 'public',
     defaultBookmarkVisibility: settings.defaultBookmarkVisibility || 'public',
     searchEngine: settings.searchEngine ? JSON.stringify(settings.searchEngine) : undefined,
+    enableQuickNotes: settings.enableQuickNotes === false ? 'false' : 'true',
   }
   const raw = await request<Record<string, string>>('/api/settings', {
     method: 'PATCH',
@@ -955,6 +959,49 @@ export const adminApi = {
 export const settingsApi = {
   get: fetchSettings,
   update: updateSettings,
+}
+
+// ========== 灵感速记 API ==========
+
+export interface QuickNote {
+  id: string
+  content: string
+  createdAt: string
+  updatedAt: string
+}
+
+export async function fetchNotes(): Promise<QuickNote[]> {
+  return request<QuickNote[]>('/api/notes')
+}
+
+export async function createNote(content: string): Promise<QuickNote> {
+  return request<QuickNote>('/api/notes', {
+    method: 'POST',
+    body: JSON.stringify({ content }),
+    requireAuth: true,
+  })
+}
+
+export async function updateNote(id: string, content: string): Promise<QuickNote> {
+  return request<QuickNote>(`/api/notes/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ content }),
+    requireAuth: true,
+  })
+}
+
+export async function deleteNote(id: string): Promise<SuccessResponse> {
+  return request<SuccessResponse>(`/api/notes/${id}`, {
+    method: 'DELETE',
+    requireAuth: true,
+  })
+}
+
+export const notesApi = {
+  list: fetchNotes,
+  create: createNote,
+  update: updateNote,
+  delete: deleteNote,
 }
 
 // ========== 数据导入导出 API ==========

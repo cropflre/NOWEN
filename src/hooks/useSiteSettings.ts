@@ -46,6 +46,7 @@ export const defaultSiteSettings: SiteSettings = {
   widgetSizeMode: 'M',
   accessMode: 'public',
   defaultBookmarkVisibility: 'public',
+  enableQuickNotes: true,
 };
 
 // 默认小部件可见性（加载前隐藏避免闪烁）
@@ -94,6 +95,9 @@ export function useSiteSettings() {
 
   // 新书签默认可见性
   const defaultBookmarkVisibility = siteSettings.defaultBookmarkVisibility ?? 'public';
+
+  // 灵感速记开关
+  const enableQuickNotes = siteSettings.enableQuickNotes ?? true;
 
   // 搜索引擎配置
   const searchEngine: SearchEngineSettings = siteSettings.searchEngine ?? { defaultEngineId: 'google', customEngines: [] };
@@ -164,5 +168,6 @@ export function useSiteSettings() {
     accessMode,
     defaultBookmarkVisibility,
     searchEngine,
+    enableQuickNotes,
   };
 }

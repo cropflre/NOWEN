@@ -361,6 +361,16 @@ export async function initDatabase() {
     // 字段已存在，忽略错误
   }
 
+  // 灵感速记表
+  db.run(`
+    CREATE TABLE IF NOT EXISTS quick_notes (
+      id TEXT PRIMARY KEY,
+      content TEXT NOT NULL,
+      createdAt TEXT DEFAULT CURRENT_TIMESTAMP,
+      updatedAt TEXT DEFAULT CURRENT_TIMESTAMP
+    )
+  `)
+
   // 清理过期的 Token
   db.run('DELETE FROM tokens WHERE expiresAt < ?', [Date.now()])
   
