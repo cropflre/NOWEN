@@ -100,7 +100,7 @@ async function geocodeCity(cityName: string): Promise<{ lat: number; lon: number
   }
 }
 
-export function useWeather(enabled: boolean = true, cityName: string = '', disableGeolocation: boolean = false) {
+export function useWeather(enabled: boolean = true, cityName: string = '', disableGeolocation: boolean = false, settingsReady: boolean = true) {
   const [weather, setWeather] = useState<WeatherData | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -201,7 +201,7 @@ export function useWeather(enabled: boolean = true, cityName: string = '', disab
   }, [])
 
   const refresh = useCallback(async () => {
-    if (!enabled) return
+    if (!enabled || !settingsReady) return
     
     // 如果有手动设置的城市，用城市名做地理编码
     if (cityName) {
@@ -237,11 +237,11 @@ export function useWeather(enabled: boolean = true, cityName: string = '', disab
       // 不支持定位，使用默认位置
       fetchWeather(39.9042, 116.4074)
     }
-  }, [enabled, cityName, disableGeolocation, fetchWeather])
+  }, [enabled, cityName, disableGeolocation, settingsReady, fetchWeather])
 
   useEffect(() => {
-    if (!enabled) {
-      setWeather(null)
+    if (!enabled || !settingsReady) {
+      if (!enabled) setWeather(null)
       return
     }
     
@@ -257,7 +257,7 @@ export function useWeather(enabled: boolean = true, cityName: string = '', disab
     const interval = setInterval(refresh, 30 * 60 * 1000)
     
     return () => clearInterval(interval)
-  }, [enabled, cityName, refresh])
+  }, [enabled, cityName, settingsReady, refresh])
 
   return {
     weather,

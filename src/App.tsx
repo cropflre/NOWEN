@@ -128,6 +128,7 @@ function App() {
   const {
     siteSettings,
     setSiteSettings,
+    settingsLoaded,
     isLiteMode,
     showWeather,
     showLunar,
@@ -198,7 +199,7 @@ function App() {
   } = useDragAndDrop({ bookmarks, reorderBookmarks, disabled: !isLoggedIn });
 
   // 天气数据
-  const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather(showWeather, weatherCity, disableGeolocation);
+const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather(showWeather, weatherCity, disableGeolocation, settingsLoaded);
 
   // 天气城市变更
   const handleWeatherCityChange = useCallback(async (city: string) => {

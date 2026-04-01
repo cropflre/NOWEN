@@ -335,7 +335,7 @@ export function AddBookmarkModal({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/50 command-backdrop"
+            className="fixed inset-0 z-[90] bg-black/50 command-backdrop"
             onClick={onClose}
           />
 
@@ -355,9 +355,9 @@ export function AddBookmarkModal({
               x: { duration: 0.4 }
             }}
             className={cn(
-              'fixed z-50',
+              'fixed z-[90]',
               'inset-0 m-auto',
-              'w-full max-w-lg h-fit',
+              'w-full max-w-lg h-fit max-h-[calc(100vh-2rem)] overflow-y-auto',
               'rounded-2xl glass shadow-2xl'
             )}
           >
