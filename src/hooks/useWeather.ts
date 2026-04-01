@@ -100,7 +100,7 @@ async function geocodeCity(cityName: string): Promise<{ lat: number; lon: number
   }
 }
 
-export function useWeather(enabled: boolean = true, cityName: string = '') {
+export function useWeather(enabled: boolean = true, cityName: string = '', disableGeolocation: boolean = false) {
   const [weather, setWeather] = useState<WeatherData | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -214,6 +214,12 @@ export function useWeather(enabled: boolean = true, cityName: string = '') {
       return
     }
     
+    // 如果强制禁用定位，直接使用默认位置（北京）
+    if (disableGeolocation) {
+      fetchWeather(39.9042, 116.4074)
+      return
+    }
+    
     // 否则使用浏览器定位
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
@@ -231,7 +237,7 @@ export function useWeather(enabled: boolean = true, cityName: string = '') {
       // 不支持定位，使用默认位置
       fetchWeather(39.9042, 116.4074)
     }
-  }, [enabled, cityName, fetchWeather])
+  }, [enabled, cityName, disableGeolocation, fetchWeather])
 
   useEffect(() => {
     if (!enabled) {

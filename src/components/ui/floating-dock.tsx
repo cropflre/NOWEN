@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useRef, useState, useEffect, useCallback, useMemo } from "react";
 import {
   motion,
   AnimatePresence,
@@ -8,6 +8,14 @@ import {
 } from "framer-motion";
 import { cn } from "../../lib/utils";
 import { Grip } from "lucide-react";
+
+// 移动端检测
+const isMobileDevice = () =>
+  typeof window !== "undefined" &&
+  (window.innerWidth < 768 ||
+    /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent
+    ));
 
 interface DockItemType {
   id: string;
@@ -71,6 +79,7 @@ export function FloatingDock({
   const [isDragging, setIsDragging] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(loadCollapsed);
   const dockRef = useRef<HTMLDivElement>(null);
+  const isMobile = useMemo(() => isMobileDevice(), []);
 
   // 拖拽位置状态
   const posRef = useRef(loadPos());
@@ -196,10 +205,10 @@ export function FloatingDock({
           /* ========== 收缩态：能量球 ========== */
           <motion.div
             key="orb"
-            initial={{ scale: 0.3, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.3, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 400, damping: 25 }}
+            initial={isMobile ? { opacity: 0 } : { scale: 0.3, opacity: 0 }}
+            animate={isMobile ? { opacity: 1 } : { scale: 1, opacity: 1 }}
+            exit={isMobile ? { opacity: 0 } : { scale: 0.3, opacity: 0 }}
+            transition={isMobile ? { duration: 0.15 } : { type: "spring", stiffness: 400, damping: 25 }}
             className={cn(
               "w-12 h-12 rounded-full flex items-center justify-center",
               "backdrop-blur-xl border cursor-pointer",
@@ -208,6 +217,7 @@ export function FloatingDock({
                 : "bg-white/90 border-slate-200/80 shadow-lg shadow-slate-200/50"
             )}
             style={{
+              willChange: "transform, opacity",
               boxShadow: isDark
                 ? "0 0 20px rgba(34, 211, 238, 0.15), 0 4px 20px rgba(0,0,0,0.4)"
                 : "0 0 20px rgba(59, 130, 246, 0.1), 0 4px 20px rgba(0,0,0,0.1)",
@@ -219,38 +229,41 @@ export function FloatingDock({
                 isDark ? "text-cyan-400/80" : "text-blue-500/70"
               )}
             />
-            {/* 呼吸光晕 */}
-            <motion.div
-              className="absolute inset-0 rounded-full pointer-events-none"
-              animate={{
-                boxShadow: isDark
-                  ? [
-                      "0 0 8px rgba(34, 211, 238, 0.2)",
-                      "0 0 16px rgba(34, 211, 238, 0.35)",
-                      "0 0 8px rgba(34, 211, 238, 0.2)",
-                    ]
-                  : [
-                      "0 0 8px rgba(59, 130, 246, 0.15)",
-                      "0 0 16px rgba(59, 130, 246, 0.25)",
-                      "0 0 8px rgba(59, 130, 246, 0.15)",
-                    ],
-              }}
-              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-            />
+            {/* 呼吸光晕 - 移动端禁用以提升性能 */}
+            {!isMobile && (
+              <motion.div
+                className="absolute inset-0 rounded-full pointer-events-none"
+                animate={{
+                  boxShadow: isDark
+                    ? [
+                        "0 0 8px rgba(34, 211, 238, 0.2)",
+                        "0 0 16px rgba(34, 211, 238, 0.35)",
+                        "0 0 8px rgba(34, 211, 238, 0.2)",
+                      ]
+                    : [
+                        "0 0 8px rgba(59, 130, 246, 0.15)",
+                        "0 0 16px rgba(59, 130, 246, 0.25)",
+                        "0 0 8px rgba(59, 130, 246, 0.15)",
+                      ],
+                }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              />
+            )}
           </motion.div>
         ) : (
           /* ========== 展开态：完整 Dock ========== */
           <motion.div
             key="dock"
-            initial={{ scale: 0.5, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.5, opacity: 0 }}
-            transition={{ type: "spring", stiffness: 350, damping: 25 }}
+            initial={isMobile ? { opacity: 0 } : { scale: 0.5, opacity: 0 }}
+            animate={isMobile ? { opacity: 1 } : { scale: 1, opacity: 1 }}
+            exit={isMobile ? { opacity: 0 } : { scale: 0.5, opacity: 0 }}
+            transition={isMobile ? { duration: 0.15 } : { type: "spring", stiffness: 350, damping: 25 }}
             className="flex items-end gap-2 px-4 py-3 rounded-2xl"
             style={{
               background: "var(--color-glass)",
               backdropFilter: "blur(24px) saturate(180%)",
               WebkitBackdropFilter: "blur(24px) saturate(180%)",
+              willChange: "transform, opacity",
               border: isDragging
                 ? `2px solid ${isDark ? "rgba(34, 211, 238, 0.5)" : "rgba(59, 130, 246, 0.5)"}`
                 : "1px solid var(--color-glass-border)",
@@ -297,6 +310,7 @@ export function FloatingDock({
                     mouseX={hoverMouseX}
                     isDark={isDark}
                     isDragging={isDragging}
+                    isMobile={isMobile}
                     {...item}
                   />
                 ))}
@@ -312,6 +326,7 @@ export function FloatingDock({
                 mouseX={hoverMouseX}
                 isDark={isDark}
                 isDragging={isDragging}
+                isMobile={isMobile}
                 {...item}
               />
             ))}
@@ -333,6 +348,7 @@ interface DockItemProps {
   mouseX: ReturnType<typeof useMotionValue<number>>;
   isDark: boolean;
   isDragging: boolean;
+  isMobile: boolean;
 }
 
 function DockItem({
@@ -344,6 +360,7 @@ function DockItem({
   mouseX,
   isDark,
   isDragging,
+  isMobile,
 }: DockItemProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [isHovered, setIsHovered] = useState(false);
@@ -355,19 +372,18 @@ function DockItem({
     return val - bounds.x - bounds.width / 2;
   });
 
-  const widthSync = useTransform(distance, [-150, 0, 150], [48, 72, 48]);
-  const heightSync = useTransform(distance, [-150, 0, 150], [48, 72, 48]);
+  // 移动端禁用鱼眼放大效果，固定 48px 尺寸以提升性能
+  const widthSync = useTransform(distance, [-150, 0, 150], isMobile ? [48, 48, 48] : [48, 72, 48]);
+  const heightSync = useTransform(distance, [-150, 0, 150], isMobile ? [48, 48, 48] : [48, 72, 48]);
 
-  const width = useSpring(widthSync, {
-    mass: 0.1,
-    stiffness: 200,
-    damping: 15,
-  });
-  const height = useSpring(heightSync, {
-    mass: 0.1,
-    stiffness: 200,
-    damping: 15,
-  });
+  const width = useSpring(widthSync, isMobile
+    ? { stiffness: 500, damping: 30 }
+    : { mass: 0.1, stiffness: 200, damping: 15 }
+  );
+  const height = useSpring(heightSync, isMobile
+    ? { stiffness: 500, damping: 30 }
+    : { mass: 0.1, stiffness: 200, damping: 15 }
+  );
 
   const handleClick = () => {
     if (isDragging) return;
@@ -547,19 +563,25 @@ function DockItem({
             ? "var(--color-primary)"
             : "var(--color-text-secondary)",
           transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+          willChange: "transform",
         }}
         whileTap={{ scale: 0.9 }}
       >
-        <motion.div
-          style={{
-            scale: useTransform(width, [48, 72], [1, 1.2]),
-          }}
-        >
-          {icon}
-        </motion.div>
+        {isMobile ? (
+          <div>{icon}</div>
+        ) : (
+          <motion.div
+            style={{
+              scale: useTransform(width, [48, 72], [1, 1.2]),
+            }}
+          >
+            {icon}
+          </motion.div>
+        )}
       </motion.button>
 
-      {isDark && (
+      {/* 移动端跳过装饰性光效动画以提升性能 */}
+      {!isMobile && isDark && (
         <motion.div
           className="absolute inset-0 rounded-xl pointer-events-none"
           style={{ boxShadow: `0 0 25px var(--color-glow)` }}
@@ -568,7 +590,7 @@ function DockItem({
         />
       )}
 
-      {!isDark && (
+      {!isMobile && !isDark && (
         <motion.div
           className="absolute inset-0 rounded-xl pointer-events-none"
           animate={{
@@ -579,7 +601,7 @@ function DockItem({
         />
       )}
 
-      {isDark && isHovered && (
+      {!isMobile && isDark && isHovered && (
         <motion.div
           className="absolute inset-0 rounded-xl pointer-events-none"
           style={{

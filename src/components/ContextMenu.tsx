@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Edit2, Trash2, Pin, BookMarked, ExternalLink, Copy, Globe, Lock } from 'lucide-react'
+import { Edit2, Trash2, Pin, BookMarked, ExternalLink, Copy, Globe, Lock, Download } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '../lib/utils'
 import { visitsApi } from '../lib/api'
@@ -129,9 +129,10 @@ export function ContextMenu({ isOpen, position, onClose, items }: ContextMenuPro
 }
 
 // 书签右键菜单的 Hook
-export function useBookmarkContextMenu() {
+export function useBookmarkContextMenu(options?: { enableIntranetDownload?: boolean }) {
   const { t } = useTranslation()
   const { isInternal } = useNetworkEnv()
+  const intranetDownloadEnabled = options?.enableIntranetDownload ?? true
   
   return {
     getMenuItems: (
@@ -158,6 +159,22 @@ export function useBookmarkContextMenu() {
           navigator.clipboard.writeText(getBookmarkUrl(bookmark, isInternal))
         },
       },
+      // 内网链接下载 - 仅在书签有内网链接且开关开启时显示
+      ...(intranetDownloadEnabled && bookmark.internalUrl ? [{
+        id: 'download_intranet',
+        label: t('bookmark.download_intranet'),
+        icon: <Download className="w-4 h-4" />,
+        onClick: () => {
+          const link = document.createElement('a')
+          link.href = bookmark.internalUrl!
+          link.download = ''
+          link.target = '_blank'
+          // 尝试触发下载
+          document.body.appendChild(link)
+          link.click()
+          document.body.removeChild(link)
+        },
+      }] : []),
       {
         id: 'pin',
         label: bookmark.isPinned ? t('bookmark.unpin') : t('bookmark.pin'),

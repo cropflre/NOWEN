@@ -47,6 +47,7 @@ export const defaultSiteSettings: SiteSettings = {
   accessMode: 'public',
   defaultBookmarkVisibility: 'public',
   enableQuickNotes: true,
+  enableIntranetDownload: true,
 };
 
 // 默认小部件可见性（加载前隐藏避免闪烁）
@@ -78,6 +79,7 @@ export function useSiteSettings() {
   const showWeather = siteSettings.enableWeather ?? true;
   const showLunar = siteSettings.enableLunar ?? true;
   const weatherCity = siteSettings.weatherCity || '';
+  const disableGeolocation = siteSettings.disableGeolocation ?? false;
   const enableAutoAi = siteSettings.enableAutoAi ?? true;
 
   // 分类折叠配置
@@ -98,6 +100,9 @@ export function useSiteSettings() {
 
   // 灵感速记开关
   const enableQuickNotes = siteSettings.enableQuickNotes ?? true;
+
+  // 内网下载开关
+  const enableIntranetDownload = siteSettings.enableIntranetDownload ?? true;
 
   // 搜索引擎配置
   const searchEngine: SearchEngineSettings = siteSettings.searchEngine ?? { defaultEngineId: 'google', customEngines: [] };
@@ -158,6 +163,7 @@ export function useSiteSettings() {
     showWeather,
     showLunar,
     weatherCity,
+    disableGeolocation,
     enableAutoAi,
     menuVisibility,
     widgetVisibility,
@@ -169,5 +175,6 @@ export function useSiteSettings() {
     defaultBookmarkVisibility,
     searchEngine,
     enableQuickNotes,
+    enableIntranetDownload,
   };
 }

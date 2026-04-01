@@ -770,6 +770,7 @@ export interface SiteSettings {
   enableLunar?: boolean    // 农历显示开关
   enableAutoAi?: boolean   // AI 自动触发开关（添加书签时自动调用 AI 分类/标签）
   weatherCity?: string     // 手动设置的天气城市名
+  disableGeolocation?: boolean  // 强制禁用定位获取
   footerText?: string      // 底部备案信息
   categoryCollapseThreshold?: number  // 分类书签折叠阈值（0=不折叠）
   categoryInitialShowCount?: number   // 折叠时默认显示数量
@@ -783,6 +784,7 @@ export interface SiteSettings {
   defaultBookmarkVisibility?: 'public' | 'private'  // 新书签默认可见性
   searchEngine?: SearchEngineSettings  // 搜索引擎设置
   enableQuickNotes?: boolean           // 灵感速记开关
+  enableIntranetDownload?: boolean     // 内网下载开关（右键菜单中的内网链接下载）
 }
 
 // 转换设置值类型（后端存储为字符串）
@@ -861,6 +863,7 @@ function parseSettings(raw: Record<string, string>): SiteSettings {
     // AI 自动触发：默认开启（保持向后兼容，原有行为不变）
     enableAutoAi: raw.enableAutoAi === undefined ? true : raw.enableAutoAi === 'true' || raw.enableAutoAi === '1',
     weatherCity: raw.weatherCity || '',
+    disableGeolocation: raw.disableGeolocation === 'true' || raw.disableGeolocation === '1',
     footerText: raw.footerText || '',
     // 分类折叠：默认 0（不折叠）
     categoryCollapseThreshold: raw.categoryCollapseThreshold ? parseInt(raw.categoryCollapseThreshold, 10) : 0,
@@ -901,6 +904,7 @@ export async function updateSettings(settings: SiteSettings): Promise<SiteSettin
     enableLunar: settings.enableLunar ? 'true' : 'false',
     enableAutoAi: settings.enableAutoAi === false ? 'false' : 'true',
     weatherCity: settings.weatherCity ?? '',
+    disableGeolocation: settings.disableGeolocation ? 'true' : 'false',
     footerText: settings.footerText ?? '',
     categoryCollapseThreshold: String(settings.categoryCollapseThreshold ?? 0),
     categoryInitialShowCount: String(settings.categoryInitialShowCount ?? 8),

@@ -25,6 +25,7 @@ import {
   Trash2,
   ChevronDown,
   Lightbulb,
+  Download,
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { SiteSettings, SearchEngineConfig } from '../../lib/api'
@@ -564,6 +565,47 @@ export function SiteSettingsCard({
                       </button>
                     )}
                   </div>
+
+                  {/* 禁用定位开关 - 仅在未设置城市时显示 */}
+                  {!settings.weatherCity && (
+                    <div 
+                      className="mt-3 flex items-center justify-between px-4 py-3 rounded-xl transition-colors duration-300"
+                      style={{
+                        background: settings.disableGeolocation
+                          ? 'rgba(245, 158, 11, 0.1)' 
+                          : 'var(--color-bg-tertiary)',
+                        border: settings.disableGeolocation
+                          ? '1px solid rgba(245, 158, 11, 0.2)'
+                          : '1px solid var(--color-glass-border)',
+                      }}
+                    >
+                      <div>
+                        <p className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>
+                          {t('admin.settings.site.disable_geolocation_title')}
+                        </p>
+                        <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                          {t('admin.settings.site.disable_geolocation_desc')}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => onChange({ ...settings, disableGeolocation: !settings.disableGeolocation })}
+                        className={cn(
+                          'relative w-12 h-6 rounded-full transition-all duration-300',
+                          settings.disableGeolocation
+                            ? 'bg-gradient-to-r from-amber-500 to-orange-500'
+                            : 'bg-gray-600/50'
+                        )}
+                      >
+                        <div
+                          className={cn(
+                            'absolute top-1 w-4 h-4 rounded-full bg-white shadow-md transition-all duration-300',
+                            settings.disableGeolocation ? 'left-7' : 'left-1'
+                          )}
+                        />
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -652,6 +694,51 @@ export function SiteSettingsCard({
                     className={cn(
                       'absolute top-1 w-4 h-4 rounded-full bg-white shadow-md transition-all duration-300',
                       settings.enableQuickNotes !== false ? 'left-7' : 'left-1'
+                    )}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {/* 内网下载开关 */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--color-text-muted)' }}>
+                <Download className="w-4 h-4" />
+                {t('admin.settings.site.intranet_download')}
+              </label>
+              <div 
+                className="flex items-center justify-between px-4 py-3 rounded-xl transition-colors duration-300"
+                style={{
+                  background: settings.enableIntranetDownload !== false
+                    ? 'rgba(59, 130, 246, 0.1)' 
+                    : 'var(--color-bg-tertiary)',
+                  border: settings.enableIntranetDownload !== false
+                    ? '1px solid rgba(59, 130, 246, 0.2)'
+                    : '1px solid var(--color-glass-border)',
+                }}
+              >
+                <div>
+                  <p className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>
+                    {t('admin.settings.site.intranet_download_title')}
+                  </p>
+                  <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                    {t('admin.settings.site.intranet_download_desc')}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => onChange({ ...settings, enableIntranetDownload: !(settings.enableIntranetDownload !== false) })}
+                  className={cn(
+                    'relative w-12 h-6 rounded-full transition-all duration-300',
+                    settings.enableIntranetDownload !== false
+                      ? 'bg-gradient-to-r from-blue-500 to-cyan-500'
+                      : 'bg-gray-600/50'
+                  )}
+                >
+                  <div
+                    className={cn(
+                      'absolute top-1 w-4 h-4 rounded-full bg-white shadow-md transition-all duration-300',
+                      settings.enableIntranetDownload !== false ? 'left-7' : 'left-1'
                     )}
                   />
                 </button>

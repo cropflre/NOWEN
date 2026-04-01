@@ -119,7 +119,6 @@ function App() {
   }>({ isOpen: false, position: { x: 0, y: 0 }, bookmark: null });
 
   // ========== 自定义 Hooks ==========
-  const { getMenuItems } = useBookmarkContextMenu();
   const { greeting, formattedTime, formattedDate, lunarDate } = useTime();
   const { isDark, toggleDarkMode } = useThemeContext();
   const { t, i18n } = useTranslation();
@@ -133,6 +132,7 @@ function App() {
     showWeather,
     showLunar,
     weatherCity,
+    disableGeolocation,
     enableAutoAi,
     menuVisibility,
     widgetVisibility,
@@ -144,7 +144,10 @@ function App() {
     defaultBookmarkVisibility,
     searchEngine,
     enableQuickNotes,
+    enableIntranetDownload,
   } = useSiteSettings();
+
+  const { getMenuItems } = useBookmarkContextMenu({ enableIntranetDownload });
 
   // 认证状态
   const {
@@ -195,7 +198,7 @@ function App() {
   } = useDragAndDrop({ bookmarks, reorderBookmarks, disabled: !isLoggedIn });
 
   // 天气数据
-  const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather(showWeather, weatherCity);
+  const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather(showWeather, weatherCity, disableGeolocation);
 
   // 天气城市变更
   const handleWeatherCityChange = useCallback(async (city: string) => {
