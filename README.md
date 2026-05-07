@@ -11,9 +11,6 @@
 ![Docker Hub](https://img.shields.io/badge/Docker%20Hub-cropflre%2Fnowen-blue)
 ![ARM64](https://img.shields.io/badge/ARM64-Supported-orange)
 
-## 🌐 在线演示 | Live Demo
-
-**🔗 访问地址 / Access URL**: [http://118.145.185.221/](http://118.145.185.221/)
 
 > 🎯 **演示模式**：通过上述地址访问时，登录页面自动填入默认账号密码（admin / admin123），直接点击登录即可体验后台功能。演示模式下禁止修改密码。
 
