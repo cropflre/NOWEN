@@ -28,38 +28,56 @@
 
 ## 📸 Screenshots
 
-### ☀️ Light Mode
+### 🖥️ Desktop
 
 <table>
   <tr>
-    <td align="center" colspan="2"><b>Desktop Homepage - System Monitor Dashboard</b></td>
+    <td align="center"><b>Light Mode</b></td>
+    <td align="center"><b>Dark Mode</b></td>
   </tr>
   <tr>
-    <td colspan="2"><img src="https://github.com/cropflre/NOWEN/raw/main/public/screenshots/light-desktop-monitor.png" alt="Light Mode - System Monitor" width="800"></td>
+    <td><img src="./public/screenshots/light-desktop-v2.png" alt="Desktop Light" width="500"></td>
+    <td><img src="./public/screenshots/dark-desktop-v2.png" alt="Desktop Dark" width="500"></td>
+  </tr>
+  <tr>
+    <td align="center" colspan="2"><b>Dock View Switcher</b></td>
+  </tr>
+  <tr>
+    <td colspan="2"><img src="./public/screenshots/light-desktop-v2-dock.png" alt="Dock View Switcher" width="1000"></td>
   </tr>
 </table>
 
+### 📱 Mobile
+
 <table>
   <tr>
-    <td align="center"><b>Bookmark Categories & Sidebar</b></td>
-    <td align="center"><b>Mobile Homepage</b></td>
+    <td align="center"><b>Light</b></td>
+    <td align="center"><b>Light (Detail)</b></td>
+    <td align="center"><b>Dark</b></td>
   </tr>
   <tr>
-    <td><img src="https://github.com/cropflre/NOWEN/raw/main/public/screenshots/light-desktop-bookmarks.png" alt="Light Mode - Bookmarks" width="500"></td>
-    <td><img src="https://github.com/cropflre/NOWEN/raw/main/public/screenshots/light-mobile.png" alt="Light Mode - Mobile" width="250"></td>
+    <td><img src="./public/screenshots/light-mobile-v2.png" alt="Mobile Light" width="280"></td>
+    <td><img src="./public/screenshots/light-mobile-v2-detail.png" alt="Mobile Light Detail" width="280"></td>
+    <td><img src="./public/screenshots/dark-mobile-v2.png" alt="Mobile Dark" width="280"></td>
   </tr>
 </table>
 
-### 🌙 Dark Mode
+### 🛠️ Admin Dashboard
 
 <table>
   <tr>
-    <td align="center"><b>Desktop Homepage - Deep Space Aesthetics</b></td>
-    <td align="center"><b>Mobile Homepage</b></td>
+    <td align="center"><b>Bookmark Management (Light)</b></td>
+    <td align="center"><b>Bookmark Management (Dark)</b></td>
   </tr>
   <tr>
-    <td><img src="https://github.com/cropflre/NOWEN/raw/main/public/screenshots/dark-desktop-monitor.png" alt="Dark Mode - Desktop" width="500"></td>
-    <td><img src="https://github.com/cropflre/NOWEN/raw/main/public/screenshots/dark-mobile.png" alt="Dark Mode - Mobile" width="250"></td>
+    <td><img src="./public/screenshots/light-admin-v2.png" alt="Admin Light" width="500"></td>
+    <td><img src="./public/screenshots/dark-admin-v2.png" alt="Admin Dark" width="500"></td>
+  </tr>
+  <tr>
+    <td align="center" colspan="2"><b>Theme Palette (8 Dark + 8 Light)</b></td>
+  </tr>
+  <tr>
+    <td colspan="2"><img src="./public/screenshots/dark-admin-themes.png" alt="Theme Palette" width="1000"></td>
   </tr>
 </table>
 
@@ -1593,6 +1611,16 @@ Contributions are welcome! Please feel free to submit Issues and Pull Requests.
 3. Commit changes (`git commit -m 'Add some AmazingFeature'`)
 4. Push to branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
+
+---
+
+## ☕ Sponsor
+
+If this project saved you time, you're welcome to buy the author a coffee / a keyboard / a bug fix 🙌
+
+<p align="center">
+  <img src="./public/sponsor/weixin.jpg" alt="WeChat Sponsor QR Code" width="260" />
+</p>
 
 ---
 
