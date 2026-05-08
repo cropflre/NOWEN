@@ -17,7 +17,8 @@ import {
   BookOpen,
   Tag,
   ScrollText,
-  Database
+  Database,
+  Info
 } from 'lucide-react'
 import type { AdminTabType } from '../../hooks/useHashRouter'
 
@@ -44,6 +45,7 @@ const navItems = [
   { id: 'logs' as AdminTabType, labelKey: 'admin.nav.logs', fullLabelKey: 'admin.nav.logs_full', icon: ScrollText },
   { id: 'backup' as AdminTabType, labelKey: 'admin.nav.backup', fullLabelKey: 'admin.nav.backup_full', icon: Database },
   { id: 'docs' as AdminTabType, labelKey: 'admin.nav.docs', fullLabelKey: 'admin.nav.docs_full', icon: BookOpen },
+  { id: 'about' as AdminTabType, labelKey: 'admin.nav.about', fullLabelKey: 'admin.nav.about_full', icon: Info },
   { id: 'settings' as AdminTabType, labelKey: 'admin.nav.settings', fullLabelKey: 'admin.nav.settings_full', icon: Settings },
 ]
 

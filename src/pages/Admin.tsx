@@ -56,6 +56,7 @@ import { SettingsPanel } from '../components/admin/SettingsPanel'
 import { AnalyticsCard } from '../components/admin/AnalyticsCard'
 import { HealthCheckCard } from '../components/admin/HealthCheckCard'
 import { DocsCard } from '../components/admin/DocsCard'
+import { AboutCard } from '../components/admin/AboutCard'
 import { TagsManageCard } from '../components/admin/TagsManageCard'
 import { LogsCard } from '../components/admin/LogsCard'
 import { BackupCard } from '../components/admin/BackupCard'
@@ -1203,6 +1204,7 @@ function AdminContent() {
                 {activeTab === 'logs' && t('admin.stats.view_logs')}
                 {activeTab === 'backup' && t('admin.settings.data.subtitle')}
                 {activeTab === 'docs' && t('admin.stats.view_docs')}
+                {activeTab === 'about' && t('admin.stats.about_project')}
                 {activeTab === 'settings' && t('admin.stats.manage_config')}
               </p>
             </div>
@@ -2950,6 +2952,13 @@ function AdminContent() {
             {activeTab === 'docs' && (
               <>
                 <DocsCard />
+              </>
+            )}
+
+            {/* About Tab */}
+            {activeTab === 'about' && (
+              <>
+                <AboutCard />
               </>
             )}
 

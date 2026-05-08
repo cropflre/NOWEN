@@ -1,4 +1,4 @@
-# NOWEN - Nebula Portal
+# NOWEN · 弄文 · Nebula Portal
 
 > A minimalist personal navigation hub combining bookmark management and system monitoring, featuring deep space aesthetics and glassmorphism design, supporting day/night dual modes with complete real-time hardware monitoring capabilities
 

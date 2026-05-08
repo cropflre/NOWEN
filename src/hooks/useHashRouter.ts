@@ -16,11 +16,11 @@ export type PageType = 'home' | 'admin' | 'admin-login' | 'force-password-change
 
 export type AdminTabType = 
   | 'bookmarks' | 'categories' | 'tags' | 'quotes' | 'icons'
-  | 'analytics' | 'health-check' | 'logs' | 'backup' | 'docs' | 'settings'
+  | 'analytics' | 'health-check' | 'logs' | 'backup' | 'docs' | 'settings' | 'about'
 
 const VALID_ADMIN_TABS: AdminTabType[] = [
   'bookmarks', 'categories', 'tags', 'quotes', 'icons',
-  'analytics', 'health-check', 'logs', 'backup', 'docs', 'settings',
+  'analytics', 'health-check', 'logs', 'backup', 'docs', 'settings', 'about',
 ]
 
 interface HashRoute {
