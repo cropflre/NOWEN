@@ -785,6 +785,7 @@ export interface SiteSettings {
   searchEngine?: SearchEngineSettings  // 搜索引擎设置
   enableQuickNotes?: boolean           // 灵感速记开关
   enableIntranetDownload?: boolean     // 内网下载开关（右键菜单中的内网链接下载）
+  enableSidebarNav?: boolean           // 快速定位侧边栏开关
 }
 
 // 转换设置值类型（后端存储为字符串）
@@ -885,6 +886,8 @@ function parseSettings(raw: Record<string, string>): SiteSettings {
     })() : { defaultEngineId: 'google', customEngines: [] },
     // 灵感速记：默认开启
     enableQuickNotes: raw.enableQuickNotes === undefined ? true : raw.enableQuickNotes === 'true' || raw.enableQuickNotes === '1',
+    // 快速定位侧边栏：默认开启
+    enableSidebarNav: raw.enableSidebarNav === undefined ? true : raw.enableSidebarNav === 'true' || raw.enableSidebarNav === '1',
   }
 }
 
@@ -918,6 +921,7 @@ export async function updateSettings(settings: SiteSettings): Promise<SiteSettin
     defaultBookmarkVisibility: settings.defaultBookmarkVisibility || 'public',
     searchEngine: settings.searchEngine ? JSON.stringify(settings.searchEngine) : undefined,
     enableQuickNotes: settings.enableQuickNotes === false ? 'false' : 'true',
+    enableSidebarNav: settings.enableSidebarNav === false ? 'false' : 'true',
   }
   const raw = await request<Record<string, string>>('/api/settings', {
     method: 'PATCH',

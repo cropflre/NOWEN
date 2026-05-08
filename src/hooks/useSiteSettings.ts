@@ -104,6 +104,9 @@ export function useSiteSettings() {
   // 内网下载开关
   const enableIntranetDownload = siteSettings.enableIntranetDownload ?? true;
 
+  // 快速定位侧边栏开关
+  const enableSidebarNav = siteSettings.enableSidebarNav ?? true;
+
   // 搜索引擎配置
   const searchEngine: SearchEngineSettings = siteSettings.searchEngine ?? { defaultEngineId: 'google', customEngines: [] };
 
@@ -176,5 +179,6 @@ export function useSiteSettings() {
     searchEngine,
     enableQuickNotes,
     enableIntranetDownload,
+    enableSidebarNav,
   };
 }

@@ -146,6 +146,7 @@ function App() {
     searchEngine,
     enableQuickNotes,
     enableIntranetDownload,
+    enableSidebarNav,
   } = useSiteSettings();
 
   const { getMenuItems } = useBookmarkContextMenu({ enableIntranetDownload });
@@ -606,18 +607,20 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
       {!isLiteMode && <Meteors number={15} />}
 
       {/* Sidebar Navigation */}
-      <SidebarNav
-        items={categories
-          .filter((cat) => (bookmarksByCategory[cat.id] || []).length > 0)
-          .map((cat) => ({
-            id: cat.id,
-            name: cat.name,
-            icon: cat.icon,
-            color: cat.color,
-            count: (bookmarksByCategory[cat.id] || []).length,
-          }))}
-        pinnedCount={pinnedBookmarks.length}
-      />
+      {enableSidebarNav && (
+        <SidebarNav
+          items={categories
+            .filter((cat) => (bookmarksByCategory[cat.id] || []).length > 0)
+            .map((cat) => ({
+              id: cat.id,
+              name: cat.name,
+              icon: cat.icon,
+              color: cat.color,
+              count: (bookmarksByCategory[cat.id] || []).length,
+            }))}
+          pinnedCount={pinnedBookmarks.length}
+        />
+      )}
 
       {/* Main Content */}
       <div className="min-h-screen px-4 sm:px-6 lg:px-8 pb-32">

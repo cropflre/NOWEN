@@ -26,6 +26,7 @@ import {
   ChevronDown,
   Lightbulb,
   Download,
+  Navigation,
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { SiteSettings, SearchEngineConfig } from '../../lib/api'
@@ -739,6 +740,51 @@ export function SiteSettingsCard({
                     className={cn(
                       'absolute top-1 w-4 h-4 rounded-full bg-white shadow-md transition-all duration-300',
                       settings.enableIntranetDownload !== false ? 'left-7' : 'left-1'
+                    )}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {/* 快速定位侧边栏开关 */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--color-text-muted)' }}>
+                <Navigation className="w-4 h-4" />
+                {t('admin.settings.site.sidebar_nav')}
+              </label>
+              <div 
+                className="flex items-center justify-between px-4 py-3 rounded-xl transition-colors duration-300"
+                style={{
+                  background: settings.enableSidebarNav !== false
+                    ? 'rgba(16, 185, 129, 0.1)' 
+                    : 'var(--color-bg-tertiary)',
+                  border: settings.enableSidebarNav !== false
+                    ? '1px solid rgba(16, 185, 129, 0.2)'
+                    : '1px solid var(--color-glass-border)',
+                }}
+              >
+                <div>
+                  <p className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>
+                    {t('admin.settings.site.sidebar_nav_title')}
+                  </p>
+                  <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                    {t('admin.settings.site.sidebar_nav_desc')}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => onChange({ ...settings, enableSidebarNav: !(settings.enableSidebarNav !== false) })}
+                  className={cn(
+                    'relative w-12 h-6 rounded-full transition-all duration-300',
+                    settings.enableSidebarNav !== false
+                      ? 'bg-gradient-to-r from-emerald-500 to-teal-500'
+                      : 'bg-gray-600/50'
+                  )}
+                >
+                  <div
+                    className={cn(
+                      'absolute top-1 w-4 h-4 rounded-full bg-white shadow-md transition-all duration-300',
+                      settings.enableSidebarNav !== false ? 'left-7' : 'left-1'
                     )}
                   />
                 </button>

@@ -367,6 +367,19 @@ function DockItem({
   const [showSubmenu, setShowSubmenu] = useState(false);
   const submenuTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // 点击外部关闭子菜单（特别是移动端没有 hover 离开事件）
+  useEffect(() => {
+    if (!showSubmenu) return;
+    const handleOutside = (e: MouseEvent | TouchEvent) => {
+      if (!ref.current) return;
+      if (!ref.current.contains(e.target as Node)) {
+        setShowSubmenu(false);
+      }
+    };
+    document.addEventListener("pointerdown", handleOutside as any);
+    return () => document.removeEventListener("pointerdown", handleOutside as any);
+  }, [showSubmenu]);
+
   const distance = useTransform(mouseX, (val) => {
     const bounds = ref.current?.getBoundingClientRect() ?? { x: 0, width: 0 };
     return val - bounds.x - bounds.width / 2;
@@ -385,8 +398,9 @@ function DockItem({
     : { mass: 0.1, stiffness: 200, damping: 15 }
   );
 
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent) => {
     if (isDragging) return;
+    e.stopPropagation();
     // 有子菜单时切换子菜单显示
     if (subItems && subItems.length > 0) {
       setShowSubmenu(prev => !prev);
@@ -407,6 +421,7 @@ function DockItem({
   };
 
   const handleMouseLeaveSubmenu = () => {
+    if (isMobile) return;
     submenuTimeoutRef.current = setTimeout(() => {
       setShowSubmenu(false);
     }, 200);
@@ -418,6 +433,7 @@ function DockItem({
       style={{ width, height }}
       className="relative flex items-center justify-center"
       onMouseEnter={() => {
+        if (isMobile) return;
         setIsHovered(true);
         if (subItems && subItems.length > 0) {
           if (submenuTimeoutRef.current) {
@@ -428,6 +444,7 @@ function DockItem({
         }
       }}
       onMouseLeave={() => {
+        if (isMobile) return;
         setIsHovered(false);
         if (subItems && subItems.length > 0) {
           submenuTimeoutRef.current = setTimeout(() => {
@@ -493,9 +510,11 @@ function DockItem({
               {subItems.map((subItem) => (
                 <motion.button
                   key={subItem.id}
+                  onPointerDown={(e) => e.stopPropagation()}
                   onClick={(e) => {
                     e.stopPropagation();
                     subItem.onClick?.();
+                    setShowSubmenu(false);
                   }}
                   className={cn(
                     "px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap",
@@ -551,6 +570,7 @@ function DockItem({
 
       <motion.button
         onClick={handleClick}
+        onPointerDown={(e) => e.stopPropagation()}
         className="w-full h-full rounded-xl flex items-center justify-center cursor-pointer overflow-hidden"
         style={{
           background: isHovered

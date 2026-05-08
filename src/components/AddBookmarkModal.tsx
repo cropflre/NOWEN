@@ -31,6 +31,80 @@ function FieldSkeleton({ className }: { className?: string }) {
   )
 }
 
+/**
+ * 将原始 AI 错误信息（例如后端透传的 OpenAI / 阿里云 / 网络错误）
+ * 映射为用户友好的本地化提示。
+ */
+function mapAiError(err: any, t: (key: string) => string): string {
+  const raw: string = (err?.message || err?.toString?.() || '').toString()
+  const msg = raw.toLowerCase()
+
+  // 401 / 鉴权失败 / API Key 无效
+  if (
+    msg.includes('401') ||
+    msg.includes('invalid_api_key') ||
+    msg.includes('incorrect api key') ||
+    msg.includes('invalid api key') ||
+    msg.includes('unauthorized') ||
+    msg.includes('authentication') ||
+    msg.includes('apikey-error')
+  ) {
+    return t('bookmark.modal.ai_error_invalid_key')
+  }
+
+  // 限流
+  if (msg.includes('429') || msg.includes('rate limit') || msg.includes('too many requests')) {
+    return t('bookmark.modal.ai_error_rate_limit')
+  }
+
+  // 额度 / 余额不足
+  if (
+    msg.includes('quota') ||
+    msg.includes('insufficient') ||
+    msg.includes('balance') ||
+    msg.includes('billing')
+  ) {
+    return t('bookmark.modal.ai_error_quota')
+  }
+
+  // 超时
+  if (msg.includes('timeout') || msg.includes('timed out') || msg.includes('etimedout')) {
+    return t('bookmark.modal.ai_error_timeout')
+  }
+
+  // 网络错误
+  if (
+    msg.includes('failed to fetch') ||
+    msg.includes('network') ||
+    msg.includes('econnrefused') ||
+    msg.includes('econnreset') ||
+    msg.includes('enotfound')
+  ) {
+    return t('bookmark.modal.ai_error_network')
+  }
+
+  // 服务端错误（5xx）
+  if (
+    msg.includes('500') ||
+    msg.includes('502') ||
+    msg.includes('503') ||
+    msg.includes('504') ||
+    msg.includes('internal server error') ||
+    msg.includes('bad gateway') ||
+    msg.includes('service unavailable')
+  ) {
+    return t('bookmark.modal.ai_error_server')
+  }
+
+  // 未配置
+  if (msg.includes('not configured') || msg.includes('未配置') || msg.includes('not set')) {
+    return t('bookmark.modal.ai_error_not_configured')
+  }
+
+  // 兜底通用错误
+  return t('bookmark.modal.ai_error')
+}
+
 export function AddBookmarkModal({
   isOpen,
   onClose,
@@ -156,6 +230,7 @@ export function AddBookmarkModal({
       setShowIconPicker(false)
       setAiTags([])
       setAiApplied(false)
+      setTags([])
     }
   }, [isOpen])
 
@@ -292,7 +367,7 @@ export function AddBookmarkModal({
       setAiApplied(true)
     } catch (err: any) {
       console.error('AI 分类失败:', err)
-      setError(err?.message || t('bookmark.modal.ai_error'))
+      setError(mapAiError(err, t))
     } finally {
       setIsAiProcessing(false)
     }
@@ -335,7 +410,7 @@ export function AddBookmarkModal({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[90] bg-black/50 command-backdrop"
+            className="fixed inset-0 z-[99] bg-black/50 command-backdrop"
             onClick={onClose}
           />
 
@@ -355,14 +430,19 @@ export function AddBookmarkModal({
               x: { duration: 0.4 }
             }}
             className={cn(
-              'fixed z-[90]',
+              'fixed z-[100]',
               'inset-0 m-auto',
-              'w-full max-w-lg h-fit max-h-[calc(100vh-2rem)] overflow-y-auto',
-              'rounded-2xl glass shadow-2xl'
+              'w-full max-w-lg h-[min(85vh,720px)]',
+              'flex flex-col overflow-hidden',
+              'rounded-2xl shadow-2xl border'
             )}
+            style={{
+              background: 'var(--color-bg-secondary)',
+              borderColor: 'var(--color-glass-border)',
+            }}
           >
             {/* 头部 */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
+            <div className="shrink-0 flex items-center justify-between px-6 py-4 border-b border-white/10">
               <div className="flex items-center gap-2">
                 <BookmarkPlus className="w-5 h-5" style={{ color: 'var(--gradient-1)' }} />
                 <h2 
@@ -382,7 +462,7 @@ export function AddBookmarkModal({
             </div>
 
             {/* 表单 */}
-            <div className="px-6 py-5 space-y-5">
+            <div className="flex-1 min-h-0 overflow-y-auto px-6 py-5 space-y-5">
               {/* URL 输入 */}
               <div>
                 <label 
@@ -1343,7 +1423,7 @@ export function AddBookmarkModal({
             </div>
 
             {/* 底部按钮 */}
-            <div className="flex justify-end gap-3 px-6 py-4 border-t border-white/10">
+            <div className="shrink-0 flex justify-end gap-3 px-6 py-4 border-t border-white/10">
               <button
                 onClick={onClose}
                 className={cn(
