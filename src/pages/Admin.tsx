@@ -2973,6 +2973,15 @@ function AdminContent() {
                   isSavingSiteSettings={isSavingSettings}
                   siteSettingsSuccess={settingsSuccess}
                   siteSettingsError={settingsError}
+                  onReloadSiteSettings={async () => {
+                    // nowen-note 一键连接 / 断开后刷新本地缓存的 settings（含 hasToken / tokenPreview / tokenName）
+                    try {
+                      const fresh = await fetchSettings()
+                      setSiteSettings(fresh)
+                    } catch (e) {
+                      console.error('reload settings failed:', e)
+                    }
+                  }}
                   // 主题设置
                   themeId={themeId}
                   isDark={isDark}

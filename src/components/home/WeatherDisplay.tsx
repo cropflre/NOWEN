@@ -205,7 +205,7 @@ export function WeatherDisplay({ weather, loading, onRefresh, weatherCity, onCit
       <AnimatePresence>
         {isExpanded && weather.forecast.length > 0 && (
           <motion.div
-            className="fixed inset-x-0 mx-auto sm:absolute sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 mt-2 z-50 w-[calc(100vw-2rem)] max-w-[420px] rounded-2xl overflow-hidden backdrop-blur-xl"
+            className="fixed left-4 right-4 sm:absolute sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 mt-2 z-50 mx-auto max-w-[420px] rounded-2xl overflow-hidden backdrop-blur-xl"
             style={{
               background: 'var(--color-glass)',
               border: '1px solid var(--color-glass-border)',

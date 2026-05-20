@@ -7,7 +7,8 @@ import {
   Shield, 
   Gauge,
   Image,
-  Sparkles
+  Sparkles,
+  Cloud
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import { SiteSettingsCard } from './SiteSettingsCard'
@@ -16,11 +17,12 @@ import { SecurityCard } from './SecurityCard'
 import { WidgetSettingsCard } from './WidgetSettingsCard'
 import { WallpaperSettingsCard } from './WallpaperSettingsCard'
 import { AiSettingsCard } from './AiSettingsCard'
+import { NowenNoteSettingsCard } from './NowenNoteSettingsCard'
 import { SiteSettings, WidgetVisibility } from '../../lib/api'
 import { ThemeId } from '../../hooks/useTheme.tsx'
 
 // 设置子标签页类型
-type SettingsTab = 'site' | 'theme' | 'wallpaper' | 'widget' | 'security' | 'ai'
+type SettingsTab = 'site' | 'theme' | 'wallpaper' | 'widget' | 'security' | 'ai' | 'sync'
 
 interface SettingsTabItem {
   id: SettingsTab
@@ -80,6 +82,14 @@ const settingsTabs: SettingsTabItem[] = [
     gradient: 'from-purple-500/20 to-cyan-500/20',
     iconBg: 'from-purple-500/20 to-cyan-600/20'
   },
+  { 
+    id: 'sync', 
+    labelKey: 'admin.settings.tabs.sync', 
+    icon: Cloud, 
+    descKey: 'admin.settings.tabs.sync_desc',
+    gradient: 'from-violet-500/20 to-indigo-500/20',
+    iconBg: 'from-violet-500/20 to-indigo-600/20'
+  },
 ]
 
 interface SettingsPanelProps {
@@ -90,6 +100,8 @@ interface SettingsPanelProps {
   isSavingSiteSettings: boolean
   siteSettingsSuccess: boolean
   siteSettingsError: string
+  /** 重新拉取站点设置（nowen-note 一键连接/断开后用来刷新 token 状态） */
+  onReloadSiteSettings?: () => Promise<void>
   // 主题设置
   themeId: ThemeId
   isDark: boolean
@@ -133,6 +145,7 @@ export function SettingsPanel({
   isSavingSiteSettings,
   siteSettingsSuccess,
   siteSettingsError,
+  onReloadSiteSettings,
   // 主题设置
   themeId,
   isDark,
@@ -172,35 +185,116 @@ export function SettingsPanel({
 
   return (
     <div className="space-y-6">
-      {/* 标签页导航 */}
-      <div 
+      {/* 标签页导航 - 分段控件式紧凑设计 */}
+      <div
         className="relative p-1.5 rounded-2xl"
         style={{
           background: 'var(--color-glass)',
           border: '1px solid var(--color-glass-border)',
         }}
       >
-        {/* 标签页按钮网格 - 响应式 */}
-        <div className="grid grid-cols-2 lg:grid-cols-6 gap-2">
+        {/*
+          自适应策略：
+          - 移动端 (<md): 横向滚动条带，每个按钮 min-width 84px，可手势横划
+          - md 及以上 (≥768px): N 列等分网格，竖排"图标+文字"分段控件风格
+          - 不再使用"横排大按钮"——经实测在中等屏幕下 7 个按钮无论如何都塞不下
+        */}
+        {/* 移动端：横向滚动 */}
+        <div className="md:hidden flex gap-1.5 overflow-x-auto scrollbar-hide -mx-0.5 px-0.5 snap-x snap-mandatory">
           {settingsTabs.map((tab) => {
             const Icon = tab.icon
             const isActive = activeSettingsTab === tab.id
-            
             return (
               <motion.button
                 key={tab.id}
                 onClick={() => setActiveSettingsTab(tab.id)}
                 className={cn(
-                  'relative flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300',
-                  'text-left overflow-hidden group',
-                  isActive && 'shadow-lg'
+                  'relative flex flex-col items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl',
+                  'transition-all duration-300 overflow-hidden snap-start',
+                  'flex-shrink-0 min-w-[84px]',
+                  isActive && 'shadow-md',
                 )}
                 style={{
-                  background: isActive 
-                    ? 'var(--color-bg-secondary)' 
+                  background: isActive ? 'var(--color-bg-secondary)' : 'transparent',
+                  border: isActive
+                    ? '1px solid var(--color-primary)'
+                    : '1px solid transparent',
+                }}
+                whileTap={{ scale: 0.95 }}
+              >
+                {isActive && (
+                  <motion.div
+                    layoutId="settings-tab-bg-mobile"
+                    className={cn('absolute inset-0 bg-gradient-to-br opacity-15', tab.gradient)}
+                    initial={false}
+                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                  />
+                )}
+                <div
+                  className={cn(
+                    'relative w-8 h-8 rounded-lg flex items-center justify-center',
+                    'bg-gradient-to-br flex-shrink-0',
+                    tab.iconBg,
+                  )}
+                  style={{
+                    border: isActive
+                      ? '1px solid var(--color-primary)'
+                      : '1px solid var(--color-glass-border)',
+                  }}
+                >
+                  <Icon
+                    className="w-4 h-4"
+                    style={{
+                      color: isActive ? 'var(--color-primary)' : 'var(--color-text-muted)',
+                    }}
+                  />
+                </div>
+                <span
+                  className="relative text-[11px] font-medium leading-tight whitespace-nowrap"
+                  style={{
+                    color: isActive
+                      ? 'var(--color-text-primary)'
+                      : 'var(--color-text-secondary)',
+                  }}
+                >
+                  {t(tab.labelKey)}
+                </span>
+              </motion.button>
+            )
+          })}
+        </div>
+
+        {/*
+          桌面端：N 列等分网格（N = settingsTabs.length），图标在上文字在下
+          - 用 grid 而非 flex，每列 minmax(0, 1fr) 强制等分且允许缩小到 0，min-width 不再阻塞
+          - 中等屏 (md~lg)：仅显示图标 + 主标题（紧凑两行）
+          - 大屏 (xl+)：可选显示描述
+        */}
+        <div
+          className="hidden md:grid gap-1.5"
+          style={{
+            gridTemplateColumns: `repeat(${settingsTabs.length}, minmax(0, 1fr))`,
+          }}
+        >
+          {settingsTabs.map((tab) => {
+            const Icon = tab.icon
+            const isActive = activeSettingsTab === tab.id
+
+            return (
+              <motion.button
+                key={tab.id}
+                onClick={() => setActiveSettingsTab(tab.id)}
+                className={cn(
+                  'relative flex flex-col items-center justify-center gap-2 px-2 py-3 rounded-xl',
+                  'transition-all duration-300 overflow-hidden group min-w-0',
+                  isActive && 'shadow-lg',
+                )}
+                style={{
+                  background: isActive
+                    ? 'var(--color-bg-secondary)'
                     : 'transparent',
-                  border: isActive 
-                    ? '1px solid var(--color-primary)' 
+                  border: isActive
+                    ? '1px solid var(--color-primary)'
                     : '1px solid transparent',
                 }}
                 whileHover={{ scale: 1.02 }}
@@ -211,64 +305,58 @@ export function SettingsPanel({
                   <motion.div
                     layoutId="settings-tab-bg"
                     className={cn(
-                      'absolute inset-0 bg-gradient-to-r opacity-20',
-                      tab.gradient
+                      'absolute inset-0 bg-gradient-to-br opacity-15',
+                      tab.gradient,
                     )}
                     initial={false}
                     transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                   />
                 )}
-                
+
                 {/* 图标 */}
-                <div 
+                <div
                   className={cn(
-                    'relative w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0',
+                    'relative w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0',
                     'bg-gradient-to-br transition-all duration-300',
                     tab.iconBg,
-                    isActive && 'shadow-md'
+                    isActive && 'shadow-md',
                   )}
                   style={{
-                    border: isActive 
-                      ? '1px solid var(--color-primary)' 
+                    border: isActive
+                      ? '1px solid var(--color-primary)'
                       : '1px solid var(--color-glass-border)',
                   }}
                 >
-                  <Icon 
-                    className={cn(
-                      'w-5 h-5 transition-colors duration-300',
-                      isActive ? 'text-[var(--color-primary)]' : ''
-                    )} 
-                    style={{ 
-                      color: isActive ? 'var(--color-primary)' : 'var(--color-text-muted)' 
+                  <Icon
+                    className="w-[18px] h-[18px] transition-colors duration-300"
+                    style={{
+                      color: isActive
+                        ? 'var(--color-primary)'
+                        : 'var(--color-text-muted)',
                     }}
                   />
                 </div>
-                
-                {/* 文本 */}
-                <div className="relative min-w-0 flex-1">
-                  <div 
-                    className={cn(
-                      'font-medium text-sm truncate transition-colors duration-300'
-                    )}
-                    style={{ 
-                      color: isActive ? 'var(--color-text-primary)' : 'var(--color-text-secondary)' 
+
+                {/* 主标题 - 跨断点字号自适应 */}
+                <div className="relative w-full min-w-0 text-center">
+                  <div
+                    className="font-medium text-xs lg:text-[13px] truncate transition-colors duration-300 leading-tight"
+                    title={t(tab.labelKey)}
+                    style={{
+                      color: isActive
+                        ? 'var(--color-text-primary)'
+                        : 'var(--color-text-secondary)',
                     }}
                   >
                     {t(tab.labelKey)}
                   </div>
-                  <div 
-                    className="text-xs truncate mt-0.5 hidden sm:block"
-                    style={{ color: 'var(--color-text-muted)' }}
-                  >
-                    {t(tab.descKey)}
-                  </div>
                 </div>
 
-                {/* 激活指示器 */}
+                {/* 激活指示器 - 顶部小光带 */}
                 {isActive && (
                   <motion.div
                     layoutId="settings-tab-indicator"
-                    className="absolute bottom-1 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-full"
+                    className="absolute top-1 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full"
                     style={{ background: 'var(--color-primary)' }}
                     initial={false}
                     transition={{ type: 'spring', stiffness: 400, damping: 30 }}
@@ -366,6 +454,19 @@ export function SettingsPanel({
                 // 自动保存
                 onSaveSiteSettings()
               }}
+            />
+          )}
+
+          {/* nowen-note 同步配置 */}
+          {activeSettingsTab === 'sync' && (
+            <NowenNoteSettingsCard
+              settings={siteSettings}
+              onChange={onSiteSettingsChange}
+              onSave={onSaveSiteSettings}
+              onReload={onReloadSiteSettings}
+              isSaving={isSavingSiteSettings}
+              success={siteSettingsSuccess}
+              error={siteSettingsError}
             />
           )}
         </motion.div>

@@ -107,6 +107,9 @@ export function useSiteSettings() {
   // 快速定位侧边栏开关
   const enableSidebarNav = siteSettings.enableSidebarNav ?? true;
 
+  // nowen-note 同步配置（已在 fetchSettings 中解析为对象）
+  const nowenNote = siteSettings.nowenNote;
+
   // 搜索引擎配置
   const searchEngine: SearchEngineSettings = siteSettings.searchEngine ?? { defaultEngineId: 'google', customEngines: [] };
 
@@ -180,5 +183,6 @@ export function useSiteSettings() {
     enableQuickNotes,
     enableIntranetDownload,
     enableSidebarNav,
+    nowenNote,
   };
 }

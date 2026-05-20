@@ -142,6 +142,7 @@
     "home": "ホーム",
     "search": "検索",
     "ai": "AIアシスタント",
+    "notes": "ひらめきメモ",
     "add": "追加",
     "view": "表示",
     "theme_light": "ライトモードに切替",
@@ -422,7 +423,9 @@
         "data": "データ管理",
         "data_desc": "インポート・エクスポート、バックアップ復元",
         "ai": "AIスマート",
-        "ai_desc": "AIモデル設定"
+        "ai_desc": "AIモデル設定",
+        "sync": "nowen-note 同期",
+        "sync_desc": "ひらめきクラウド · 接続と設定"
       },
       "site": {
         "title": "サイト設定",
@@ -506,7 +509,70 @@
         "preview_subtitle": "厳選サイトナビゲーションを探索",
         "save": "設定を保存",
         "saving": "保存中...",
-        "saved": "設定を保存しました"
+        "saved": "設定を保存しました",
+        "nowenNote": {
+          "title": "nowen-note 同期",
+          "subtitle": "ひらめきメモをあなたのプライベートナレッジベースに自動保存",
+          "configured": "設定済み",
+          "notConfigured": "未設定",
+          "baseUrl": "nowen-note の URL",
+          "apiToken": "API トークン",
+          "tokenStored": "保存済み",
+          "tokenHint": "nowen-note 設定 → 個人 API トークンで作成。プレフィックスは nkn_",
+          "syncMode": "同期モード",
+          "mode": {
+            "manual": "手動",
+            "auto": "自動（片方向）",
+            "bidirectional": "双方向"
+          },
+          "modeHint": {
+            "manual": "「送信」をクリックした時のみ",
+            "auto": "作成/編集後に自動送信",
+            "bidirectional": "ローカルとリモートをミラー"
+          },
+          "defaultNotebook": "デフォルトノートブック ID（任意）",
+          "defaultNotebookPlaceholder": "未入力なら「ひらめき受信箱」を自動作成",
+          "defaultNotebookHint": "指定すると同期メモはこのノートブックに入ります",
+          "test": "接続テスト",
+          "testOk": "接続成功、ノートブック {{count}} 件を取得",
+          "testFail": "接続失敗",
+          "helpText": "API トークンは再入力時のみ更新されます。空欄の場合は既存のトークンを保持します。すべての同期通信はあなたのサーバーと nowen-note の間で行われます。",
+          "openRemote": "nowen-note を開く",
+          "setup": {
+            "title": "ワンクリック接続",
+            "subtitle": "nowen-note のアカウント情報を入力してください。専用のアクセストークンを自動的に作成します。パスワードは保存されません。",
+            "username": "ユーザー名 / メール",
+            "usernamePlaceholder": "nowen-note のログイン名",
+            "password": "パスワード",
+            "passwordPlaceholder": "トークン取得のために 1 度のみ使用、保存されません",
+            "passwordHint": "パスワードはメモリ上に数秒間のみ存在し、成功後すぐに破棄されます",
+            "action": "ワンクリック接続",
+            "connecting": "接続中…",
+            "success": "接続成功！専用のアクセストークンを作成しました",
+            "fail": "接続失敗",
+            "missingFields": "URL、ユーザー名、パスワードをすべて入力してください",
+            "use2faHint": "クリックして手動トークン入力に切り替え →"
+          },
+          "advanced": {
+            "title": "高度な設定：API トークンを手動入力",
+            "hint": "次の場合に使用：2 段階認証を有効にしている / 既存のトークンを使いたい / 細かいスコープ制御が必要。nowen-note の「個人アクセストークン」ページで作成してください。",
+            "save": "トークンを保存"
+          },
+          "connected": {
+            "title": "nowen-note に正常に接続されました",
+            "tokenPreview": "アクセストークン",
+            "tokenName": "トークン名",
+            "tokenNameLegacy": "（名前なし）",
+            "syncConfig": "同期設定"
+          },
+          "disconnect": {
+            "action": "接続を解除",
+            "confirm": "nowen-note との接続を解除しますか？リモートのアクセストークンは取り消されます。",
+            "success": "接続を解除しました。リモートトークンは取り消されました。",
+            "successLocal": "ローカルで切断しました（リモート取り消しに失敗、nowen-note で手動削除してください）",
+            "fail": "解除失敗"
+          }
+        }
       },
       "theme": {
         "title": "テーマ配色",
@@ -1034,17 +1100,117 @@
   },
   "quickNotes": {
     "title": "クイックノート",
-    "placeholder": "アイデアやメモを記録...",
+    "subtitle": "ひらめきの小川、nowen-note 知識ベースへ自動で流れ込む",
+    "drawerSubtitle": "今のひらめきを記録 · nowen-note へ自動同期",
+    "view": {
+      "card": "カードビュー",
+      "list": "リストビュー"
+    },
+    "placeholder": "アイデアやメモを記録... Markdown と #タグ に対応",
+    "placeholderShort": "💬 今のひらめき...",
     "add": "保存",
-    "shortcut": "Ctrl + Enter で保存",
     "edit": "編集",
     "delete": "削除",
     "confirmDelete": "もう一度クリックで削除",
     "autoSave": "自動保存中...",
     "empty": "ノートはまだありません",
+    "emptyHint": "ひらめきは流れる水のよう、記録すれば失われない",
+    "shortcut": "Ctrl + Enter で保存",
     "justNow": "たった今",
     "minutesAgo": "{{count}}分前",
     "hoursAgo": "{{count}}時間前",
-    "daysAgo": "{{count}}日前"
+    "daysAgo": "{{count}}日前",
+    "filter": {
+      "all": "すべて",
+      "today": "今日",
+      "week": "今週",
+      "synced": "同期済み",
+      "local": "ローカル",
+      "date": "日付",
+      "dateHint": "日付範囲で絞り込み",
+      "dateClear": "クリア",
+      "dateDone": "完了",
+      "datePresets": "クイック範囲",
+      "dateCustom": "カスタム範囲",
+      "preset": {
+        "today": "今日",
+        "yesterday": "昨日",
+        "last7": "過去 7 日間",
+        "last30": "過去 30 日間"
+      }
+    },
+    "sync": {
+      "synced": "同期済み",
+      "syncing": "同期中",
+      "local": "ローカルのみ",
+      "conflict": "競合",
+      "syncedTip": "受信箱ノートブックに同期済み",
+      "localTip": "nowen-note へ未送信",
+      "syncingTip": "nowen-note へ送信中...",
+      "conflictTip": "ローカルとリモートの両方が変更されました",
+      "pushNow": "今すぐ送信",
+      "openInRemote": "nowen-note で開く",
+      "notConfigured": "nowen-note が未設定",
+      "configure": "nowen-note を設定"
+    },
+    "actions": {
+      "expand": "リッチエディタを開く",
+      "collapse": "折りたたむ",
+      "aiPolish": "AI 推敲",
+      "addTag": "タグを追加",
+      "moveToNotebook": "ノートブックを選択"
+    },
+    "collapsed": {
+      "expandHint": "ひらめきメモを展開",
+      "collapseHint": "折りたたむ（スペース節約）",
+      "inlinePlaceholder": "💬 今のひらめき… クリックで展開",
+      "summary_one": "{{count}} 件のメモ",
+      "summary_other": "{{count}} 件のメモ",
+      "pendingHint": "{{count}} 件保留"
+    },
+    "idearain": {
+      "button": "ひらめきの雨"
+    },
+    "ai": {
+      "button": "AI"
+    },
+    "rain": {
+      "title": "ひらめきの雨",
+      "subtitle": "時間軸でひらめきの軌跡を辿る",
+      "openAll": "nowen-note ですべて表示",
+      "today": "今日",
+      "yesterday": "昨日",
+      "earlier": "それ以前"
+    },
+    "cloud": {
+      "navName": "ひらめきクラウド",
+      "title": "ひらめきクラウド · 同期センター",
+      "subtitle": "同期済 {{synced}} · 保留 {{local}} · 競合 {{conflict}}",
+      "subtitleEmpty": "nowen-note 未接続",
+      "connected": "nowen-note に接続済み",
+      "modeLabel": "モード",
+      "modeManual": "手動同期",
+      "modeAuto": "自動片方向 · 30 秒後にプッシュ",
+      "modeBi": "双方向同期",
+      "settings": "設定",
+      "pushAll": "一括プッシュ",
+      "pushingAll": "一括プッシュ中…",
+      "syncingHint": "{{count}} 件をプッシュ中…",
+      "pendingTitle": "保留中 ({{count}})",
+      "conflictTitle": "競合 ({{count}})",
+      "moreItems": "他 {{count}} 件…",
+      "push": "プッシュ",
+      "pushing": "送信中",
+      "resolve": "解決",
+      "openIdeaRain": "ひらめきの雨に切替",
+      "openRemote": "nowen-note を開く",
+      "allSynced": "すべてクラウドに揃いました",
+      "allSyncedHint": "{{count}} 件のひらめきを安全に保管",
+      "noNotes": "まだひらめきが記録されていません",
+      "notConfiguredTitle": "nowen-note にまだ接続していません",
+      "notConfiguredHint": "接続するとすべてのひらめきは 30 秒以内にクラウドへ自動保管され、AI で整理できます。",
+      "gotoSettings": "設定へ",
+      "learnMore": "nowen-note について"
+    }
   }
 }

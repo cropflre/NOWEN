@@ -6,7 +6,7 @@
  */
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X } from "lucide-react";
+import { Menu, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "../../lib/utils";
 
 interface DockItem {
@@ -16,8 +16,10 @@ interface DockItem {
     className?: string;
     style?: React.CSSProperties;
   }>;
-  onClick: () => void;
+  onClick?: () => void;
   isActive?: boolean;
+  /** 子菜单：点击后不执行 onClick，而是进入二级菜单 */
+  subItems?: DockItem[];
 }
 
 interface MobileFloatingDockProps {
@@ -40,6 +42,8 @@ export function MobileFloatingDock({
   leftSlot,
 }: MobileFloatingDockProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+  // 当前展示的子菜单项，null 表示在主菜单
+  const [activeSubmenu, setActiveSubmenu] = useState<DockItem | null>(null);
   const orbBtnRef = useRef<HTMLButtonElement>(null);
   const [orbRect, setOrbRect] = useState<{ right: number; bottom: number }>({
     right: 16,
@@ -55,22 +59,43 @@ export function MobileFloatingDock({
         bottom: window.innerHeight - rect.top + 8,
       });
     }
+    // 收起菜单时重置子菜单状态
+    if (!isExpanded) {
+      setActiveSubmenu(null);
+    }
   }, [isExpanded]);
+
+  const closeDock = () => {
+    setIsExpanded(false);
+    setActiveSubmenu(null);
+  };
 
   const handleItemClick = (item: DockItem) => {
     if ("vibrate" in navigator) {
       navigator.vibrate(10);
     }
-    item.onClick();
-    setIsExpanded(false);
+    // 有子菜单：进入二级菜单，不执行 onClick、不收起
+    if (item.subItems && item.subItems.length > 0) {
+      setActiveSubmenu(item);
+      return;
+    }
+    item.onClick?.();
+    closeDock();
   };
 
   const toggleDock = () => {
     if ("vibrate" in navigator) {
       navigator.vibrate(5);
     }
-    setIsExpanded(!isExpanded);
+    if (isExpanded) {
+      closeDock();
+    } else {
+      setIsExpanded(true);
+    }
   };
+
+  // 当前要渲染的列表：子菜单状态下用 subItems，否则用主 items
+  const displayItems = activeSubmenu?.subItems ?? items;
 
   return (
     <>
@@ -83,7 +108,7 @@ export function MobileFloatingDock({
             exit={{ opacity: 0 }}
             transition={LIQUID_SPRING.backdrop}
             className="fixed inset-0 z-[70] bg-black/40 dark:bg-black/50 backdrop-blur-sm"
-            onClick={() => setIsExpanded(false)}
+            onClick={closeDock}
           />
         )}
       </AnimatePresence>
@@ -101,9 +126,37 @@ export function MobileFloatingDock({
               bottom: orbRect.bottom,
             }}
           >
-            {items.map((item, index) => (
+            {/* 子菜单返回按钮（位于底部，但 flex-col-reverse 后在最上方） */}
+            {activeSubmenu && (
               <motion.button
-                key={item.id}
+                key="submenu-back"
+                initial={{ opacity: 0, scale: 0.5, x: 20 }}
+                animate={{ opacity: 1, scale: 1, x: 0 }}
+                exit={{ opacity: 0, scale: 0.5, x: 20 }}
+                transition={LIQUID_SPRING.item}
+                onClick={() => {
+                  if ("vibrate" in navigator) navigator.vibrate(5);
+                  setActiveSubmenu(null);
+                }}
+                className={cn(
+                  "flex items-center gap-2 px-3 py-2 rounded-xl",
+                  "bg-white/95 border-slate-200/80",
+                  "dark:bg-black/80 dark:border-white/10",
+                  "backdrop-blur-xl border",
+                  "active:scale-95 transition-transform"
+                )}
+                style={{ boxShadow: "0 4px 20px rgba(0, 0, 0, 0.15)" }}
+              >
+                <ChevronLeft className="w-4 h-4 text-slate-500 dark:text-white/60" />
+                <span className="text-xs font-medium text-slate-600 dark:text-white/70">
+                  {activeSubmenu.label}
+                </span>
+              </motion.button>
+            )}
+
+            {displayItems.map((item, index) => (
+              <motion.button
+                key={`${activeSubmenu?.id ?? "main"}-${item.id}`}
                 initial={{ opacity: 0, scale: 0.5, x: 20 }}
                 animate={{
                   opacity: 1,
@@ -111,7 +164,7 @@ export function MobileFloatingDock({
                   x: 0,
                   transition: {
                     ...LIQUID_SPRING.item,
-                    delay: index * 0.05,
+                    delay: index * 0.04,
                   },
                 }}
                 exit={{
@@ -120,7 +173,7 @@ export function MobileFloatingDock({
                   x: 20,
                   transition: {
                     duration: 0.15,
-                    delay: (items.length - index - 1) * 0.03,
+                    delay: (displayItems.length - index - 1) * 0.02,
                   },
                 }}
                 onClick={() => handleItemClick(item)}
@@ -169,6 +222,11 @@ export function MobileFloatingDock({
                     )}
                   />
                 </div>
+
+                {/* 有子菜单时显示右箭头（在子菜单状态下不显示） */}
+                {item.subItems && item.subItems.length > 0 && !activeSubmenu && (
+                  <ChevronRight className="w-4 h-4 text-slate-400 dark:text-white/40" />
+                )}
 
                 {/* 选中态能量指示条 */}
                 {item.isActive && (

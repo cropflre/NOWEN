@@ -100,12 +100,19 @@ export const updateQuotesSchema = z.object({
 
 // ========== 灵感速记相关 Schema ==========
 
+// P1：扩展支持 tags 与 notebookId（双向同步用）
+const noteTagsSchema = z.array(z.string().max(50)).max(20, '标签最多 20 个').optional()
+
 export const createNoteSchema = z.object({
   content: z.string().min(1, '内容不能为空').max(5000, '内容不能超过5000字符'),
+  tags: noteTagsSchema,
+  notebookId: z.string().max(100).optional().nullable(),
 })
 
 export const updateNoteSchema = z.object({
-  content: z.string().min(1, '内容不能为空').max(5000, '内容不能超过5000字符'),
+  content: z.string().min(1, '内容不能为空').max(5000, '内容不能超过5000字符').optional(),
+  tags: noteTagsSchema,
+  notebookId: z.string().max(100).optional().nullable(),
 })
 
 // ========== 数据导入 Schema ==========

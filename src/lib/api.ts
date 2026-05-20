@@ -761,6 +761,26 @@ export interface SearchEngineSettings {
   customEngines?: SearchEngineConfig[] // 用户自定义的搜索引擎列表
 }
 
+/** nowen-note 同步配置（前端持有的部分；apiToken 永不返回明文，仅 hasToken+预览） */
+export interface NowenNoteSettings {
+  /** nowen-note 站点 URL，例如 https://note.example.com */
+  baseUrl?: string
+  /** Personal API Token（仅在用户填入时随 PATCH 上传；GET 时永远不返回） */
+  apiToken?: string
+  /** 后端 GET 时返回的 token 预览（如 nkn_xx…ab） */
+  apiTokenPreview?: string
+  /** 后端 GET 时返回是否已配置 token */
+  hasToken?: boolean
+  /** Token 名称（一键连接时自动生成，便于在 nowen-note 那边吊销时识别） */
+  tokenName?: string
+  /** Token 在 nowen-note 那边的 ID，用于断开时远端吊销 */
+  tokenId?: string
+  /** 默认目标笔记本 ID（不填则自动定位/创建"灵感收件箱"） */
+  defaultNotebookId?: string
+  /** 同步模式：手动 / 自动单向 / 完全双向 */
+  syncMode?: 'manual' | 'auto' | 'bidirectional'
+}
+
 export interface SiteSettings {
   siteTitle?: string
   siteFavicon?: string
@@ -786,6 +806,7 @@ export interface SiteSettings {
   enableQuickNotes?: boolean           // 灵感速记开关
   enableIntranetDownload?: boolean     // 内网下载开关（右键菜单中的内网链接下载）
   enableSidebarNav?: boolean           // 快速定位侧边栏开关
+  nowenNote?: NowenNoteSettings        // nowen-note 同步配置
 }
 
 // 转换设置值类型（后端存储为字符串）
@@ -888,6 +909,23 @@ function parseSettings(raw: Record<string, string>): SiteSettings {
     enableQuickNotes: raw.enableQuickNotes === undefined ? true : raw.enableQuickNotes === 'true' || raw.enableQuickNotes === '1',
     // 快速定位侧边栏：默认开启
     enableSidebarNav: raw.enableSidebarNav === undefined ? true : raw.enableSidebarNav === 'true' || raw.enableSidebarNav === '1',
+    // nowen-note 同步配置（apiToken 永远不会从后端返回，前端用 hasToken 判断已配置）
+    nowenNote: raw.nowenNote ? (() => {
+      try {
+        const parsed = JSON.parse(raw.nowenNote)
+        return {
+          baseUrl: parsed.baseUrl || '',
+          apiTokenPreview: parsed.apiTokenPreview || '',
+          hasToken: !!parsed.hasToken,
+          defaultNotebookId: parsed.defaultNotebookId || '',
+          syncMode: (parsed.syncMode === 'manual' || parsed.syncMode === 'bidirectional')
+            ? parsed.syncMode
+            : 'auto',
+        } as NowenNoteSettings
+      } catch {
+        return { baseUrl: '', hasToken: false, syncMode: 'auto' } as NowenNoteSettings
+      }
+    })() : { baseUrl: '', hasToken: false, syncMode: 'auto' } as NowenNoteSettings,
   }
 }
 
@@ -922,6 +960,13 @@ export async function updateSettings(settings: SiteSettings): Promise<SiteSettin
     searchEngine: settings.searchEngine ? JSON.stringify(settings.searchEngine) : undefined,
     enableQuickNotes: settings.enableQuickNotes === false ? 'false' : 'true',
     enableSidebarNav: settings.enableSidebarNav === false ? 'false' : 'true',
+    // nowen-note：apiToken 仅在用户实际填入时上传；空字符串/undefined 都不上传，避免误清空
+    nowenNote: settings.nowenNote ? JSON.stringify({
+      baseUrl: settings.nowenNote.baseUrl || '',
+      ...(settings.nowenNote.apiToken ? { apiToken: settings.nowenNote.apiToken } : {}),
+      defaultNotebookId: settings.nowenNote.defaultNotebookId || '',
+      syncMode: settings.nowenNote.syncMode || 'auto',
+    }) : undefined,
   }
   const raw = await request<Record<string, string>>('/api/settings', {
     method: 'PATCH',
@@ -971,29 +1016,56 @@ export const settingsApi = {
 
 // ========== 灵感速记 API ==========
 
+/** 同步状态：本地 / 同步中 / 已同步 / 冲突 */
+export type NoteSyncStatus = 'local' | 'syncing' | 'synced' | 'conflict'
+
 export interface QuickNote {
   id: string
   content: string
   createdAt: string
   updatedAt: string
+  /** 标签数组（与 nowen-note 标签系统打通） */
+  tags?: string[]
+  /** nowen-note 中对应笔记的 ID（已同步则有值） */
+  remoteId?: string | null
+  /** 目标笔记本 ID，默认进"灵感收件箱" */
+  notebookId?: string | null
+  /** 同步状态 */
+  syncStatus?: NoteSyncStatus
+  /** 远端最后一次更新时间（用于冲突检测） */
+  remoteUpdatedAt?: string | null
+}
+
+export interface CreateNoteInput {
+  content: string
+  tags?: string[]
+  notebookId?: string | null
+}
+
+export interface UpdateNoteInput {
+  content?: string
+  tags?: string[]
+  notebookId?: string | null
 }
 
 export async function fetchNotes(): Promise<QuickNote[]> {
   return request<QuickNote[]>('/api/notes')
 }
 
-export async function createNote(content: string): Promise<QuickNote> {
+export async function createNote(input: string | CreateNoteInput): Promise<QuickNote> {
+  const body = typeof input === 'string' ? { content: input } : input
   return request<QuickNote>('/api/notes', {
     method: 'POST',
-    body: JSON.stringify({ content }),
+    body: JSON.stringify(body),
     requireAuth: true,
   })
 }
 
-export async function updateNote(id: string, content: string): Promise<QuickNote> {
+export async function updateNote(id: string, input: string | UpdateNoteInput): Promise<QuickNote> {
+  const body = typeof input === 'string' ? { content: input } : input
   return request<QuickNote>(`/api/notes/${id}`, {
     method: 'PATCH',
-    body: JSON.stringify({ content }),
+    body: JSON.stringify(body),
     requireAuth: true,
   })
 }
@@ -1005,11 +1077,262 @@ export async function deleteNote(id: string): Promise<SuccessResponse> {
   })
 }
 
+/** push 错误结构（冲突时携带远端快照供 UI 比对） */
+export interface PushNoteErrorPayload {
+  status: number
+  note?: QuickNote
+  syncStatus?: 'local' | 'syncing' | 'synced' | 'conflict'
+  remoteSnapshot?: { title: string; contentText: string; updatedAt: string } | null
+}
+
+/** 手动触发：将一条速记推送到 nowen-note，可指定 forceMode 解决冲突 */
+export async function pushNoteToRemote(
+  id: string,
+  forceMode?: 'force-push' | 'force-pull',
+): Promise<QuickNote> {
+  // 后端返回 409 (conflict) 时，body 里仍带 note；这里把异常拆出来，使前端能拿到最新本地数据
+  const token = getToken()
+  const res = await fetch(`${API_BASE}/api/notes/${id}/push`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(forceMode ? { forceMode } : {}),
+  })
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({} as any))
+    const err: any = new Error(data.error || `推送失败 (${res.status})`)
+    err.status = res.status
+    err.note = data.note
+    err.syncStatus = data.syncStatus
+    err.remoteSnapshot = data.remoteSnapshot || null
+    throw err
+  }
+  return res.json()
+}
+
+/** 同步状态汇总（不需要登录即可查看是否已配置） */
+export interface NoteSyncStatusSummary {
+  configured: boolean
+  syncMode: 'manual' | 'auto' | 'bidirectional'
+  baseUrl: string | null
+  counts: { synced: number; syncing: number; local: number; conflict: number; total: number }
+}
+export async function fetchNoteSyncStatus(): Promise<NoteSyncStatusSummary> {
+  return request<NoteSyncStatusSummary>('/api/notes/sync-status')
+}
+
+/** 拉取一条速记的远端快照（用于冲突对比 UI） */
+export interface RemoteNoteSnapshot {
+  title: string
+  contentText: string
+  updatedAt: string
+  tags: string[]
+}
+export async function fetchRemoteSnapshot(id: string): Promise<RemoteNoteSnapshot> {
+  return request<RemoteNoteSnapshot>(`/api/notes/${id}/remote`, { requireAuth: true })
+}
+
+/** 双向同步：把远端"灵感收件箱"拉回本地 */
+export interface PullRemoteResult {
+  ok: boolean
+  pulled: number
+  created: number
+  updated: number
+  skipped: number
+  error?: string
+}
+export async function pullRemoteNotes(): Promise<PullRemoteResult> {
+  const token = getToken()
+  const res = await fetch(`${API_BASE}/api/notes/sync-pull`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  })
+  return res.json().catch(() => ({ ok: false, error: '解析响应失败' } as PullRemoteResult))
+}
+
+/** AI 流式动作类型（与 nowen-note ai.ts 中 AIAction 对齐） */
+export type AIAction =
+  | 'continue'
+  | 'rewrite'
+  | 'polish'
+  | 'shorten'
+  | 'expand'
+  | 'translate_en'
+  | 'translate_zh'
+  | 'summarize'
+  | 'explain'
+  | 'fix_grammar'
+  | 'title'
+  | 'tags'
+  | 'format_markdown'
+  | 'format_code'
+  | 'custom'
+
+/**
+ * 流式 AI 写作助手：返回一个 AsyncGenerator，每次 yield 一个 token 片段。
+ * 用法：
+ *   for await (const chunk of streamAIChat({ action, text })) updateUI(chunk)
+ *
+ * 协议来自 nowen-note：data: {"t":"片段"}\n\n  …  data: [DONE]\n\n
+ */
+export async function* streamAIChat(payload: {
+  action: AIAction
+  text: string
+  customPrompt?: string
+  context?: string
+}): AsyncGenerator<string, void, void> {
+  const token = getToken()
+  const res = await fetch(`${API_BASE}/api/notes/ai/chat`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(payload),
+  })
+  if (!res.ok || !res.body) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error((err as any).error || `AI 请求失败 (${res.status})`)
+  }
+  const reader = res.body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    buffer += decoder.decode(value, { stream: true })
+    // SSE：以 \n\n 分隔事件
+    const events = buffer.split('\n\n')
+    buffer = events.pop() || ''
+    for (const evt of events) {
+      // 提取 data: 行
+      const dataLine = evt
+        .split('\n')
+        .map((l) => l.trim())
+        .find((l) => l.startsWith('data:'))
+      if (!dataLine) continue
+      const data = dataLine.slice(5).trim()
+      if (data === '[DONE]') return
+      try {
+        const json = JSON.parse(data)
+        if (json && typeof json.t === 'string') yield json.t as string
+      } catch {
+        // 忽略解析失败
+      }
+    }
+  }
+}
+
+/** 测试 nowen-note 连通性 */
+export interface NowenNoteTestResult {
+  ok: boolean
+  notebooksCount?: number
+  error?: string
+  status?: number
+}
+export async function testNowenNoteConnection(
+  baseUrl?: string,
+  apiToken?: string,
+): Promise<NowenNoteTestResult> {
+  const body: Record<string, string> = {}
+  if (baseUrl) body.baseUrl = baseUrl
+  if (apiToken) body.apiToken = apiToken
+  const token = getToken()
+  const res = await fetch(`${API_BASE}/api/settings/nowen-note/test`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(body),
+  })
+  const data = await res.json().catch(() => ({} as any))
+  // 服务端 502/400 也带 ok:false 字段
+  return data as NowenNoteTestResult
+}
+
+/** 一键连接 nowen-note 的请求/响应类型 */
+export interface NowenNoteSetupParams {
+  baseUrl: string
+  username: string
+  password: string
+  /** 自定义 Token 名（不传则后端用时间戳生成） */
+  tokenName?: string
+}
+export interface NowenNoteSetupResult {
+  ok: boolean
+  /** Token 预览，如 nkn_xx…ab（成功时返回） */
+  tokenPreview?: string
+  tokenName?: string
+  tokenId?: string
+  baseUrl?: string
+  /** 失败信息（人类可读） */
+  error?: string
+  /**
+   * 失败码，便于前端做 UI 引导：
+   *   - REQUIRES_2FA: 提示走"手填 Token"路径
+   *   - AUTH_FAILED: 高亮密码框
+   *   - ACCOUNT_LOCKED / RATE_LIMITED: 显示重试倒计时
+   *   - NETWORK_ERROR / TIMEOUT: 高亮 URL
+   */
+  code?: string
+}
+/**
+ * 一键连接 nowen-note：用账号密码自动登录并创建永不过期的 API Token。
+ * 后端流程：登录 → 创建 Token → 持久化 → 立即丢弃密码（不会落盘）。
+ */
+export async function setupNowenNoteWithCredentials(
+  params: NowenNoteSetupParams,
+): Promise<NowenNoteSetupResult> {
+  const token = getToken()
+  const res = await fetch(`${API_BASE}/api/settings/nowen-note/setup`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(params),
+  })
+  const data = await res.json().catch(() => ({} as any))
+  // 后端 4xx/5xx 都会带 ok:false + error + code
+  return data as NowenNoteSetupResult
+}
+
+/** 断开 nowen-note 连接（best-effort 远端吊销 Token，本地一定清空敏感字段） */
+export async function disconnectNowenNote(): Promise<{
+  ok: boolean
+  remoteRevoked?: boolean
+  remoteError?: string
+  alreadyDisconnected?: boolean
+  error?: string
+}> {
+  const token = getToken()
+  const res = await fetch(`${API_BASE}/api/settings/nowen-note/disconnect`, {
+    method: 'DELETE',
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+  })
+  const data = await res.json().catch(() => ({} as any))
+  return data
+}
+
 export const notesApi = {
   list: fetchNotes,
   create: createNote,
   update: updateNote,
   delete: deleteNote,
+  push: pushNoteToRemote,
+  pullRemote: pullRemoteNotes,
+  remoteSnapshot: fetchRemoteSnapshot,
+  syncStatus: fetchNoteSyncStatus,
+  testRemote: testNowenNoteConnection,
+  aiStream: streamAIChat,
 }
 
 // ========== 数据导入导出 API ==========

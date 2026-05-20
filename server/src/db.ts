@@ -371,6 +371,18 @@ export async function initDatabase() {
     )
   `)
 
+  // 数据库迁移：为 quick_notes 表添加双向同步相关字段（幂等，已存在则忽略）
+  // tags：JSON 数组字符串（与书签 tags 风格保持一致，存逗号分隔）
+  try { db.run('ALTER TABLE quick_notes ADD COLUMN tags TEXT') } catch {}
+  // notebookId：目标笔记本 ID（默认进"灵感收件箱"，由后端 push 时解析为 nowen-note 真实 ID）
+  try { db.run('ALTER TABLE quick_notes ADD COLUMN notebookId TEXT') } catch {}
+  // remoteId：nowen-note 中对应笔记的 ID（同步成功后回填）
+  try { db.run('ALTER TABLE quick_notes ADD COLUMN remoteId TEXT') } catch {}
+  // syncStatus：local | syncing | synced | conflict
+  try { db.run("ALTER TABLE quick_notes ADD COLUMN syncStatus TEXT DEFAULT 'local'") } catch {}
+  // remoteUpdatedAt：远端最后一次更新时间，用于冲突检测
+  try { db.run('ALTER TABLE quick_notes ADD COLUMN remoteUpdatedAt TEXT') } catch {}
+
   // 清理过期的 Token
   db.run('DELETE FROM tokens WHERE expiresAt < ?', [Date.now()])
   

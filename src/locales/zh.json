@@ -27,7 +27,9 @@
     "all": "全部",
     "categories": "分类",
     "pinned": "常用",
-    "click_to_navigate": "点击快速定位"
+    "click_to_navigate": "点击快速定位",
+    "expand": "展开分类导航",
+    "collapse_to_orb": "收为悬浮球"
   },
   "bookmark": {
     "add": "添加书签",
@@ -142,6 +144,7 @@
     "home": "首页",
     "search": "搜索",
     "ai": "AI 助手",
+    "notes": "灵感速记",
     "add": "添加",
     "view": "视图",
     "theme_light": "切换日间模式",
@@ -422,7 +425,9 @@
         "data": "数据管理",
         "data_desc": "导入导出、恢复备份",
         "ai": "AI 智能",
-        "ai_desc": "AI 模型配置"
+        "ai_desc": "AI 模型配置",
+        "sync": "nowen-note 同步",
+        "sync_desc": "灵感云 · 连接与同步选项"
       },
       "site": {
         "title": "站点配置",
@@ -506,7 +511,70 @@
         "preview_subtitle": "探索精选网站导航",
         "save": "保存配置",
         "saving": "保存中...",
-        "saved": "设置保存成功"
+        "saved": "设置保存成功",
+        "nowenNote": {
+          "title": "nowen-note 同步",
+          "subtitle": "把灵感速记自动归档到你的私有知识库",
+          "configured": "已配置",
+          "notConfigured": "未配置",
+          "baseUrl": "nowen-note 站点地址",
+          "apiToken": "API Token",
+          "tokenStored": "已保存",
+          "tokenHint": "在 nowen-note 设置 → 个人 API Token 中创建，前缀为 nkn_",
+          "syncMode": "同步模式",
+          "mode": {
+            "manual": "手动",
+            "auto": "自动单向",
+            "bidirectional": "双向同步"
+          },
+          "modeHint": {
+            "manual": "仅在点击「推送」时上传",
+            "auto": "新建/编辑后自动推送",
+            "bidirectional": "本地与远端互为镜像"
+          },
+          "defaultNotebook": "默认笔记本 ID（可选）",
+          "defaultNotebookPlaceholder": "留空将自动创建「灵感收件箱」",
+          "defaultNotebookHint": "指定后，所有同步的速记都会进入此笔记本",
+          "test": "测试连通性",
+          "testOk": "连接成功，可见 {{count}} 个笔记本",
+          "testFail": "连接失败",
+          "helpText": "API Token 仅在你重新填写时才会更新，留空则保留已有 Token。所有同步操作仅发生在你的服务器与 nowen-note 之间。",
+          "openRemote": "打开 nowen-note",
+          "setup": {
+            "title": "一键连接",
+            "subtitle": "填入您的 nowen-note 账号，我们会自动为您创建一个专属访问令牌。密码不会被保存。",
+            "username": "用户名 / 邮箱",
+            "usernamePlaceholder": "您在 nowen-note 的登录名",
+            "password": "密码",
+            "passwordPlaceholder": "密码仅用于一次性换取令牌，不会保存",
+            "passwordHint": "密码仅在内存中存在数秒——成功后立即丢弃，绝不落地保存",
+            "action": "一键连接",
+            "connecting": "正在连接…",
+            "success": "连接成功！已自动创建专属访问令牌",
+            "fail": "连接失败",
+            "missingFields": "请填写完整的服务地址、用户名和密码",
+            "use2faHint": "点此切换到手动填 Token →"
+          },
+          "advanced": {
+            "title": "高级：手动填入 API Token",
+            "hint": "适用于：开启了二次验证的账号 / 想用现有的 Token / 需要更精细的 scope 控制。请到 nowen-note 的「个人访问令牌」页面创建一个 Token。",
+            "save": "保存 Token"
+          },
+          "connected": {
+            "title": "已成功连接到 nowen-note",
+            "tokenPreview": "访问令牌",
+            "tokenName": "令牌名称",
+            "tokenNameLegacy": "（未命名）",
+            "syncConfig": "同步配置"
+          },
+          "disconnect": {
+            "action": "断开连接",
+            "confirm": "确定要断开 nowen-note 连接吗？远端的访问令牌将被吊销。",
+            "success": "已断开连接，远端令牌已吊销",
+            "successLocal": "已在本地断开（远端吊销失败，请手动到 nowen-note 删除）",
+            "fail": "断开失败"
+          }
+        }
       },
       "theme": {
         "title": "主题配色",
@@ -1034,17 +1102,119 @@
   },
   "quickNotes": {
     "title": "灵感速记",
-    "placeholder": "记录一个灵感、想法或碎片笔记...",
+    "subtitle": "瞬时想法的渪流，自动汇入 nowen-note 知识库",
+    "drawerSubtitle": "记录此刻的灵感 · 自动同步至 nowen-note",
+    "view": {
+      "card": "卡片视图",
+      "list": "列表视图"
+    },
+    "placeholder": "记录一个灵感、想法或碎片笔记...支持 Markdown，#标签",
+    "placeholderShort": "💬 此刻的灵感...",
     "add": "记录",
-    "shortcut": "Ctrl + Enter 快速保存",
     "edit": "编辑",
     "delete": "删除",
     "confirmDelete": "再次点击确认删除",
     "autoSave": "自动保存中...",
     "empty": "还没有灵感记录",
+    "emptyHint": "灵感如流水，记录下来才不会溜走",
+    "shortcut": "Ctrl + Enter 快速保存",
     "justNow": "刚刚",
     "minutesAgo": "{{count}}分钟前",
     "hoursAgo": "{{count}}小时前",
-    "daysAgo": "{{count}}天前"
+    "daysAgo": "{{count}}天前",
+    "filter": {
+      "all": "全部",
+      "today": "今天",
+      "week": "本周",
+      "synced": "已同步",
+      "local": "本地",
+      "date": "日期",
+      "dateHint": "按日期范围筛选",
+      "dateClear": "清除",
+      "dateDone": "完成",
+      "datePresets": "快捷范围",
+      "dateCustom": "自定义范围",
+      "preset": {
+        "today": "今天",
+        "yesterday": "昨天",
+        "last7": "近 7 天",
+        "last30": "近 30 天"
+      }
+    },
+    "sync": {
+      "synced": "已同步",
+      "syncing": "同步中",
+      "local": "仅本地",
+      "conflict": "存在冲突",
+      "syncedTip": "已同步到「灵感收件箱」",
+      "localTip": "尚未推送到 nowen-note",
+      "syncingTip": "正在推送到 nowen-note...",
+      "conflictTip": "本地与远端都有修改，需手动解决",
+      "pushNow": "立即推送",
+      "pushAll": "一键推送",
+      "pushAllHint": "一键推送 {{count}} 条待同步笔记",
+      "openInRemote": "在 nowen-note 中打开",
+      "notConfigured": "未配置 nowen-note，前往设置",
+      "configure": "配置 nowen-note"
+    },
+    "actions": {
+      "expand": "展开富文本编辑",
+      "collapse": "收起",
+      "aiPolish": "AI 润色",
+      "addTag": "添加标签",
+      "moveToNotebook": "选择笔记本"
+    },
+    "collapsed": {
+      "expandHint": "展开灵感速记",
+      "collapseHint": "折叠（节省首屏空间）",
+      "inlinePlaceholder": "💬 此刻的灵感… 点击展开",
+      "summary_one": "{{count}} 条灵感",
+      "summary_other": "{{count}} 条灵感",
+      "pendingHint": "{{count}} 条待同步"
+    },
+    "idearain": {
+      "button": "灵感雨"
+    },
+    "ai": {
+      "button": "AI"
+    },
+    "rain": {
+      "title": "灵感雨",
+      "subtitle": "时间脉络中的灵感轨迹",
+      "openAll": "在 nowen-note 中查看全部",
+      "today": "今天",
+      "yesterday": "昨天",
+      "earlier": "更早"
+    },
+    "cloud": {
+      "navName": "灵感云",
+      "title": "灵感云 · 同步中心",
+      "subtitle": "已同步 {{synced}} · 待推送 {{local}} · 冲突 {{conflict}}",
+      "subtitleEmpty": "尚未连接 nowen-note",
+      "connected": "已连接 nowen-note",
+      "modeLabel": "模式",
+      "modeManual": "手动同步",
+      "modeAuto": "自动单向 · 30s 推送",
+      "modeBi": "双向同步",
+      "settings": "设置",
+      "pushAll": "一键全部推送",
+      "pushingAll": "正在推送全部…",
+      "syncingHint": "正在推送 {{count}} 条…",
+      "pendingTitle": "待同步 ({{count}})",
+      "conflictTitle": "冲突待解决 ({{count}})",
+      "moreItems": "还有 {{count}} 条…",
+      "push": "推送",
+      "pushing": "推送中",
+      "resolve": "解决",
+      "openIdeaRain": "切换到灵感雨",
+      "openRemote": "打开 nowen-note",
+      "allSynced": "一切都已云端就位",
+      "allSyncedHint": "{{count}} 条灵感已安全归档",
+      "noNotes": "还没有灵感被记录",
+      "notConfiguredTitle": "还没有连接 nowen-note",
+      "notConfiguredHint": "连接后，所有灵感会在 30 秒内自动云端归档，并可跨端访问与 AI 整理。",
+      "gotoSettings": "前往设置",
+      "learnMore": "了解 nowen-note"
+    }
   }
 }

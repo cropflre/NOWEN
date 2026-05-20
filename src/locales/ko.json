@@ -142,6 +142,7 @@
     "home": "홈",
     "search": "검색",
     "ai": "AI 어시스턴트",
+    "notes": "영감 메모",
     "add": "추가",
     "view": "보기",
     "theme_light": "라이트 모드로 전환",
@@ -422,7 +423,9 @@
         "data": "데이터 관리",
         "data_desc": "가져오기/내보내기, 백업 복원",
         "ai": "AI 스마트",
-        "ai_desc": "AI 모델 설정"
+        "ai_desc": "AI 모델 설정",
+        "sync": "nowen-note 동기화",
+        "sync_desc": "영감 클라우드 · 연결 및 옵션"
       },
       "site": {
         "title": "사이트 설정",
@@ -506,7 +509,70 @@
         "preview_subtitle": "엄선된 사이트 내비게이션 탐색",
         "save": "설정 저장",
         "saving": "저장 중...",
-        "saved": "설정을 저장했습니다"
+        "saved": "설정을 저장했습니다",
+        "nowenNote": {
+          "title": "nowen-note 동기화",
+          "subtitle": "영감 메모를 개인 지식 베이스에 자동 보관",
+          "configured": "구성됨",
+          "notConfigured": "구성되지 않음",
+          "baseUrl": "nowen-note URL",
+          "apiToken": "API 토큰",
+          "tokenStored": "저장됨",
+          "tokenHint": "nowen-note 설정 → 개인 API 토큰에서 생성, 접두사는 nkn_",
+          "syncMode": "동기화 모드",
+          "mode": {
+            "manual": "수동",
+            "auto": "자동(단방향)",
+            "bidirectional": "양방향"
+          },
+          "modeHint": {
+            "manual": "「전송」 클릭 시에만",
+            "auto": "생성/수정 후 자동 전송",
+            "bidirectional": "로컬과 원격을 미러링"
+          },
+          "defaultNotebook": "기본 노트북 ID(선택)",
+          "defaultNotebookPlaceholder": "비워두면 「영감 수신함」을 자동 생성",
+          "defaultNotebookHint": "지정하면 모든 동기화 메모가 이 노트북으로 들어갑니다",
+          "test": "연결 테스트",
+          "testOk": "연결 성공, 노트북 {{count}}개 보임",
+          "testFail": "연결 실패",
+          "helpText": "API 토큰은 다시 입력할 때만 업데이트됩니다. 비워두면 기존 토큰을 유지합니다. 모든 동기화 트래픽은 사용자의 서버와 nowen-note 사이에서만 발생합니다.",
+          "openRemote": "nowen-note 열기",
+          "setup": {
+            "title": "원클릭 연결",
+            "subtitle": "nowen-note 계정 정보를 입력하세요. 전용 액세스 토큰이 자동으로 생성됩니다. 비밀번호는 저장되지 않습니다.",
+            "username": "사용자 이름 / 이메일",
+            "usernamePlaceholder": "nowen-note 로그인 이름",
+            "password": "비밀번호",
+            "passwordPlaceholder": "토큰 발급용으로 한 번만 사용되며 저장되지 않습니다",
+            "passwordHint": "비밀번호는 메모리에서 몇 초간만 존재하며 성공 후 즉시 폐기됩니다",
+            "action": "원클릭 연결",
+            "connecting": "연결 중…",
+            "success": "연결 성공! 전용 액세스 토큰이 자동으로 생성되었습니다",
+            "fail": "연결 실패",
+            "missingFields": "URL, 사용자 이름, 비밀번호를 모두 입력하세요",
+            "use2faHint": "클릭하여 수동 토큰 입력으로 전환 →"
+          },
+          "advanced": {
+            "title": "고급: API 토큰 수동 입력",
+            "hint": "다음 경우에 사용: 2단계 인증을 사용 / 기존 토큰을 재사용 / 세분화된 스코프 제어가 필요. nowen-note의 「개인 액세스 토큰」 페이지에서 생성하세요.",
+            "save": "토큰 저장"
+          },
+          "connected": {
+            "title": "nowen-note에 성공적으로 연결되었습니다",
+            "tokenPreview": "액세스 토큰",
+            "tokenName": "토큰 이름",
+            "tokenNameLegacy": "(이름 없음)",
+            "syncConfig": "동기화 설정"
+          },
+          "disconnect": {
+            "action": "연결 해제",
+            "confirm": "nowen-note 연결을 해제하시겠습니까? 원격 액세스 토큰이 취소됩니다.",
+            "success": "연결이 해제되었습니다. 원격 토큰이 취소되었습니다.",
+            "successLocal": "로컬에서 연결 해제됨 (원격 취소 실패, nowen-note에서 수동으로 삭제하세요)",
+            "fail": "연결 해제 실패"
+          }
+        }
       },
       "theme": {
         "title": "테마 색상",
@@ -1034,17 +1100,117 @@
   },
   "quickNotes": {
     "title": "빠른 메모",
-    "placeholder": "아이디어나 메모를 기록하세요...",
+    "subtitle": "찰나의 영감이 흐르는 시냇물, nowen-note 지식 베이스로 흘러들어갑니다",
+    "drawerSubtitle": "이 순간의 영감을 기록 · nowen-note 로 자동 동기화",
+    "view": {
+      "card": "카드 보기",
+      "list": "리스트 보기"
+    },
+    "placeholder": "아이디어나 메모를 기록하세요... Markdown 과 #태그 지원",
+    "placeholderShort": "💬 지금의 영감...",
     "add": "저장",
-    "shortcut": "Ctrl + Enter로 저장",
     "edit": "편집",
     "delete": "삭제",
     "confirmDelete": "다시 클릭하여 삭제 확인",
     "autoSave": "자동 저장 중...",
     "empty": "메모가 없습니다",
+    "emptyHint": "영감은 흐르는 물과 같아, 기록해야 잃지 않습니다",
+    "shortcut": "Ctrl + Enter로 저장",
     "justNow": "방금",
     "minutesAgo": "{{count}}분 전",
     "hoursAgo": "{{count}}시간 전",
-    "daysAgo": "{{count}}일 전"
+    "daysAgo": "{{count}}일 전",
+    "filter": {
+      "all": "전체",
+      "today": "오늘",
+      "week": "이번 주",
+      "synced": "동기화됨",
+      "local": "로컬",
+      "date": "날짜",
+      "dateHint": "날짜 범위로 필터링",
+      "dateClear": "지우기",
+      "dateDone": "완료",
+      "datePresets": "빠른 범위",
+      "dateCustom": "사용자 지정 범위",
+      "preset": {
+        "today": "오늘",
+        "yesterday": "어제",
+        "last7": "최근 7일",
+        "last30": "최근 30일"
+      }
+    },
+    "sync": {
+      "synced": "동기화됨",
+      "syncing": "동기화 중",
+      "local": "로컬 전용",
+      "conflict": "충돌",
+      "syncedTip": "받은 편지함 노트북에 동기화됨",
+      "localTip": "nowen-note 로 푸시되지 않음",
+      "syncingTip": "nowen-note 로 푸시 중...",
+      "conflictTip": "로컬과 원격 모두 변경됨",
+      "pushNow": "지금 푸시",
+      "openInRemote": "nowen-note 에서 열기",
+      "notConfigured": "nowen-note 미구성",
+      "configure": "nowen-note 구성"
+    },
+    "actions": {
+      "expand": "리치 에디터 열기",
+      "collapse": "접기",
+      "aiPolish": "AI 윤문",
+      "addTag": "태그 추가",
+      "moveToNotebook": "노트북 선택"
+    },
+    "collapsed": {
+      "expandHint": "영감 메모 펼치기",
+      "collapseHint": "접기 (공간 절약)",
+      "inlinePlaceholder": "💬 지금의 영감… 클릭하여 펼치기",
+      "summary_one": "{{count}}개의 메모",
+      "summary_other": "{{count}}개의 메모",
+      "pendingHint": "{{count}}개 대기 중"
+    },
+    "idearain": {
+      "button": "영감 비"
+    },
+    "ai": {
+      "button": "AI"
+    },
+    "rain": {
+      "title": "영감 비",
+      "subtitle": "시간선을 따라 영감의 궤적을 추적",
+      "openAll": "nowen-note 에서 모두 보기",
+      "today": "오늘",
+      "yesterday": "어제",
+      "earlier": "이전"
+    },
+    "cloud": {
+      "navName": "영감 클라우드",
+      "title": "영감 클라우드 · 동기화 센터",
+      "subtitle": "동기화 {{synced}} · 대기 {{local}} · 충돌 {{conflict}}",
+      "subtitleEmpty": "nowen-note 에 연결되지 않음",
+      "connected": "nowen-note 에 연결됨",
+      "modeLabel": "모드",
+      "modeManual": "수동 동기화",
+      "modeAuto": "자동 단방향 · 30초 푸시",
+      "modeBi": "양방향 동기화",
+      "settings": "설정",
+      "pushAll": "전체 한 번에 푸시",
+      "pushingAll": "전체 푸시 중…",
+      "syncingHint": "{{count}}개 푸시 중…",
+      "pendingTitle": "대기 중 ({{count}})",
+      "conflictTitle": "충돌 ({{count}})",
+      "moreItems": "{{count}}개 더…",
+      "push": "푸시",
+      "pushing": "푸시 중",
+      "resolve": "해결",
+      "openIdeaRain": "영감 비로 전환",
+      "openRemote": "nowen-note 열기",
+      "allSynced": "모두 클라우드에 안전합니다",
+      "allSyncedHint": "{{count}}개의 영감이 안전하게 보관되었습니다",
+      "noNotes": "아직 기록된 영감이 없습니다",
+      "notConfiguredTitle": "아직 nowen-note 에 연결되지 않았습니다",
+      "notConfiguredHint": "연결하면 모든 영감이 30초 이내에 자동 보관되며, AI 로 정리하고 모든 기기에서 접근할 수 있습니다.",
+      "gotoSettings": "설정으로",
+      "learnMore": "nowen-note 알아보기"
+    }
   }
 }

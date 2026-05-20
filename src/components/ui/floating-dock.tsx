@@ -258,7 +258,7 @@ export function FloatingDock({
             animate={isMobile ? { opacity: 1 } : { scale: 1, opacity: 1 }}
             exit={isMobile ? { opacity: 0 } : { scale: 0.5, opacity: 0 }}
             transition={isMobile ? { duration: 0.15 } : { type: "spring", stiffness: 350, damping: 25 }}
-            className="flex items-end gap-2 px-4 py-3 rounded-2xl"
+            className="flex items-end gap-1 px-2.5 py-1.5 rounded-xl"
             style={{
               background: "var(--color-glass)",
               backdropFilter: "blur(24px) saturate(180%)",
@@ -284,7 +284,7 @@ export function FloatingDock({
                 if (!isDragging) toggleCollapse();
               }}
               className={cn(
-                "w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mb-2",
+                "w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 mb-1",
                 "transition-colors duration-200",
                 isDark
                   ? "hover:bg-white/10 text-white/40 hover:text-cyan-400/80"
@@ -294,11 +294,11 @@ export function FloatingDock({
               whileTap={{ scale: 0.9 }}
               title="收缩为球"
             >
-              <Grip className="w-4 h-4" />
+              <Grip className="w-3 h-3" />
             </motion.button>
 
             <div
-              className="w-px h-8 mx-1 mb-2"
+              className="w-px h-6 mx-0.5 mb-1"
               style={{ background: "var(--color-glass-border)" }}
             />
 
@@ -315,7 +315,7 @@ export function FloatingDock({
                   />
                 ))}
                 <div
-                  className="w-px h-8 mx-1"
+                  className="w-px h-6 mx-0.5"
                   style={{ background: "var(--color-glass-border)" }}
                 />
               </>
@@ -385,9 +385,9 @@ function DockItem({
     return val - bounds.x - bounds.width / 2;
   });
 
-  // 移动端禁用鱼眼放大效果，固定 48px 尺寸以提升性能
-  const widthSync = useTransform(distance, [-150, 0, 150], isMobile ? [48, 48, 48] : [48, 72, 48]);
-  const heightSync = useTransform(distance, [-150, 0, 150], isMobile ? [48, 48, 48] : [48, 72, 48]);
+  // Mini 版尺寸：基础 36，鱼眼放大到 52；移动端固定 36 以提升性能
+  const widthSync = useTransform(distance, [-120, 0, 120], isMobile ? [36, 36, 36] : [36, 52, 36]);
+  const heightSync = useTransform(distance, [-120, 0, 120], isMobile ? [36, 36, 36] : [36, 52, 36]);
 
   const width = useSpring(widthSync, isMobile
     ? { stiffness: 500, damping: 30 }
@@ -456,7 +456,7 @@ function DockItem({
       <AnimatePresence>
         {isHovered && !isDragging && !showSubmenu && (
           <motion.div
-            className="absolute -top-12 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-lg whitespace-nowrap"
+            className="absolute -top-9 left-1/2 -translate-x-1/2 px-2 py-1 rounded-md whitespace-nowrap"
             style={{
               background: "var(--color-bg-secondary)",
               border: "1px solid var(--color-glass-border)",
@@ -468,7 +468,7 @@ function DockItem({
             transition={{ duration: 0.15 }}
           >
             <span
-              className="text-sm font-medium"
+              className="text-xs font-medium"
               style={{ color: "var(--color-text-primary)" }}
             >
               {title}
@@ -506,7 +506,7 @@ function DockItem({
             onMouseEnter={handleMouseEnterSubmenu}
             onMouseLeave={handleMouseLeaveSubmenu}
           >
-            <div className="flex flex-col gap-1 min-w-[120px]">
+            <div className="flex flex-col gap-0.5 min-w-[110px]">
               {subItems.map((subItem) => (
                 <motion.button
                   key={subItem.id}
@@ -517,8 +517,8 @@ function DockItem({
                     setShowSubmenu(false);
                   }}
                   className={cn(
-                    "px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap",
-                    "flex items-center gap-2.5 transition-all duration-200",
+                    "px-2.5 py-1.5 rounded-md text-xs font-medium whitespace-nowrap",
+                    "flex items-center gap-2 transition-all duration-200",
                     "cursor-pointer"
                   )}
                   style={{
@@ -571,7 +571,7 @@ function DockItem({
       <motion.button
         onClick={handleClick}
         onPointerDown={(e) => e.stopPropagation()}
-        className="w-full h-full rounded-xl flex items-center justify-center cursor-pointer overflow-hidden"
+        className="w-full h-full rounded-lg flex items-center justify-center cursor-pointer overflow-hidden"
         style={{
           background: isHovered
             ? "var(--color-glass-hover)"
@@ -588,11 +588,12 @@ function DockItem({
         whileTap={{ scale: 0.9 }}
       >
         {isMobile ? (
-          <div>{icon}</div>
+          <div className="[&_svg]:w-4 [&_svg]:h-4">{icon}</div>
         ) : (
           <motion.div
+            className="[&_svg]:w-4 [&_svg]:h-4"
             style={{
-              scale: useTransform(width, [48, 72], [1, 1.2]),
+              scale: useTransform(width, [36, 52], [1, 1.2]),
             }}
           >
             {icon}
@@ -603,8 +604,8 @@ function DockItem({
       {/* 移动端跳过装饰性光效动画以提升性能 */}
       {!isMobile && isDark && (
         <motion.div
-          className="absolute inset-0 rounded-xl pointer-events-none"
-          style={{ boxShadow: `0 0 25px var(--color-glow)` }}
+          className="absolute inset-0 rounded-lg pointer-events-none"
+          style={{ boxShadow: `0 0 18px var(--color-glow)` }}
           animate={{ opacity: isHovered ? 0.8 : 0 }}
           transition={{ duration: 0.2 }}
         />
@@ -612,7 +613,7 @@ function DockItem({
 
       {!isMobile && !isDark && (
         <motion.div
-          className="absolute inset-0 rounded-xl pointer-events-none"
+          className="absolute inset-0 rounded-lg pointer-events-none"
           animate={{
             boxShadow: isHovered ? "var(--color-shadow-hover)" : "none",
             y: isHovered ? -2 : 0,
@@ -623,7 +624,7 @@ function DockItem({
 
       {!isMobile && isDark && isHovered && (
         <motion.div
-          className="absolute inset-0 rounded-xl pointer-events-none"
+          className="absolute inset-0 rounded-lg pointer-events-none"
           style={{
             background: `linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%)`,
             padding: "1px",

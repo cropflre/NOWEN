@@ -51,6 +51,10 @@ import {
   BookmarkDragOverlay,
   QuickNotes,
 } from "./components/home";
+import { CloudDrawerHost } from "./components/home/notes/CloudDrawerHost";
+import { QuickNotesDrawer } from "./components/home/notes/QuickNotesDrawer";
+import { QuickNotesProvider } from "./hooks/QuickNotesContext";
+import { CloudDrawerProvider } from "./hooks/CloudDrawerContext";
 
 // 监控组件
 import { SystemMonitorCard } from "./components/SystemMonitorCard";
@@ -104,6 +108,7 @@ function App() {
   const [isSpotlightOpen, setIsSpotlightOpen] = useState(false);
   const [isAiAssistantOpen, setIsAiAssistantOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isQuickNotesDrawerOpen, setIsQuickNotesDrawerOpen] = useState(false);
   const [isIconManagerOpen, setIsIconManagerOpen] = useState(false);
   const [editingBookmark, setEditingBookmark] = useState<Bookmark | null>(null);
   const [editingCategory, setEditingCategory] = useState<import("./types/bookmark").Category | null>(null);
@@ -147,6 +152,7 @@ function App() {
     enableQuickNotes,
     enableIntranetDownload,
     enableSidebarNav,
+    nowenNote,
   } = useSiteSettings();
 
   const { getMenuItems } = useBookmarkContextMenu({ enableIntranetDownload });
@@ -302,6 +308,9 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
         break;
       case "add":
         if (isLoggedIn) setIsAddModalOpen(true);
+        break;
+      case "notes":
+        if (isLoggedIn) setIsQuickNotesDrawerOpen(true);
         break;
       case "admin":
         navigateToAdmin();
@@ -573,17 +582,24 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
     : { showBeams: siteSettings.enableBeamAnimation !== false };
 
   return (
+    <QuickNotesProvider
+      syncMode={nowenNote?.syncMode || 'auto'}
+      remoteConfigured={!!nowenNote?.hasToken && !!nowenNote?.baseUrl}
+    >
+    <CloudDrawerProvider>
     <>
       {/* 壁纸背景层 - 独立于 BackgroundWrapper，位于最底层 */}
       {wallpaperEnabled && wallpaperImageSrc && (
         <>
           <div
-            className="fixed inset-0 bg-cover bg-center bg-no-repeat"
+            className="fixed bg-cover bg-center bg-no-repeat"
             style={{
               backgroundImage: `url(${wallpaperImageSrc})`,
               filter: `blur(${wallpaper?.blur || 0}px)`,
-              transform: 'scale(1.1)',
+              /* 用 inset 负值代替 transform: scale，避免移动端 fixed + transform 子像素抖动 */
+              inset: '-5%',
               zIndex: 0,
+              willChange: 'auto',
             }}
           />
           {/* 遮罩层 */}
@@ -651,10 +667,7 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
             onRemove={toggleReadLater}
           />
 
-          {/* Quick Notes / 灵感速记 */}
-          {enableQuickNotes && (
-            <QuickNotes isLoggedIn={isLoggedIn} />
-          )}
+          {/* Quick Notes / 灵感速记 — 从首页移除，现以抽屉形式由 dock 触发 */}
 
           {/* Pinned Bookmarks - Bento Grid */}
           {pinnedBookmarks.length > 0 ? (
@@ -936,14 +949,22 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
     {/* 移动端：底部固定栏（状态栏 + 能量球） */}
     <div className="md:hidden">
       <MobileFloatingDock
-        items={filteredDockItems
-          .filter((item) => !item.href)
-          .map((item) => ({
+          items={filteredDockItems
+            .filter((item) => item.id !== "home")
+            .map((item) => ({
             id: item.id,
             label: item.title,
             icon: item.IconComponent,
             onClick: item.onClick || (() => handleDockClick(item.id)),
             isActive: item.id === "home",
+            // 透传子菜单（如"视图"项有 卡片/列表/紧凑 等子项）
+            subItems: item.subItems?.map((sub) => ({
+              id: sub.id,
+              label: sub.title,
+              icon: sub.IconComponent,
+              onClick: sub.onClick,
+              isActive: sub.isActive,
+            })),
           }))}
         leftSlot={
           effectiveWidgetVisibility.mobileTicker !== false
@@ -952,10 +973,32 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
         }
       />
     </div>
+
+    {/* 灵感云·同步中心抽屉（被 SidebarNav 模块项触发） */}
+    <CloudDrawerHost
+      remoteConfigured={!!nowenNote?.hasToken && !!nowenNote?.baseUrl}
+      remoteBaseUrl={nowenNote?.baseUrl || undefined}
+      syncMode={nowenNote?.syncMode || 'auto'}
+      onOpenSettings={() => { setAdminTab('settings'); navigateToAdmin(); }}
+    />
+
+    {/* 灵感速记抽屉（被 dock “灵感”按钮触发） */}
+    {enableQuickNotes && (
+      <QuickNotesDrawer
+        open={isQuickNotesDrawerOpen}
+        onClose={() => setIsQuickNotesDrawerOpen(false)}
+        isLoggedIn={isLoggedIn}
+        remoteConfigured={!!nowenNote?.hasToken && !!nowenNote?.baseUrl}
+        remoteBaseUrl={nowenNote?.baseUrl || undefined}
+        syncMode={nowenNote?.syncMode || 'auto'}
+        onOpenSettings={() => { setAdminTab('settings'); navigateToAdmin(); }}
+      />
+    )}
     </>
+    </CloudDrawerProvider>
+    </QuickNotesProvider>
   );
 }
-
 // ========== 分类区书签卡片（React.memo 优化） ==========
 const MAX_ANIMATED_INDEX = 12; // 超过此索引的卡片不再有递增延迟动画
 

@@ -27,7 +27,9 @@
     "all": "All",
     "categories": "Categories",
     "pinned": "Pinned",
-    "click_to_navigate": "Click to navigate"
+    "click_to_navigate": "Click to navigate",
+    "expand": "Expand category nav",
+    "collapse_to_orb": "Collapse to orb"
   },
   "bookmark": {
     "add": "Add Bookmark",
@@ -142,6 +144,7 @@
     "home": "Home",
     "search": "Search",
     "ai": "AI Assistant",
+    "notes": "Quick Notes",
     "add": "Add",
     "view": "View",
     "theme_light": "Switch to Light Mode",
@@ -422,7 +425,9 @@
         "data": "Data",
         "data_desc": "Import, export, backup",
         "ai": "AI",
-        "ai_desc": "AI model configuration"
+        "ai_desc": "AI model configuration",
+        "sync": "nowen-note Sync",
+        "sync_desc": "Idea Cloud · connection & options"
       },
       "site": {
         "title": "Site Settings",
@@ -506,7 +511,70 @@
         "preview_subtitle": "Explore curated website navigation",
         "save": "Save Settings",
         "saving": "Saving...",
-        "saved": "Settings saved successfully"
+        "saved": "Settings saved successfully",
+        "nowenNote": {
+          "title": "nowen-note Sync",
+          "subtitle": "Archive your quick notes to your private knowledge base",
+          "configured": "Configured",
+          "notConfigured": "Not configured",
+          "baseUrl": "nowen-note URL",
+          "apiToken": "API Token",
+          "tokenStored": "saved",
+          "tokenHint": "Create one in nowen-note → Personal API Token, starts with nkn_",
+          "syncMode": "Sync Mode",
+          "mode": {
+            "manual": "Manual",
+            "auto": "Auto (one-way)",
+            "bidirectional": "Bidirectional"
+          },
+          "modeHint": {
+            "manual": "Push only when you click",
+            "auto": "Auto push after create/edit",
+            "bidirectional": "Mirror local & remote"
+          },
+          "defaultNotebook": "Default notebook ID (optional)",
+          "defaultNotebookPlaceholder": "Leave blank to auto-create \"Inbox\"",
+          "defaultNotebookHint": "All synced notes will go into this notebook",
+          "test": "Test connection",
+          "testOk": "Connected, {{count}} notebooks visible",
+          "testFail": "Connection failed",
+          "helpText": "API Token is only updated when you re-enter it; leaving it blank keeps the existing token. All sync traffic happens between your server and nowen-note.",
+          "openRemote": "Open nowen-note",
+          "setup": {
+            "title": "One-Click Connect",
+            "subtitle": "Enter your nowen-note credentials. We'll create a dedicated access token for you. Your password will not be stored.",
+            "username": "Username / Email",
+            "usernamePlaceholder": "Your nowen-note login name",
+            "password": "Password",
+            "passwordPlaceholder": "Used once to obtain a token, never stored",
+            "passwordHint": "Your password lives in memory for seconds only and is discarded immediately after success",
+            "action": "Connect",
+            "connecting": "Connecting…",
+            "success": "Connected! A dedicated access token has been created.",
+            "fail": "Connection failed",
+            "missingFields": "Please fill in URL, username and password",
+            "use2faHint": "Click here to switch to manual token →"
+          },
+          "advanced": {
+            "title": "Advanced: Paste API Token Manually",
+            "hint": "Use this if you have 2FA enabled / want to reuse an existing token / need finer-grained scope control. Create one in nowen-note's \"Personal Access Tokens\" page.",
+            "save": "Save Token"
+          },
+          "connected": {
+            "title": "Successfully connected to nowen-note",
+            "tokenPreview": "Access Token",
+            "tokenName": "Token Name",
+            "tokenNameLegacy": "(unnamed)",
+            "syncConfig": "Sync Configuration"
+          },
+          "disconnect": {
+            "action": "Disconnect",
+            "confirm": "Disconnect nowen-note? The remote access token will be revoked.",
+            "success": "Disconnected. Remote token revoked.",
+            "successLocal": "Disconnected locally (remote revocation failed; please remove it manually in nowen-note).",
+            "fail": "Disconnect failed"
+          }
+        }
       },
       "theme": {
         "title": "Theme Settings",
@@ -1034,17 +1102,117 @@
   },
   "quickNotes": {
     "title": "Quick Notes",
-    "placeholder": "Capture an idea, thought, or snippet...",
+    "subtitle": "A stream of fleeting ideas, flowing into your nowen-note vault",
+    "drawerSubtitle": "Capture this moment · Auto-sync to nowen-note",
+    "view": {
+      "card": "Card view",
+      "list": "List view"
+    },
+    "placeholder": "Capture an idea, thought, or snippet... Markdown supported, #tags",
+    "placeholderShort": "💬 What's on your mind?",
     "add": "Save",
-    "shortcut": "Ctrl + Enter to save",
     "edit": "Edit",
     "delete": "Delete",
     "confirmDelete": "Click again to confirm",
     "autoSave": "Auto-saving...",
     "empty": "No notes yet",
+    "emptyHint": "Ideas flow like water — capture them before they slip away",
+    "shortcut": "Ctrl + Enter to save",
     "justNow": "Just now",
     "minutesAgo": "{{count}} min ago",
     "hoursAgo": "{{count}} hr ago",
-    "daysAgo": "{{count}} days ago"
+    "daysAgo": "{{count}} days ago",
+    "filter": {
+      "all": "All",
+      "today": "Today",
+      "week": "This week",
+      "synced": "Synced",
+      "local": "Local",
+      "date": "Date",
+      "dateHint": "Filter by date range",
+      "dateClear": "Clear",
+      "dateDone": "Done",
+      "datePresets": "Quick ranges",
+      "dateCustom": "Custom range",
+      "preset": {
+        "today": "Today",
+        "yesterday": "Yesterday",
+        "last7": "Last 7 days",
+        "last30": "Last 30 days"
+      }
+    },
+    "sync": {
+      "synced": "Synced",
+      "syncing": "Syncing",
+      "local": "Local only",
+      "conflict": "Conflict",
+      "syncedTip": "Synced to Inbox notebook",
+      "localTip": "Not pushed to nowen-note yet",
+      "syncingTip": "Pushing to nowen-note...",
+      "conflictTip": "Both local and remote changed — manual resolution needed",
+      "pushNow": "Push now",
+      "openInRemote": "Open in nowen-note",
+      "notConfigured": "nowen-note not configured",
+      "configure": "Configure nowen-note"
+    },
+    "actions": {
+      "expand": "Expand to rich editor",
+      "collapse": "Collapse",
+      "aiPolish": "AI Polish",
+      "addTag": "Add tag",
+      "moveToNotebook": "Choose notebook"
+    },
+    "collapsed": {
+      "expandHint": "Expand quick notes",
+      "collapseHint": "Collapse (save space)",
+      "inlinePlaceholder": "💬 What's on your mind? Click to expand",
+      "summary_one": "{{count}} note",
+      "summary_other": "{{count}} notes",
+      "pendingHint": "{{count}} pending"
+    },
+    "idearain": {
+      "button": "Rain"
+    },
+    "ai": {
+      "button": "AI"
+    },
+    "rain": {
+      "title": "Idea Rain",
+      "subtitle": "Trace your ideas along the timeline",
+      "openAll": "View all in nowen-note",
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "earlier": "Earlier"
+    },
+    "cloud": {
+      "navName": "Idea Cloud",
+      "title": "Idea Cloud · Sync Center",
+      "subtitle": "Synced {{synced}} · Pending {{local}} · Conflict {{conflict}}",
+      "subtitleEmpty": "Not connected to nowen-note",
+      "connected": "Connected to nowen-note",
+      "modeLabel": "Mode",
+      "modeManual": "Manual sync",
+      "modeAuto": "Auto one-way · 30s push",
+      "modeBi": "Bidirectional",
+      "settings": "Settings",
+      "pushAll": "Push all at once",
+      "pushingAll": "Pushing all…",
+      "syncingHint": "Pushing {{count}}…",
+      "pendingTitle": "Pending ({{count}})",
+      "conflictTitle": "Conflicts ({{count}})",
+      "moreItems": "{{count}} more…",
+      "push": "Push",
+      "pushing": "Pushing",
+      "resolve": "Resolve",
+      "openIdeaRain": "Switch to Idea Rain",
+      "openRemote": "Open nowen-note",
+      "allSynced": "Everything is in the cloud",
+      "allSyncedHint": "{{count}} ideas safely archived",
+      "noNotes": "No ideas recorded yet",
+      "notConfiguredTitle": "Not connected to nowen-note",
+      "notConfiguredHint": "Once connected, every idea is auto-archived within 30s and accessible across devices with AI assistance.",
+      "gotoSettings": "Go to settings",
+      "learnMore": "About nowen-note"
+    }
   }
 }

@@ -12,6 +12,7 @@ import {
   LayoutGrid,
   StretchHorizontal,
   Eye,
+  Lightbulb,
 } from "lucide-react";
 import { TFunction } from "i18next";
 
@@ -77,6 +78,12 @@ export const createDockItems = (
     IconComponent: Sparkles,
   },
   {
+    id: "notes",
+    title: t("dock.notes"),
+    icon: <Lightbulb className="w-5 h-5" />,
+    IconComponent: Lightbulb,
+  },
+  {
     id: "add",
     title: t("dock.add"),
     icon: <Plus className="w-5 h-5" />,
@@ -134,6 +141,9 @@ export const filterDockItems = (
       return false;
     }
     if (item.id === "ai" && (widgetVisibility?.aiAssistant === false || !isLoggedIn)) {
+      return false;
+    }
+    if (item.id === "notes" && !isLoggedIn) {
       return false;
     }
     if (item.id === "add" && !isLoggedIn) {

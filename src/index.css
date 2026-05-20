@@ -81,6 +81,11 @@
 html {
   font-size: 16px;
   scroll-behavior: smooth;
+  /* 横向锚定：与 body 协同防止移动端滚动横向抖动 */
+  overflow-x: hidden;
+  width: 100%;
+  /* iOS Safari：避免地址栏伸缩时反复触发布局重排 */
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
@@ -88,7 +93,12 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+  /* 关键：固定宽度等于视口，避免子元素超出视口宽度时引起 1px 横向抖动 */
+  width: 100%;
+  max-width: 100vw;
   min-height: 100vh;
+  /* 滚动锚定：滚动时如果有元素位置改变，浏览器会调整 scroll 位置以保持视觉稳定 */
+  overscroll-behavior-x: none;
   background: var(--color-bg-primary);
   color: var(--color-text-primary);
   transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
@@ -189,6 +199,17 @@ body::before {
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.2);
+}
+
+/* 完全隐藏滚动条（用于横向 tabs 等） */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE / Edge */
+  scrollbar-width: none;     /* Firefox */
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;             /* Chrome / Safari / Opera */
+  width: 0;
+  height: 0;
 }
 
 /* 默认选中 */
