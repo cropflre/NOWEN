@@ -1235,8 +1235,10 @@ function AdminContent() {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.15 }}
               className={cn(
+                'w-full',
                 ['tags', 'quotes', 'icons'].includes(activeTab) && 'max-w-4xl',
-                ['analytics', 'health-check', 'logs', 'backup', 'docs', 'settings'].includes(activeTab) && 'max-w-5xl',
+                ['analytics', 'health-check', 'logs', 'backup', 'docs'].includes(activeTab) && 'max-w-5xl',
+                activeTab === 'settings' && 'max-w-[1480px]',
               )}
             >
             {/* Bookmarks Tab */}

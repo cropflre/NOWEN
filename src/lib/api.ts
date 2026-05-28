@@ -734,6 +734,7 @@ export interface WidgetVisibility {
 export interface MenuVisibility {
   languageToggle?: boolean  // 多语言切换开关
   themeToggle?: boolean     // 日间/夜间模式切换开关
+  searchToggle?: boolean    // Dock 搜索按钮开关
 }
 
 // 壁纸设置
@@ -788,6 +789,7 @@ export interface SiteSettings {
   enableLiteMode?: boolean // 精简模式开关 - 禅 (Zen)
   enableWeather?: boolean  // 天气显示开关
   enableLunar?: boolean    // 农历显示开关
+  enableSearch?: boolean   // 前台搜索栏 / 搜索入口开关
   enableAutoAi?: boolean   // AI 自动触发开关（添加书签时自动调用 AI 分类/标签）
   weatherCity?: string     // 手动设置的天气城市名
   disableGeolocation?: boolean  // 强制禁用定位获取
@@ -843,6 +845,7 @@ function parseSettings(raw: Record<string, string>): SiteSettings {
   let menuVisibility: MenuVisibility = {
     languageToggle: true,
     themeToggle: true,
+    searchToggle: true,
   }
   
   if (raw.menuVisibility) {
@@ -879,9 +882,10 @@ function parseSettings(raw: Record<string, string>): SiteSettings {
     // 默认开启光束，默认关闭精简模式
     enableBeamAnimation: raw.enableBeamAnimation === undefined ? true : raw.enableBeamAnimation === 'true' || raw.enableBeamAnimation === '1',
     enableLiteMode: raw.enableLiteMode === 'true' || raw.enableLiteMode === '1',
-    // 默认开启天气和农历
+    // 默认开启天气、农历和搜索入口
     enableWeather: raw.enableWeather === undefined ? true : raw.enableWeather === 'true' || raw.enableWeather === '1',
     enableLunar: raw.enableLunar === undefined ? true : raw.enableLunar === 'true' || raw.enableLunar === '1',
+    enableSearch: raw.enableSearch === undefined ? true : raw.enableSearch === 'true' || raw.enableSearch === '1',
     // AI 自动触发：默认开启（保持向后兼容，原有行为不变）
     enableAutoAi: raw.enableAutoAi === undefined ? true : raw.enableAutoAi === 'true' || raw.enableAutoAi === '1',
     weatherCity: raw.weatherCity || '',
@@ -943,6 +947,7 @@ export async function updateSettings(settings: SiteSettings): Promise<SiteSettin
     enableLiteMode: settings.enableLiteMode ? 'true' : 'false',
     enableWeather: settings.enableWeather ? 'true' : 'false',
     enableLunar: settings.enableLunar ? 'true' : 'false',
+    enableSearch: settings.enableSearch === false ? 'false' : 'true',
     enableAutoAi: settings.enableAutoAi === false ? 'false' : 'true',
     weatherCity: settings.weatherCity ?? '',
     disableGeolocation: settings.disableGeolocation ? 'true' : 'false',

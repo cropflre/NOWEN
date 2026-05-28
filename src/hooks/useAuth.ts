@@ -5,9 +5,12 @@ import type { PageType, AdminTabType } from './useHashRouter';
 
 export type { PageType, AdminTabType } from './useHashRouter';
 
+type LoginRedirectTarget = 'home' | 'admin';
+
 export function useAuth() {
   const { page: currentPage, adminTab, navigateTo, setAdminTab } = useHashRouter();
   const [adminUsername, setAdminUsername] = useState<string>('');
+  const [loginRedirectTarget, setLoginRedirectTarget] = useState<LoginRedirectTarget>('home');
   // 从 localStorage 同步初始化登录状态，避免闪烁和竞态
   const [isLoggedIn, setIsLoggedIn] = useState(() => {
     const { isValid } = checkAuthStatus();
@@ -58,6 +61,7 @@ export function useAuth() {
         setIsLoggedIn(true);
         setAdminUsername(username);
       } else {
+        setLoginRedirectTarget('admin');
         navigateTo('admin-login');
       }
     }
@@ -76,7 +80,7 @@ export function useAuth() {
     return false;
   }, []);
 
-  // 后台登录成功
+  // 登录成功：默认回前台；从后台入口进入登录页时回后台
   const handleAdminLogin = useCallback((username: string, requirePasswordChange?: boolean) => {
     setAdminUsername(username);
     setIsLoggedIn(true);
@@ -85,9 +89,9 @@ export function useAuth() {
       // URL 显示 admin-login，内部渲染密码修改
       navigateTo('admin-login');
     } else {
-      navigateTo('admin');
+      navigateTo(loginRedirectTarget);
     }
-  }, [navigateTo]);
+  }, [loginRedirectTarget, navigateTo]);
 
   // 密码修改成功后的处理
   const handlePasswordChangeSuccess = useCallback((newUsername?: string) => {
@@ -95,8 +99,8 @@ export function useAuth() {
       setAdminUsername(newUsername);
     }
     setForcePasswordChange(false);
-    navigateTo('admin');
-  }, [navigateTo]);
+    navigateTo(loginRedirectTarget);
+  }, [loginRedirectTarget, navigateTo]);
 
   // 后台退出登录
   const handleAdminLogout = useCallback(() => {
@@ -107,18 +111,24 @@ export function useAuth() {
     navigateTo('home');
   }, [navigateTo]);
 
+  const navigateToLogin = useCallback((redirectTarget: LoginRedirectTarget = 'home') => {
+    setLoginRedirectTarget(redirectTarget);
+    navigateTo('admin-login');
+  }, [navigateTo]);
+
   // 导航到管理页面（带权限检查）
   const navigateToAdmin = useCallback(() => {
     const authResult = checkAdminAuth();
     if (authResult === 'require-password-change') {
+      setLoginRedirectTarget('admin');
       setForcePasswordChange(true);
       navigateTo('admin-login');
     } else if (authResult) {
       navigateTo('admin');
     } else {
-      navigateTo('admin-login');
+      navigateToLogin('admin');
     }
-  }, [checkAdminAuth, navigateTo]);
+  }, [checkAdminAuth, navigateTo, navigateToLogin]);
 
   // 计算实际显示的页面（考虑 forcePasswordChange 内部状态）
   const effectivePage: PageType = forcePasswordChange && isLoggedIn
@@ -136,5 +146,6 @@ export function useAuth() {
     handlePasswordChangeSuccess,
     handleAdminLogout,
     navigateToAdmin,
+    navigateToLogin,
   };
 }

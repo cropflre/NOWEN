@@ -137,6 +137,7 @@ function App() {
     isLiteMode,
     showWeather,
     showLunar,
+    showSearch,
     weatherCity,
     disableGeolocation,
     enableAutoAi,
@@ -169,6 +170,7 @@ function App() {
     handlePasswordChangeSuccess,
     handleAdminLogout,
     navigateToAdmin,
+    navigateToLogin,
   } = useAuth();
 
   // 书签数据
@@ -195,7 +197,18 @@ function App() {
     refreshData,
   } = useBookmarkStore();
 
+  const previousLoginStateRef = React.useRef(isLoggedIn);
+
+  // 登录状态从未登录切换到已登录时，重新拉取私有书签/分类
+  useEffect(() => {
+    if (!previousLoginStateRef.current && isLoggedIn) {
+      refreshData();
+    }
+    previousLoginStateRef.current = isLoggedIn;
+  }, [isLoggedIn, refreshData]);
+
   // 拖拽功能
+
   const {
     activeBookmark,
     sensors,
@@ -267,14 +280,18 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
   }, [widgetVisibility, isLoggedIn])
 
   const dockItems = createDockItems(isDark, toggleDarkMode, t, toggleLanguage, handleCardViewModeChange, cardViewMode);
-  const filteredDockItems = filterDockItems(dockItems, menuVisibility, effectiveWidgetVisibility, isLoggedIn);
+  const effectiveMenuVisibility = useMemo(
+    () => ({ ...menuVisibility, searchToggle: showSearch && menuVisibility.searchToggle !== false }),
+    [menuVisibility, showSearch]
+  );
+  const filteredDockItems = filterDockItems(dockItems, effectiveMenuVisibility, effectiveWidgetVisibility, isLoggedIn);
 
   // ========== 全局快捷键 ==========
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         e.preventDefault();
-        setIsSpotlightOpen(true);
+        if (showSearch) setIsSpotlightOpen(true);
       }
       if ((e.metaKey || e.ctrlKey) && e.key === "n") {
         e.preventDefault();
@@ -290,7 +307,7 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isLoggedIn]);
+  }, [isLoggedIn, showSearch, effectiveWidgetVisibility.aiAssistant]);
 
   // ========== 事件处理函数 ==========
   const handleDockClick = (id: string) => {
@@ -415,7 +432,7 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
   // 后台管理页面
   if (currentPage === "admin") {
     if (!isLoggedIn) {
-      setCurrentPage("admin-login");
+      navigateToLogin('admin');
       return null;
     }
     return (
@@ -534,7 +551,7 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
 
             {/* 登录按钮 */}
             <motion.button
-              onClick={() => setCurrentPage('admin-login')}
+              onClick={() => navigateToLogin('home')}
               className="w-full py-3.5 rounded-xl text-white font-medium relative overflow-hidden group"
               style={{ background: 'linear-gradient(135deg, #667eea, #ec4899)' }}
               whileHover={{ scale: 1.02 }}
@@ -650,6 +667,7 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
             isLiteMode={isLiteMode}
             showWeather={showWeather}
             showLunar={showLunar}
+            showSearch={showSearch}
             weather={weather}
             weatherLoading={weatherLoading}
             weatherCity={weatherCity}
@@ -844,13 +862,15 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
       )}
 
       {/* Modals */}
-      <SpotlightSearch
-        isOpen={isSpotlightOpen}
-        onClose={() => setIsSpotlightOpen(false)}
-        bookmarks={bookmarks}
-        onAddBookmark={handleAddFromSpotlight}
-        searchEngineSettings={searchEngine}
-      />
+      {showSearch && (
+        <SpotlightSearch
+          isOpen={isSpotlightOpen}
+          onClose={() => setIsSpotlightOpen(false)}
+          bookmarks={bookmarks}
+          onAddBookmark={handleAddFromSpotlight}
+          searchEngineSettings={searchEngine}
+        />
+      )}
 
       {isLoggedIn && effectiveWidgetVisibility.aiAssistant !== false && (
         <AiAssistant

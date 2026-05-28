@@ -63,10 +63,32 @@ function loadPos(): { x: number; y: number } {
 
 function loadCollapsed(): boolean {
   try {
-    return localStorage.getItem(DOCK_COLLAPSED_KEY) === "true";
+    const stored = localStorage.getItem(DOCK_COLLAPSED_KEY);
+    return stored === null ? true : stored === "true";
   } catch {
-    return false;
+    return true;
   }
+}
+
+const DOCK_MARGIN = 16;
+const DOCK_ITEM_WIDTH = 40;
+const DOCK_HANDLE_WIDTH = 37;
+
+function getDockWidth(itemCount: number, hasLeftItems: boolean): number {
+  const separators = hasLeftItems ? 2 : 1;
+  return DOCK_HANDLE_WIDTH + itemCount * DOCK_ITEM_WIDTH + separators * 9 + 20;
+}
+
+function getDockTranslateX(x: number, dockWidth: number): string {
+  if (x - dockWidth / 2 < DOCK_MARGIN) return "0";
+  if (x + dockWidth / 2 > window.innerWidth - DOCK_MARGIN) return "-100%";
+  return "-50%";
+}
+
+function getDockTranslateY(y: number, dockHeight = 56): string {
+  if (y - dockHeight / 2 < DOCK_MARGIN) return "0";
+  if (y + dockHeight / 2 > window.innerHeight - DOCK_MARGIN) return "-100%";
+  return "-50%";
 }
 
 export function FloatingDock({
@@ -80,6 +102,10 @@ export function FloatingDock({
   const [isCollapsed, setIsCollapsed] = useState(loadCollapsed);
   const dockRef = useRef<HTMLDivElement>(null);
   const isMobile = useMemo(() => isMobileDevice(), []);
+  const expandedDockWidth = useMemo(
+    () => getDockWidth(items.length + (leftItems?.length ?? 0), !!leftItems?.length),
+    [items.length, leftItems?.length]
+  );
 
   // 拖拽位置状态
   const posRef = useRef(loadPos());
@@ -155,8 +181,8 @@ export function FloatingDock({
       const dx = e.clientX - dragStartMouse.current.x;
       const dy = e.clientY - dragStartMouse.current.y;
       if (Math.abs(dx) > 3 || Math.abs(dy) > 3) hasDragged.current = true;
-      const nx = Math.max(30, Math.min(window.innerWidth - 30, dragStartPos.current.x + dx));
-      const ny = Math.max(30, Math.min(window.innerHeight - 20, dragStartPos.current.y + dy));
+      const nx = Math.max(DOCK_MARGIN, Math.min(window.innerWidth - DOCK_MARGIN, dragStartPos.current.x + dx));
+      const ny = Math.max(DOCK_MARGIN, Math.min(window.innerHeight - DOCK_MARGIN, dragStartPos.current.y + dy));
       posRef.current = { x: nx, y: ny };
       setPos({ x: nx, y: ny });
     },
@@ -188,7 +214,9 @@ export function FloatingDock({
       style={{
         left: pos.x,
         top: pos.y,
-        transform: "translate(-50%, -50%)",
+        transform: isCollapsed
+          ? "translate(-50%, -50%)"
+          : `translate(${getDockTranslateX(pos.x, expandedDockWidth)}, ${getDockTranslateY(pos.y)})`,
         transition: isDragging
           ? "none"
           : "opacity 0.5s cubic-bezier(0.22, 1, 0.36, 1), transform 0.5s cubic-bezier(0.22, 1, 0.36, 1)",

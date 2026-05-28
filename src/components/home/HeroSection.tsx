@@ -23,6 +23,7 @@ interface HeroSectionProps {
   isLiteMode?: boolean;
   showWeather?: boolean;
   showLunar?: boolean;
+  showSearch?: boolean;
   weather: WeatherData | null;
   weatherLoading?: boolean;
   weatherCity?: string;
@@ -47,6 +48,7 @@ export function HeroSection({
   isLiteMode,
   showWeather,
   showLunar,
+  showSearch = true,
   weather,
   weatherLoading,
   weatherCity,
@@ -141,7 +143,7 @@ export function HeroSection({
       )}
 
       {/* Search Hint */}
-      <SearchHint isLiteMode={isLiteMode} onOpenSearch={onOpenSearch} />
+      {showSearch && <SearchHint isLiteMode={isLiteMode} onOpenSearch={onOpenSearch} />}
     </motion.section>
   );
 }

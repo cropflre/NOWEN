@@ -87,15 +87,14 @@ export function ScrollToTop({
           whileTap={{ scale: 0.92 }}
           onClick={scrollToTop}
           className={cn(
-            "fixed z-40 group cursor-pointer",
+            "fixed z-[60] md:z-40 group cursor-pointer",
             // 尺寸
             "w-11 h-11",
             // 位置
             position === "right" ? "right-4 md:right-6" : "left-4 md:left-6",
-            // 桌面端在底部，移动端在 Dock 上方
+            // 桌面端在底部；移动端避开底部导航栏和安全区
             "bottom-6 md:bottom-8",
-            // 移动端：Dock 在 bottom-6 (24px) + 按钮高度约 56px + 间距
-            "max-md:bottom-20",
+            "max-md:bottom-[calc(env(safe-area-inset-bottom)+5.75rem)]",
             className
           )}
           aria-label="回到顶部"
@@ -184,7 +183,7 @@ export function ScrollToTop({
           {/* 进度百分比 - 悬停显示 - 适配主题 */}
           <motion.div
             className={cn(
-              "absolute -top-8 left-1/2 -translate-x-1/2",
+              "absolute -top-8 left-1/2 -translate-x-1/2 max-md:hidden",
               "px-2 py-1 rounded-md",
               // 日间模式
               "bg-white/95 border-slate-200",

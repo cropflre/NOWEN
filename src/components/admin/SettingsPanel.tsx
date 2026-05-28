@@ -184,7 +184,7 @@ export function SettingsPanel({
   const [activeSettingsTab, setActiveSettingsTab] = useState<SettingsTab>('site')
 
   return (
-    <div className="space-y-6">
+    <div className="w-full space-y-6">
       {/* 标签页导航 - 分段控件式紧凑设计 */}
       <div
         className="relative p-1.5 rounded-2xl"
@@ -243,10 +243,10 @@ export function SettingsPanel({
                   }}
                 >
                   <Icon
-                    className="w-4 h-4"
-                    style={{
-                      color: isActive ? 'var(--color-primary)' : 'var(--color-text-muted)',
-                    }}
+                    className={cn(
+                      'w-4 h-4',
+                      isActive ? 'text-[var(--color-primary)]' : 'text-[var(--color-text-muted)]',
+                    )}
                   />
                 </div>
                 <span
@@ -328,12 +328,10 @@ export function SettingsPanel({
                   }}
                 >
                   <Icon
-                    className="w-[18px] h-[18px] transition-colors duration-300"
-                    style={{
-                      color: isActive
-                        ? 'var(--color-primary)'
-                        : 'var(--color-text-muted)',
-                    }}
+                    className={cn(
+                      'w-[18px] h-[18px] transition-colors duration-300',
+                      isActive ? 'text-[var(--color-primary)]' : 'text-[var(--color-text-muted)]',
+                    )}
                   />
                 </div>
 
@@ -376,7 +374,7 @@ export function SettingsPanel({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.15 }}
-          className="max-w-3xl"
+          className={cn('w-full', activeSettingsTab === 'site' ? 'max-w-none' : 'max-w-4xl')}
         >
           {/* 站点配置 */}
           {activeSettingsTab === 'site' && (

@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react'
+﻿import { useState, useRef, useCallback, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
@@ -171,7 +171,7 @@ export function WallpaperSettingsCard({
             type="button"
             onClick={() => updateWallpaper({ enabled: !wallpaper.enabled })}
             className={cn(
-              'relative w-12 h-6 rounded-full transition-all duration-300',
+              'relative w-12 h-6 rounded-full transition-all duration-300 flex-shrink-0',
               wallpaper.enabled
                 ? 'bg-gradient-to-r from-violet-500 to-purple-500'
                 : 'bg-gray-600/50'

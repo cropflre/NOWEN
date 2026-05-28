@@ -57,7 +57,7 @@ export function BookmarkCardContent({
       <div className="flex items-start justify-between mb-4">
         <div
           className={cn(
-            "rounded-xl flex items-center justify-center",
+            "rounded-xl flex items-center justify-center flex-shrink-0",
             isLarge ? "w-14 h-14" : "w-12 h-12"
           )}
           style={{ background: "var(--color-bg-tertiary)" }}
@@ -104,7 +104,7 @@ export function BookmarkCardContent({
         <AnimatePresence>
           {showActions && isLoggedIn && (
             <motion.div
-              className="flex items-center gap-1"
+              className="absolute top-0 right-0 z-20 flex items-center gap-1 rounded-xl bg-[var(--color-bg-secondary)] backdrop-blur-md border border-[var(--color-glass-border)] px-1 py-1 shadow-sm"
               initial={{ opacity: 0, x: 10 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 10 }}

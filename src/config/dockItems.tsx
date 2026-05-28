@@ -129,7 +129,7 @@ export const createDockItems = (
 // 根据菜单可见性过滤 Dock 项
 export const filterDockItems = (
   items: DockItem[],
-  menuVisibility: { languageToggle?: boolean; themeToggle?: boolean },
+  menuVisibility: { languageToggle?: boolean; themeToggle?: boolean; searchToggle?: boolean },
   widgetVisibility?: { aiAssistant?: boolean },
   isLoggedIn?: boolean
 ): DockItem[] => {
@@ -138,6 +138,9 @@ export const filterDockItems = (
       return false;
     }
     if (item.id === "theme" && menuVisibility.themeToggle === false) {
+      return false;
+    }
+    if (item.id === "search" && menuVisibility.searchToggle === false) {
       return false;
     }
     if (item.id === "ai" && (widgetVisibility?.aiAssistant === false || !isLoggedIn)) {

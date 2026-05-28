@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+﻿import { useState, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Sun, Moon, Monitor, Check, Palette, ChevronDown } from 'lucide-react'
@@ -317,7 +317,7 @@ export function ThemeCard({
           <motion.button
             onClick={() => onAutoModeChange(!autoMode)}
             className={cn(
-              'relative w-12 h-6 rounded-full p-0.5 transition-colors duration-300'
+              'relative w-12 h-6 rounded-full p-0.5 transition-colors duration-300 flex-shrink-0'
             )}
             style={{
               backgroundColor: autoMode ? 'var(--color-primary)' : 'var(--color-border)',

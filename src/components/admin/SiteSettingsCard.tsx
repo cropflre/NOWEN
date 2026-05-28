@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
+﻿import { useState, useRef, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
@@ -17,10 +17,10 @@ import {
   Languages,
   SunMoon,
   FileText,
+  Search,
   LayoutGrid,
   Shield,
   Users,
-  Search,
   Plus,
   Trash2,
   ChevronDown,
@@ -50,6 +50,46 @@ interface SiteSettingsCardProps {
   error: string
 }
 
+interface SettingsSectionProps {
+  icon: React.ReactNode
+  title: string
+  description: string
+  children: React.ReactNode
+  defaultOpen?: boolean
+  hidden?: boolean
+}
+
+function SettingsSection({ icon, title, description, children, defaultOpen = false, hidden = false }: SettingsSectionProps) {
+  if (hidden) return null
+
+  return (
+    <details
+      open={defaultOpen}
+      className="group/section rounded-2xl overflow-hidden"
+      style={{
+        background: 'var(--color-bg-tertiary)',
+        border: '1px solid var(--color-glass-border)',
+      }}
+    >
+      <summary className="flex items-center justify-between gap-4 px-4 py-3 cursor-pointer select-none list-none">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-white/5 text-cyan-500">
+            {icon}
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold" style={{ color: 'var(--color-text-primary)' }}>{title}</p>
+            <p className="text-xs truncate" style={{ color: 'var(--color-text-muted)' }}>{description}</p>
+          </div>
+        </div>
+        <ChevronDown className="w-4 h-4 flex-shrink-0 transition-transform group-open/section:rotate-180" style={{ color: 'var(--color-text-muted)' }} />
+      </summary>
+      <div className="px-4 pb-4 space-y-4">
+        {children}
+      </div>
+    </details>
+  )
+}
+
 export function SiteSettingsCard({
   settings,
   onChange,
@@ -60,7 +100,47 @@ export function SiteSettingsCard({
 }: SiteSettingsCardProps) {
   const { t } = useTranslation()
   const [isDragging, setIsDragging] = useState(false)
+  const [activeSection, setActiveSection] = useState<'basic' | 'performance' | 'access' | 'display' | 'features' | 'advanced'>('basic')
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const siteSectionTabs = [
+    {
+      id: 'basic' as const,
+      icon: Globe,
+      title: t('admin.settings.site.section_basic', '基础信息'),
+      description: t('admin.settings.site.section_basic_desc', '站点名称、图标与浏览器展示'),
+    },
+    {
+      id: 'performance' as const,
+      icon: Feather,
+      title: t('admin.settings.site.section_performance', '性能体验'),
+      description: t('admin.settings.site.section_performance_desc', '动画效果与低配设备优化'),
+    },
+    {
+      id: 'access' as const,
+      icon: Shield,
+      title: t('admin.settings.site.section_access', '访问安全'),
+      description: t('admin.settings.site.section_access_desc', '公开/私有访问与书签默认权限'),
+    },
+    {
+      id: 'display' as const,
+      icon: CloudSun,
+      title: t('admin.settings.site.section_display', '首页显示'),
+      description: t('admin.settings.site.section_display_desc', '天气、农历等首页信息'),
+    },
+    {
+      id: 'features' as const,
+      icon: Navigation,
+      title: t('admin.settings.site.section_features', '功能入口'),
+      description: t('admin.settings.site.section_features_desc', '前台搜索、导航、语言、主题等入口'),
+    },
+    {
+      id: 'advanced' as const,
+      icon: LayoutGrid,
+      title: t('admin.settings.site.section_advanced', '更多设置'),
+      description: t('admin.settings.site.section_advanced_desc', '备案信息、分类折叠与搜索引擎'),
+    },
+  ]
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -91,11 +171,11 @@ export function SiteSettingsCard({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.1 }}
-      className="relative group"
+      className="relative group w-full max-w-none"
     >
       {/* Card Container with Glass Effect */}
       <div 
-        className="relative overflow-hidden rounded-2xl backdrop-blur-xl p-6"
+        className="relative w-full max-w-none overflow-hidden rounded-2xl backdrop-blur-xl p-6"
         style={{
           background: 'var(--color-glass)',
           border: '1px solid var(--color-glass-border)',
@@ -118,9 +198,69 @@ export function SiteSettingsCard({
           </div>
         </div>
 
-        <div className="relative grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left: Form Fields */}
-          <div className="space-y-5">
+        <div className="relative grid grid-cols-1 xl:grid-cols-[240px_minmax(0,1fr)_380px] 2xl:grid-cols-[260px_minmax(0,1fr)_440px] gap-6 lg:gap-8 items-start">
+          {/* Section Navigation */}
+          <div
+            className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-1 gap-2 p-2 rounded-2xl xl:sticky xl:top-6"
+            style={{
+              background: 'var(--color-bg-tertiary)',
+              border: '1px solid var(--color-glass-border)',
+            }}
+          >
+            {siteSectionTabs.map((section) => {
+              const Icon = section.icon
+              const isActive = activeSection === section.id
+
+              return (
+                <button
+                  key={section.id}
+                  type="button"
+                  onClick={() => setActiveSection(section.id)}
+                  className="flex items-center gap-2 min-w-0 px-3 py-2.5 xl:py-3 rounded-xl text-left transition-all duration-300"
+                  style={{
+                    background: isActive ? 'var(--color-bg-secondary)' : 'transparent',
+                    border: isActive ? '1px solid var(--color-primary)' : '1px solid transparent',
+                    color: isActive ? 'var(--color-text-primary)' : 'var(--color-text-secondary)',
+                  }}
+                >
+                  <span
+                    className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style={{
+                      background: isActive ? 'rgba(6, 182, 212, 0.14)' : 'rgba(255, 255, 255, 0.04)',
+                      color: isActive ? 'var(--color-primary)' : 'var(--color-text-muted)',
+                    }}
+                  >
+                    <Icon className="w-4 h-4" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-sm font-medium truncate">{section.title}</span>
+                    <span className="block text-[11px] truncate" style={{ color: 'var(--color-text-muted)' }}>
+                      {section.description}
+                    </span>
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Center: Paged Form Fields */}
+          <div className="space-y-4 min-w-0">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeSection}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.16 }}
+                className="space-y-4"
+              >
+            <SettingsSection
+              icon={<Globe className="w-4 h-4" />}
+              title={t('admin.settings.site.section_basic', '基础信息')}
+              description={t('admin.settings.site.section_basic_desc', '站点名称、图标与浏览器展示')}
+              defaultOpen
+              hidden={activeSection !== 'basic'}
+            >
             {/* Site Title Input */}
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--color-text-muted)' }}>
@@ -223,7 +363,15 @@ export function SiteSettingsCard({
                 />
               </div>
             </div>
+            </SettingsSection>
 
+            <SettingsSection
+              icon={<Feather className="w-4 h-4" />}
+              title={t('admin.settings.site.section_performance', '性能体验')}
+              description={t('admin.settings.site.section_performance_desc', '动画效果与低配设备优化')}
+              defaultOpen
+              hidden={activeSection !== 'performance'}
+            >
             {/* Beam Animation Toggle */}
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--color-text-muted)' }}>
@@ -250,7 +398,7 @@ export function SiteSettingsCard({
                   onClick={() => onChange({ ...settings, enableBeamAnimation: !settings.enableBeamAnimation })}
                   disabled={settings.enableLiteMode}
                   className={cn(
-                    'relative w-12 h-6 rounded-full transition-all duration-300',
+                    'relative w-12 h-6 rounded-full transition-all duration-300 flex-shrink-0',
                     settings.enableLiteMode 
                       ? 'bg-gray-600/30 cursor-not-allowed' 
                       : settings.enableBeamAnimation !== false
@@ -305,7 +453,7 @@ export function SiteSettingsCard({
                     enableBeamAnimation: !settings.enableLiteMode ? false : settings.enableBeamAnimation 
                   })}
                   className={cn(
-                    'relative w-12 h-6 rounded-full transition-all duration-300',
+                    'relative w-12 h-6 rounded-full transition-all duration-300 flex-shrink-0',
                     settings.enableLiteMode
                       ? 'bg-gradient-to-r from-emerald-500 to-green-500'
                       : 'bg-gray-600/50'
@@ -320,8 +468,16 @@ export function SiteSettingsCard({
                 </button>
               </div>
             </div>
+            </SettingsSection>
 
-            {/* 天气显示开关 */}
+            <SettingsSection
+              icon={<Shield className="w-4 h-4" />}
+              title={t('admin.settings.site.section_access', '访问安全')}
+              description={t('admin.settings.site.section_access_desc', '公开/私有访问与书签默认权限')}
+              defaultOpen
+              hidden={activeSection !== 'access'}
+            >
+            {/* 访问模式 */}
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--color-text-muted)' }}>
                 <Shield className="w-4 h-4" />
@@ -478,7 +634,15 @@ export function SiteSettingsCard({
                 </div>
               </div>
             </div>
+            </SettingsSection>
 
+            <SettingsSection
+              icon={<CloudSun className="w-4 h-4" />}
+              title={t('admin.settings.site.section_display', '首页显示')}
+              description={t('admin.settings.site.section_display_desc', '天气、农历等首页信息')}
+              defaultOpen
+              hidden={activeSection !== 'display'}
+            >
             {/* 天气显示开关 */}
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--color-text-muted)' }}>
@@ -508,7 +672,7 @@ export function SiteSettingsCard({
                   type="button"
                   onClick={() => onChange({ ...settings, enableWeather: !(settings.enableWeather !== false) })}
                   className={cn(
-                    'relative w-12 h-6 rounded-full transition-all duration-300',
+                    'relative w-12 h-6 rounded-full transition-all duration-300 flex-shrink-0',
                     settings.enableWeather !== false
                       ? 'bg-gradient-to-r from-blue-500 to-sky-500'
                       : 'bg-gray-600/50'
@@ -592,7 +756,7 @@ export function SiteSettingsCard({
                         type="button"
                         onClick={() => onChange({ ...settings, disableGeolocation: !settings.disableGeolocation })}
                         className={cn(
-                          'relative w-12 h-6 rounded-full transition-all duration-300',
+                          'relative w-12 h-6 rounded-full transition-all duration-300 flex-shrink-0',
                           settings.disableGeolocation
                             ? 'bg-gradient-to-r from-amber-500 to-orange-500'
                             : 'bg-gray-600/50'
@@ -640,7 +804,7 @@ export function SiteSettingsCard({
                   type="button"
                   onClick={() => onChange({ ...settings, enableLunar: !(settings.enableLunar !== false) })}
                   className={cn(
-                    'relative w-12 h-6 rounded-full transition-all duration-300',
+                    'relative w-12 h-6 rounded-full transition-all duration-300 flex-shrink-0',
                     settings.enableLunar !== false
                       ? 'bg-gradient-to-r from-orange-500 to-amber-500'
                       : 'bg-gray-600/50'
@@ -655,7 +819,15 @@ export function SiteSettingsCard({
                 </button>
               </div>
             </div>
+            </SettingsSection>
 
+            <SettingsSection
+              icon={<Navigation className="w-4 h-4" />}
+              title={t('admin.settings.site.section_features', '功能入口')}
+              description={t('admin.settings.site.section_features_desc', '前台搜索、导航、语言、主题等入口')}
+              defaultOpen
+              hidden={activeSection !== 'features'}
+            >
             {/* 灵感速记开关 */}
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--color-text-muted)' }}>
@@ -685,7 +857,7 @@ export function SiteSettingsCard({
                   type="button"
                   onClick={() => onChange({ ...settings, enableQuickNotes: !(settings.enableQuickNotes !== false) })}
                   className={cn(
-                    'relative w-12 h-6 rounded-full transition-all duration-300',
+                    'relative w-12 h-6 rounded-full transition-all duration-300 flex-shrink-0',
                     settings.enableQuickNotes !== false
                       ? 'bg-gradient-to-r from-purple-500 to-violet-500'
                       : 'bg-gray-600/50'
@@ -730,7 +902,7 @@ export function SiteSettingsCard({
                   type="button"
                   onClick={() => onChange({ ...settings, enableIntranetDownload: !(settings.enableIntranetDownload !== false) })}
                   className={cn(
-                    'relative w-12 h-6 rounded-full transition-all duration-300',
+                    'relative w-12 h-6 rounded-full transition-all duration-300 flex-shrink-0',
                     settings.enableIntranetDownload !== false
                       ? 'bg-gradient-to-r from-blue-500 to-cyan-500'
                       : 'bg-gray-600/50'
@@ -740,6 +912,51 @@ export function SiteSettingsCard({
                     className={cn(
                       'absolute top-1 w-4 h-4 rounded-full bg-white shadow-md transition-all duration-300',
                       settings.enableIntranetDownload !== false ? 'left-7' : 'left-1'
+                    )}
+                  />
+                </button>
+              </div>
+            </div>
+
+            {/* 前台搜索栏开关 */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--color-text-muted)' }}>
+                <Search className="w-4 h-4" />
+                {t('admin.settings.site.search_entry')}
+              </label>
+              <div
+                className="flex items-center justify-between px-4 py-3 rounded-xl transition-colors duration-300"
+                style={{
+                  background: settings.enableSearch !== false
+                    ? 'rgba(6, 182, 212, 0.1)'
+                    : 'var(--color-bg-tertiary)',
+                  border: settings.enableSearch !== false
+                    ? '1px solid rgba(6, 182, 212, 0.2)'
+                    : '1px solid var(--color-glass-border)',
+                }}
+              >
+                <div>
+                  <p className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>
+                    {t('admin.settings.site.search_entry_title')}
+                  </p>
+                  <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                    {t('admin.settings.site.search_entry_desc')}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => onChange({ ...settings, enableSearch: !(settings.enableSearch !== false) })}
+                  className={cn(
+                    'relative w-12 h-6 rounded-full transition-all duration-300 flex-shrink-0',
+                    settings.enableSearch !== false
+                      ? 'bg-gradient-to-r from-cyan-500 to-blue-500'
+                      : 'bg-gray-600/50'
+                  )}
+                >
+                  <div
+                    className={cn(
+                      'absolute top-1 w-4 h-4 rounded-full bg-white shadow-md transition-all duration-300',
+                      settings.enableSearch !== false ? 'left-7' : 'left-1'
                     )}
                   />
                 </button>
@@ -775,7 +992,7 @@ export function SiteSettingsCard({
                   type="button"
                   onClick={() => onChange({ ...settings, enableSidebarNav: !(settings.enableSidebarNav !== false) })}
                   className={cn(
-                    'relative w-12 h-6 rounded-full transition-all duration-300',
+                    'relative w-12 h-6 rounded-full transition-all duration-300 flex-shrink-0',
                     settings.enableSidebarNav !== false
                       ? 'bg-gradient-to-r from-emerald-500 to-teal-500'
                       : 'bg-gray-600/50'
@@ -826,7 +1043,7 @@ export function SiteSettingsCard({
                     } 
                   })}
                   className={cn(
-                    'relative w-12 h-6 rounded-full transition-all duration-300',
+                    'relative w-12 h-6 rounded-full transition-all duration-300 flex-shrink-0',
                     (settings.menuVisibility?.languageToggle !== false)
                       ? 'bg-gradient-to-r from-violet-500 to-purple-500'
                       : 'bg-gray-600/50'
@@ -877,7 +1094,7 @@ export function SiteSettingsCard({
                     } 
                   })}
                   className={cn(
-                    'relative w-12 h-6 rounded-full transition-all duration-300',
+                    'relative w-12 h-6 rounded-full transition-all duration-300 flex-shrink-0',
                     (settings.menuVisibility?.themeToggle !== false)
                       ? 'bg-gradient-to-r from-pink-500 to-rose-500'
                       : 'bg-gray-600/50'
@@ -892,7 +1109,15 @@ export function SiteSettingsCard({
                 </button>
               </div>
             </div>
+            </SettingsSection>
 
+            <SettingsSection
+              icon={<LayoutGrid className="w-4 h-4" />}
+              title={t('admin.settings.site.section_advanced', '更多设置')}
+              description={t('admin.settings.site.section_advanced_desc', '备案信息、分类折叠与搜索引擎')}
+              defaultOpen
+              hidden={activeSection !== 'advanced'}
+            >
             {/* 底部备案信息 */}
             <div className="space-y-2">
               <label className="flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--color-text-muted)' }}>
@@ -985,10 +1210,13 @@ export function SiteSettingsCard({
 
             {/* 搜索引擎设置 */}
             <SearchEngineSettingsSection settings={settings} onChange={onChange} />
+            </SettingsSection>
+              </motion.div>
+            </AnimatePresence>
           </div>
 
           {/* Right: Live Preview */}
-          <div className="space-y-3">
+          <div className="space-y-4 min-w-0 xl:sticky xl:top-6">
             <label className="flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--color-text-muted)' }}>
               <ExternalLink className="w-4 h-4" />
               {t('admin.settings.site.preview')}

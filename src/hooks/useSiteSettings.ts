@@ -10,6 +10,7 @@ export const defaultSiteSettings: SiteSettings = {
   enableLiteMode: false,
   enableWeather: true,
   enableLunar: true,
+  enableSearch: true,
   categoryCollapseThreshold: 0,
   categoryInitialShowCount: 8,
   widgetVisibility: {
@@ -78,6 +79,7 @@ export function useSiteSettings() {
   const isLiteMode = siteSettings.enableLiteMode ?? false;
   const showWeather = siteSettings.enableWeather ?? true;
   const showLunar = siteSettings.enableLunar ?? true;
+  const showSearch = siteSettings.enableSearch ?? true;
   const weatherCity = siteSettings.weatherCity || '';
   const disableGeolocation = siteSettings.disableGeolocation ?? false;
   const enableAutoAi = siteSettings.enableAutoAi ?? true;
@@ -117,6 +119,7 @@ export function useSiteSettings() {
   const menuVisibility = siteSettings.menuVisibility || {
     languageToggle: true,
     themeToggle: true,
+    searchToggle: true,
   };
 
   // 小部件可见性 - 设置未加载完成时默认隐藏所有小部件避免闪烁
@@ -168,6 +171,7 @@ export function useSiteSettings() {
     isLiteMode,
     showWeather,
     showLunar,
+    showSearch,
     weatherCity,
     disableGeolocation,
     enableAutoAi,
