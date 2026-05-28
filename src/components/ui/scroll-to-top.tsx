@@ -24,6 +24,17 @@ export function ScrollToTop({
 }: ScrollToTopProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // 检测移动端，用于切换为轻量样式
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(max-width: 767px)");
+    const updateIsMobile = () => setIsMobile(mediaQuery.matches);
+
+    updateIsMobile();
+    mediaQuery.addEventListener("change", updateIsMobile);
+    return () => mediaQuery.removeEventListener("change", updateIsMobile);
+  }, []);
 
   // 监听滚动事件
   useEffect(() => {
@@ -83,18 +94,18 @@ export function ScrollToTop({
             stiffness: 500,
             damping: 30,
           }}
-          whileHover={{ scale: 1.08 }}
+          whileHover={isMobile ? undefined : { scale: 1.08 }}
           whileTap={{ scale: 0.92 }}
           onClick={scrollToTop}
           className={cn(
-            "fixed z-[60] md:z-40 group cursor-pointer",
-            // 尺寸
-            "w-11 h-11",
+            "fixed z-[80] md:z-40 group cursor-pointer",
+            // 尺寸：移动端更轻巧，桌面端保留原尺寸
+            "w-10 h-10 md:w-11 md:h-11",
             // 位置
-            position === "right" ? "right-4 md:right-6" : "left-4 md:left-6",
+            position === "right" ? "right-3 md:right-6" : "left-3 md:left-6",
             // 桌面端在底部；移动端避开底部导航栏和安全区
             "bottom-6 md:bottom-8",
-            "max-md:bottom-[calc(env(safe-area-inset-bottom)+5.75rem)]",
+            "max-md:bottom-[calc(env(safe-area-inset-bottom)+5.25rem)]",
             className
           )}
           aria-label="回到顶部"
@@ -104,25 +115,35 @@ export function ScrollToTop({
             className={cn(
               "absolute inset-0 rounded-full",
               // 日间模式
-              "bg-white/90",
-              "border border-slate-200/80",
-              "shadow-lg shadow-slate-200/50",
+              "bg-white/95 md:bg-white/90",
+              "border border-slate-200/80 md:border-slate-200/80",
+              "shadow-md shadow-slate-200/60 md:shadow-lg md:shadow-slate-200/50",
               // 夜间模式
-              "dark:bg-slate-900/90",
-              "dark:border-slate-700/50",
-              "dark:shadow-lg dark:shadow-black/30",
+              "dark:bg-slate-900/95 md:dark:bg-slate-900/90",
+              "dark:border-slate-700/60 md:dark:border-slate-700/50",
+              "dark:shadow-md dark:shadow-black/35 md:dark:shadow-lg md:dark:shadow-black/30",
               // 毛玻璃
               "backdrop-blur-xl",
               // 悬停效果
-              "group-hover:border-blue-400/50 dark:group-hover:border-blue-500/50",
-              "group-hover:shadow-blue-500/20 dark:group-hover:shadow-blue-500/20",
+              "md:group-hover:border-blue-400/50 md:dark:group-hover:border-blue-500/50",
+              "md:group-hover:shadow-blue-500/20 md:dark:group-hover:shadow-blue-500/20",
               "transition-all duration-300"
             )}
           />
 
+          {/* 移动端使用轻量进度底色，避免外圈过重 */}
+          <div
+            className="absolute inset-0 rounded-full opacity-100 md:hidden"
+            style={{
+              background: `conic-gradient(${progressColor} ${scrollProgress * 3.6}deg, transparent 0deg)`,
+              mask: "radial-gradient(farthest-side, transparent calc(100% - 2px), #000 0)",
+              WebkitMask: "radial-gradient(farthest-side, transparent calc(100% - 2px), #000 0)",
+            }}
+          />
+
           {/* 环形进度条 SVG */}
           <svg
-            className="absolute inset-0 -rotate-90"
+            className="absolute inset-0 -rotate-90 hidden md:block"
             width={size}
             height={size}
             viewBox={`0 0 ${size} ${size}`}
@@ -158,8 +179,8 @@ export function ScrollToTop({
           {/* 箭头图标 */}
           <motion.div
             className="absolute inset-0 flex items-center justify-center"
-            animate={{ y: [0, -2, 0] }}
-            transition={{
+            animate={isMobile ? undefined : { y: [0, -2, 0] }}
+            transition={isMobile ? undefined : {
               duration: 1.5,
               repeat: Infinity,
               ease: "easeInOut",
@@ -170,10 +191,10 @@ export function ScrollToTop({
                 "w-5 h-5 relative z-10",
                 // 日间模式
                 "text-slate-500",
-                "group-hover:text-blue-500",
+                "md:group-hover:text-blue-500",
                 // 夜间模式
                 "dark:text-slate-400",
-                "dark:group-hover:text-blue-400",
+                "md:dark:group-hover:text-blue-400",
                 "transition-colors duration-200"
               )}
               strokeWidth={2.5}

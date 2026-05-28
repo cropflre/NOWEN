@@ -404,7 +404,7 @@ export function IconManager({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/50 command-backdrop"
+            className="fixed inset-0 z-[120] bg-black/50 command-backdrop"
             onClick={handleClose}
           />
 
@@ -415,7 +415,7 @@ export function IconManager({
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             className={cn(
-              'fixed z-50',
+              'fixed z-[121]',
               'inset-0 m-auto',
               'w-full max-w-2xl h-fit max-h-[80vh]',
               'rounded-2xl shadow-2xl',
