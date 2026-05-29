@@ -309,6 +309,61 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isLoggedIn, showSearch, effectiveWidgetVisibility.aiAssistant]);
 
+  // ========== Bookmarklet / 外部 URL 唤起：?action=add&url=&title= ==========
+  // 用户从任意网页点击 NOWEN Bookmarklet，会带参数跳转到本站，自动打开添加书签弹窗
+  useEffect(() => {
+    if (!settingsLoaded) return;
+    const search = window.location.search;
+    if (!search) return;
+    const params = new URLSearchParams(search);
+    const action = params.get('action');
+    if (action !== 'add') return;
+
+    const targetUrl = params.get('url') || '';
+    const targetTitle = params.get('title') || '';
+
+    // 清理 URL，避免刷新页面再次触发
+    const cleaned = window.location.pathname + window.location.hash;
+    window.history.replaceState({}, '', cleaned);
+
+    if (!isLoggedIn) {
+      // 未登录：缓存到 sessionStorage，登录成功后再恢复
+      try {
+        sessionStorage.setItem('pending_bookmark_add', JSON.stringify({ url: targetUrl, title: targetTitle }));
+      } catch {}
+      navigateToLogin('home');
+      return;
+    }
+
+    setPendingUrl(targetUrl);
+    if (targetTitle) {
+      // 把 title 暂存到 sessionStorage，AddBookmarkModal 会自动消费
+      try {
+        sessionStorage.setItem('pending_bookmark_title', targetTitle);
+      } catch {}
+    }
+    setIsAddModalOpen(true);
+  }, [settingsLoaded, isLoggedIn, navigateToLogin]);
+
+  // 登录成功后，如果之前因未登录被缓存的 Bookmarklet 请求，恢复出来
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    let raw: string | null = null;
+    try {
+      raw = sessionStorage.getItem('pending_bookmark_add');
+    } catch {}
+    if (!raw) return;
+    try {
+      sessionStorage.removeItem('pending_bookmark_add');
+      const { url: targetUrl, title: targetTitle } = JSON.parse(raw) as { url?: string; title?: string };
+      if (targetUrl) setPendingUrl(targetUrl);
+      if (targetTitle) {
+        try { sessionStorage.setItem('pending_bookmark_title', targetTitle); } catch {}
+      }
+      setIsAddModalOpen(true);
+    } catch {}
+  }, [isLoggedIn]);
+
   // ========== 事件处理函数 ==========
   const handleDockClick = (id: string) => {
     switch (id) {

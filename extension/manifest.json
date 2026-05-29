@@ -1,0 +1,52 @@
+{
+  "manifest_version": 3,
+  "name": "NOWEN 一键收藏",
+  "short_name": "NOWEN",
+  "version": "1.0.0",
+  "description": "在任意网页一键将当前页面收藏到自己部署的 NOWEN 导航站，支持跨浏览器、跨设备同步。",
+  "default_locale": "zh_CN",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "action": {
+    "default_title": "收藏到 NOWEN",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "permissions": [
+    "storage",
+    "contextMenus",
+    "activeTab",
+    "tabs",
+    "scripting"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "options_page": "options.html",
+  "commands": {
+    "save-current-page": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+B",
+        "mac": "Command+Shift+B"
+      },
+      "description": "收藏当前页面到 NOWEN"
+    }
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "nowen-bookmark@nowen.local",
+      "strict_min_version": "109.0"
+    }
+  }
+}

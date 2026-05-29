@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>NOWEN 扩展设置</title>
+  <style>
+    :root { color-scheme: light dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 32px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1a1b26; color: #c0caf5;
+      min-height: 100vh;
+    }
+    .container { max-width: 600px; margin: 0 auto; }
+    h1 {
+      font-size: 22px; margin: 0 0 8px;
+      background: linear-gradient(135deg, #22d3ee, #3b82f6);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .subtitle { color: #9aa5ce; font-size: 13px; margin-bottom: 28px; }
+    .field { margin-bottom: 20px; }
+    label {
+      display: block; margin-bottom: 6px;
+      font-size: 12px; color: #9aa5ce; font-weight: 500;
+    }
+    input, select {
+      width: 100%; padding: 10px 12px; border-radius: 8px;
+      border: 1px solid #2f334d;
+      background: #16161e; color: #c0caf5;
+      font-size: 14px;
+    }
+    input:focus, select:focus {
+      outline: 0; border-color: #7aa2f7;
+    }
+    .hint { font-size: 11px; color: #565f89; margin-top: 4px; }
+    .btn {
+      padding: 10px 20px; border-radius: 8px;
+      border: 0; cursor: pointer; font-size: 13px;
+      font-weight: 500;
+      background: linear-gradient(135deg, #22d3ee, #3b82f6);
+      color: #fff;
+    }
+    .btn:hover { opacity: 0.9; }
+    .status {
+      margin-top: 16px; padding: 10px 14px; border-radius: 8px;
+      font-size: 13px; display: none;
+    }
+    .status.success { background: rgba(16,185,129,.15); color: #6ee7b7; display: block; }
+    .status.error   { background: rgba(239,68,68,.15);  color: #fca5a5; display: block; }
+    .row { display: flex; gap: 12px; align-items: center; }
+    .row .btn { flex: 0 0 auto; }
+    a { color: #7aa2f7; }
+    .info-box {
+      background: rgba(59,130,246,.08);
+      border: 1px solid rgba(59,130,246,.2);
+      padding: 14px; border-radius: 8px;
+      font-size: 13px; line-height: 1.6;
+      margin-bottom: 24px;
+    }
+    code {
+      background: #16161e; padding: 1px 6px;
+      border-radius: 4px; font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>NOWEN 扩展设置</h1>
+    <p class="subtitle">配置你自部署的 NOWEN 站点，让浏览器扩展能直接保存书签。</p>
+
+    <div class="info-box">
+      <strong>📌 使用说明：</strong><br />
+      1. 填写 NOWEN 站点地址（如 <code>https://nav.example.com</code>）<br />
+      2. 在 NOWEN 后台 → 安全设置中获取 Admin Token，或使用浏览器登录态<br />
+      3. 保存后，可通过工具栏图标、右键菜单或 <code>Ctrl/Cmd + Shift + B</code> 收藏页面
+    </div>
+
+    <div class="field">
+      <label for="nowenUrl">NOWEN 站点地址</label>
+      <input id="nowenUrl" placeholder="https://your-nowen.example.com" />
+      <p class="hint">不要包含末尾的斜杠或 /admin 路径。</p>
+    </div>
+
+    <div class="field">
+      <label for="nowenToken">Admin Token（可选）</label>
+      <input id="nowenToken" type="password" placeholder="留空则通过网页方式收藏" />
+      <p class="hint">填写后扩展直接通过 API 保存（无需打开 NOWEN）。在 NOWEN admin 登录后，可在浏览器开发者工具 localStorage 中获取 admin_token，或使用专用 API Token。</p>
+    </div>
+
+    <div class="field">
+      <label for="defaultVisibility">默认书签可见性</label>
+      <select id="defaultVisibility">
+        <option value="public">公开（未登录用户也可见）</option>
+        <option value="private">仅登录用户可见</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="defaultCategory">默认分类 ID（可选）</label>
+      <input id="defaultCategory" placeholder="留空则不指定分类" />
+      <p class="hint">在 NOWEN 后台 → 分类管理中可以看到分类 ID。</p>
+    </div>
+
+    <div class="row">
+      <button class="btn" id="save-btn">保存设置</button>
+      <button class="btn" id="test-btn" style="background: #2f334d;">测试连接</button>
+    </div>
+
+    <div id="status" class="status"></div>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>

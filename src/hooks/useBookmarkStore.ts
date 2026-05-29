@@ -5,6 +5,9 @@ import * as api from '../lib/api'
 // 自定义图标本地存储 Key
 const CUSTOM_ICONS_KEY = 'zen-garden-custom-icons'
 
+// 多端同步：可见时每 60s 轮询一次后端，确保跨浏览器/跨设备的近实时一致性
+const SYNC_POLL_INTERVAL = 60_000
+
 export function useBookmarkStore() {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([])
   const [categories, setCategories] = useState<Category[]>([])
@@ -39,9 +42,10 @@ export function useBookmarkStore() {
   }, [])
 
   // 加载数据函数
-  const loadData = useCallback(async () => {
+  // silent=true 时静默刷新，不切 isLoading（避免轮询触发骨架屏）
+  const loadData = useCallback(async (silent = false) => {
     try {
-      setIsLoading(true)
+      if (!silent) setIsLoading(true)
       const [bookmarksData, categoriesData] = await Promise.all([
         api.fetchBookmarks(),
         api.fetchCategories(),
@@ -51,9 +55,9 @@ export function useBookmarkStore() {
       setError(null)
     } catch (err) {
       console.error('加载数据失败:', err)
-      setError('加载数据失败，请确保后端服务已启动')
+      if (!silent) setError('加载数据失败，请确保后端服务已启动')
     } finally {
-      setIsLoading(false)
+      if (!silent) setIsLoading(false)
     }
   }, [])
 
@@ -62,6 +66,50 @@ export function useBookmarkStore() {
     loadData()
     loadCustomIcons()
   }, [loadData, loadCustomIcons])
+
+  // 多端实时同步：标签可见 + 窗口聚焦 + 定时轮询 三联触发
+  useEffect(() => {
+    let timer: ReturnType<typeof setInterval> | null = null
+
+    const syncNow = () => {
+      // 仅在标签页可见、且页面在线时刷新，避免无谓请求
+      if (typeof document !== 'undefined' && document.hidden) return
+      if (typeof navigator !== 'undefined' && navigator.onLine === false) return
+      loadData(true)
+    }
+
+    const startTimer = () => {
+      if (timer) return
+      timer = setInterval(syncNow, SYNC_POLL_INTERVAL)
+    }
+    const stopTimer = () => {
+      if (timer) {
+        clearInterval(timer)
+        timer = null
+      }
+    }
+
+    const handleVisibility = () => {
+      if (document.hidden) {
+        stopTimer()
+      } else {
+        syncNow()
+        startTimer()
+      }
+    }
+
+    startTimer()
+    document.addEventListener('visibilitychange', handleVisibility)
+    window.addEventListener('focus', syncNow)
+    window.addEventListener('online', syncNow)
+
+    return () => {
+      stopTimer()
+      document.removeEventListener('visibilitychange', handleVisibility)
+      window.removeEventListener('focus', syncNow)
+      window.removeEventListener('online', syncNow)
+    }
+  }, [loadData])
 
   // 刷新数据（导入后调用）
   const refreshData = useCallback(async () => {

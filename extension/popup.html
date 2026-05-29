@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>收藏到 NOWEN</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 16px;
+      width: 320px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 13px;
+      background: #1a1b26;
+      color: #c0caf5;
+    }
+    h2 {
+      font-size: 14px;
+      margin: 0 0 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+    }
+    h2 .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: linear-gradient(135deg, #22d3ee, #3b82f6);
+    }
+    .field { margin-bottom: 10px; }
+    label { display: block; margin-bottom: 4px; font-size: 11px; color: #9aa5ce; }
+    input, textarea {
+      width: 100%; padding: 6px 8px; border-radius: 6px;
+      border: 1px solid #2f334d;
+      background: #16161e; color: #c0caf5;
+      font-size: 12px; font-family: inherit;
+    }
+    textarea { resize: vertical; min-height: 36px; }
+    .actions { display: flex; gap: 8px; margin-top: 10px; }
+    button {
+      flex: 1; padding: 8px 10px; border-radius: 6px;
+      border: 0; cursor: pointer; font-size: 12px; font-weight: 500;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #22d3ee, #3b82f6);
+      color: #fff;
+    }
+    .btn-primary:hover { opacity: 0.9; }
+    .btn-secondary {
+      background: #2f334d; color: #c0caf5;
+    }
+    .status {
+      margin-top: 8px; padding: 6px 8px; border-radius: 6px;
+      font-size: 11px; display: none;
+    }
+    .status.success { background: rgba(16,185,129,.15); color: #6ee7b7; display: block; }
+    .status.error   { background: rgba(239,68,68,.15);  color: #fca5a5; display: block; }
+    .footer {
+      margin-top: 12px; padding-top: 10px;
+      border-top: 1px solid #2f334d;
+      font-size: 11px; color: #9aa5ce;
+      display: flex; justify-content: space-between;
+    }
+    .footer a { color: #7aa2f7; text-decoration: none; }
+    .footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <h2><span class="dot"></span>收藏到 NOWEN</h2>
+
+  <div class="field">
+    <label>标题</label>
+    <input id="title" />
+  </div>
+  <div class="field">
+    <label>URL</label>
+    <input id="url" />
+  </div>
+  <div class="field">
+    <label>备注（可选）</label>
+    <textarea id="description" rows="2"></textarea>
+  </div>
+
+  <div class="actions">
+    <button class="btn-secondary" id="cancel-btn">取消</button>
+    <button class="btn-primary" id="save-btn">保存</button>
+  </div>
+
+  <div id="status" class="status"></div>
+
+  <div class="footer">
+    <a href="#" id="open-options">设置</a>
+    <a href="#" id="open-site">打开 NOWEN</a>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

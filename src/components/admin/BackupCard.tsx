@@ -28,6 +28,7 @@ import {
   AlertCircle,
   CheckCircle,
   Sparkles,
+  Bookmark as BookmarkIcon,
 } from 'lucide-react'
 import { cn } from '../../lib/utils'
 import {
@@ -41,6 +42,7 @@ import {
 } from '../../lib/api'
 import { Bookmark, Category } from '../../types/bookmark'
 import { isBrowserBookmarkHTML, parseBrowserBookmarks } from '../../lib/bookmarkParser'
+import { BookmarkletDialog } from './BookmarkletDialog'
 
 // ========== SunPanel 数据格式支持 ==========
 
@@ -246,6 +248,7 @@ export function BackupCard({ onShowToast, bookmarks, categories, settings, onImp
   const [isImporting, setIsImporting] = useState(false)
   const [isResetting, setIsResetting] = useState(false)
   const [showResetConfirm, setShowResetConfirm] = useState(false)
+  const [isBookmarkletOpen, setIsBookmarkletOpen] = useState(false)
   const [dataSuccess, setDataSuccess] = useState<string | null>(null)
   const [dataError, setDataError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -662,7 +665,7 @@ a.download = `nowen-backup-${new Date().toISOString().split('T')[0]}.json`
         </div>
 
         {/* 导入导出操作 */}
-        <div className="relative grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="relative grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           {/* 导出 JSON */}
           <motion.button onClick={handleExport} disabled={isExporting}
             whileHover={{ scale: isExporting ? 1 : 1.02 }} whileTap={{ scale: isExporting ? 1 : 0.98 }}
@@ -715,6 +718,19 @@ a.download = `nowen-backup-${new Date().toISOString().split('T')[0]}.json`
             <div className="text-center">
               <p className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>{t('admin.settings.data.browser_import')}</p>
               <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>{t('admin.settings.data.browser_import_desc')}</p>
+            </div>
+          </motion.button>
+
+          {/* Bookmarklet 一键收藏 */}
+          <motion.button onClick={() => setIsBookmarkletOpen(true)}
+            whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+            className={cn('flex flex-col items-center gap-2 p-4 rounded-xl', 'bg-gradient-to-br from-cyan-500/10 to-sky-500/10', 'border border-cyan-500/20 hover:border-cyan-500/40', 'transition-all duration-300')}>
+            <div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center">
+              <BookmarkIcon className="w-5 h-5 text-cyan-500" />
+            </div>
+            <div className="text-center">
+              <p className="text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>{t('admin.settings.data.bookmarklet', '一键收藏')}</p>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>{t('admin.settings.data.bookmarklet_desc', '从任意网页一键添加到本站')}</p>
             </div>
           </motion.button>
 
@@ -1186,6 +1202,13 @@ a.download = `nowen-backup-${new Date().toISOString().split('T')[0]}.json`
           </ul>
         </div>
       </div>
+
+      {/* Bookmarklet 一键收藏弹窗 */}
+      <BookmarkletDialog
+        isOpen={isBookmarkletOpen}
+        onClose={() => setIsBookmarkletOpen(false)}
+        siteTitle={settings?.siteTitle || 'NOWEN'}
+      />
     </div>
   )
 }

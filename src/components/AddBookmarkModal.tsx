@@ -190,6 +190,13 @@ export function AddBookmarkModal({
       }
     } else if (initialUrl) {
       setUrl(initialUrl)
+      // Bookmarklet 唤起：若提前存入了 title，则先填上，再后台 AI 分析补全 favicon/description
+      let pendingTitle = ''
+      try {
+        pendingTitle = sessionStorage.getItem('pending_bookmark_title') || ''
+        if (pendingTitle) sessionStorage.removeItem('pending_bookmark_title')
+      } catch {}
+      if (pendingTitle) setTitle(pendingTitle)
       analyzeUrl(initialUrl)
     }
   }, [editBookmark, initialUrl, customIcons])
