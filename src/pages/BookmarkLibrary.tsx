@@ -168,7 +168,14 @@ function LibraryBookmarkCard({
   onSelectTag: (tag: string | null) => void
 }) {
   const hostname = safeHostname(bookmark.url)
-  const visibleTags = bookmark.tags?.slice(0, view === 'grid' ? 2 : 3) ?? []
+  const normalizedCategoryName = category?.name?.trim().toLocaleLowerCase()
+  const dedupedTags = useMemo(() => {
+    const tags = bookmark.tags ?? []
+    if (!normalizedCategoryName) return tags
+    return tags.filter((tag) => tag.trim().toLocaleLowerCase() !== normalizedCategoryName)
+  }, [bookmark.tags, normalizedCategoryName])
+  const visibleTags = dedupedTags.slice(0, view === 'grid' ? 2 : 3)
+  const overflowCount = dedupedTags.length - visibleTags.length
 
   const openBookmark = () => {
     visitsApi.track(bookmark.id).catch(console.error)
@@ -201,25 +208,25 @@ function LibraryBookmarkCard({
             <span className="bookmark-library-card__domain">{hostname}</span>
           </div>
 
-          {category && (
-            <span
-              className="bookmark-library-card__category"
-              style={{ '--library-category-color': category.color || '#818cf8' } as CSSProperties}
-            >
-              <IconRenderer icon={category.icon} className="h-3.5 w-3.5" />
-              {category.name}
-            </span>
-          )}
-
           <ExternalLink className="bookmark-library-card__external h-4 w-4" aria-hidden="true" />
         </div>
 
-        {visibleTags.length > 0 && (
-          <div className="bookmark-library-card__tags">
+        {(category || visibleTags.length > 0) && (
+          <div className="bookmark-library-card__meta">
+            {category && (
+              <span
+                className="bookmark-library-card__category"
+                style={{ '--library-category-color': category.color || '#818cf8' } as CSSProperties}
+              >
+                <IconRenderer icon={category.icon} className="h-3.5 w-3.5" />
+                {category.name}
+              </span>
+            )}
             {visibleTags.map((tag) => (
               <button
                 key={tag}
                 type="button"
+                className="bookmark-library-card__tag"
                 onClick={(event) => {
                   event.preventDefault()
                   event.stopPropagation()
@@ -229,8 +236,8 @@ function LibraryBookmarkCard({
                 #{tag}
               </button>
             ))}
-            {(bookmark.tags?.length ?? 0) > visibleTags.length && (
-              <span>+{(bookmark.tags?.length ?? 0) - visibleTags.length}</span>
+            {overflowCount > 0 && (
+              <span className="bookmark-library-card__more">+{overflowCount}</span>
             )}
           </div>
         )}
