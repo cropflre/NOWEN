@@ -96,6 +96,7 @@ export function MobileFloatingDock({
 
   // 当前要渲染的列表：子菜单状态下用 subItems，否则用主 items
   const displayItems = activeSubmenu?.subItems ?? items;
+  const hasLeftSlot = Boolean(leftSlot);
 
   return (
     <>
@@ -244,26 +245,25 @@ export function MobileFloatingDock({
         )}
       </AnimatePresence>
 
-      {/* 底部固定栏 */}
+      {/* 有状态内容时展示完整底栏；无状态内容时只保留右下角菜单按钮 */}
       <div
         className={cn(
-          "fixed bottom-0 left-0 right-0 z-[75]",
-          "flex items-center px-3 py-2",
-          "bg-white/90 dark:bg-black/80",
-          "backdrop-blur-xl",
-          "border-t border-slate-200/60 dark:border-white/10",
-          "safe-area-bottom",
+          "fixed z-[75] flex items-center",
+          hasLeftSlot &&
+            "bottom-0 left-0 right-0 px-3 py-2 bg-white/90 dark:bg-black/80 backdrop-blur-xl border-t border-slate-200/60 dark:border-white/10 safe-area-bottom",
+          !hasLeftSlot && "right-3",
           className
         )}
-        style={{ paddingBottom: "max(8px, env(safe-area-inset-bottom))" }}
+        style={
+          hasLeftSlot
+            ? { paddingBottom: "max(8px, env(safe-area-inset-bottom))" }
+            : { bottom: "max(8px, env(safe-area-inset-bottom))" }
+        }
       >
         {/* 左侧：状态栏插槽 */}
-        {leftSlot && (
+        {hasLeftSlot && (
           <div className="flex-1 min-w-0 mr-3 overflow-hidden">{leftSlot}</div>
         )}
-
-        {/* 占位：无 leftSlot 时推能量球到右侧 */}
-        {!leftSlot && <div className="flex-1" />}
 
         {/* 右侧：能量球按钮 */}
         <div className="relative flex-shrink-0">
