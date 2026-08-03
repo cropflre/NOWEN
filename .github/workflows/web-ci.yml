@@ -3,32 +3,24 @@ name: Web CI
 on:
   pull_request:
     branches: [main]
+  push:
+    branches: [main]
 
 concurrency:
   group: web-ci-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   test-and-build:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
 
     steps:
-      - name: Checkout PR branch
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref }}
-          fetch-depth: 0
-
-      - name: Apply staged homepage refactor
-        run: |
-          cat .github/phase4/part* | base64 -d | gzip -d > /tmp/phase4.diff
-          patch --batch -p1 < /tmp/phase4.diff
-          patch --batch -p1 < .github/phase4-fix.diff
-          patch --batch -p1 < .github/phase4-storage.diff
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -44,20 +36,3 @@ jobs:
 
       - name: Build production bundle
         run: npm run build
-
-      - name: Publish verified refactor
-        run: |
-          rm -rf \
-            .github/phase4 \
-            .github/phase4-code.patch.gz.b64 \
-            .github/phase4-fix.diff \
-            .github/phase4-storage.diff \
-            .github/phase4-verified.txt \
-            .github/phase4-atomic-probe.txt \
-            .github/phase4-atomic-probe2.txt \
-            .github/phase4-atomic-probe3.txt
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git commit -m "feat(home): add responsive bookmark library [skip ci]"
-          git push origin HEAD:${{ github.head_ref }}
