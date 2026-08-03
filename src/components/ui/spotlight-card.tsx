@@ -10,6 +10,29 @@ interface SpotlightCardProps {
   lightweight?: boolean // 轻量模式：禁用 spotlight/border beam，用纯 CSS hover 代替 framer-motion
   onClick?: () => void
   onContextMenu?: (e: React.MouseEvent) => void
+  /**
+   * 是否让鼠标中键执行卡片主操作。
+   * 书签卡片都会提供右键菜单，因此默认在存在 onContextMenu 时启用；
+   * 其他类型的可点击卡片可显式开启或关闭。
+   */
+  openOnMiddleClick?: boolean
+}
+
+const INTERACTIVE_DESCENDANT_SELECTOR = [
+  'a',
+  'button',
+  'input',
+  'textarea',
+  'select',
+  '[role="button"]',
+  '[contenteditable="true"]',
+].join(',')
+
+function isInteractiveDescendant(event: React.MouseEvent<HTMLDivElement>) {
+  const target = event.target
+  return target instanceof Element && target !== event.currentTarget
+    ? Boolean(target.closest(INTERACTIVE_DESCENDANT_SELECTOR))
+    : false
 }
 
 /**
@@ -26,6 +49,7 @@ export function SpotlightCard({
   lightweight = false,
   onClick,
   onContextMenu,
+  openOnMiddleClick = Boolean(onContextMenu),
 }: SpotlightCardProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const rafIdRef = useRef<number>(0)
@@ -58,6 +82,40 @@ export function SpotlightCard({
     setIsHovered(false)
   }, [])
 
+  // 中键按下时阻止浏览器进入自动滚屏模式，但不影响卡片内按钮等独立控件。
+  const handleMouseDown = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+    if (
+      event.button === 1 &&
+      openOnMiddleClick &&
+      onClick &&
+      !isInteractiveDescendant(event)
+    ) {
+      event.preventDefault()
+    }
+  }, [onClick, openOnMiddleClick])
+
+  // auxclick 专门处理非主鼠标键；button === 1 表示中键。
+  const handleAuxClick = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+    if (
+      event.button !== 1 ||
+      !openOnMiddleClick ||
+      !onClick ||
+      isInteractiveDescendant(event)
+    ) {
+      return
+    }
+
+    event.preventDefault()
+    onClick()
+
+    // 卡片主操作会通过 window.open 打开书签；重新聚焦当前页，保持“后台打开”体验。
+    try {
+      window.focus()
+    } catch {
+      // 某些 WebView 不允许脚本主动聚焦，打开行为本身仍然有效。
+    }
+  }, [onClick, openOnMiddleClick])
+
   // 清理 RAF
   useEffect(() => {
     return () => cancelAnimationFrame(rafIdRef.current)
@@ -74,6 +132,8 @@ export function SpotlightCard({
   if (lightweight) {
     return (
       <div
+        onMouseDown={handleMouseDown}
+        onAuxClick={handleAuxClick}
         onClick={onClick}
         onContextMenu={onContextMenu}
         className={cn(
@@ -100,6 +160,8 @@ export function SpotlightCard({
       onMouseMove={handleMouseMove}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      onMouseDown={handleMouseDown}
+      onAuxClick={handleAuxClick}
       onClick={onClick}
       onContextMenu={onContextMenu}
       className={cn(
