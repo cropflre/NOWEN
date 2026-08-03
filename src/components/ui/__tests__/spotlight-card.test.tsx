@@ -9,12 +9,6 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
-function getCard(container: HTMLElement) {
-  const card = container.querySelector<HTMLElement>('[data-test-card]')
-  if (!card) throw new Error('SpotlightCard was not rendered')
-  return card
-}
-
 describe('SpotlightCard middle click', () => {
   it('runs the bookmark action on middle click and keeps focus on the current page', () => {
     const onClick = vi.fn()
