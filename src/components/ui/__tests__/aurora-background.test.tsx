@@ -27,7 +27,7 @@ describe('AuroraBackground wallpaper mode', () => {
     expect(queryByTestId('background-beams')).toBeNull()
   })
 
-  it('renders normal Aurora decorations when wallpaper mode is disabled', () => {
+  it('renders visible Aurora beams when wallpaper mode is disabled', () => {
     const { getByTestId } = render(
       <AuroraBackground showBeams>
         <span>page content</span>
@@ -37,5 +37,6 @@ describe('AuroraBackground wallpaper mode', () => {
     expect(getByTestId('aurora-background').getAttribute('data-transparent')).toBe('false')
     expect(getByTestId('aurora-decorations')).toBeTruthy()
     expect(getByTestId('background-beams')).toBeTruthy()
+    expect(Number(getByTestId('aurora-beam-layer').style.opacity)).toBeGreaterThan(0)
   })
 })
