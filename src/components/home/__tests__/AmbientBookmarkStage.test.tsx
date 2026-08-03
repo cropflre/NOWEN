@@ -15,8 +15,18 @@ vi.mock('react-i18next', () => ({
 vi.mock('framer-motion', () => ({
   AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   motion: new Proxy({}, {
-    get: (_target, tag: string) => ({ children, ...props }: React.HTMLAttributes<HTMLElement>) =>
-      React.createElement(tag, props, children),
+    get: (_target, tag: string) => ({
+      children,
+      ...props
+    }: React.HTMLAttributes<HTMLElement> & Record<string, unknown>) => {
+      const domProps = { ...props };
+      delete domProps.initial;
+      delete domProps.animate;
+      delete domProps.exit;
+      delete domProps.transition;
+      delete domProps.layout;
+      return React.createElement(tag, domProps, children);
+    },
   }),
 }));
 
@@ -34,7 +44,7 @@ vi.mock('../../ui/spotlight-card', () => ({
 }));
 
 vi.mock('../../IconRenderer', () => ({
-  IconRenderer: ({ icon }: { icon?: string }) => <span data-testid="category-icon">{icon}</span>,
+  IconRenderer: () => <span aria-hidden="true" />,
 }));
 
 vi.mock('../../../lib/api', () => ({
@@ -100,37 +110,37 @@ afterEach(() => {
 
 describe('AmbientBookmarkStage', () => {
   it('renders all sparse bookmarks and deliberate fallback initials', () => {
-    const { getByText } = render(
+    const { getByRole, getByText } = render(
       <AmbientBookmarkStage {...baseProps} activeCollection="all" />,
     );
 
-    expect(getByText('linux.do')).toBeTruthy();
-    expect(getByText('异文笔记')).toBeTruthy();
-    expect(getByText('异文书签')).toBeTruthy();
-    expect(getByText('L')).toBeTruthy();
+    expect(getByRole('heading', { name: 'linux.do' })).toBeTruthy();
+    expect(getByRole('heading', { name: '异文笔记' })).toBeTruthy();
+    expect(getByRole('heading', { name: '异文书签' })).toBeTruthy();
+    expect(getByText('L', { selector: '.ambient-bookmark-mark--initial' })).toBeTruthy();
   });
 
   it('filters the stage by category', () => {
-    const { getByText, queryByText } = render(
+    const { getByRole, queryByRole } = render(
       <AmbientBookmarkStage {...baseProps} activeCollection="dev" />,
     );
 
-    expect(getByText('linux.do')).toBeTruthy();
-    expect(queryByText('异文笔记')).toBeNull();
-    expect(queryByText('异文书签')).toBeNull();
+    expect(getByRole('heading', { name: 'linux.do' })).toBeTruthy();
+    expect(queryByRole('heading', { name: '异文笔记' })).toBeNull();
+    expect(queryByRole('heading', { name: '异文书签' })).toBeNull();
   });
 
   it('supports pinned and read-later collections', () => {
-    const { getByText, queryByText, rerender } = render(
+    const { getByRole, queryByRole, rerender } = render(
       <AmbientBookmarkStage {...baseProps} activeCollection="pinned" />,
     );
 
-    expect(getByText('linux.do')).toBeTruthy();
-    expect(queryByText('异文笔记')).toBeNull();
+    expect(getByRole('heading', { name: 'linux.do' })).toBeTruthy();
+    expect(queryByRole('heading', { name: '异文笔记' })).toBeNull();
 
     rerender(<AmbientBookmarkStage {...baseProps} activeCollection="read-later" />);
-    expect(getByText('异文笔记')).toBeTruthy();
-    expect(queryByText('linux.do')).toBeNull();
+    expect(getByRole('heading', { name: '异文笔记' })).toBeTruthy();
+    expect(queryByRole('heading', { name: 'linux.do' })).toBeNull();
   });
 
   it('reports collection chip selection to the homepage state owner', () => {
@@ -143,7 +153,7 @@ describe('AmbientBookmarkStage', () => {
       />,
     );
 
-    fireEvent.click(getByRole('tab', { name: /效率 2/ }));
+    fireEvent.click(getByRole('tab', { name: /效率.*2/ }));
     expect(onSelectCollection).toHaveBeenCalledWith('productivity');
   });
 });
