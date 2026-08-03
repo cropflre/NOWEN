@@ -26,7 +26,8 @@ const app = express()
 // ========== 环境配置 ==========
 const NODE_ENV = process.env.NODE_ENV || 'development'
 const isDev = NODE_ENV === 'development'
-const PORT = parseInt(process.env.PORT || '3001', 10)
+const DEFAULT_PORT = isDev ? 39101 : 39001
+const PORT = parseInt(process.env.PORT || String(DEFAULT_PORT), 10)
 
 // 启动日志
 console.log(`

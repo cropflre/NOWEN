@@ -9,6 +9,9 @@ const serverDir = path.join(rootDir, 'server')
 const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm'
 const isWindows = process.platform === 'win32'
 
+const DEFAULT_DEV_WEB_PORT = 39100
+const DEFAULT_DEV_API_PORT = 39101
+
 function parsePort(value, fallback) {
   const port = Number.parseInt(value ?? '', 10)
   return Number.isInteger(port) && port > 0 && port <= 65535 ? port : fallback
@@ -46,9 +49,12 @@ function describePort(name, preferredPort, selectedPort) {
 
 const preferredApiPort = parsePort(
   process.env.NOWEN_API_PORT ?? process.env.PORT,
-  3001,
+  DEFAULT_DEV_API_PORT,
 )
-const preferredWebPort = parsePort(process.env.NOWEN_WEB_PORT, 5173)
+const preferredWebPort = parsePort(
+  process.env.NOWEN_WEB_PORT,
+  DEFAULT_DEV_WEB_PORT,
+)
 
 const apiPort = await findAvailablePort(preferredApiPort)
 const webPort = await findAvailablePort(preferredWebPort, new Set([apiPort]))
