@@ -1,0 +1,102 @@
+/* Layout composition layered on top of ambient-home.css. */
+
+@media (min-width: 1024px) {
+  [data-testid="aurora-background"]:has(.ambient-hero)
+    [class~="max-w-6xl"][class~="mx-auto"] {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: 24px;
+    align-items: start;
+  }
+
+  [data-testid="aurora-background"]:has(.ambient-hero)
+    [class~="max-w-6xl"][class~="mx-auto"] > * {
+    grid-column: 1 / -1;
+  }
+
+  [data-testid="aurora-background"]:has(.ambient-hero)
+    [class~="max-w-6xl"][class~="mx-auto"] > section[data-category-id] {
+    grid-column: span 6;
+    width: 100%;
+    min-width: 0;
+  }
+
+  /* A single collection remains centered instead of occupying the left half. */
+  [data-testid="aurora-background"]:has(.ambient-hero)
+    [class~="max-w-6xl"][class~="mx-auto"]
+    > section[data-category-id]:not(:has(~ section[data-category-id])):not(section[data-category-id] ~ section[data-category-id]) {
+    grid-column: 4 / span 6;
+  }
+
+  /* The old floating category orb breaks the centered composition. Mobile keeps its drawer. */
+  [data-testid="aurora-background"]:has(.ambient-hero)
+    > div[aria-hidden="true"] + div,
+  [data-testid="aurora-background"]:has(.ambient-hero)
+    .fixed.left-4.top-1\/2.-translate-y-1\/2.z-40.hidden.lg\:block {
+    display: none !important;
+  }
+}
+
+/* Weather is a quiet information pill, visually related to search and dock. */
+.ambient-hero__weather > div > div:first-child {
+  margin-top: 0 !important;
+  background: var(--ambient-control-bg) !important;
+  border-color: var(--ambient-control-border) !important;
+  box-shadow: 0 10px 30px rgba(64, 76, 112, 0.06), inset 0 1px 0 rgba(255,255,255,0.46);
+  backdrop-filter: blur(26px) saturate(140%);
+  -webkit-backdrop-filter: blur(26px) saturate(140%);
+}
+
+/* Failed favicons get a deliberate generic mark instead of an empty grey square. */
+[data-testid="aurora-background"]:has(.ambient-hero)
+  section[data-category-id]
+  [data-spotlight-card="true"]
+  div[class*="rounded-xl"][class*="flex-shrink-0"] {
+  position: relative;
+  overflow: hidden;
+}
+
+[data-testid="aurora-background"]:has(.ambient-hero)
+  section[data-category-id]
+  [data-spotlight-card="true"]
+  div[class*="rounded-xl"][class*="flex-shrink-0"]:has(> img[style*="display: none"])::before {
+  content: "↗";
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--color-primary);
+  font-size: 13px;
+  font-weight: 650;
+  background: linear-gradient(145deg, rgba(129, 140, 248, 0.16), rgba(34, 211, 238, 0.08));
+}
+
+/* Pinned cards use the same material family as normal bookmarks. */
+[data-testid="aurora-background"]:has(.ambient-hero)
+  section[data-section="pinned"] [data-spotlight-card="true"],
+[data-testid="aurora-background"]:has(.ambient-hero)
+  section[data-section="pinned"] [class*="rounded-2xl"] {
+  border-color: var(--ambient-card-border) !important;
+}
+
+/* Keep collection cards usable when two stages share a row. */
+@media (min-width: 1024px) and (max-width: 1399px) {
+  [data-testid="aurora-background"]:has(.ambient-hero)
+    section[data-category-id]
+    div[class~="grid"][class*="lg:grid-cols-4"] {
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)) !important;
+  }
+
+  [data-testid="aurora-background"]:has(.ambient-hero)
+    section[data-category-id]
+    div[class~="grid"][class*="lg:grid-cols-3"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 1023px) {
+  [data-testid="aurora-background"]:has(.ambient-hero)
+    section[data-category-id] {
+    width: 100%;
+  }
+}
