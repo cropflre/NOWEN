@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { cn } from '../../lib/utils'
 
@@ -6,28 +7,44 @@ interface MeteorsProps {
   className?: string
 }
 
-export function Meteors({ number = 20, className }: MeteorsProps) {
-  const meteors = Array.from({ length: number }, (_, i) => ({
-    id: i,
-    left: `${Math.random() * 100}%`,
-    animationDelay: `${Math.random() * 2}s`,
-    animationDuration: `${Math.random() * 8 + 5}s`,
-  }))
+const MAX_VISIBLE_METEORS = 6
+
+export function Meteors({ number = MAX_VISIBLE_METEORS, className }: MeteorsProps) {
+  const meteorCount = Math.max(0, Math.min(number, MAX_VISIBLE_METEORS))
+
+  // Keep each meteor's position and timing stable across parent re-renders.
+  // A long, staggered cycle keeps only one or two meteors visible at once.
+  const meteors = useMemo(
+    () =>
+      Array.from({ length: meteorCount }, (_, i) => ({
+        id: i,
+        left: `${35 + Math.random() * 75}%`,
+        top: `${Math.random() * 22}%`,
+        animationDelay: `${i * 2.2 + Math.random() * 1.2}s`,
+        animationDuration: `${12 + Math.random() * 3.5}s`,
+      })),
+    [meteorCount]
+  )
 
   return (
-    <div className={cn('absolute inset-0 overflow-hidden pointer-events-none', className)}>
+    <div
+      aria-hidden="true"
+      className={cn('absolute inset-0 overflow-hidden pointer-events-none', className)}
+    >
       {meteors.map((meteor) => (
         <span
           key={meteor.id}
-          className="absolute top-0 w-0.5 h-0.5 rounded-full bg-white rotate-[215deg] animate-meteor"
+          className="absolute w-0.5 h-0.5 rounded-full bg-white/80 animate-meteor motion-reduce:hidden"
           style={{
             left: meteor.left,
+            top: meteor.top,
             animationDelay: meteor.animationDelay,
             animationDuration: meteor.animationDuration,
+            willChange: 'transform, opacity',
           }}
         >
           {/* Tail */}
-          <span className="absolute top-1/2 -translate-y-1/2 w-[100px] h-[1px] bg-gradient-to-r from-white/50 to-transparent" />
+          <span className="absolute top-1/2 -translate-y-1/2 w-[120px] h-px bg-gradient-to-r from-white/40 via-white/20 to-transparent" />
         </span>
       ))}
     </div>

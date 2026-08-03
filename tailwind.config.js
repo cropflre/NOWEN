@@ -85,7 +85,7 @@ export default {
         'pulse-glow': 'pulse-glow 2s ease-in-out infinite',
         'spin-slow': 'spin 20s linear infinite',
         'spotlight': 'spotlight 2s ease .75s 1 forwards',
-        'meteor': 'meteor 5s linear infinite',
+        'meteor': 'meteor 13s linear infinite',
         'border-beam': 'border-beam var(--duration, 12s) linear infinite',
       },
       keyframes: {
@@ -122,9 +122,20 @@ export default {
           },
         },
         meteor: {
-          '0%': { transform: 'rotate(215deg) translateX(0)', opacity: 1 },
-          '70%': { opacity: 1 },
-          '100%': { transform: 'rotate(215deg) translateX(-500px)', opacity: 0 },
+          '0%, 3%': {
+            transform: 'rotate(215deg) translate3d(0, 0, 0)',
+            opacity: 0,
+          },
+          '6%': { opacity: 0.75 },
+          '26%': { opacity: 0.38 },
+          '34%': {
+            transform: 'rotate(215deg) translate3d(-560px, 0, 0)',
+            opacity: 0,
+          },
+          '100%': {
+            transform: 'rotate(215deg) translate3d(-560px, 0, 0)',
+            opacity: 0,
+          },
         },
         'border-beam': {
           '100%': { offsetDistance: '100%' },
