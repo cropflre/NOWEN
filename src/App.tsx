@@ -27,6 +27,7 @@ import { BentoGrid, BentoGridItem } from "./components/ui/bento-grid";
 import { SpotlightCard } from "./components/ui/spotlight-card";
 import { FloatingDock } from "./components/ui/floating-dock";
 import { MobileFloatingDock } from "./components/ui/mobile-floating-dock";
+import { MobileContentNavigation } from "./components/ui/mobile-content-navigation";
 import { SpotlightSearch } from "./components/ui/spotlight-search";
 import { AiAssistant } from "./components/ui/ai-assistant";
 import { Meteors } from "./components/ui/effects";
@@ -85,6 +86,13 @@ import { Bookmark } from "./types/bookmark";
 import { IconRenderer } from "./components/IconRenderer";
 import { handleQuotesChange } from "./data/quotes";
 import { createDockItems, filterDockItems } from "./config/dockItems";
+import {
+  buildTagStats,
+  filterBookmarksByTag,
+  getTagFromSearch,
+  normalizeTag,
+  writeTagToLocation,
+} from "./lib/bookmark-filter";
 
 // 标签颜色：基于名称哈希生成柔和的彩色药丸
 const TAG_COLORS = [
@@ -115,6 +123,9 @@ function App() {
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [categoryModalMode, setCategoryModalMode] = useState<'edit' | 'add'>('edit');
   const [pendingUrl, setPendingUrl] = useState("");
+  const [activeTag, setActiveTag] = useState<string | null>(() =>
+    typeof window === 'undefined' ? null : getTagFromSearch(window.location.search)
+  );
 
   // 右键菜单状态
   const [contextMenu, setContextMenu] = useState<{
@@ -207,8 +218,17 @@ function App() {
     previousLoginStateRef.current = isLoggedIn;
   }, [isLoggedIn, refreshData]);
 
-  // 拖拽功能
+  // 浏览器前进/后退时恢复 URL 中的标签筛选
+  useEffect(() => {
+    const handlePopState = () => {
+      setActiveTag(getTagFromSearch(window.location.search));
+    };
 
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // 拖拽功能：标签筛选时禁用，避免局部列表重排污染完整顺序
   const {
     activeBookmark,
     sensors,
@@ -216,7 +236,7 @@ function App() {
     handleDragEnd,
     handleDragCancel,
     measuringConfig,
-  } = useDragAndDrop({ bookmarks, reorderBookmarks, disabled: !isLoggedIn });
+  } = useDragAndDrop({ bookmarks, reorderBookmarks, disabled: !isLoggedIn || Boolean(activeTag) });
 
   // 天气数据
 const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather(showWeather, weatherCity, disableGeolocation, settingsLoaded);
@@ -325,6 +345,7 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
     // 清理 URL，避免刷新页面再次触发
     const cleaned = window.location.pathname + window.location.hash;
     window.history.replaceState({}, '', cleaned);
+    setActiveTag(null);
 
     if (!isLoggedIn) {
       // 未登录：缓存到 sessionStorage，登录成功后再恢复
@@ -444,18 +465,55 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
     [deleteBookmark, t]
   );
 
+  const handleTagSelect = useCallback((tag: string | null) => {
+    const normalizedTag = normalizeTag(tag);
+    const nextTag = normalizedTag && normalizedTag === activeTag ? null : normalizedTag;
+    setActiveTag(nextTag);
+    writeTagToLocation(nextTag);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [activeTag]);
+
+  const handleMobileCategorySelect = useCallback((categoryId: string) => {
+    setActiveTag(null);
+    writeTagToLocation(null);
+
+    window.setTimeout(() => {
+      const section = categoryId === 'pinned'
+        ? document.querySelector("[data-section='pinned']")
+        : document.querySelector(`[data-category-id="${categoryId}"]`);
+
+      if (section) {
+        const top = section.getBoundingClientRect().top + window.scrollY - 88;
+        window.scrollTo({ top, behavior: 'smooth' });
+      }
+    }, 0);
+  }, []);
+
   // ========== 数据分组（useMemo 优化，避免每次渲染重新计算） ==========
-  const pinnedBookmarks = useMemo(() => bookmarks.filter((b) => b.isPinned), [bookmarks]);
+  const tagStats = useMemo(() => buildTagStats(bookmarks), [bookmarks]);
+  const visibleBookmarks = useMemo(
+    () => filterBookmarksByTag(bookmarks, activeTag),
+    [bookmarks, activeTag]
+  );
+  const pinnedBookmarks = useMemo(() => visibleBookmarks.filter((b) => b.isPinned), [visibleBookmarks]);
+  const allPinnedCount = useMemo(() => bookmarks.filter((b) => b.isPinned).length, [bookmarks]);
 
   const bookmarksByCategory = useMemo(() => categories.reduce((acc, cat) => {
-    const categoryBookmarks = bookmarks.filter((b) => b.category === cat.id);
+    const categoryBookmarks = visibleBookmarks.filter((b) => b.category === cat.id);
     acc[cat.id] = categoryBookmarks.sort((a, b) => {
       if (a.isPinned && !b.isPinned) return -1;
       if (!a.isPinned && b.isPinned) return 1;
       return a.orderIndex - b.orderIndex;
     });
     return acc;
-  }, {} as Record<string, Bookmark[]>), [bookmarks, categories]);
+  }, {} as Record<string, Bookmark[]>), [visibleBookmarks, categories]);
+
+  const mobileCategoryItems = useMemo(() => categories
+    .map((category) => ({
+      ...category,
+      count: bookmarks.filter((bookmark) => bookmark.category === category.id).length,
+    }))
+    .filter((category) => category.count > 0), [bookmarks, categories]);
 
   // ========== 页面路由 ==========
   // 后台登录页面
@@ -732,9 +790,42 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
             onOpenSearch={() => setIsSpotlightOpen(true)}
           />
 
+          {activeTag && (
+            <motion.div
+              className="mb-6 flex flex-wrap items-center gap-2 rounded-2xl px-4 py-3 backdrop-blur-xl"
+              style={{ background: 'var(--color-glass)', border: '1px solid var(--color-glass-border)' }}
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                {t('mobileNavigation.activeFilter', '当前筛选')}
+              </span>
+              <button
+                type="button"
+                onClick={() => handleTagSelect(null)}
+                className="rounded-lg px-2.5 py-1 text-sm font-medium"
+                style={{ background: 'var(--color-primary-light)', color: 'var(--color-primary)', border: '1px solid var(--color-primary)' }}
+              >
+                #{activeTag}
+              </button>
+              <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                {visibleBookmarks.length} {t('mobileNavigation.results', '个结果')}
+              </span>
+              <button
+                type="button"
+                aria-label={t('mobileNavigation.clear', '清除标签筛选')}
+                onClick={() => handleTagSelect(null)}
+                className="ml-auto flex h-8 w-8 items-center justify-center rounded-lg text-lg"
+                style={{ background: 'var(--color-bg-tertiary)', color: 'var(--color-text-muted)' }}
+              >
+                ×
+              </button>
+            </motion.div>
+          )}
+
           {/* Read Later Section */}
           <ReadLaterSection
-            bookmarks={bookmarks}
+            bookmarks={visibleBookmarks}
             isLiteMode={isLiteMode ?? false}
             onMarkRead={toggleRead}
             onRemove={toggleReadLater}
@@ -820,6 +911,7 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
                         setIsAddModalOpen(true);
                       }}
                       onDelete={() => handleDelete(bookmark.id)}
+                      onTagSelect={handleTagSelect}
                     />
                   </BentoGridItem>
                 ))}
@@ -878,7 +970,7 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
                   catIndex={catIndex}
                   isLiteMode={isLiteMode}
                   isInternal={isInternal}
-                  totalBookmarkCount={bookmarks.length}
+                  totalBookmarkCount={visibleBookmarks.length}
                   collapseThreshold={categoryCollapseThreshold}
                   initialShowCount={categoryInitialShowCount}
                   cardViewMode={cardViewMode}
@@ -889,6 +981,7 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
                     setIsCategoryModalOpen(true);
                   }}
                   onViewModeChange={handleCardViewModeChange}
+                  onTagSelect={handleTagSelect}
                   isLoggedIn={isLoggedIn}
                 />
               );
@@ -899,7 +992,28 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
           </DndContext>
 
           {/* Empty State */}
-          {bookmarks.length === 0 && !isLoading && (
+          {activeTag && visibleBookmarks.length === 0 && !isLoading && (
+            <motion.div
+              className="mb-12 flex flex-col items-center justify-center rounded-3xl px-6 py-14 text-center"
+              style={{ background: 'var(--color-glass)', border: '1px solid var(--color-glass-border)' }}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <p className="text-lg font-medium" style={{ color: 'var(--color-text-primary)' }}>
+                {t('mobileNavigation.noResults', '没有找到包含该标签的书签')}
+              </p>
+              <p className="mt-2 text-sm" style={{ color: 'var(--color-text-muted)' }}>#{activeTag}</p>
+              <button
+                type="button"
+                onClick={() => handleTagSelect(null)}
+                className="mt-5 rounded-xl px-4 py-2 text-sm font-medium"
+                style={{ background: 'var(--color-primary)', color: '#fff' }}
+              >
+                {t('mobileNavigation.clear', '清除标签筛选')}
+              </button>
+            </motion.div>
+          )}
+          {!activeTag && bookmarks.length === 0 && !isLoading && (
             <EmptyState isLiteMode={isLiteMode ?? false} isLoggedIn={isLoggedIn} onAddBookmark={() => setIsAddModalOpen(true)} />
           )}
         </div>
@@ -1004,6 +1118,19 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
 
     {/* 以下组件放在 BackgroundWrapper 外部，避免被其 stacking context 限制 z-index */}
 
+    {enableSidebarNav && (
+      <MobileContentNavigation
+        categories={mobileCategoryItems}
+        tags={tagStats}
+        pinnedCount={allPinnedCount}
+        totalBookmarks={bookmarks.length}
+        activeTag={activeTag}
+        matchedCount={visibleBookmarks.length}
+        onSelectTag={handleTagSelect}
+        onSelectCategory={handleMobileCategorySelect}
+      />
+    )}
+
     {/* 桌面端：Dock（自主管理 fixed 定位 + 自由拖拽） */}
     <div className="hidden md:block">
       <FloatingDock
@@ -1086,6 +1213,7 @@ const MemoizedBookmarkItem = React.memo(function MemoizedBookmarkItem({
   lightweight,
   cardViewMode = 'standard',
   onContextMenu,
+  onTagSelect,
 }: {
   bookmark: Bookmark;
   index: number;
@@ -1095,6 +1223,7 @@ const MemoizedBookmarkItem = React.memo(function MemoizedBookmarkItem({
   lightweight: boolean;
   cardViewMode?: 'compact' | 'standard' | 'comfortable';
   onContextMenu: (e: React.MouseEvent, bookmark: Bookmark) => void;
+  onTagSelect: (tag: string) => void;
 }) {
   const animDelay = index < MAX_ANIMATED_INDEX ? index * 0.04 : 0;
   const isCompact = cardViewMode === 'compact';
@@ -1172,18 +1301,24 @@ const MemoizedBookmarkItem = React.memo(function MemoizedBookmarkItem({
             {bookmark.tags.slice(0, 3).map(tag => {
               const color = getTagColor(tag)
               return (
-                <span
+                <button
                   key={tag}
-                  className="px-1.5 py-0.5 rounded-md text-[10px] leading-tight font-medium truncate max-w-[80px]"
+                  type="button"
+                  className="px-1.5 py-0.5 rounded-md text-[10px] leading-tight font-medium truncate max-w-[80px] transition-transform hover:scale-105 active:scale-95"
                   style={{
                     background: color.bg,
                     color: color.text,
                     border: `1px solid ${color.border}`,
                   }}
                   title={tag}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    onTagSelect(tag);
+                  }}
                 >
                   #{tag}
-                </span>
+                </button>
               )
             })}
             {bookmark.tags.length > 3 && (
@@ -1366,6 +1501,7 @@ function CategorySection({
   onContextMenu,
   onEditCategory,
   onViewModeChange,
+  onTagSelect,
   isLoggedIn,
 }: {
   category: import("./types/bookmark").Category;
@@ -1380,6 +1516,7 @@ function CategorySection({
   onContextMenu: (e: React.MouseEvent, bookmark: Bookmark) => void;
   onEditCategory: (cat: import("./types/bookmark").Category) => void;
   onViewModeChange?: (mode: 'compact' | 'standard' | 'comfortable') => void;
+  onTagSelect: (tag: string) => void;
   isLoggedIn?: boolean;
 }) {
   const { t } = useTranslation();
@@ -1469,6 +1606,7 @@ function CategorySection({
               lightweight={lightweight}
               cardViewMode={cardViewMode}
               onContextMenu={onContextMenu}
+              onTagSelect={onTagSelect}
             />
           )) : null}
         </div>
