@@ -30,8 +30,6 @@
 
   /* The old floating category orb breaks the centered composition. Mobile keeps its drawer. */
   [data-testid="aurora-background"]:has(.ambient-hero)
-    > div[aria-hidden="true"] + div,
-  [data-testid="aurora-background"]:has(.ambient-hero)
     .fixed.left-4.top-1\/2.-translate-y-1\/2.z-40.hidden.lg\:block {
     display: none !important;
   }
