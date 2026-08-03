@@ -27,6 +27,7 @@ jobs:
         run: |
           cat .github/phase4/part* | base64 -d | gzip -d > /tmp/phase4.diff
           patch --batch -p1 < /tmp/phase4.diff
+          patch --batch -p1 < .github/phase4-fix.diff
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -48,7 +49,7 @@ jobs:
           FINAL_WORKFLOW_B64: bmFtZTogV2ViIENJCgpvbjoKICBwdWxsX3JlcXVlc3Q6CiAgICBicmFuY2hlczogW21haW5dCiAgcHVzaDoKICAgIGJyYW5jaGVzOiBbbWFpbl0KCmNvbmN1cnJlbmN5OgogIGdyb3VwOiB3ZWItY2ktJHt7IGdpdGh1Yi5yZWYgfX0KICBjYW5jZWwtaW4tcHJvZ3Jlc3M6IHRydWUKCnBlcm1pc3Npb25zOgogIGNvbnRlbnRzOiByZWFkCgpqb2JzOgogIHRlc3QtYW5kLWJ1aWxkOgogICAgcnVucy1vbjogdWJ1bnR1LWxhdGVzdAogICAgdGltZW91dC1taW51dGVzOiAxNQoKICAgIHN0ZXBzOgogICAgICAtIG5hbWU6IENoZWNrb3V0CiAgICAgICAgdXNlczogYWN0aW9ucy9jaGVja291dEB2NAoKICAgICAgLSBuYW1lOiBTZXR1cCBOb2RlLmpzCiAgICAgICAgdXNlczogYWN0aW9ucy9zZXR1cC1ub2RlQHY0CiAgICAgICAgd2l0aDoKICAgICAgICAgIG5vZGUtdmVyc2lvbjogMjAKICAgICAgICAgIGNhY2hlOiBucG0KCiAgICAgIC0gbmFtZTogSW5zdGFsbCBkZXBlbmRlbmNpZXMKICAgICAgICBydW46IG5wbSBjaQoKICAgICAgLSBuYW1lOiBSdW4gdW5pdCB0ZXN0cwogICAgICAgIHJ1bjogbnBtIHJ1biB0ZXN0OnJ1bgoKICAgICAgLSBuYW1lOiBCdWlsZCBwcm9kdWN0aW9uIGJ1bmRsZQogICAgICAgIHJ1bjogbnBtIHJ1biBidWlsZAo=
         run: |
           printf '%s' "$FINAL_WORKFLOW_B64" | base64 -d > .github/workflows/web-ci.yml
-          rm -rf .github/phase4 .github/phase4-code.patch.gz.b64
+          rm -rf .github/phase4 .github/phase4-code.patch.gz.b64 .github/phase4-fix.diff
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
