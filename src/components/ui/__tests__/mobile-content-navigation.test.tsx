@@ -1,8 +1,8 @@
 /** @vitest-environment jsdom */
 
 import React from 'react'
-import { cleanup, fireEvent, render, waitFor } from '@testing-library/react'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { cleanup, fireEvent, render } from '@testing-library/react'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { MobileContentNavigation } from '../mobile-content-navigation'
 
 vi.mock('react-i18next', () => ({
@@ -50,32 +50,21 @@ const baseProps = {
   pinnedCount: 1,
   totalBookmarks: 3,
   activeTag: null,
+  activeCollection: 'all',
+  readLaterCount: 1,
+  collectionFilterMode: true,
   matchedCount: 3,
   onSelectTag: vi.fn(),
   onSelectCategory: vi.fn(),
 }
 
-beforeEach(() => {
-  window.history.replaceState({}, '', '/')
-})
-
 afterEach(() => {
   cleanup()
-  document.querySelector('[data-ambient-sparse-stage="true"]')?.remove()
   vi.clearAllMocks()
 })
 
-function addSparseStage() {
-  const stage = document.createElement('section')
-  stage.dataset.ambientSparseStage = 'true'
-  stage.dataset.pinnedCount = '1'
-  stage.dataset.readLaterCount = '1'
-  document.body.appendChild(stage)
-}
-
 describe('MobileContentNavigation', () => {
-  it('shows sparse collections and persists a read-later selection', async () => {
-    addSparseStage()
+  it('shows sparse collections and reports a read-later selection', () => {
     const onSelectCategory = vi.fn()
     const { getByRole } = render(
       <MobileContentNavigation {...baseProps} onSelectCategory={onSelectCategory} />,
@@ -85,38 +74,48 @@ describe('MobileContentNavigation', () => {
     fireEvent.click(getByRole('button', { name: /稍后阅读.*1/ }))
 
     expect(onSelectCategory).toHaveBeenCalledWith('read-later')
-    await waitFor(() => {
-      expect(window.location.search).toBe('?collection=read-later')
-    })
   })
 
-  it('clears a collection when the mobile user chooses all bookmarks', async () => {
-    addSparseStage()
-    window.history.replaceState({}, '', '/?collection=dev')
-    const onSelectTag = vi.fn()
-    const { getAllByRole, getByRole } = render(
-      <MobileContentNavigation {...baseProps} onSelectTag={onSelectTag} />,
+  it('shows the active collection summary and clears it through all bookmarks', () => {
+    const onSelectCategory = vi.fn()
+    const { getAllByRole, getByRole, getByText } = render(
+      <MobileContentNavigation
+        {...baseProps}
+        activeCollection="dev"
+        onSelectCategory={onSelectCategory}
+      />,
     )
 
     fireEvent.click(getByRole('button', { name: '打开分类和标签导航' }))
-    fireEvent.click(getByRole('button', { name: '标签' }))
-    const allBookmarksButtons = getAllByRole('button', { name: /全部书签.*3/ })
-    fireEvent.click(allBookmarksButtons[allBookmarksButtons.length - 1])
+    expect(getByText('当前筛选：开发')).toBeTruthy()
 
-    expect(onSelectTag).toHaveBeenCalledWith(null)
-    await waitFor(() => {
-      expect(window.location.search).toBe('')
-    })
+    const allBookmarksButtons = getAllByRole('button', { name: /全部书签.*3/ })
+    fireEvent.click(allBookmarksButtons[0])
+
+    expect(onSelectCategory).toHaveBeenCalledWith('all')
   })
 
-  it('keeps sparse-only collection controls hidden in the dense bookshelf mode', () => {
+  it('keeps sparse-only collection controls hidden in dense bookshelf mode', () => {
     const { getByRole, queryByRole } = render(
-      <MobileContentNavigation {...baseProps} />,
+      <MobileContentNavigation {...baseProps} collectionFilterMode={false} />,
     )
 
     fireEvent.click(getByRole('button', { name: '打开分类和标签导航' }))
     expect(queryByRole('button', { name: /稍后阅读/ })).toBeNull()
     expect(queryByRole('button', { name: /全部书签.*3/ })).toBeNull()
     expect(getByRole('button', { name: /开发.*2/ })).toBeTruthy()
+  })
+
+  it('reports tag choices without maintaining a second filter state', () => {
+    const onSelectTag = vi.fn()
+    const { getByRole } = render(
+      <MobileContentNavigation {...baseProps} onSelectTag={onSelectTag} />,
+    )
+
+    fireEvent.click(getByRole('button', { name: '打开分类和标签导航' }))
+    fireEvent.click(getByRole('button', { name: '标签' }))
+    fireEvent.click(getByRole('button', { name: /#Docker.*2/ }))
+
+    expect(onSelectTag).toHaveBeenCalledWith('Docker')
   })
 })

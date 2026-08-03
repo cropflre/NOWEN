@@ -3,10 +3,6 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { Check, Clock3, FolderTree, LayoutList, Pin, Tags, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Category } from '../../types/bookmark'
-import {
-  getCollectionFromSearch,
-  writeCollectionToLocation,
-} from '../../lib/bookmark-filter'
 import type { BookmarkCollectionId, TagStat } from '../../lib/bookmark-filter'
 import { IconRenderer } from '../IconRenderer'
 
@@ -20,9 +16,12 @@ interface MobileContentNavigationProps {
   pinnedCount: number
   totalBookmarks: number
   activeTag: string | null
+  activeCollection: BookmarkCollectionId
+  readLaterCount: number
+  collectionFilterMode: boolean
   matchedCount: number
   onSelectTag: (tag: string | null) => void
-  onSelectCategory: (categoryId: string) => void
+  onSelectCategory: (categoryId: BookmarkCollectionId) => void
 }
 
 type NavigationTab = 'categories' | 'tags'
@@ -113,6 +112,9 @@ export function MobileContentNavigation({
   pinnedCount,
   totalBookmarks,
   activeTag,
+  activeCollection,
+  readLaterCount,
+  collectionFilterMode,
   matchedCount,
   onSelectTag,
   onSelectCategory,
@@ -122,11 +124,6 @@ export function MobileContentNavigation({
   const copy = COPY[language] || COPY.en
   const [open, setOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<NavigationTab>(activeTag ? 'tags' : 'categories')
-  const [activeCollection, setActiveCollection] = useState<BookmarkCollectionId>(() =>
-    typeof window === 'undefined' ? 'all' : getCollectionFromSearch(window.location.search),
-  )
-  const [collectionFilterMode, setCollectionFilterMode] = useState(false)
-  const [readLaterCount, setReadLaterCount] = useState(0)
 
   const popularTags = useMemo(() => tags.slice(0, 12), [tags])
   const remainingTags = useMemo(() => tags.slice(12), [tags])
@@ -146,24 +143,8 @@ export function MobileContentNavigation({
   }, [activeCollection, categories, pinnedCount, readLaterCount, totalBookmarks])
 
   useEffect(() => {
-    if (activeTag) {
-      setActiveTab('tags')
-      setActiveCollection('all')
-    }
+    if (activeTag) setActiveTab('tags')
   }, [activeTag])
-
-  useEffect(() => {
-    const syncCollectionState = () => {
-      const stage = document.querySelector<HTMLElement>('[data-ambient-sparse-stage="true"]')
-      setCollectionFilterMode(Boolean(stage))
-      setReadLaterCount(Number(stage?.dataset.readLaterCount || 0))
-      setActiveCollection(activeTag ? 'all' : getCollectionFromSearch(window.location.search))
-    }
-
-    syncCollectionState()
-    window.addEventListener('popstate', syncCollectionState)
-    return () => window.removeEventListener('popstate', syncCollectionState)
-  }, [activeTag, categories.length, open, totalBookmarks])
 
   useEffect(() => {
     if (!open) return
@@ -193,27 +174,13 @@ export function MobileContentNavigation({
   ) return null
 
   const selectTag = (tag: string | null) => {
-    const previousCollection = activeCollection
     setOpen(false)
-    setActiveCollection('all')
     onSelectTag(tag)
-
-    if (tag === null && collectionFilterMode && previousCollection !== 'all') {
-      Promise.resolve().then(() => writeCollectionToLocation('all', 'push'))
-    }
   }
 
   const selectCategory = (categoryId: BookmarkCollectionId) => {
-    const hadActiveTag = Boolean(activeTag)
     setOpen(false)
-    setActiveCollection(categoryId)
     onSelectCategory(categoryId)
-
-    if (collectionFilterMode) {
-      Promise.resolve().then(() => {
-        writeCollectionToLocation(categoryId, hadActiveTag ? 'replace' : 'push')
-      })
-    }
   }
 
   const renderTag = (tag: TagStat) => {

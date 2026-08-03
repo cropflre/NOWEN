@@ -16,6 +16,8 @@ import {
   Maximize2,
   Square,
   Lock,
+  LibraryBig,
+  ArrowRight,
 } from "lucide-react";
 
 // API
@@ -91,10 +93,16 @@ import { createDockItems, filterDockItems } from "./config/dockItems";
 import {
   buildTagStats,
   filterBookmarksByTag,
+  getCollectionFromSearch,
   getTagFromSearch,
   normalizeTag,
+  writeCollectionToLocation,
   writeTagToLocation,
 } from "./lib/bookmark-filter";
+
+const BookmarkLibrary = React.lazy(() =>
+  import("./pages/BookmarkLibrary").then((module) => ({ default: module.BookmarkLibrary })),
+);
 
 // 标签颜色：基于名称哈希生成柔和的彩色药丸
 const TAG_COLORS = [
@@ -128,7 +136,12 @@ function App() {
   const [activeTag, setActiveTag] = useState<string | null>(() =>
     typeof window === 'undefined' ? null : getTagFromSearch(window.location.search)
   );
-  const [activeCollection, setActiveCollection] = useState<AmbientCollectionId>('all');
+  const [activeCollection, setActiveCollection] = useState<AmbientCollectionId>(() => {
+    if (typeof window === 'undefined') return 'all';
+    return getTagFromSearch(window.location.search)
+      ? 'all'
+      : getCollectionFromSearch(window.location.search);
+  });
 
   // 右键菜单状态
   const [contextMenu, setContextMenu] = useState<{
@@ -221,11 +234,12 @@ function App() {
     previousLoginStateRef.current = isLoggedIn;
   }, [isLoggedIn, refreshData]);
 
-  // 浏览器前进/后退时恢复 URL 中的标签筛选
+  // 浏览器前进/后退时恢复 URL 中唯一的筛选状态。
   useEffect(() => {
     const handlePopState = () => {
-      setActiveTag(getTagFromSearch(window.location.search));
-      setActiveCollection('all');
+      const nextTag = getTagFromSearch(window.location.search);
+      setActiveTag(nextTag);
+      setActiveCollection(nextTag ? 'all' : getCollectionFromSearch(window.location.search));
     };
 
     window.addEventListener('popstate', handlePopState);
@@ -318,7 +332,15 @@ function App() {
     effectiveWidgetVisibility.networkTelemetry !== false ||
     effectiveWidgetVisibility.processMatrix !== false;
 
-  const dockItems = createDockItems(isDark, toggleDarkMode, t, toggleLanguage, handleCardViewModeChange, cardViewMode);
+  const dockItems = createDockItems(
+    isDark,
+    toggleDarkMode,
+    t,
+    toggleLanguage,
+    handleCardViewModeChange,
+    cardViewMode,
+    currentPage,
+  );
   const effectiveMenuVisibility = useMemo(
     () => ({ ...menuVisibility, searchToggle: showSearch && menuVisibility.searchToggle !== false }),
     [menuVisibility, showSearch]
@@ -406,6 +428,11 @@ function App() {
     switch (id) {
       case "home":
         setCurrentPage("home");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        break;
+      case "library":
+        setCurrentPage("library");
+        window.scrollTo({ top: 0, behavior: "smooth" });
         break;
       case "search":
         setIsSpotlightOpen(true);
@@ -483,31 +510,38 @@ function App() {
   const handleTagSelect = useCallback((tag: string | null) => {
     const normalizedTag = normalizeTag(tag);
     const nextTag = normalizedTag && normalizedTag === activeTag ? null : normalizedTag;
+    const replacesCollection = activeCollection !== 'all';
+
     setActiveCollection('all');
     setActiveTag(nextTag);
-    writeTagToLocation(nextTag);
+
+    if (!nextTag && replacesCollection) {
+      writeCollectionToLocation('all', 'push');
+    } else {
+      writeTagToLocation(nextTag, replacesCollection ? 'replace' : 'push');
+    }
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [activeTag]);
+  }, [activeCollection, activeTag]);
 
   const handleCollectionSelect = useCallback((collectionId: AmbientCollectionId) => {
+    const replacesTag = Boolean(activeTag);
     setActiveCollection(collectionId);
-    if (activeTag) {
-      setActiveTag(null);
-      writeTagToLocation(null);
-    }
+    setActiveTag(null);
+    writeCollectionToLocation(collectionId, replacesTag ? 'replace' : 'push');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [activeTag]);
 
   const handleMobileCategorySelect = useCallback((categoryId: string) => {
-    setActiveTag(null);
-    writeTagToLocation(null);
-
     const sparseHome = bookmarks.length > 0 && bookmarks.length <= AMBIENT_SPARSE_BOOKMARK_LIMIT;
     if (sparseHome) {
-      setActiveCollection(categoryId === 'pinned' ? 'pinned' : categoryId);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      handleCollectionSelect(categoryId === 'pinned' ? 'pinned' : categoryId);
       return;
     }
+
+    setActiveTag(null);
+    setActiveCollection('all');
+    writeCollectionToLocation('all', 'replace');
 
     window.setTimeout(() => {
       const section = categoryId === 'pinned'
@@ -517,9 +551,13 @@ function App() {
       if (section) {
         const top = section.getBoundingClientRect().top + window.scrollY - 88;
         window.scrollTo({ top, behavior: 'smooth' });
+        return;
       }
+
+      handleCollectionSelect(categoryId === 'pinned' ? 'pinned' : categoryId);
+      setCurrentPage('library');
     }, 0);
-  }, [bookmarks.length]);
+  }, [bookmarks.length, handleCollectionSelect, setCurrentPage]);
 
   // ========== 数据分组（useMemo 优化，避免每次渲染重新计算） ==========
   const tagStats = useMemo(() => buildTagStats(bookmarks), [bookmarks]);
@@ -534,6 +572,8 @@ function App() {
     [bookmarks],
   );
   const isSparseHome = bookmarks.length > 0 && bookmarks.length <= AMBIENT_SPARSE_BOOKMARK_LIMIT;
+  const isLibraryPage = currentPage === "library";
+  const collectionFilterEnabled = isSparseHome || isLibraryPage;
 
   const bookmarksByCategory = useMemo(() => categories.reduce((acc, cat) => {
     const categoryBookmarks = visibleBookmarks.filter((b) => b.category === cat.id);
@@ -545,6 +585,17 @@ function App() {
     return acc;
   }, {} as Record<string, Bookmark[]>), [visibleBookmarks, categories]);
 
+  const homeCategorySections = useMemo(
+    () => categories
+      .filter((category) => (bookmarksByCategory[category.id] || []).length > 0)
+      .slice(0, 4),
+    [bookmarksByCategory, categories],
+  );
+  const visibleHomeCategoryCount = useMemo(
+    () => categories.filter((category) => (bookmarksByCategory[category.id] || []).length > 0).length,
+    [bookmarksByCategory, categories],
+  );
+
   const mobileCategoryItems = useMemo(() => categories
     .map((category) => ({
       ...category,
@@ -554,18 +605,23 @@ function App() {
 
   // 数据量增长、分类删除或筛选集合失效时，回到“全部”这一稳定状态。
   useEffect(() => {
-    if (!isSparseHome) {
-      if (activeCollection !== 'all') setActiveCollection('all');
+    const resetCollection = () => {
+      setActiveCollection('all');
+      writeCollectionToLocation('all', 'replace');
+    };
+
+    if (!collectionFilterEnabled) {
+      if (activeCollection !== 'all') resetCollection();
       return;
     }
 
     if (activeCollection === 'pinned' && allPinnedCount === 0) {
-      setActiveCollection('all');
+      resetCollection();
       return;
     }
 
     if (activeCollection === 'read-later' && allReadLaterCount === 0) {
-      setActiveCollection('all');
+      resetCollection();
       return;
     }
 
@@ -575,9 +631,9 @@ function App() {
       activeCollection !== 'read-later' &&
       !categories.some((category) => category.id === activeCollection)
     ) {
-      setActiveCollection('all');
+      resetCollection();
     }
-  }, [activeCollection, allPinnedCount, allReadLaterCount, categories, isSparseHome]);
+  }, [activeCollection, allPinnedCount, allReadLaterCount, categories, collectionFilterEnabled]);
 
   // ========== 页面路由 ==========
   if (currentPage === "admin-login") {
@@ -720,7 +776,7 @@ function App() {
             </motion.p>
 
             <motion.button
-              onClick={() => navigateToLogin('home')}
+              onClick={() => navigateToLogin(currentPage === 'library' ? 'library' : 'home')}
               className="w-full py-3.5 rounded-xl text-white font-medium relative overflow-hidden group"
               style={{ background: 'linear-gradient(135deg, #667eea, #ec4899)' }}
               whileHover={{ scale: 1.02 }}
@@ -845,11 +901,9 @@ function App() {
     >
       {!isLiteMode && <Meteors number={4} />}
 
-      {enableSidebarNav && !isSparseHome && (
+      {enableSidebarNav && currentPage === "home" && !isSparseHome && (
         <SidebarNav
-          items={categories
-            .filter((cat) => (bookmarksByCategory[cat.id] || []).length > 0)
-            .map((cat) => ({
+          items={homeCategorySections.map((cat) => ({
               id: cat.id,
               name: cat.name,
               icon: cat.icon,
@@ -861,7 +915,37 @@ function App() {
       )}
 
       <div className="min-h-screen px-4 sm:px-6 lg:px-8 pb-32">
-        <div className="max-w-6xl mx-auto">
+        <div className={isLibraryPage ? "max-w-[1800px] mx-auto" : "max-w-6xl mx-auto"}>
+          {isLibraryPage ? (
+            <React.Suspense
+              fallback={(
+                <div
+                  className="mx-auto mt-6 min-h-[36rem] max-w-[1800px] animate-pulse rounded-[2rem]"
+                  style={{
+                    background: 'var(--color-glass)',
+                    border: '1px solid var(--color-glass-border)',
+                  }}
+                  aria-label={t('library.loading', '正在加载书签库')}
+                />
+              )}
+            >
+              <BookmarkLibrary
+                bookmarks={bookmarks}
+                categories={categories}
+                activeTag={activeTag}
+                activeCollection={activeCollection}
+                isInternal={isInternal}
+                isLoggedIn={isLoggedIn}
+                onBack={() => setCurrentPage("home")}
+                onOpenSearch={() => setIsSpotlightOpen(true)}
+                onAddBookmark={() => setIsAddModalOpen(true)}
+                onSelectTag={handleTagSelect}
+                onSelectCollection={handleCollectionSelect}
+                onContextMenu={handleContextMenu}
+              />
+            </React.Suspense>
+          ) : (
+            <>
           <HeroSection
             formattedTime={formattedTime}
             formattedDate={formattedDate}
@@ -911,6 +995,29 @@ function App() {
                 ×
               </button>
             </motion.div>
+          )}
+
+          {!isSparseHome && bookmarks.length > 0 && (
+            <motion.section
+              className="ambient-library-gateway"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.42, duration: 0.45 }}
+            >
+              <span className="ambient-library-gateway__icon" aria-hidden="true">
+                <LibraryBig className="h-5 w-5" />
+              </span>
+              <div className="ambient-library-gateway__copy">
+                <strong>{t('library.title', '书签库')}</strong>
+                <span>
+                  {bookmarks.length} {t('bookmark.items', '个书签')} · {visibleHomeCategoryCount} {t('bookmark.categories', '个分类')}
+                </span>
+              </div>
+              <button type="button" onClick={() => setCurrentPage('library')}>
+                {t('library.open', '浏览全部')}
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            </motion.section>
           )}
 
           {!isSparseHome && (
@@ -1029,7 +1136,7 @@ function App() {
               onDragCancel={handleDragCancel}
               measuring={measuringConfig}
             >
-              {categories.map((category, catIndex) => {
+              {homeCategorySections.map((category, catIndex) => {
                 const categoryBookmarks = bookmarksByCategory[category.id] || [];
                 if (categoryBookmarks.length === 0) return null;
 
@@ -1086,10 +1193,12 @@ function App() {
           {!activeTag && bookmarks.length === 0 && !isLoading && (
             <EmptyState isLiteMode={isLiteMode ?? false} isLoggedIn={isLoggedIn} onAddBookmark={() => setIsAddModalOpen(true)} />
           )}
+            </>
+          )}
         </div>
       </div>
 
-      {siteSettings.footerText && (
+      {!isLibraryPage && siteSettings.footerText && (
         <div className="w-full text-center pb-20 md:pb-24 pt-8 px-4">
           <p
             className="text-xs leading-relaxed"
@@ -1183,13 +1292,16 @@ function App() {
       <ScrollToTop threshold={400} />
     </BackgroundWrapper>
 
-    {enableSidebarNav && (
+    {enableSidebarNav && currentPage === "home" && (
       <MobileContentNavigation
         categories={mobileCategoryItems}
         tags={tagStats}
         pinnedCount={allPinnedCount}
         totalBookmarks={bookmarks.length}
         activeTag={activeTag}
+        activeCollection={activeCollection}
+        readLaterCount={allReadLaterCount}
+        collectionFilterMode={isSparseHome}
         matchedCount={visibleBookmarks.length}
         onSelectTag={handleTagSelect}
         onSelectCategory={handleMobileCategorySelect}
@@ -1205,7 +1317,7 @@ function App() {
       />
     </div>
 
-    {effectiveWidgetVisibility.dockMiniMonitor !== false && (
+    {currentPage === "home" && effectiveWidgetVisibility.dockMiniMonitor !== false && (
       <div className="hidden md:flex fixed bottom-6 left-1/2 -translate-x-1/2 z-40">
         <SystemMonitor initialMode="mini" size="sm" showLoading={false} />
       </div>
@@ -1214,13 +1326,13 @@ function App() {
     <div className="md:hidden">
       <MobileFloatingDock
         items={filteredDockItems
-          .filter((item) => item.id !== "home")
+          .filter((item) => currentPage === "home" ? item.id !== "home" : true)
           .map((item) => ({
             id: item.id,
             label: item.title,
             icon: item.IconComponent,
             onClick: item.onClick || (() => handleDockClick(item.id)),
-            isActive: item.id === "home",
+            isActive: item.isActive,
             subItems: item.subItems?.map((sub) => ({
               id: sub.id,
               label: sub.title,

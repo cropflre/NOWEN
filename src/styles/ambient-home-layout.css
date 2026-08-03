@@ -98,3 +98,87 @@
     width: 100%;
   }
 }
+
+/* Dense home shows a curated preview and sends full management to the library. */
+.ambient-library-gateway {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin: 0 0 1.5rem;
+  padding: 0.85rem 0.95rem;
+  border: 1px solid var(--ambient-control-border, var(--color-glass-border));
+  border-radius: 1.15rem;
+  background:
+    linear-gradient(120deg, color-mix(in srgb, var(--color-primary) 7%, transparent), transparent 48%),
+    var(--ambient-control-bg, var(--color-glass));
+  box-shadow: 0 16px 45px rgba(63, 76, 116, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  backdrop-filter: blur(24px) saturate(140%);
+  -webkit-backdrop-filter: blur(24px) saturate(140%);
+}
+
+.dark .ambient-library-gateway {
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.ambient-library-gateway__icon {
+  display: grid;
+  width: 2.7rem;
+  height: 2.7rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 0.9rem;
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  color: var(--color-primary);
+}
+
+.ambient-library-gateway__copy {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.ambient-library-gateway__copy strong {
+  color: var(--color-text-primary);
+  font-size: 0.86rem;
+  font-weight: 650;
+}
+
+.ambient-library-gateway__copy span {
+  color: var(--color-text-muted);
+  font-size: 0.68rem;
+}
+
+.ambient-library-gateway button {
+  display: inline-flex;
+  min-height: 2.35rem;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 24%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-primary) 9%, transparent);
+  color: var(--color-primary);
+  font-size: 0.72rem;
+  font-weight: 620;
+  padding: 0 0.75rem;
+  transition: transform 160ms ease, background 160ms ease;
+}
+
+.ambient-library-gateway button:hover {
+  transform: translateX(2px);
+  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+}
+
+@media (max-width: 639px) {
+  .ambient-library-gateway {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .ambient-library-gateway button {
+    width: 100%;
+    justify-content: center;
+  }
+}
