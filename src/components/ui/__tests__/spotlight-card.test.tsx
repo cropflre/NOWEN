@@ -4,6 +4,17 @@ import { cleanup, fireEvent, render } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { SpotlightCard } from '../spotlight-card'
 
+function auxiliaryClick(element: Element, button: number) {
+  return fireEvent(
+    element,
+    new MouseEvent('auxclick', {
+      bubbles: true,
+      cancelable: true,
+      button,
+    }),
+  )
+}
+
 afterEach(() => {
   cleanup()
   vi.restoreAllMocks()
@@ -26,7 +37,7 @@ describe('SpotlightCard middle click', () => {
     const card = container.querySelector<HTMLElement>('.test-card')
     expect(card).toBeTruthy()
 
-    fireEvent.auxClick(card!, { button: 1 })
+    auxiliaryClick(card!, 1)
 
     expect(onClick).toHaveBeenCalledTimes(1)
     expect(focusSpy).toHaveBeenCalledTimes(1)
@@ -68,7 +79,7 @@ describe('SpotlightCard middle click', () => {
         </div>,
       )
 
-      fireEvent.auxClick(getByText('Bookmark title'), { button: 1 })
+      auxiliaryClick(getByText('Bookmark title'), 1)
 
       expect(onClick).toHaveBeenCalledTimes(1)
     },
@@ -86,7 +97,7 @@ describe('SpotlightCard middle click', () => {
       </SpotlightCard>,
     )
 
-    fireEvent.auxClick(getByRole('button', { name: 'Pin bookmark' }), { button: 1 })
+    auxiliaryClick(getByRole('button', { name: 'Pin bookmark' }), 1)
 
     expect(onClick).not.toHaveBeenCalled()
   })
@@ -108,8 +119,8 @@ describe('SpotlightCard middle click', () => {
     const card = container.querySelector<HTMLElement>('.test-card')
     expect(card).toBeTruthy()
 
-    fireEvent.auxClick(card!, { button: 2 })
-    fireEvent.auxClick(card!, { button: 1 })
+    auxiliaryClick(card!, 2)
+    auxiliaryClick(card!, 1)
 
     expect(onClick).not.toHaveBeenCalled()
   })
