@@ -1,0 +1,108 @@
+/*
+ * Bookmark library list metadata rail.
+ *
+ * The original list layout placed the category badge in the flex row while
+ * independently positioning the tag group in the same bottom-right area.
+ * Reserve a stable rail for category, tags and the external-link affordance so
+ * they can never overlap, while keeping the compact one-line list density.
+ */
+
+.bookmark-library-card--list .bookmark-library-card__surface {
+  position: relative;
+  overflow: hidden;
+}
+
+.bookmark-library-card--list .bookmark-library-card__content {
+  min-height: 3.3rem;
+  padding-right: clamp(18rem, 42%, 34rem);
+}
+
+.bookmark-library-card--list .bookmark-library-card__category {
+  position: absolute;
+  top: 50%;
+  right: 2.55rem;
+  z-index: 2;
+  max-width: 8.5rem;
+  flex: 0 0 auto;
+  transform: translateY(-50%);
+}
+
+.bookmark-library-card--list .bookmark-library-card__external {
+  position: absolute;
+  top: 50%;
+  right: 0.2rem;
+  transform: translateY(-50%);
+}
+
+.bookmark-library-card--list .bookmark-library-card__surface:hover .bookmark-library-card__external {
+  transform: translate(1px, calc(-50% - 1px));
+}
+
+.bookmark-library-card--list .bookmark-library-card__tags {
+  position: absolute;
+  top: 50%;
+  right: 11.65rem;
+  bottom: auto;
+  display: flex;
+  width: auto;
+  max-width: min(26vw, 23rem);
+  min-width: 0;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.35rem;
+  overflow: hidden;
+  margin: 0;
+  transform: translateY(-50%);
+  white-space: nowrap;
+}
+
+.bookmark-library-card--list .bookmark-library-card__tags button,
+.bookmark-library-card--list .bookmark-library-card__tags span {
+  min-width: 0;
+  flex: 0 1 auto;
+}
+
+/* Keep list rows scannable: at most two explicit tags plus the existing +N. */
+.bookmark-library-card--list .bookmark-library-card__tags button:nth-of-type(n + 3) {
+  display: none;
+}
+
+@media (max-width: 1279px) {
+  .bookmark-library-card--list .bookmark-library-card__content {
+    padding-right: 16rem;
+  }
+
+  .bookmark-library-card--list .bookmark-library-card__category {
+    right: 2.45rem;
+    max-width: 7rem;
+  }
+
+  .bookmark-library-card--list .bookmark-library-card__tags {
+    right: 10rem;
+    max-width: 9rem;
+  }
+
+  .bookmark-library-card--list .bookmark-library-card__tags button:nth-of-type(n + 2) {
+    display: none;
+  }
+}
+
+@media (max-width: 799px) {
+  .bookmark-library-card--list .bookmark-library-card__content {
+    padding-right: 9.5rem;
+  }
+
+  .bookmark-library-card--list .bookmark-library-card__tags {
+    display: none;
+  }
+
+  .bookmark-library-card--list .bookmark-library-card__category {
+    max-width: 6.5rem;
+  }
+}
+
+@media (max-width: 639px) {
+  .bookmark-library-card--list .bookmark-library-card__content {
+    padding-right: 1.75rem;
+  }
+}
