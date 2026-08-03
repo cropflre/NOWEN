@@ -9,18 +9,14 @@ interface MeteorsProps {
 
 const MAX_VISIBLE_METEORS = 6
 const METEOR_LAYOUT = [
-  { left: '9%', top: '22%', delay: 0.8, duration: 12.5, distance: 88, rotate: -18 },
-  { left: '31%', top: '13%', delay: 5.4, duration: 15.5, distance: 72, rotate: -22 },
-  { left: '73%', top: '19%', delay: 3.1, duration: 13.8, distance: 96, rotate: -16 },
-  { left: '84%', top: '57%', delay: 9.6, duration: 16.8, distance: 78, rotate: -24 },
-  { left: '18%', top: '68%', delay: 12.7, duration: 14.6, distance: 84, rotate: -20 },
-  { left: '58%', top: '76%', delay: 7.9, duration: 17.2, distance: 70, rotate: -17 },
+  { left: '12%', top: '14%', delay: -3.8, duration: 7.2, distance: 220 },
+  { left: '37%', top: '8%', delay: -6.4, duration: 8.4, distance: 260 },
+  { left: '63%', top: '18%', delay: -2.1, duration: 7.8, distance: 235 },
+  { left: '84%', top: '11%', delay: -5.2, duration: 8.8, distance: 280 },
+  { left: '25%', top: '31%', delay: -7.1, duration: 9.2, distance: 245 },
+  { left: '72%', top: '34%', delay: -4.6, duration: 8.1, distance: 230 },
 ]
 
-/**
- * Short diagonal meteor glints. They stay visible enough to give the page character,
- * while avoiding the long vertical streaks that previously resembled rendering faults.
- */
 export function Meteors({ number = MAX_VISIBLE_METEORS, className }: MeteorsProps) {
   const meteorCount = Math.max(0, Math.min(number, MAX_VISIBLE_METEORS))
   const meteors = useMemo(() => METEOR_LAYOUT.slice(0, meteorCount), [meteorCount])
@@ -28,40 +24,46 @@ export function Meteors({ number = MAX_VISIBLE_METEORS, className }: MeteorsProp
   return (
     <div
       aria-hidden="true"
-      className={cn('absolute inset-0 overflow-hidden pointer-events-none', className)}
+      data-testid="meteor-layer"
+      data-meteor-count={meteorCount}
+      className={cn('fixed inset-0 z-[3] overflow-hidden pointer-events-none', className)}
     >
       {meteors.map((meteor, index) => (
         <motion.span
           key={index}
-          className="absolute h-px w-10 origin-right rounded-full motion-reduce:hidden"
+          data-testid="meteor-streak"
+          className="absolute block h-[2px] w-[2px] rounded-full"
           style={{
             left: meteor.left,
             top: meteor.top,
-            rotate: `${meteor.rotate}deg`,
-            background:
-              'linear-gradient(90deg, transparent 0%, rgba(56, 189, 248, 0.12) 28%, rgba(99, 102, 241, 0.72) 78%, rgba(224, 231, 255, 0.96) 100%)',
-            boxShadow: '0 0 10px rgba(99, 102, 241, 0.28)',
+            background: 'rgba(255,255,255,0.98)',
+            boxShadow:
+              '0 0 8px rgba(255,255,255,0.95), 0 0 18px rgba(99,102,241,0.78)',
+            rotate: 36,
           }}
+          initial={{ x: 0, y: 0, opacity: 0 }}
           animate={{
-            x: [0, meteor.distance * 0.46, meteor.distance],
-            y: [0, -meteor.distance * 0.13, -meteor.distance * 0.28],
-            opacity: [0, 0.68, 0],
-            scaleX: [0.48, 1, 0.7],
+            x: [0, meteor.distance * 0.18, meteor.distance],
+            y: [0, meteor.distance * 0.13, meteor.distance * 0.72],
+            opacity: [0, 0.96, 0],
           }}
           transition={{
             duration: meteor.duration,
             repeat: Infinity,
             delay: meteor.delay,
-            ease: 'easeInOut',
-            times: [0, 0.42, 1],
+            repeatDelay: 1.2,
+            ease: 'linear',
+            times: [0, 0.14, 1],
           }}
         >
           <span
-            className="absolute right-0 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full"
+            className="absolute right-0 top-1/2 h-[2px] -translate-y-1/2 rounded-full"
             style={{
-              background: 'rgba(238, 242, 255, 0.98)',
-              boxShadow:
-                '0 0 8px rgba(125, 211, 252, 0.9), 0 0 16px rgba(129, 140, 248, 0.62)',
+              width: 150,
+              transformOrigin: 'right center',
+              background:
+                'linear-gradient(90deg, transparent 0%, rgba(99,102,241,0.18) 32%, rgba(125,211,252,0.58) 72%, rgba(255,255,255,0.92) 100%)',
+              boxShadow: '0 0 12px rgba(99,102,241,0.28)',
             }}
           />
         </motion.span>
