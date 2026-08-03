@@ -27,7 +27,7 @@ describe('AuroraBackground wallpaper mode', () => {
     expect(queryByTestId('background-beams')).toBeNull()
   })
 
-  it('renders the restored visible beam layer when wallpaper mode is disabled', () => {
+  it('renders the visible compositor beam layer when wallpaper mode is disabled', () => {
     const { getByTestId } = render(
       <AuroraBackground showBeams>
         <span>page content</span>
@@ -35,7 +35,7 @@ describe('AuroraBackground wallpaper mode', () => {
     )
 
     expect(getByTestId('aurora-background').getAttribute('data-transparent')).toBe('false')
-    expect(getByTestId('aurora-background').getAttribute('data-animation-profile')).toBe('restored')
+    expect(getByTestId('aurora-background').getAttribute('data-animation-profile')).toBe('compositor')
     expect(getByTestId('aurora-decorations')).toBeTruthy()
     expect(getByTestId('background-beams')).toBeTruthy()
     expect(Number(getByTestId('aurora-beam-layer').style.opacity)).toBeGreaterThanOrEqual(0.8)
