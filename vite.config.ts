@@ -1,12 +1,16 @@
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
 
+const DEV_WEB_PORT = 39100;
+const DEV_API_PORT = 39101;
+const PRODUCTION_WEB_PORT = 39000;
+
 export default defineConfig(({ mode }) => {
   // 加载环境变量
   const env = loadEnv(mode, process.cwd(), '');
   
   const isDev = mode === 'development';
-  const apiTarget = env.VITE_API_BASE || 'http://localhost:3001';
+  const apiTarget = env.VITE_API_BASE || `http://localhost:${DEV_API_PORT}`;
 
   return {
     plugins: [react()],
@@ -18,7 +22,7 @@ export default defineConfig(({ mode }) => {
     },
     
     server: {
-      port: 5173,
+      port: DEV_WEB_PORT,
       host: true,
       // 开发环境代理配置
       proxy: isDev ? {
@@ -51,9 +55,9 @@ export default defineConfig(({ mode }) => {
       },
     },
     
-    // 预览服务器配置（用于本地预览生产构建）
+    // 预览服务器使用生产 Web 端口
     preview: {
-      port: 3000,
+      port: PRODUCTION_WEB_PORT,
       host: true,
     },
   };
