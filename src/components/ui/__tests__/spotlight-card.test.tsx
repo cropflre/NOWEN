@@ -49,6 +49,31 @@ describe('SpotlightCard middle click', () => {
     expect(fireEvent.mouseDown(card!, { button: 1 })).toBe(false)
   })
 
+  it.each([false, true])(
+    'opens from card content even when the sortable ancestor has role=button (lightweight=%s)',
+    (lightweight) => {
+      const onClick = vi.fn()
+      const { getByText } = render(
+        <div role="button" aria-label="Sortable bookmark">
+          <SpotlightCard
+            lightweight={lightweight}
+            onClick={onClick}
+            onContextMenu={() => undefined}
+          >
+            <div>
+              <span>Bookmark title</span>
+              <p>Bookmark description</p>
+            </div>
+          </SpotlightCard>
+        </div>,
+      )
+
+      fireEvent.auxClick(getByText('Bookmark title'), { button: 1 })
+
+      expect(onClick).toHaveBeenCalledTimes(1)
+    },
+  )
+
   it('does not open the bookmark when middle-clicking a nested action', () => {
     const onClick = vi.fn()
     const { getByRole } = render(
