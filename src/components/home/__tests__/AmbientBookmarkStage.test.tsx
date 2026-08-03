@@ -1,8 +1,8 @@
 /** @vitest-environment jsdom */
 
 import React from 'react';
-import { cleanup, fireEvent, render } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { cleanup, fireEvent, render, waitFor } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Bookmark, Category } from '../../../types/bookmark';
 import { AmbientBookmarkStage } from '../AmbientBookmarkStage';
 
@@ -31,13 +31,20 @@ vi.mock('framer-motion', () => ({
 }));
 
 vi.mock('../../ui/spotlight-card', () => ({
-  SpotlightCard: ({ children, onClick, onContextMenu, className }: {
+  SpotlightCard: ({ children, onClick, onContextMenu, className, ariaLabel }: {
     children: React.ReactNode;
     onClick?: () => void;
     onContextMenu?: React.MouseEventHandler<HTMLDivElement>;
     className?: string;
+    ariaLabel?: string;
   }) => (
-    <div className={className} onClick={onClick} onContextMenu={onContextMenu}>
+    <div
+      role={onClick ? 'link' : undefined}
+      aria-label={ariaLabel}
+      className={className}
+      onClick={onClick}
+      onContextMenu={onContextMenu}
+    >
       {children}
     </div>
   ),
@@ -103,6 +110,10 @@ const baseProps = {
   onTagSelect: vi.fn(),
 };
 
+beforeEach(() => {
+  window.history.replaceState({}, '', '/');
+});
+
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
@@ -118,6 +129,7 @@ describe('AmbientBookmarkStage', () => {
     expect(getByRole('heading', { name: '异文笔记' })).toBeTruthy();
     expect(getByRole('heading', { name: '异文书签' })).toBeTruthy();
     expect(getByText('L', { selector: '.ambient-bookmark-mark--initial' })).toBeTruthy();
+    expect(getByRole('link', { name: 'linux.do · linux.do' })).toBeTruthy();
   });
 
   it('filters the stage by category', () => {
@@ -143,7 +155,7 @@ describe('AmbientBookmarkStage', () => {
     expect(queryByRole('heading', { name: 'linux.do' })).toBeNull();
   });
 
-  it('reports collection chip selection to the homepage state owner', () => {
+  it('reports collection chip selection and writes a shareable URL', () => {
     const onSelectCollection = vi.fn();
     const { getByRole } = render(
       <AmbientBookmarkStage
@@ -155,5 +167,38 @@ describe('AmbientBookmarkStage', () => {
 
     fireEvent.click(getByRole('tab', { name: /效率.*2/ }));
     expect(onSelectCollection).toHaveBeenCalledWith('productivity');
+    expect(window.location.search).toBe('?collection=productivity');
+  });
+
+  it('restores a valid collection from the URL', async () => {
+    window.history.replaceState({}, '', '/?collection=productivity');
+    const onSelectCollection = vi.fn();
+
+    render(
+      <AmbientBookmarkStage
+        {...baseProps}
+        activeCollection="all"
+        onSelectCollection={onSelectCollection}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(onSelectCollection).toHaveBeenCalledWith('productivity');
+    });
+  });
+
+  it('supports arrow-key navigation across collection tabs', () => {
+    const onSelectCollection = vi.fn();
+    const { getByRole } = render(
+      <AmbientBookmarkStage
+        {...baseProps}
+        activeCollection="all"
+        onSelectCollection={onSelectCollection}
+      />,
+    );
+
+    fireEvent.keyDown(getByRole('tab', { name: /全部.*3/ }), { key: 'ArrowRight' });
+    expect(onSelectCollection).toHaveBeenCalledWith('pinned');
+    expect(window.location.search).toBe('?collection=pinned');
   });
 });
