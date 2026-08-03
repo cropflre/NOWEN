@@ -11,6 +11,7 @@ interface SpotlightCardProps {
   onClick?: () => void
   onContextMenu?: (event: React.MouseEvent) => void
   openOnMiddleClick?: boolean
+  ariaLabel?: string
 }
 
 const INTERACTIVE_DESCENDANT_SELECTOR = [
@@ -44,6 +45,7 @@ export function SpotlightCard({
   onClick,
   onContextMenu,
   openOnMiddleClick,
+  ariaLabel,
 }: SpotlightCardProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const rafIdRef = useRef<number>(0)
@@ -93,6 +95,14 @@ export function SpotlightCard({
     }
   }, [onClick, shouldOpenOnMiddleClick])
 
+  const handleKeyDown = useCallback((event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (!onClick || event.target !== event.currentTarget) return
+    if (event.key !== 'Enter' && event.key !== ' ') return
+
+    event.preventDefault()
+    onClick()
+  }, [onClick])
+
   useEffect(() => () => cancelAnimationFrame(rafIdRef.current), [])
 
   const sizeClasses = {
@@ -111,9 +121,19 @@ export function SpotlightCard({
     boxShadow: 'var(--color-shadow)',
   } as React.CSSProperties
 
+  const interactiveProps = onClick
+    ? {
+        role: 'link' as const,
+        tabIndex: 0,
+        'aria-label': ariaLabel,
+        onKeyDown: handleKeyDown,
+      }
+    : {}
+
   if (lightweight) {
     return (
       <div
+        {...interactiveProps}
         data-spotlight-card="true"
         data-spotlight-size={size}
         onMouseDown={handleMouseDown}
@@ -123,6 +143,7 @@ export function SpotlightCard({
         className={cn(
           'relative overflow-hidden rounded-2xl backdrop-blur-xl',
           'transition-all duration-300 hover:-translate-y-1',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-transparent',
           onClick && 'cursor-pointer active:scale-[0.98]',
           sizeClasses[size],
           className,
@@ -136,6 +157,7 @@ export function SpotlightCard({
 
   return (
     <motion.div
+      {...interactiveProps}
       ref={containerRef}
       data-spotlight-card="true"
       data-spotlight-size={size}
@@ -155,6 +177,7 @@ export function SpotlightCard({
       className={cn(
         'relative overflow-hidden rounded-2xl backdrop-blur-xl',
         'transition-all duration-500',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-transparent',
         onClick && 'cursor-pointer',
         sizeClasses[size],
         className,
