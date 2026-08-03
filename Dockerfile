@@ -65,20 +65,21 @@ RUN mkdir -p /app/server/data /app/.nowen-safe
 # 不声明 VOLUME，让用户通过 docker-compose.yml 中的 volumes 手动挂载，
 # 或者 NAS GUI 的存储配置来指定固定路径。
 
-# 🔑 防呆设计：直接在镜像内设置 NODE_ENV=production
-# 这样即使用户通过 NAS GUI 部署时忘记配置环境变量，
-# 数据库路径也能正确指向 /app/server/data/zen-garden.db
-# 用户在 docker-compose.yml 或 GUI 中设置的环境变量会覆盖此默认值
+# 🔑 防呆设计：直接在镜像内设置生产环境和固定 API 端口
+# 用户通过 NAS GUI 部署时无需额外配置即可与 Nginx 反向代理保持一致
 ENV NODE_ENV=production
+ENV PORT=39001
 
-# 暴露端口
-EXPOSE 3000 3001
+# 生产端口：Nginx Web 39000，Express API 39001
+EXPOSE 39000 39001
 
 # 🔑 确保容器停止时发送 SIGTERM，让 start.sh 有机会保存数据
 STOPSIGNAL SIGTERM
 
 # Start script
 COPY start.sh /app/start.sh
-RUN sed -i 's/\r$//' /app/start.sh && chmod +x /app/start.sh
+RUN sed -i 's/\r$//' /app/start.sh && \
+    sed -i 's/port 3001/port 39001/g; s/port 3000/port 39000/g' /app/start.sh && \
+    chmod +x /app/start.sh
 
 CMD ["/app/start.sh"]
