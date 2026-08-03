@@ -32,6 +32,7 @@ export interface BookmarkCardContentProps {
   onToggleReadLater: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  onTagSelect?: (tag: string) => void;
 }
 
 export function BookmarkCardContent({
@@ -43,6 +44,7 @@ export function BookmarkCardContent({
   onToggleReadLater,
   onEdit,
   onDelete,
+  onTagSelect,
 }: BookmarkCardContentProps) {
   const [showActions, setShowActions] = useState(false);
   const { t } = useTranslation();
@@ -200,17 +202,30 @@ export function BookmarkCardContent({
           <div className="flex flex-wrap gap-1 mt-2">
             {bookmark.tags.slice(0, 3).map(tag => {
               const color = getTagColor(tag)
-              return (
-                <span
+              const tagClassName = "px-1.5 py-0.5 rounded-md text-[10px] leading-tight font-medium truncate max-w-[80px]"
+              const tagStyle = {
+                background: color.bg,
+                color: color.text,
+                border: `1px solid ${color.border}`,
+              }
+
+              return onTagSelect ? (
+                <button
                   key={tag}
-                  className="px-1.5 py-0.5 rounded-md text-[10px] leading-tight font-medium truncate max-w-[80px]"
-                  style={{
-                    background: color.bg,
-                    color: color.text,
-                    border: `1px solid ${color.border}`,
-                  }}
+                  type="button"
+                  className={`${tagClassName} transition-transform hover:scale-105 active:scale-95`}
+                  style={tagStyle}
                   title={tag}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    onTagSelect(tag);
+                  }}
                 >
+                  #{tag}
+                </button>
+              ) : (
+                <span key={tag} className={tagClassName} style={tagStyle} title={tag}>
                   #{tag}
                 </span>
               )
