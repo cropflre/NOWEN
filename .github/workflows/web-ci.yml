@@ -36,3 +36,13 @@ jobs:
 
       - name: Build production bundle
         run: npm run build
+
+      - name: Package source snapshot
+        run: tar --exclude=.git --exclude=node_modules --exclude=dist -czf /tmp/nowen-source.tgz .
+
+      - name: Upload source snapshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: nowen-source-${{ github.sha }}
+          path: /tmp/nowen-source.tgz
+          retention-days: 1
