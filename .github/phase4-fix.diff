@@ -1,0 +1,97 @@
+--- a/src/pages/BookmarkLibrary.tsx
++++ b/src/pages/BookmarkLibrary.tsx
+@@ -55,8 +55,10 @@
+ const LIBRARY_SORT_KEY = 'nowen-library-sort-v1'
+ 
+ function readStoredValue<T extends string>(key: string, allowed: readonly T[], fallback: T): T {
++  if (typeof window === 'undefined') return fallback
++
+   try {
+-    const value = localStorage.getItem(key) as T | null
++    const value = window.localStorage.getItem(key) as T | null
+     return value && allowed.includes(value) ? value : fallback
+   } catch {
+     return fallback
+@@ -64,8 +66,10 @@
+ }
+ 
+ function writeStoredValue(key: string, value: string) {
++  if (typeof window === 'undefined') return
++
+   try {
+-    localStorage.setItem(key, value)
++    window.localStorage.setItem(key, value)
+   } catch {
+     // Persistence is optional. The in-memory state still works.
+   }
+--- a/src/pages/__tests__/BookmarkLibrary.test.tsx
++++ b/src/pages/__tests__/BookmarkLibrary.test.tsx
+@@ -1,7 +1,7 @@
+ /** @vitest-environment jsdom */
+ 
+ import React from 'react'
+-import { cleanup, fireEvent, render } from '@testing-library/react'
++import { cleanup, fireEvent, render, waitFor } from '@testing-library/react'
+ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+ import type { Bookmark, Category } from '../../types/bookmark'
+ import { BookmarkLibrary } from '../BookmarkLibrary'
+@@ -120,7 +120,7 @@
+ }
+ 
+ beforeEach(() => {
+-  localStorage.clear()
++  window.localStorage.clear()
+ })
+ 
+ afterEach(() => {
+@@ -144,17 +144,26 @@
+     expect(queryByRole('heading', { name: 'Vite' })).toBeNull()
+   })
+ 
+-  it('searches across titles, descriptions, categories and tags', () => {
++  it('searches across titles, descriptions, categories and tags', async () => {
+     const { getByRole, queryByRole } = render(<BookmarkLibrary {...baseProps} />)
+-    const input = getByRole('textbox', { name: '搜索标题、网址、分类或标签' })
+ 
+-    fireEvent.change(input, { target: { value: '容器' } })
+-    expect(getByRole('heading', { name: 'Docker' })).toBeTruthy()
+-    expect(queryByRole('heading', { name: 'GitHub' })).toBeNull()
+-
+-    fireEvent.change(input, { target: { value: '开发' } })
+-    expect(getByRole('heading', { name: 'GitHub' })).toBeTruthy()
+-    expect(getByRole('heading', { name: 'Vite' })).toBeTruthy()
++    fireEvent.change(
++      getByRole('textbox', { name: '搜索标题、网址、分类或标签' }),
++      { target: { value: '容器' } },
++    )
++    await waitFor(() => {
++      expect(getByRole('heading', { name: 'Docker' })).toBeTruthy()
++      expect(queryByRole('heading', { name: 'GitHub' })).toBeNull()
++    })
++
++    fireEvent.change(
++      getByRole('textbox', { name: '搜索标题、网址、分类或标签' }),
++      { target: { value: '开发' } },
++    )
++    await waitFor(() => {
++      expect(getByRole('heading', { name: 'GitHub' })).toBeTruthy()
++      expect(getByRole('heading', { name: 'Vite' })).toBeTruthy()
++    })
+   })
+ 
+   it('reports collection and tag selections to the single state owner', () => {
+@@ -205,9 +214,12 @@
+     expect(onSelectCollection).not.toHaveBeenCalled()
+   })
+ 
+-  it('persists the preferred list view', () => {
++  it('persists the preferred list view', async () => {
+     const { getByTitle } = render(<BookmarkLibrary {...baseProps} />)
+     fireEvent.click(getByTitle('列表视图'))
+-    expect(localStorage.getItem('nowen-library-view-v1')).toBe('list')
++
++    await waitFor(() => {
++      expect(window.localStorage.getItem('nowen-library-view-v1')).toBe('list')
++    })
+   })
+ })
