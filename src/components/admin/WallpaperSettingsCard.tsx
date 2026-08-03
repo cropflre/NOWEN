@@ -90,16 +90,10 @@ function isHttpImageUrl(value: string): boolean {
 
 function createGalleryUrl(source: GallerySource): string {
   const nonce = Math.random().toString(36).slice(2)
-
-  if (source === 'unsplash') {
-    return `https://picsum.photos/1920/1080?random=${nonce}`
-  }
-
+  if (source === 'unsplash') return `https://picsum.photos/1920/1080?random=${nonce}`
   if (source === 'picsum') {
-    const imageId = Math.floor(Math.random() * 1084)
-    return `https://picsum.photos/id/${imageId}/1920/1080`
+    return `https://picsum.photos/id/${Math.floor(Math.random() * 1084)}/1920/1080`
   }
-
   return `https://bing.img.run/1920x1080.jpg?t=${nonce}`
 }
 
@@ -120,11 +114,11 @@ export function WallpaperSettingsCard({
 
   const language = i18n.language.split('-')[0] as keyof typeof COPY
   const copy = COPY[language] || COPY.en
-
-  const wallpaper: WallpaperSettings = {
+  const wallpaper = useMemo<WallpaperSettings>(() => ({
     ...FALLBACK_WALLPAPER,
     ...settings.wallpaper,
-  }
+  }), [settings.wallpaper])
+
   const activeSource: WallpaperSource = wallpaper.source || 'upload'
   const imageUrl = activeSource === 'upload'
     ? wallpaper.imageData?.trim() || ''
@@ -161,16 +155,11 @@ export function WallpaperSettingsCard({
     }
 
     setGalleryLoading(true)
-    updateWallpaper({
-      source,
-      imageUrl: createGalleryUrl(source),
-      enabled: true,
-    })
+    updateWallpaper({ source, imageUrl: createGalleryUrl(source), enabled: true })
   }, [updateWallpaper])
 
   const refreshGallery = useCallback(() => {
     if (!['unsplash', 'picsum', 'pexels'].includes(activeSource)) return
-
     setGalleryLoading(true)
     setPreviewError(false)
     setLocalError('')
@@ -189,7 +178,6 @@ export function WallpaperSettingsCard({
       setLocalError(copy.invalidFile)
       return
     }
-
     if (file.size > 5 * 1024 * 1024) {
       setLocalError(copy.fileTooLarge)
       return
@@ -203,12 +191,7 @@ export function WallpaperSettingsCard({
         setLocalError(copy.invalidFile)
         return
       }
-
-      updateWallpaper({
-        imageData,
-        source: 'upload',
-        enabled: true,
-      })
+      updateWallpaper({ imageData, source: 'upload', enabled: true })
     }
     reader.readAsDataURL(file)
   }, [copy.fileTooLarge, copy.invalidFile, updateWallpaper])
@@ -247,7 +230,6 @@ export function WallpaperSettingsCard({
         return
       }
     }
-
     setLocalError('')
     await onSave()
   }, [copy.invalidUrl, copy.loadFailed, copy.missingImage, imageUrl, isExternalSource, onSave, previewError, wallpaper.enabled])
@@ -269,10 +251,7 @@ export function WallpaperSettingsCard({
     >
       <div
         className="relative overflow-hidden rounded-2xl backdrop-blur-xl p-6"
-        style={{
-          background: 'var(--color-glass)',
-          border: '1px solid var(--color-glass-border)',
-        }}
+        style={{ background: 'var(--color-glass)', border: '1px solid var(--color-glass-border)' }}
       >
         <div className="relative flex items-center gap-4 mb-6">
           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500/20 to-purple-600/20 border border-violet-500/20 flex items-center justify-center">
@@ -292,17 +271,13 @@ export function WallpaperSettingsCard({
             onClick={() => updateWallpaper({ enabled: !wallpaper.enabled })}
             className={cn(
               'relative w-12 h-6 rounded-full transition-all duration-300 flex-shrink-0',
-              wallpaper.enabled
-                ? 'bg-gradient-to-r from-violet-500 to-purple-500'
-                : 'bg-gray-600/50',
+              wallpaper.enabled ? 'bg-gradient-to-r from-violet-500 to-purple-500' : 'bg-gray-600/50',
             )}
           >
-            <span
-              className={cn(
-                'absolute top-1 w-4 h-4 rounded-full bg-white shadow-md transition-all duration-300',
-                wallpaper.enabled ? 'left-7' : 'left-1',
-              )}
-            />
+            <span className={cn(
+              'absolute top-1 w-4 h-4 rounded-full bg-white shadow-md transition-all duration-300',
+              wallpaper.enabled ? 'left-7' : 'left-1',
+            )} />
           </button>
         </div>
 
@@ -321,32 +296,15 @@ export function WallpaperSettingsCard({
                   {t('admin.settings.wallpaper.source')}
                 </label>
                 <div className="flex flex-wrap gap-2">
-                  <button
-                    type="button"
-                    onClick={() => selectSource('upload')}
-                    className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200"
-                    style={sourceButtonStyle(activeSource === 'upload')}
-                  >
+                  <button type="button" onClick={() => selectSource('upload')} className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all" style={sourceButtonStyle(activeSource === 'upload')}>
                     <Upload className="w-3 h-3 inline mr-1" />
                     {t('admin.settings.wallpaper.upload')}
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => selectSource('url')}
-                    className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200"
-                    style={sourceButtonStyle(activeSource === 'url')}
-                  >
-                    <Link2 className="w-3 h-3 inline mr-1" />
-                    URL
+                  <button type="button" onClick={() => selectSource('url')} className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all" style={sourceButtonStyle(activeSource === 'url')}>
+                    <Link2 className="w-3 h-3 inline mr-1" /> URL
                   </button>
                   {IMAGE_SOURCES.map((source) => (
-                    <button
-                      key={source.id}
-                      type="button"
-                      onClick={() => selectSource(source.id)}
-                      className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200"
-                      style={sourceButtonStyle(activeSource === source.id)}
-                    >
+                    <button key={source.id} type="button" onClick={() => selectSource(source.id)} className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all" style={sourceButtonStyle(activeSource === source.id)}>
                       {source.name}
                     </button>
                   ))}
@@ -355,17 +313,11 @@ export function WallpaperSettingsCard({
 
               {activeSource === 'upload' && (
                 <div
-                  onDragOver={(event) => {
-                    event.preventDefault()
-                    setIsDragging(true)
-                  }}
-                  onDragLeave={(event) => {
-                    event.preventDefault()
-                    setIsDragging(false)
-                  }}
+                  onDragOver={(event) => { event.preventDefault(); setIsDragging(true) }}
+                  onDragLeave={(event) => { event.preventDefault(); setIsDragging(false) }}
                   onDrop={handleDrop}
                   onClick={() => fileInputRef.current?.click()}
-                  className="relative rounded-xl cursor-pointer transition-all duration-300 overflow-hidden"
+                  className="relative rounded-xl cursor-pointer transition-all overflow-hidden"
                   style={{
                     background: isDragging ? 'rgba(139,92,246,0.1)' : 'var(--color-bg-tertiary)',
                     border: isDragging ? '2px dashed #8b5cf6' : '2px dashed var(--color-glass-border)',
@@ -374,20 +326,11 @@ export function WallpaperSettingsCard({
                 >
                   {wallpaper.imageData ? (
                     <div className="relative">
-                      <img
-                        src={wallpaper.imageData}
-                        alt="wallpaper"
-                        className="w-full h-32 object-cover rounded-lg"
-                        onLoad={handleImageLoad}
-                        onError={handleImageError}
-                      />
+                      <img src={wallpaper.imageData} alt="wallpaper" className="w-full h-32 object-cover rounded-lg" onLoad={handleImageLoad} onError={handleImageError} />
                       <button
                         type="button"
-                        onClick={(event) => {
-                          event.stopPropagation()
-                          updateWallpaper({ imageData: '' })
-                        }}
-                        className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/50 flex items-center justify-center hover:bg-black/70 transition-colors"
+                        onClick={(event) => { event.stopPropagation(); updateWallpaper({ imageData: '' }) }}
+                        className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/50 flex items-center justify-center hover:bg-black/70"
                       >
                         <X className="w-4 h-4 text-white" />
                       </button>
@@ -395,12 +338,8 @@ export function WallpaperSettingsCard({
                   ) : (
                     <div className="flex flex-col items-center justify-center py-8 gap-2">
                       <Upload className="w-8 h-8" style={{ color: 'var(--color-text-muted)' }} />
-                      <span className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
-                        {t('admin.settings.wallpaper.drag_hint')}
-                      </span>
-                      <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                        {t('admin.settings.wallpaper.size_hint')}
-                      </span>
+                      <span className="text-sm" style={{ color: 'var(--color-text-muted)' }}>{t('admin.settings.wallpaper.drag_hint')}</span>
+                      <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>{t('admin.settings.wallpaper.size_hint')}</span>
                     </div>
                   )}
                   <input
@@ -422,13 +361,9 @@ export function WallpaperSettingsCard({
                   type="url"
                   inputMode="url"
                   value={wallpaper.imageUrl || ''}
-                  onChange={(event) => updateWallpaper({
-                    imageUrl: event.target.value,
-                    source: 'url',
-                    enabled: true,
-                  })}
+                  onChange={(event) => updateWallpaper({ imageUrl: event.target.value, source: 'url', enabled: true })}
                   placeholder={t('admin.settings.wallpaper.url_placeholder')}
-                  className="w-full px-4 py-3 rounded-xl focus:outline-none transition-all duration-300"
+                  className="w-full px-4 py-3 rounded-xl focus:outline-none transition-all"
                   style={{
                     background: 'var(--color-bg-tertiary)',
                     border: `1px solid ${externalUrlValid ? 'var(--color-glass-border)' : 'rgb(248 113 113)'}`,
@@ -442,12 +377,8 @@ export function WallpaperSettingsCard({
                   type="button"
                   onClick={refreshGallery}
                   disabled={galleryLoading}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 disabled:opacity-50"
-                  style={{
-                    background: 'var(--color-bg-tertiary)',
-                    border: '1px solid var(--color-glass-border)',
-                    color: 'var(--color-text-secondary)',
-                  }}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all disabled:opacity-50"
+                  style={{ background: 'var(--color-bg-tertiary)', border: '1px solid var(--color-glass-border)', color: 'var(--color-text-secondary)' }}
                 >
                   <Shuffle className="w-4 h-4" />
                   {t('admin.settings.wallpaper.refresh')}
@@ -462,19 +393,9 @@ export function WallpaperSettingsCard({
                     <span className="ml-auto text-xs font-mono">{wallpaper.blur ?? 0}px</span>
                   </label>
                   <div className="px-3 py-3 rounded-xl" style={{ background: 'var(--color-bg-tertiary)', border: '1px solid var(--color-glass-border)' }}>
-                    <input
-                      type="range"
-                      min="0"
-                      max="20"
-                      step="1"
-                      value={wallpaper.blur ?? 0}
-                      onChange={(event) => updateWallpaper({ blur: Number(event.target.value) })}
-                      className="w-full h-1.5 rounded-full appearance-none cursor-pointer accent-violet-500"
-                      style={{ background: 'linear-gradient(to right, var(--color-primary), var(--color-text-muted))' }}
-                    />
+                    <input type="range" min="0" max="20" step="1" value={wallpaper.blur ?? 0} onChange={(event) => updateWallpaper({ blur: Number(event.target.value) })} className="w-full h-1.5 rounded-full appearance-none cursor-pointer accent-violet-500" />
                   </div>
                 </div>
-
                 <div className="space-y-2">
                   <label className="flex items-center gap-2 text-sm font-medium" style={{ color: 'var(--color-text-muted)' }}>
                     <Eye className="w-4 h-4" />
@@ -482,16 +403,7 @@ export function WallpaperSettingsCard({
                     <span className="ml-auto text-xs font-mono">{wallpaper.overlay ?? 30}%</span>
                   </label>
                   <div className="px-3 py-3 rounded-xl" style={{ background: 'var(--color-bg-tertiary)', border: '1px solid var(--color-glass-border)' }}>
-                    <input
-                      type="range"
-                      min="0"
-                      max="100"
-                      step="1"
-                      value={wallpaper.overlay ?? 30}
-                      onChange={(event) => updateWallpaper({ overlay: Number(event.target.value) })}
-                      className="w-full h-1.5 rounded-full appearance-none cursor-pointer accent-violet-500"
-                      style={{ background: 'linear-gradient(to right, var(--color-primary), var(--color-text-muted))' }}
-                    />
+                    <input type="range" min="0" max="100" step="1" value={wallpaper.overlay ?? 30} onChange={(event) => updateWallpaper({ overlay: Number(event.target.value) })} className="w-full h-1.5 rounded-full appearance-none cursor-pointer accent-violet-500" />
                   </div>
                 </div>
               </div>
@@ -514,28 +426,15 @@ export function WallpaperSettingsCard({
                       key={imageUrl}
                       src={imageUrl}
                       alt="wallpaper preview"
-                      className={cn(
-                        'w-full h-full object-cover transition-opacity duration-300',
-                        galleryLoading && 'opacity-50',
-                      )}
-                      style={{
-                        filter: `blur(${wallpaper.blur ?? 0}px)`,
-                        transform: 'scale(1.08)',
-                      }}
+                      className={cn('w-full h-full object-cover transition-opacity', galleryLoading && 'opacity-50')}
+                      style={{ filter: `blur(${wallpaper.blur ?? 0}px)`, transform: 'scale(1.08)' }}
                       onLoad={handleImageLoad}
                       onError={handleImageError}
                     />
-                    <div
-                      className="absolute inset-0"
-                      style={{ background: `rgba(0,0,0,${(wallpaper.overlay ?? 30) / 100})` }}
-                    />
+                    <div className="absolute inset-0" style={{ background: `rgba(0,0,0,${(wallpaper.overlay ?? 30) / 100})` }} />
                     {galleryLoading && (
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <motion.span
-                          animate={{ rotate: 360 }}
-                          transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                          className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full"
-                        />
+                        <motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full" />
                       </div>
                     )}
                     <div className="absolute inset-0 flex items-center justify-center text-center">
@@ -548,21 +447,14 @@ export function WallpaperSettingsCard({
                 </div>
               )}
 
-              <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                {copy.homepageHint}
-              </p>
+              <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>{copy.homepageHint}</p>
             </motion.div>
           )}
         </AnimatePresence>
 
         <AnimatePresence>
           {displayedError && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="mt-4 flex items-start gap-2 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-sm text-red-400"
-            >
+            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="mt-4 flex items-start gap-2 px-4 py-3 rounded-xl bg-red-500/10 border border-red-500/20 text-sm text-red-400">
               <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
               {displayedError}
             </motion.div>
@@ -571,12 +463,7 @@ export function WallpaperSettingsCard({
 
         <AnimatePresence>
           {success && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="mt-4 flex items-center gap-2 px-4 py-3 rounded-xl bg-green-500/10 border border-green-500/20 text-sm text-green-400"
-            >
+            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="mt-4 flex items-center gap-2 px-4 py-3 rounded-xl bg-green-500/10 border border-green-500/20 text-sm text-green-400">
               <CheckCircle className="w-4 h-4 flex-shrink-0" />
               {t('admin.settings.wallpaper.saved')}
             </motion.div>
@@ -591,24 +478,16 @@ export function WallpaperSettingsCard({
           whileTap={{ scale: isSaving || !canSave ? 1 : 0.98 }}
           className={cn(
             'relative w-full mt-6 py-3 rounded-xl font-medium overflow-hidden',
-            'bg-gradient-to-r from-violet-600 to-purple-600',
-            'text-white shadow-lg shadow-violet-500/20',
-            'disabled:opacity-50 disabled:cursor-not-allowed',
-            'transition-all duration-300',
+            'bg-gradient-to-r from-violet-600 to-purple-600 text-white shadow-lg shadow-violet-500/20',
+            'disabled:opacity-50 disabled:cursor-not-allowed transition-all',
           )}
         >
-          <span className="relative z-10">
-            {isSaving ? (
-              <span className="flex items-center justify-center gap-2">
-                <motion.span
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                  className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full"
-                />
-                {t('admin.settings.wallpaper.saving')}
-              </span>
-            ) : t('admin.settings.wallpaper.save')}
-          </span>
+          {isSaving ? (
+            <span className="flex items-center justify-center gap-2">
+              <motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full" />
+              {t('admin.settings.wallpaper.saving')}
+            </span>
+          ) : t('admin.settings.wallpaper.save')}
         </motion.button>
       </div>
     </motion.div>
