@@ -6,11 +6,6 @@ import { BackgroundBeamsWithCollision } from './background-beams-with-collision'
 const isMobileViewport = () =>
   typeof window !== 'undefined' && window.innerWidth < 768
 
-const prefersReducedMotion = () =>
-  typeof window !== 'undefined' &&
-  typeof window.matchMedia === 'function' &&
-  window.matchMedia('(prefers-reduced-motion: reduce)').matches
-
 interface AuroraBackgroundProps {
   children?: React.ReactNode
   className?: string
@@ -39,7 +34,7 @@ function AmbientOrb({ className, background, opacity, animate, duration }: Ambie
       className={cn('absolute rounded-full will-change-transform', className)}
       style={{
         background,
-        filter: 'blur(96px)',
+        filter: 'blur(72px)',
         opacity,
       }}
       animate={animate}
@@ -58,7 +53,6 @@ export function AuroraBackground({
   const containerRef = useRef<HTMLDivElement>(null)
   const rafIdRef = useRef<number>(0)
   const [isDark, setIsDark] = useState(true)
-  const [reduceMotion, setReduceMotion] = useState(prefersReducedMotion)
   const mobile = useMemo(() => isMobileViewport(), [])
 
   useEffect(() => {
@@ -76,17 +70,6 @@ export function AuroraBackground({
     return () => observer.disconnect()
   }, [])
 
-  useEffect(() => {
-    if (typeof window.matchMedia !== 'function') return
-
-    const media = window.matchMedia('(prefers-reduced-motion: reduce)')
-    const syncMotionPreference = () => setReduceMotion(media.matches)
-    syncMotionPreference()
-    media.addEventListener?.('change', syncMotionPreference)
-
-    return () => media.removeEventListener?.('change', syncMotionPreference)
-  }, [])
-
   const handleMouseMove = useCallback((event: MouseEvent) => {
     const container = containerRef.current
     if (!container) return
@@ -102,25 +85,24 @@ export function AuroraBackground({
   }, [])
 
   useEffect(() => {
-    if (transparent || mobile || reduceMotion) return
+    if (transparent || mobile) return
 
     window.addEventListener('mousemove', handleMouseMove, { passive: true })
     return () => {
       window.removeEventListener('mousemove', handleMouseMove)
       cancelAnimationFrame(rafIdRef.current)
     }
-  }, [handleMouseMove, mobile, reduceMotion, transparent])
+  }, [handleMouseMove, mobile, transparent])
 
   const renderDecorations = !transparent
-  const animateOrb = !reduceMotion
-  const mobileMotionScale = mobile ? 0.42 : 1
+  const mobileMotionScale = mobile ? 0.58 : 1
 
   return (
     <div
       ref={containerRef}
       data-testid="aurora-background"
       data-transparent={transparent ? 'true' : 'false'}
-      data-reduced-motion={reduceMotion ? 'true' : 'false'}
+      data-animation-profile="restored"
       className={cn('relative min-h-screen w-full overflow-hidden', className)}
       style={{
         '--mouse-x': '50%',
@@ -134,92 +116,92 @@ export function AuroraBackground({
           <AnimatePresence mode="wait">
             <motion.div
               key={isDark ? 'ambient-dark' : 'ambient-light'}
-              className="fixed inset-0 overflow-hidden pointer-events-none"
+              className="fixed inset-0 z-0 overflow-hidden pointer-events-none"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.65 }}
+              transition={{ duration: 0.45 }}
             >
               <div
                 className="absolute inset-0"
                 style={{
                   background: isDark
                     ? 'linear-gradient(180deg, #090a0f 0%, #0b0d14 52%, #090a10 100%)'
-                    : 'linear-gradient(180deg, #fafbff 0%, #f7f8fc 48%, #fafbff 100%)',
+                    : 'linear-gradient(180deg, #fafbff 0%, #f6f8ff 48%, #fafbff 100%)',
                 }}
               />
 
               <AmbientOrb
                 className={isDark
-                  ? 'left-[-10%] top-[-16%] h-[620px] w-[760px]'
-                  : 'left-[-8%] top-[-18%] h-[680px] w-[820px]'}
+                  ? 'left-[-10%] top-[-18%] h-[720px] w-[900px]'
+                  : 'left-[-9%] top-[-20%] h-[760px] w-[940px]'}
                 background={isDark
-                  ? 'radial-gradient(circle, rgba(124, 111, 255, 0.44) 0%, rgba(91, 77, 218, 0.14) 48%, transparent 72%)'
-                  : 'radial-gradient(circle, rgba(183, 166, 255, 0.66) 0%, rgba(200, 187, 255, 0.2) 48%, transparent 72%)'}
-                opacity={isDark ? 0.58 : 0.5}
-                animate={animateOrb ? {
-                  x: [0, 66 * mobileMotionScale, 0],
-                  y: [0, 30 * mobileMotionScale, 0],
-                  scale: [1, 1.055, 1],
-                  opacity: [0.84, 1, 0.84],
-                } : undefined}
-                duration={26}
+                  ? 'radial-gradient(circle, rgba(124, 111, 255, 0.58) 0%, rgba(91, 77, 218, 0.2) 46%, transparent 72%)'
+                  : 'radial-gradient(circle, rgba(173, 154, 255, 0.72) 0%, rgba(200, 187, 255, 0.28) 46%, transparent 72%)'}
+                opacity={isDark ? 0.68 : 0.58}
+                animate={{
+                  x: [0, 96 * mobileMotionScale, 28 * mobileMotionScale, 0],
+                  y: [0, 42 * mobileMotionScale, -18 * mobileMotionScale, 0],
+                  scale: [1, 1.1, 1.04, 1],
+                  opacity: [0.82, 1, 0.9, 0.82],
+                }}
+                duration={18}
               />
 
               <AmbientOrb
                 className={isDark
-                  ? 'right-[-12%] top-[10%] h-[680px] w-[760px]'
-                  : 'right-[-10%] top-[6%] h-[720px] w-[800px]'}
+                  ? 'right-[-14%] top-[4%] h-[760px] w-[860px]'
+                  : 'right-[-12%] top-[2%] h-[800px] w-[900px]'}
                 background={isDark
-                  ? 'radial-gradient(circle, rgba(54, 194, 216, 0.36) 0%, rgba(54, 194, 216, 0.11) 48%, transparent 72%)'
-                  : 'radial-gradient(circle, rgba(154, 229, 235, 0.64) 0%, rgba(189, 235, 237, 0.2) 48%, transparent 72%)'}
-                opacity={isDark ? 0.5 : 0.45}
-                animate={animateOrb ? {
-                  x: [0, -58 * mobileMotionScale, 0],
-                  y: [0, 44 * mobileMotionScale, 0],
-                  scale: [1, 1.065, 1],
-                  opacity: [0.82, 1, 0.82],
-                } : undefined}
-                duration={30}
+                  ? 'radial-gradient(circle, rgba(54, 194, 216, 0.52) 0%, rgba(54, 194, 216, 0.16) 48%, transparent 72%)'
+                  : 'radial-gradient(circle, rgba(128, 223, 235, 0.7) 0%, rgba(189, 235, 237, 0.26) 48%, transparent 72%)'}
+                opacity={isDark ? 0.6 : 0.54}
+                animate={{
+                  x: [0, -92 * mobileMotionScale, -24 * mobileMotionScale, 0],
+                  y: [0, 70 * mobileMotionScale, 20 * mobileMotionScale, 0],
+                  scale: [1, 1.12, 1.05, 1],
+                  opacity: [0.8, 1, 0.88, 0.8],
+                }}
+                duration={21}
               />
 
               <AmbientOrb
                 className={isDark
-                  ? 'bottom-[-24%] left-[22%] h-[620px] w-[760px]'
-                  : 'bottom-[-28%] left-[18%] h-[680px] w-[820px]'}
+                  ? 'bottom-[-28%] left-[18%] h-[760px] w-[920px]'
+                  : 'bottom-[-30%] left-[14%] h-[820px] w-[980px]'}
                 background={isDark
-                  ? 'radial-gradient(circle, rgba(76, 120, 255, 0.34) 0%, rgba(76, 120, 255, 0.1) 50%, transparent 74%)'
-                  : 'radial-gradient(circle, rgba(154, 190, 255, 0.66) 0%, rgba(191, 214, 255, 0.2) 50%, transparent 74%)'}
-                opacity={isDark ? 0.46 : 0.43}
-                animate={animateOrb ? {
-                  x: [0, 52 * mobileMotionScale, 0],
-                  y: [0, -38 * mobileMotionScale, 0],
-                  scale: [1, 1.05, 1],
-                  opacity: [0.8, 1, 0.8],
-                } : undefined}
-                duration={28}
+                  ? 'radial-gradient(circle, rgba(76, 120, 255, 0.48) 0%, rgba(76, 120, 255, 0.15) 50%, transparent 74%)'
+                  : 'radial-gradient(circle, rgba(135, 180, 255, 0.7) 0%, rgba(191, 214, 255, 0.26) 50%, transparent 74%)'}
+                opacity={isDark ? 0.56 : 0.5}
+                animate={{
+                  x: [0, 82 * mobileMotionScale, 20 * mobileMotionScale, 0],
+                  y: [0, -62 * mobileMotionScale, -20 * mobileMotionScale, 0],
+                  scale: [1, 1.1, 1.04, 1],
+                  opacity: [0.78, 1, 0.9, 0.78],
+                }}
+                duration={20}
               />
 
-              {!mobile && !reduceMotion && (
+              {!mobile && (
                 <motion.div
-                  className="absolute -inset-[8%]"
+                  className="absolute -inset-[10%]"
                   style={{
                     background: isDark
-                      ? 'radial-gradient(ellipse 42% 34% at var(--mouse-x) var(--mouse-y), rgba(111, 94, 255, 0.22) 0%, rgba(75, 185, 220, 0.08) 48%, transparent 72%)'
-                      : 'radial-gradient(ellipse 42% 34% at var(--mouse-x) var(--mouse-y), rgba(99, 102, 241, 0.18) 0%, rgba(34, 211, 238, 0.08) 48%, transparent 72%)',
+                      ? 'radial-gradient(ellipse 46% 38% at var(--mouse-x) var(--mouse-y), rgba(111, 94, 255, 0.34) 0%, rgba(75, 185, 220, 0.14) 46%, transparent 72%)'
+                      : 'radial-gradient(ellipse 46% 38% at var(--mouse-x) var(--mouse-y), rgba(99, 102, 241, 0.26) 0%, rgba(34, 211, 238, 0.12) 46%, transparent 72%)',
                     mixBlendMode: isDark ? 'screen' : 'multiply',
                   }}
-                  animate={{ opacity: [0.72, 1, 0.72], scale: [1, 1.02, 1] }}
-                  transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
+                  animate={{ opacity: [0.74, 1, 0.74], scale: [1, 1.035, 1] }}
+                  transition={{ duration: 5.5, repeat: Infinity, ease: 'easeInOut' }}
                 />
               )}
 
               <div
                 className="absolute inset-0"
                 style={{
-                  opacity: isDark ? 0.04 : 0.028,
+                  opacity: isDark ? 0.045 : 0.03,
                   backgroundImage:
-                    'radial-gradient(circle at 20% 30%, currentColor 0.45px, transparent 0.55px), radial-gradient(circle at 70% 60%, currentColor 0.35px, transparent 0.5px)',
+                    'radial-gradient(circle at 20% 30%, currentColor 0.5px, transparent 0.6px), radial-gradient(circle at 70% 60%, currentColor 0.4px, transparent 0.55px)',
                   backgroundSize: '11px 11px, 13px 13px',
                   color: isDark ? '#ffffff' : '#4f5d7a',
                   mixBlendMode: isDark ? 'screen' : 'multiply',
@@ -230,28 +212,27 @@ export function AuroraBackground({
 
           {showRadialGradient && (
             <div
-              className="fixed inset-0 pointer-events-none"
+              className="fixed inset-0 z-[1] pointer-events-none"
               style={{
                 background: isDark
-                  ? 'radial-gradient(ellipse 94% 90% at 50% 40%, transparent 18%, rgba(5, 6, 10, 0.44) 100%)'
-                  : 'radial-gradient(ellipse 116% 108% at 50% 32%, transparent 38%, rgba(247, 248, 252, 0.42) 100%)',
+                  ? 'radial-gradient(ellipse 96% 92% at 50% 40%, transparent 12%, rgba(5, 6, 10, 0.34) 100%)'
+                  : 'radial-gradient(ellipse 118% 110% at 50% 32%, transparent 34%, rgba(247, 248, 252, 0.28) 100%)',
                 transition: 'background 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
               }}
             />
           )}
 
-          {showBeams && !reduceMotion && (
+          {showBeams && (
             <div
               data-testid="aurora-beam-layer"
-              className="fixed inset-0 pointer-events-none transition-opacity duration-700"
-              style={{ opacity: isDark ? 0.58 : 0.44 }}
+              className="fixed inset-0 z-[2] pointer-events-none"
+              style={{ opacity: isDark ? 0.96 : 0.86 }}
             >
               <BackgroundBeamsWithCollision
                 containerClassName="absolute inset-0"
                 className="h-full w-full"
                 isDark={isDark}
                 isMobile={mobile}
-                reducedMotion={reduceMotion}
               />
             </div>
           )}
