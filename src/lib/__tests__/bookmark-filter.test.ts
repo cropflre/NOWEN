@@ -58,10 +58,14 @@ describe('bookmark filtering', () => {
     expect(buildTagUrl('https://nowen.example/?view=grid&tag=Docker#bookmarks', null)).toBe('/?view=grid#bookmarks')
   })
 
-  it('keeps tag and collection filters mutually exclusive', () => {
+  it('keeps tag and collection filters mutually exclusive when entering a filter', () => {
     expect(buildTagUrl('https://nowen.example/?collection=dev&view=grid', 'Docker')).toBe('/?view=grid&tag=Docker')
     expect(buildCollectionUrl('https://nowen.example/?tag=Docker&view=grid', 'dev')).toBe('/?view=grid&collection=dev')
     expect(buildCollectionUrl('https://nowen.example/?collection=dev&view=grid', 'all')).toBe('/?view=grid')
+  })
+
+  it('preserves a newly selected collection when only clearing the previous tag', () => {
+    expect(buildTagUrl('https://nowen.example/?collection=dev&tag=Docker', null)).toBe('/?collection=dev')
   })
 
   it('restores collection filters and treats an absent collection as all', () => {
