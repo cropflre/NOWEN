@@ -7,45 +7,51 @@ interface MeteorsProps {
   className?: string
 }
 
-const MAX_VISIBLE_METEORS = 6
+const MAX_VISIBLE_GLINTS = 4
+const GLINT_LAYOUT = [
+  { left: '15%', top: '24%', delay: 1.2, duration: 18 },
+  { left: '76%', top: '18%', delay: 6.8, duration: 22 },
+  { left: '63%', top: '66%', delay: 11.4, duration: 20 },
+  { left: '28%', top: '72%', delay: 15.7, duration: 24 },
+]
 
-export function Meteors({ number = MAX_VISIBLE_METEORS, className }: MeteorsProps) {
-  const meteorCount = Math.max(0, Math.min(number, MAX_VISIBLE_METEORS))
-
-  // Keep each meteor's position and timing stable across parent re-renders.
-  // A long, staggered cycle keeps only one or two meteors visible at once.
-  const meteors = useMemo(
-    () =>
-      Array.from({ length: meteorCount }, (_, i) => ({
-        id: i,
-        left: `${35 + Math.random() * 75}%`,
-        top: `${Math.random() * 22}%`,
-        animationDelay: `${i * 2.2 + Math.random() * 1.2}s`,
-        animationDuration: `${12 + Math.random() * 3.5}s`,
-      })),
-    [meteorCount]
-  )
+/**
+ * Historical name kept for API compatibility.
+ * The visual is intentionally a quiet ambient glint rather than a long meteor streak,
+ * so the background supports the content instead of looking like rendering artifacts.
+ */
+export function Meteors({ number = MAX_VISIBLE_GLINTS, className }: MeteorsProps) {
+  const glintCount = Math.max(0, Math.min(number, MAX_VISIBLE_GLINTS))
+  const glints = useMemo(() => GLINT_LAYOUT.slice(0, glintCount), [glintCount])
 
   return (
     <div
       aria-hidden="true"
       className={cn('absolute inset-0 overflow-hidden pointer-events-none', className)}
     >
-      {meteors.map((meteor) => (
-        <span
-          key={meteor.id}
-          className="absolute w-0.5 h-0.5 rounded-full bg-white/80 animate-meteor motion-reduce:hidden"
+      {glints.map((glint, index) => (
+        <motion.span
+          key={index}
+          className="absolute h-1 w-1 rounded-full motion-reduce:hidden"
           style={{
-            left: meteor.left,
-            top: meteor.top,
-            animationDelay: meteor.animationDelay,
-            animationDuration: meteor.animationDuration,
-            willChange: 'transform, opacity',
+            left: glint.left,
+            top: glint.top,
+            background: 'rgba(255,255,255,0.66)',
+            boxShadow: '0 0 12px rgba(129,140,248,0.22)',
           }}
-        >
-          {/* Tail */}
-          <span className="absolute top-1/2 -translate-y-1/2 w-[120px] h-px bg-gradient-to-r from-white/40 via-white/20 to-transparent" />
-        </span>
+          animate={{
+            x: [0, 18, 34],
+            y: [0, -8, -14],
+            opacity: [0, 0.42, 0],
+            scale: [0.65, 1, 0.72],
+          }}
+          transition={{
+            duration: glint.duration,
+            repeat: Infinity,
+            delay: glint.delay,
+            ease: 'easeInOut',
+          }}
+        />
       ))}
     </div>
   )
@@ -113,7 +119,6 @@ interface GlowingBorderProps {
 export function GlowingBorder({ children, className, glowColor = '#667eea' }: GlowingBorderProps) {
   return (
     <div className={cn('relative group', className)}>
-      {/* Animated Border */}
       <div className="absolute -inset-[1px] rounded-2xl overflow-hidden">
         <motion.div
           className="absolute inset-0"
@@ -124,8 +129,7 @@ export function GlowingBorder({ children, className, glowColor = '#667eea' }: Gl
           transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
         />
       </div>
-      
-      {/* Content with background */}
+
       <div className="relative rounded-2xl bg-[#0d0d14]">
         {children}
       </div>
@@ -147,10 +151,8 @@ export function TracingBeam({ className, status = 'online' }: TracingBeamProps) 
 
   return (
     <div className={cn('relative w-1 h-full', className)}>
-      {/* Track */}
       <div className="absolute inset-0 rounded-full bg-white/5" />
-      
-      {/* Beam */}
+
       <motion.div
         className="absolute w-full rounded-full"
         style={{
@@ -166,8 +168,7 @@ export function TracingBeam({ className, status = 'online' }: TracingBeamProps) 
           ease: 'easeInOut',
         }}
       />
-      
-      {/* Glow */}
+
       <motion.div
         className="absolute w-4 h-4 -left-1.5 rounded-full"
         style={{
