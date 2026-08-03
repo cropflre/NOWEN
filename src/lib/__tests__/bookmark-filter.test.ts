@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { Bookmark } from '../../types/bookmark'
 import {
+  buildCollectionUrl,
   buildTagStats,
   buildTagUrl,
   filterBookmarksByTag,
+  getCollectionFromSearch,
   getTagFromSearch,
 } from '../bookmark-filter'
 
@@ -36,7 +38,7 @@ const bookmarks: Bookmark[] = [
   },
 ]
 
-describe('bookmark tag filtering', () => {
+describe('bookmark filtering', () => {
   it('filters bookmarks by one exact tag and keeps all bookmarks without a filter', () => {
     expect(filterBookmarksByTag(bookmarks, 'Docker').map((bookmark) => bookmark.id)).toEqual(['1', '2'])
     expect(filterBookmarksByTag(bookmarks, null)).toBe(bookmarks)
@@ -50,9 +52,21 @@ describe('bookmark tag filtering', () => {
     ])
   })
 
-  it('reads and writes a shareable tag query without dropping other parameters or hashes', () => {
+  it('reads and writes a shareable tag query without dropping unrelated parameters or hashes', () => {
     expect(getTagFromSearch('?tag=Docker')).toBe('Docker')
     expect(buildTagUrl('https://nowen.example/?view=grid#bookmarks', 'Docker')).toBe('/?view=grid&tag=Docker#bookmarks')
     expect(buildTagUrl('https://nowen.example/?view=grid&tag=Docker#bookmarks', null)).toBe('/?view=grid#bookmarks')
+  })
+
+  it('keeps tag and collection filters mutually exclusive', () => {
+    expect(buildTagUrl('https://nowen.example/?collection=dev&view=grid', 'Docker')).toBe('/?view=grid&tag=Docker')
+    expect(buildCollectionUrl('https://nowen.example/?tag=Docker&view=grid', 'dev')).toBe('/?view=grid&collection=dev')
+    expect(buildCollectionUrl('https://nowen.example/?collection=dev&view=grid', 'all')).toBe('/?view=grid')
+  })
+
+  it('restores collection filters and treats an absent collection as all', () => {
+    expect(getCollectionFromSearch('?collection=read-later')).toBe('read-later')
+    expect(getCollectionFromSearch('?collection=productivity')).toBe('productivity')
+    expect(getCollectionFromSearch('?tag=Docker')).toBe('all')
   })
 })
