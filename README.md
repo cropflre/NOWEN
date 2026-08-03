@@ -78,7 +78,7 @@
     <td align="center" colspan="2"><b>主题配色（8 款深色 + 8 款浅色）</b></td>
   </tr>
   <tr>
-    <td colspan="2"><img src="./public/screenshots/dark-admin-themes.png" alt="主题配色" width="1000"></td>
+    <td colspan="2"><img src="./public/screenshots/dark-admin-themes.png" alt="后台主题配色" width="1000"></td>
   </tr>
 </table>
 
@@ -89,20 +89,21 @@
 ```bash
 docker run -d \
   --name nowen \
-  -p 3000:3000 \
+  -p 39000:39000 \
   -v nowen-data:/app/server/data \
-  -v nowen-backup:/app/.data-backup \
   --restart unless-stopped \
   cropflre/nowen:latest
 ```
 
-打开 <http://localhost:3000>，使用默认账号登录：
+打开 <http://localhost:39000>，使用默认账号登录：
 
 | 用户名 | 密码 |
 | ------ | -------- |
 | admin  | admin123 |
 
 > ⚠️ 首次登录后请立即修改默认密码。
+
+生产容器内部使用固定端口：Nginx Web 为 `39000`，Express API 为 `39001`。默认只需要映射 Web 端口，`/api` 会由 Nginx 在容器内转发。
 
 ### Docker Compose
 
@@ -112,15 +113,13 @@ services:
     image: cropflre/nowen:latest
     container_name: nowen
     ports:
-      - "3000:3000"
+      - "39000:39000"
     volumes:
       - nowen-data:/app/server/data
-      - nowen-backup:/app/.data-backup
     restart: unless-stopped
 
 volumes:
   nowen-data:
-  nowen-backup:
 ```
 
 ```bash
@@ -134,14 +133,33 @@ docker compose up -d
 git clone https://github.com/cropflre/NOWEN.git
 cd NOWEN
 npm install
-cd server && npm install && cd ..
+npm --prefix server install
 
-# 启动后端（端口 3001）
-cd server && npm run dev
-
-# 启动前端（端口 5173，新终端）
+# 一行同时启动前端和后端
 npm run dev
 ```
+
+默认开发地址：
+
+```text
+Web：http://localhost:39100
+API：http://localhost:39101
+```
+
+如果端口被占用，启动器会自动向后寻找可用端口，并把前端代理指向实际选中的 API 端口。也可以手动指定首选端口：
+
+```bash
+NOWEN_WEB_PORT=39200 NOWEN_API_PORT=39201 npm run dev
+```
+
+## 🔌 端口规划
+
+| 环境 | 服务 | 默认端口 | 对外暴露 |
+| --- | --- | ---: | --- |
+| 生产 | Nginx / Web | `39000` | 是 |
+| 生产 | Express API | `39001` | 默认仅容器内部 |
+| 开发 | Vite Web | `39100` | 本地开发访问 |
+| 开发 | Express API | `39101` | 本地开发代理 |
 
 ## 🛠️ 技术栈
 
@@ -162,7 +180,7 @@ npm run dev
 
 ## 📦 数据持久化
 
-数据库位于容器内 `/app/server/data/zen-garden.db`。建议保留默认的 Named Volume 配置，配合 8 层防呆机制（双卷互备、启动备份、运行时同步、SQLite 完整性校验等）保证数据安全。
+数据库位于容器内 `/app/server/data/zen-garden.db`。建议保留默认的 Named Volume 配置，配合多层防呆机制（启动备份、运行时同步、SQLite 完整性校验等）保证数据安全。
 
 也可在后台启用 **WebDAV 云备份**（坚果云 / 群晖 / Alist 等）实现定时异地备份。
 
