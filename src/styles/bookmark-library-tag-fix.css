@@ -1,121 +1,134 @@
 /*
  * Bookmark library metadata rail and legacy category-tag de-duplication.
  *
- * Existing bookmark data stores the category name as the first tag as well as
- * in bookmark.category. The card renders the category as its own colored pill,
- * so displaying that first tag again creates the duplicate shown in the UI.
- * Keep the stored data intact, but suppress the duplicated first tag wherever a
- * category pill is present. Real secondary tags remain interactive.
+ * This file is loaded before the component bundle CSS in production, so every
+ * list-view override intentionally uses a stronger selector (and, where needed,
+ * !important) to prevent bookmark-library.css from restoring the old absolute
+ * positioning values afterwards.
  */
 
-.bookmark-library-card__surface:has(.bookmark-library-card__category)
+.bookmark-library
+  .bookmark-library-card__surface:has(.bookmark-library-card__category)
   .bookmark-library-card__tags > button:first-of-type {
-  display: none;
+  display: none !important;
 }
 
-/* Collapse the footer when the category was the only stored tag. */
-.bookmark-library-card__surface:has(.bookmark-library-card__category)
+/* Collapse the tag rail when the stored category tag is the only tag. */
+.bookmark-library
+  .bookmark-library-card__surface:has(.bookmark-library-card__category)
   .bookmark-library-card__tags:has(> button:first-of-type:last-of-type):not(:has(> span)) {
-  display: none;
+  display: none !important;
 }
 
-.bookmark-library-card--list .bookmark-library-card__surface {
-  position: relative;
-  overflow: hidden;
+.bookmark-library .bookmark-library-card--list .bookmark-library-card__surface {
+  position: relative !important;
+  overflow: hidden !important;
 }
 
-.bookmark-library-card--list .bookmark-library-card__content {
+.bookmark-library .bookmark-library-card--list .bookmark-library-card__content {
   min-height: 3.3rem;
-  padding-right: clamp(18rem, 42%, 34rem);
+  padding-right: clamp(23rem, 48%, 40rem) !important;
 }
 
-.bookmark-library-card--list .bookmark-library-card__category {
-  position: absolute;
-  top: 50%;
-  right: 2.55rem;
-  z-index: 2;
-  max-width: 8.5rem;
+.bookmark-library .bookmark-library-card--list .bookmark-library-card__category {
+  position: absolute !important;
+  top: 50% !important;
+  right: 2.75rem !important;
+  bottom: auto !important;
+  z-index: 4;
+  width: auto;
+  max-width: 9rem;
   flex: 0 0 auto;
-  transform: translateY(-50%);
+  transform: translateY(-50%) !important;
 }
 
-.bookmark-library-card--list .bookmark-library-card__external {
-  position: absolute;
-  top: 50%;
-  right: 0.2rem;
-  transform: translateY(-50%);
+.bookmark-library .bookmark-library-card--list .bookmark-library-card__external {
+  position: absolute !important;
+  top: 50% !important;
+  right: 0.35rem !important;
+  bottom: auto !important;
+  transform: translateY(-50%) !important;
 }
 
-.bookmark-library-card--list .bookmark-library-card__surface:hover .bookmark-library-card__external {
-  transform: translate(1px, calc(-50% - 1px));
+.bookmark-library
+  .bookmark-library-card--list
+  .bookmark-library-card__surface:hover
+  .bookmark-library-card__external {
+  transform: translate(1px, calc(-50% - 1px)) !important;
 }
 
-.bookmark-library-card--list .bookmark-library-card__tags {
-  position: absolute;
-  top: 50%;
-  right: 11.65rem;
-  bottom: auto;
+.bookmark-library .bookmark-library-card--list .bookmark-library-card__tags {
+  position: absolute !important;
+  top: 50% !important;
+  right: 14rem !important;
+  bottom: auto !important;
+  z-index: 3;
   display: flex;
   width: auto;
-  max-width: min(26vw, 23rem);
+  max-width: min(22vw, 18rem) !important;
   min-width: 0;
   align-items: center;
   justify-content: flex-end;
-  gap: 0.35rem;
+  gap: 0.4rem;
   overflow: hidden;
-  margin: 0;
-  transform: translateY(-50%);
+  margin: 0 !important;
+  padding: 0 !important;
+  transform: translateY(-50%) !important;
   white-space: nowrap;
 }
 
-.bookmark-library-card--list .bookmark-library-card__tags button,
-.bookmark-library-card--list .bookmark-library-card__tags span {
+.bookmark-library .bookmark-library-card--list .bookmark-library-card__tags button,
+.bookmark-library .bookmark-library-card--list .bookmark-library-card__tags span {
   min-width: 0;
   flex: 0 1 auto;
 }
 
 /* First button is the hidden category duplicate; keep two real tags after it. */
-.bookmark-library-card--list .bookmark-library-card__tags button:nth-of-type(n + 4) {
-  display: none;
+.bookmark-library
+  .bookmark-library-card--list
+  .bookmark-library-card__tags button:nth-of-type(n + 4) {
+  display: none !important;
 }
 
 @media (max-width: 1279px) {
-  .bookmark-library-card--list .bookmark-library-card__content {
-    padding-right: 16rem;
+  .bookmark-library .bookmark-library-card--list .bookmark-library-card__content {
+    padding-right: 18rem !important;
   }
 
-  .bookmark-library-card--list .bookmark-library-card__category {
-    right: 2.45rem;
-    max-width: 7rem;
+  .bookmark-library .bookmark-library-card--list .bookmark-library-card__category {
+    right: 2.55rem !important;
+    max-width: 7.25rem;
   }
 
-  .bookmark-library-card--list .bookmark-library-card__tags {
-    right: 10rem;
-    max-width: 9rem;
+  .bookmark-library .bookmark-library-card--list .bookmark-library-card__tags {
+    right: 10.75rem !important;
+    max-width: 6.75rem !important;
   }
 
   /* Medium widths keep one real tag after the hidden category duplicate. */
-  .bookmark-library-card--list .bookmark-library-card__tags button:nth-of-type(n + 3) {
-    display: none;
+  .bookmark-library
+    .bookmark-library-card--list
+    .bookmark-library-card__tags button:nth-of-type(n + 3) {
+    display: none !important;
   }
 }
 
-@media (max-width: 799px) {
-  .bookmark-library-card--list .bookmark-library-card__content {
-    padding-right: 9.5rem;
+@media (max-width: 899px) {
+  .bookmark-library .bookmark-library-card--list .bookmark-library-card__content {
+    padding-right: 9.75rem !important;
   }
 
-  .bookmark-library-card--list .bookmark-library-card__tags {
-    display: none;
+  .bookmark-library .bookmark-library-card--list .bookmark-library-card__tags {
+    display: none !important;
   }
 
-  .bookmark-library-card--list .bookmark-library-card__category {
-    max-width: 6.5rem;
+  .bookmark-library .bookmark-library-card--list .bookmark-library-card__category {
+    max-width: 6.75rem;
   }
 }
 
 @media (max-width: 639px) {
-  .bookmark-library-card--list .bookmark-library-card__content {
-    padding-right: 1.75rem;
+  .bookmark-library .bookmark-library-card--list .bookmark-library-card__content {
+    padding-right: 1.75rem !important;
   }
 }
