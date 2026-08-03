@@ -6,7 +6,8 @@ services:
     # 🔑 确保容器停止时有足够时间保存数据
     stop_grace_period: 15s
     ports:
-      - "3002:3000"
+      # 生产 Web 入口；API 由容器内 Nginx 转发到 39001，不直接暴露到宿主机
+      - "39000:39000"
     volumes:
       # ========== 🔑 数据持久化（最重要！）==========
       # 使用 Docker Named Volume，容器重建/更新后自动复用同一个卷
@@ -34,6 +35,7 @@ services:
       # - /volume1/@docker/docker.sock:/var/run/docker.sock  # Synology
     environment:
       - NODE_ENV=production
+      - PORT=39001
       # ========== 系统信息读取路径 ==========
       # 告诉 systeminformation 从 /host 路径读取文件系统信息
       - SI_FILESYSTEM_DISK_PREFIX=/host
