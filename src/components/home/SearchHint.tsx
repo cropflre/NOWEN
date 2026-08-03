@@ -1,8 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { Search, Command } from 'lucide-react';
-import { Button as MovingBorderButton } from '../ui/moving-border';
+import { Search, Command, ArrowUpRight } from 'lucide-react';
 
 interface SearchHintProps {
   isLiteMode: boolean;
@@ -13,68 +12,60 @@ export function SearchHint({ isLiteMode, onOpenSearch }: SearchHintProps) {
   const { t } = useTranslation();
 
   return (
-    <motion.div
-      className="relative inline-block"
-      initial={{ opacity: 0, y: 20 }}
+    <motion.button
+      type="button"
+      data-ambient-control="true"
+      className="group flex w-full items-center gap-3 rounded-2xl px-4 py-3.5 text-left transition-all duration-300 sm:px-5"
+      initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.6 }}
-      whileHover={{ y: isLiteMode ? 0 : -2 }}
+      transition={{ delay: 0.5, duration: 0.45 }}
+      whileHover={isLiteMode ? undefined : { y: -2, scale: 1.005 }}
+      whileTap={{ scale: 0.99 }}
+      onClick={onOpenSearch}
+      aria-label={t('search_placeholder')}
     >
-      {isLiteMode ? (
-        // 精简模式：简约搜索框，无 Moving Border
-        <div
-          className="inline-flex items-center gap-3 px-6 py-3.5 rounded-xl cursor-pointer transition-all duration-300 hover:shadow-md"
-          style={{
-            background: 'var(--color-glass)',
-            border: '1px solid var(--color-glass-border)',
-          }}
-          onClick={onOpenSearch}
+      <span
+        className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-xl transition-transform duration-300 group-hover:scale-105"
+        style={{
+          color: 'var(--color-primary)',
+          background: 'color-mix(in srgb, var(--color-primary) 10%, transparent)',
+          border: '1px solid color-mix(in srgb, var(--color-primary) 12%, transparent)',
+        }}
+      >
+        <Search className="h-4 w-4" />
+      </span>
+
+      <span className="min-w-0 flex-1">
+        <span
+          className="block truncate text-sm font-medium sm:text-[15px]"
+          style={{ color: 'var(--color-text-secondary)' }}
         >
-          <Search className="w-4 h-4" style={{ color: 'var(--color-text-muted)' }} />
-          <span className="tracking-wide" style={{ color: 'var(--color-text-muted)' }}>
-            {t('search_placeholder')}
-          </span>
-          <kbd
-            className="px-2 py-1 rounded text-xs flex items-center gap-1 ml-2"
-            style={{
-              background: 'var(--color-bg-tertiary)',
-              color: 'var(--color-text-muted)',
-              border: '1px solid var(--color-border-light)',
-            }}
-          >
-            <Command className="w-3 h-3" /> K
-          </kbd>
-        </div>
-      ) : (
-        // 完整模式：Moving Border 搜索框
-        <MovingBorderButton
-          borderRadius="1rem"
-          duration={3000}
-          containerClassName="cursor-pointer"
-          borderClassName="bg-[radial-gradient(var(--color-primary)_40%,transparent_60%)]"
-          className="bg-[var(--color-glass)] dark:bg-slate-900/[0.8] border-[var(--color-glass-border)] dark:border-slate-800 px-6 py-3.5 gap-3"
-          onClick={onOpenSearch}
+          {t('search_placeholder')}
+        </span>
+        <span
+          className="mt-0.5 hidden text-[11px] sm:block"
+          style={{ color: 'var(--color-text-muted)' }}
         >
-          <Search
-            className="w-4 h-4 transition-colors group-hover:text-[var(--color-primary)]"
-            style={{ color: 'var(--color-text-muted)' }}
-          />
-          <span className="tracking-wide transition-colors" style={{ color: 'var(--color-text-muted)' }}>
-            {t('search_placeholder')}
-          </span>
-          <kbd
-            className="px-2 py-1 rounded text-xs flex items-center gap-1 ml-2"
-            style={{
-              background: 'var(--color-bg-tertiary)',
-              color: 'var(--color-text-muted)',
-              border: '1px solid var(--color-border-light)',
-            }}
-          >
-            <Command className="w-3 h-3" /> K
-          </kbd>
-        </MovingBorderButton>
-      )}
-    </motion.div>
+          搜索书签、标签，或直接输入网址
+        </span>
+      </span>
+
+      <kbd
+        className="hidden items-center gap-1 rounded-lg px-2 py-1 text-[11px] sm:flex"
+        style={{
+          background: 'var(--color-bg-tertiary)',
+          color: 'var(--color-text-muted)',
+          border: '1px solid var(--color-border-light)',
+        }}
+      >
+        <Command className="h-3 w-3" /> K
+      </kbd>
+
+      <ArrowUpRight
+        className="h-4 w-4 flex-shrink-0 opacity-40 transition-all duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:opacity-70"
+        style={{ color: 'var(--color-text-muted)' }}
+      />
+    </motion.button>
   );
 }
 
