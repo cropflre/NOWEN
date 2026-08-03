@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import type { CSSProperties, MouseEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { CSSProperties, KeyboardEvent, MouseEvent } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Clock3, Layers3, Lock, Pin } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -7,6 +7,10 @@ import type { Bookmark, Category } from '../../types/bookmark';
 import { IconRenderer } from '../IconRenderer';
 import { SpotlightCard } from '../ui/spotlight-card';
 import { visitsApi } from '../../lib/api';
+import {
+  getCollectionFromSearch,
+  writeCollectionToLocation,
+} from '../../lib/bookmark-filter';
 import { getBookmarkUrl } from '../../hooks/useNetworkEnv';
 import '../../styles/ambient-bookmark-stage.css';
 
@@ -170,6 +174,7 @@ function AmbientBookmarkCard({
         size={mode === 'compact' ? 'sm' : mode === 'comfortable' ? 'lg' : 'md'}
         lightweight={Boolean(isLiteMode)}
         spotlightColor={category?.color ? `${category.color}22` : 'rgba(129, 140, 248, 0.16)'}
+        ariaLabel={`${bookmark.title} · ${hostname}`}
         onClick={openBookmark}
         onContextMenu={(event) => onContextMenu(event, bookmark)}
       >
@@ -241,19 +246,34 @@ export function AmbientBookmarkStage({
   onTagSelect,
 }: AmbientBookmarkStageProps) {
   const { t } = useTranslation();
+  const tabRefs = useRef(new Map<AmbientCollectionId, HTMLButtonElement>());
   const categoryMap = useMemo(
     () => new Map(categories.map((category) => [category.id, category])),
     [categories],
   );
 
+  const collectionStats = useMemo(() => {
+    const categoryCounts = new Map<string, number>();
+    let pinnedCount = 0;
+    let readLaterCount = 0;
+
+    bookmarks.forEach((bookmark) => {
+      if (bookmark.isPinned) pinnedCount += 1;
+      if (bookmark.isReadLater && !bookmark.isRead) readLaterCount += 1;
+      if (bookmark.category) {
+        categoryCounts.set(bookmark.category, (categoryCounts.get(bookmark.category) || 0) + 1);
+      }
+    });
+
+    return { categoryCounts, pinnedCount, readLaterCount };
+  }, [bookmarks]);
+
   const collections = useMemo<CollectionItem[]>(() => {
-    const pinnedCount = bookmarks.filter((bookmark) => bookmark.isPinned).length;
-    const readLaterCount = bookmarks.filter((bookmark) => bookmark.isReadLater && !bookmark.isRead).length;
     const categoryItems = categories
       .map((category) => ({
         id: category.id,
         name: category.name,
-        count: bookmarks.filter((bookmark) => bookmark.category === category.id).length,
+        count: collectionStats.categoryCounts.get(category.id) || 0,
         icon: category.icon,
         color: category.color,
       }))
@@ -265,17 +285,22 @@ export function AmbientBookmarkStage({
         name: t('bookmark.all', '全部'),
         count: bookmarks.length,
       },
-      ...(pinnedCount > 0
-        ? [{ id: 'pinned' as const, name: t('sidebar.pinned', '常用'), count: pinnedCount, icon: 'Pin', color: '#eab308' }]
+      ...(collectionStats.pinnedCount > 0
+        ? [{ id: 'pinned' as const, name: t('sidebar.pinned', '常用'), count: collectionStats.pinnedCount, icon: 'Pin', color: '#eab308' }]
         : []),
-      ...(readLaterCount > 0
-        ? [{ id: 'read-later' as const, name: t('readLater.title', '稍后阅读'), count: readLaterCount, icon: 'Clock3', color: '#38bdf8' }]
+      ...(collectionStats.readLaterCount > 0
+        ? [{ id: 'read-later' as const, name: t('readLater.title', '稍后阅读'), count: collectionStats.readLaterCount, icon: 'Clock3', color: '#38bdf8' }]
         : []),
       ...categoryItems,
     ];
-  }, [bookmarks, categories, t]);
+  }, [bookmarks.length, categories, collectionStats, t]);
 
-  const resolvedCollection = collections.some((collection) => collection.id === activeCollection)
+  const collectionIds = useMemo(
+    () => new Set(collections.map((collection) => collection.id)),
+    [collections],
+  );
+
+  const resolvedCollection = collectionIds.has(activeCollection)
     ? activeCollection
     : 'all';
 
@@ -295,10 +320,75 @@ export function AmbientBookmarkStage({
     });
   }, [bookmarks, resolvedCollection]);
 
+  const restoreCollectionFromLocation = useCallback(() => {
+    if (typeof window === 'undefined' || activeTag) return;
+
+    const requestedCollection = getCollectionFromSearch(window.location.search);
+    const nextCollection = collectionIds.has(requestedCollection)
+      ? requestedCollection
+      : 'all';
+
+    if (requestedCollection !== nextCollection) {
+      writeCollectionToLocation(nextCollection, 'replace');
+    }
+    if (nextCollection !== activeCollection) {
+      onSelectCollection(nextCollection);
+    }
+  }, [activeCollection, activeTag, collectionIds, onSelectCollection]);
+
+  useEffect(() => {
+    restoreCollectionFromLocation();
+    window.addEventListener('popstate', restoreCollectionFromLocation);
+    return () => window.removeEventListener('popstate', restoreCollectionFromLocation);
+  }, [restoreCollectionFromLocation]);
+
+  useEffect(() => {
+    if (activeCollection !== resolvedCollection) {
+      writeCollectionToLocation(resolvedCollection, 'replace');
+    }
+  }, [activeCollection, resolvedCollection]);
+
+  const selectCollection = useCallback((collectionId: AmbientCollectionId) => {
+    if (collectionId === resolvedCollection && !activeTag) return;
+    writeCollectionToLocation(collectionId, 'push');
+    onSelectCollection(collectionId);
+  }, [activeTag, onSelectCollection, resolvedCollection]);
+
+  const handleCollectionKeyDown = useCallback((
+    event: KeyboardEvent<HTMLButtonElement>,
+    currentIndex: number,
+  ) => {
+    const lastIndex = collections.length - 1;
+    let nextIndex: number | null = null;
+
+    if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+      nextIndex = currentIndex === lastIndex ? 0 : currentIndex + 1;
+    } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+      nextIndex = currentIndex === 0 ? lastIndex : currentIndex - 1;
+    } else if (event.key === 'Home') {
+      nextIndex = 0;
+    } else if (event.key === 'End') {
+      nextIndex = lastIndex;
+    }
+
+    if (nextIndex === null) return;
+    event.preventDefault();
+    const nextCollection = collections[nextIndex];
+    tabRefs.current.get(nextCollection.id)?.focus();
+    selectCollection(nextCollection.id);
+  }, [collections, selectCollection]);
+
+  const resultLabel = t(
+    'bookmark.collection_result_count',
+    `${displayedBookmarks.length} 个书签`,
+  );
+
   return (
     <motion.section
       className="ambient-bookmark-stage"
       data-ambient-sparse-stage="true"
+      data-pinned-count={collectionStats.pinnedCount}
+      data-read-later-count={collectionStats.readLaterCount}
       initial={{ opacity: 0, y: 18 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.22, duration: 0.52, ease: [0.22, 1, 0.36, 1] }}
@@ -309,17 +399,28 @@ export function AmbientBookmarkStage({
           <span>{activeTag ? `#${activeTag}` : t('bookmark.my_space', '我的空间')}</span>
         </div>
 
-        <div className="ambient-bookmark-stage__collections" role="tablist">
-          {collections.map((collection) => {
+        <div
+          className="ambient-bookmark-stage__collections"
+          role="tablist"
+          aria-label={t('bookmark.category_filter', '分类筛选')}
+        >
+          {collections.map((collection, index) => {
             const isActive = collection.id === resolvedCollection;
             return (
               <button
                 key={collection.id}
+                ref={(element) => {
+                  if (element) tabRefs.current.set(collection.id, element);
+                  else tabRefs.current.delete(collection.id);
+                }}
                 type="button"
                 role="tab"
+                tabIndex={isActive ? 0 : -1}
                 aria-selected={isActive}
+                aria-controls="ambient-bookmark-collection-panel"
                 className={isActive ? 'is-active' : undefined}
-                onClick={() => onSelectCollection(collection.id)}
+                onClick={() => selectCollection(collection.id)}
+                onKeyDown={(event) => handleCollectionKeyDown(event, index)}
                 style={collection.color ? { '--collection-accent': collection.color } as CSSProperties : undefined}
               >
                 {collection.id === 'pinned' ? (
@@ -337,7 +438,15 @@ export function AmbientBookmarkStage({
         </div>
       </div>
 
-      <div className={`ambient-bookmark-stage__grid ambient-bookmark-stage__grid--${cardViewMode}`}>
+      <p className="sr-only" aria-live="polite" aria-atomic="true">
+        {resultLabel}
+      </p>
+
+      <div
+        id="ambient-bookmark-collection-panel"
+        role="tabpanel"
+        className={`ambient-bookmark-stage__grid ambient-bookmark-stage__grid--${cardViewMode}`}
+      >
         <AnimatePresence mode="popLayout">
           {displayedBookmarks.map((bookmark, index) => (
             <AmbientBookmarkCard
@@ -358,7 +467,7 @@ export function AmbientBookmarkStage({
       {displayedBookmarks.length === 0 && (
         <div className="ambient-bookmark-stage__empty">
           <span>{t('bookmark.no_collection_items', '这个分类还没有书签')}</span>
-          <button type="button" onClick={() => onSelectCollection('all')}>
+          <button type="button" onClick={() => selectCollection('all')}>
             {t('bookmark.show_all', '查看全部')}
           </button>
         </div>
