@@ -1,23 +1,22 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { useTranslation } from 'react-i18next';
-import { Sparkles } from '../ui/effects';
 import { Typewriter } from '../ui/typewriter';
 import { getRandomWisdom, isQuotesVisible } from '../../data/quotes';
 import { WeatherDisplay } from './WeatherDisplay';
 import { SearchHint } from './SearchHint';
 import { WeatherData } from '../../hooks/useWeather';
+import '../../styles/ambient-home.css';
 
 interface HeroSectionProps {
   formattedTime: string;
   formattedDate: string;
   lunarDate: {
-    month?: any;
-    day?: any;
+    month?: unknown;
+    day?: unknown;
     fullDate?: string;
     display?: string;
     festival?: string | null;
-    jieQi?: any;
+    jieQi?: unknown;
   };
   greeting: string;
   isLiteMode?: boolean;
@@ -33,11 +32,10 @@ interface HeroSectionProps {
   onOpenSearch: () => void;
 }
 
-// A11y: 壁纸模式下的文字阴影样式 - 提升对比度确保可读性
 const wallpaperTextShadow = {
-  primary: { textShadow: '0 1px 3px rgba(0,0,0,0.8), 0 0 12px rgba(0,0,0,0.4)' },
-  secondary: { textShadow: '0 1px 3px rgba(0,0,0,0.7), 0 0 10px rgba(0,0,0,0.35)' },
-  muted: { textShadow: '0 1px 2px rgba(0,0,0,0.6), 0 0 8px rgba(0,0,0,0.3)' },
+  primary: { textShadow: '0 2px 18px rgba(0,0,0,0.42), 0 1px 3px rgba(0,0,0,0.55)' },
+  secondary: { textShadow: '0 2px 14px rgba(0,0,0,0.34), 0 1px 2px rgba(0,0,0,0.5)' },
+  muted: { textShadow: '0 1px 8px rgba(0,0,0,0.36)' },
 };
 
 export function HeroSection({
@@ -57,44 +55,57 @@ export function HeroSection({
   onCityChange,
   onOpenSearch,
 }: HeroSectionProps) {
+  const primaryColor = hasWallpaper ? 'rgba(255, 255, 255, 0.96)' : 'var(--color-text-primary)';
+  const secondaryColor = hasWallpaper ? 'rgba(255, 255, 255, 0.82)' : 'var(--color-text-secondary)';
+  const mutedColor = hasWallpaper ? 'rgba(255, 255, 255, 0.66)' : 'var(--color-text-muted)';
+
   return (
     <motion.section
-      className="pt-20 pb-16 text-center relative"
-      initial={{ opacity: 0, y: isLiteMode ? 10 : 30 }}
+      className="ambient-hero relative text-center"
+      initial={{ opacity: 0, y: isLiteMode ? 8 : 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: isLiteMode ? 0.5 : 0.8 }}
+      transition={{ duration: isLiteMode ? 0.45 : 0.68, ease: [0.22, 1, 0.36, 1] }}
     >
-      {/* Time Display */}
       <motion.div
-        className="mb-8"
-        initial={{ opacity: 0, scale: 0.9 }}
+        initial={{ opacity: 0, scale: 0.96 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.2 }}
+        transition={{ delay: 0.08, duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
       >
         <div
-          className="text-3xl sm:text-4xl lg:text-5xl font-semibold tracking-tighter font-mono"
-          style={{ color: hasWallpaper ? 'rgba(255, 255, 255, 0.95)' : 'var(--color-text-primary)', ...(hasWallpaper ? wallpaperTextShadow.primary : {}) }}
+          className="ambient-hero__time font-mono text-[2.65rem] font-semibold leading-none sm:text-5xl lg:text-[3.4rem]"
+          style={{
+            color: primaryColor,
+            ...(hasWallpaper ? wallpaperTextShadow.primary : {}),
+          }}
         >
           {formattedTime}
         </div>
+
         <div
-          className="text-base tracking-[0.2em] uppercase mt-3 flex flex-wrap items-center justify-center gap-2"
-          style={{ color: hasWallpaper ? 'rgba(255, 255, 255, 0.7)' : 'var(--color-text-muted)', ...(hasWallpaper ? wallpaperTextShadow.muted : {}) }}
+          className="ambient-hero__meta mt-3 flex flex-wrap items-center justify-center gap-2 text-xs sm:text-sm"
+          style={{
+            color: mutedColor,
+            ...(hasWallpaper ? wallpaperTextShadow.muted : {}),
+          }}
         >
           <span>{formattedDate}</span>
           {showLunar && lunarDate.display && (
             <span
-              className="px-2 py-0.5 rounded-md text-sm normal-case tracking-normal"
+              className="rounded-full px-2.5 py-1 text-[11px] tracking-normal"
               style={{
                 background:
                   lunarDate.festival || lunarDate.jieQi
-                    ? 'rgba(251, 146, 60, 0.15)'
-                    : hasWallpaper ? 'rgba(255, 255, 255, 0.15)' : 'var(--color-bg-tertiary)',
+                    ? 'rgba(251, 146, 60, 0.14)'
+                    : hasWallpaper
+                      ? 'rgba(255, 255, 255, 0.14)'
+                      : 'var(--color-bg-tertiary)',
                 color:
                   lunarDate.festival || lunarDate.jieQi
                     ? 'rgb(251, 146, 60)'
-                    : hasWallpaper ? 'rgba(255, 255, 255, 0.85)' : 'var(--color-text-muted)',
-                ...(hasWallpaper ? wallpaperTextShadow.muted : {}),
+                    : mutedColor,
+                border: hasWallpaper
+                  ? '1px solid rgba(255,255,255,0.12)'
+                  : '1px solid var(--color-border-light)',
               }}
             >
               {lunarDate.display}
@@ -102,48 +113,45 @@ export function HeroSection({
           )}
         </div>
 
-        {/* 天气显示 */}
         {showWeather && weather && (
-          <WeatherDisplay weather={weather} loading={weatherLoading} onRefresh={onRefreshWeather} weatherCity={weatherCity} onCityChange={onCityChange} />
+          <div className="ambient-hero__weather mt-4">
+            <WeatherDisplay
+              weather={weather}
+              loading={Boolean(weatherLoading)}
+              onRefresh={onRefreshWeather}
+              weatherCity={weatherCity}
+              onCityChange={onCityChange}
+            />
+          </div>
         )}
       </motion.div>
 
-      {/* Greeting with Typewriter */}
       {isQuotesVisible() && (
-        <motion.h1
-          className="text-base sm:text-lg lg:text-xl font-serif font-medium mb-8 tracking-wide min-h-[3.5em] flex items-center justify-center"
-          style={{ 
-            color: hasWallpaper ? 'rgba(255, 255, 255, 0.95)' : 'var(--color-text-secondary)',
+        <motion.div
+          className="ambient-hero__quote mt-8 flex items-center justify-center px-4 font-serif text-[15px] font-normal sm:text-base"
+          style={{
+            color: secondaryColor,
             ...(hasWallpaper ? wallpaperTextShadow.secondary : {}),
           }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.28, duration: 0.5 }}
           layout
         >
-          {isLiteMode ? (
-            // 精简模式：静态文字，无 Sparkles 特效
-            <Typewriter
-              getNextWord={getRandomWisdom}
-              initialWord={greeting}
-              delayBetweenWords={5000}
-              fullSentence
-            />
-          ) : (
-            <Sparkles>
-              <Typewriter
-                getNextWord={getRandomWisdom}
-                initialWord={greeting}
-                delayBetweenWords={5000}
-                fullSentence
-              />
-            </Sparkles>
-          )}
-        </motion.h1>
+          <Typewriter
+            getNextWord={getRandomWisdom}
+            initialWord={greeting}
+            delayBetweenWords={6500}
+            fullSentence
+          />
+        </motion.div>
       )}
 
-      {/* Search Hint */}
-      {showSearch && <SearchHint isLiteMode={isLiteMode} onOpenSearch={onOpenSearch} />}
+      {showSearch && (
+        <div className="ambient-hero__search mt-7 px-3 sm:px-0">
+          <SearchHint isLiteMode={Boolean(isLiteMode)} onOpenSearch={onOpenSearch} />
+        </div>
+      )}
     </motion.section>
   );
 }
