@@ -7,6 +7,8 @@ export interface TagStat {
 
 export type BookmarkCollectionId = 'all' | 'pinned' | 'read-later' | string
 
+type HistoryMode = 'push' | 'replace'
+
 export function normalizeTag(value: string | null | undefined): string | null {
   const normalized = value?.trim()
   return normalized ? normalized : null
@@ -61,9 +63,24 @@ export function buildCollectionUrl(
   return `${url.pathname}${url.search}${url.hash}`
 }
 
+function writeHistoryState(
+  nextUrl: string,
+  state: Record<string, unknown>,
+  mode: HistoryMode,
+) {
+  const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`
+
+  // 同一个 URL 只更新 state，不制造需要多按一次“后退”的重复记录。
+  if (mode === 'replace' || nextUrl === currentUrl) {
+    window.history.replaceState(state, '', nextUrl)
+  } else {
+    window.history.pushState(state, '', nextUrl)
+  }
+}
+
 export function writeTagToLocation(
   tag: string | null,
-  mode: 'push' | 'replace' = 'push',
+  mode: HistoryMode = 'push',
 ): void {
   if (typeof window === 'undefined') return
 
@@ -75,16 +92,12 @@ export function writeTagToLocation(
     nowenCollection: getCollectionFromSearch(nextSearch),
   }
 
-  if (mode === 'replace') {
-    window.history.replaceState(state, '', nextUrl)
-  } else {
-    window.history.pushState(state, '', nextUrl)
-  }
+  writeHistoryState(nextUrl, state, mode)
 }
 
 export function writeCollectionToLocation(
   collection: BookmarkCollectionId,
-  mode: 'push' | 'replace' = 'push',
+  mode: HistoryMode = 'push',
 ): void {
   if (typeof window === 'undefined') return
 
@@ -96,11 +109,7 @@ export function writeCollectionToLocation(
     nowenCollection: normalizedCollection,
   }
 
-  if (mode === 'replace') {
-    window.history.replaceState(state, '', nextUrl)
-  } else {
-    window.history.pushState(state, '', nextUrl)
-  }
+  writeHistoryState(nextUrl, state, mode)
 }
 
 export function filterBookmarksByTag(bookmarks: Bookmark[], tag: string | null): Bookmark[] {
