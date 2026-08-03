@@ -5,6 +5,7 @@ import { WeatherDisplay } from './WeatherDisplay';
 import { SearchHint } from './SearchHint';
 import { WeatherData } from '../../hooks/useWeather';
 import '../../styles/ambient-home.css';
+import '../../styles/ambient-home-layout.css';
 
 interface HeroSectionProps {
   formattedTime: string;
