@@ -1,4 +1,3 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 import { Typewriter } from '../ui/typewriter';
 import { getRandomWisdom, isQuotesVisible } from '../../data/quotes';
