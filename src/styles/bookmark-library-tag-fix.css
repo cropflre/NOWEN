@@ -1,11 +1,23 @@
 /*
- * Bookmark library list metadata rail.
+ * Bookmark library metadata rail and legacy category-tag de-duplication.
  *
- * The original list layout placed the category badge in the flex row while
- * independently positioning the tag group in the same bottom-right area.
- * Reserve a stable rail for category, tags and the external-link affordance so
- * they can never overlap, while keeping the compact one-line list density.
+ * Existing bookmark data stores the category name as the first tag as well as
+ * in bookmark.category. The card renders the category as its own colored pill,
+ * so displaying that first tag again creates the duplicate shown in the UI.
+ * Keep the stored data intact, but suppress the duplicated first tag wherever a
+ * category pill is present. Real secondary tags remain interactive.
  */
+
+.bookmark-library-card__surface:has(.bookmark-library-card__category)
+  .bookmark-library-card__tags > button:first-of-type {
+  display: none;
+}
+
+/* Collapse the footer when the category was the only stored tag. */
+.bookmark-library-card__surface:has(.bookmark-library-card__category)
+  .bookmark-library-card__tags:has(> button:first-of-type:last-of-type):not(:has(> span)) {
+  display: none;
+}
 
 .bookmark-library-card--list .bookmark-library-card__surface {
   position: relative;
@@ -62,8 +74,8 @@
   flex: 0 1 auto;
 }
 
-/* Keep list rows scannable: at most two explicit tags plus the existing +N. */
-.bookmark-library-card--list .bookmark-library-card__tags button:nth-of-type(n + 3) {
+/* First button is the hidden category duplicate; keep two real tags after it. */
+.bookmark-library-card--list .bookmark-library-card__tags button:nth-of-type(n + 4) {
   display: none;
 }
 
@@ -82,7 +94,8 @@
     max-width: 9rem;
   }
 
-  .bookmark-library-card--list .bookmark-library-card__tags button:nth-of-type(n + 2) {
+  /* Medium widths keep one real tag after the hidden category duplicate. */
+  .bookmark-library-card--list .bookmark-library-card__tags button:nth-of-type(n + 3) {
     display: none;
   }
 }
