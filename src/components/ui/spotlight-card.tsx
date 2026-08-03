@@ -30,9 +30,19 @@ const INTERACTIVE_DESCENDANT_SELECTOR = [
 
 function isInteractiveDescendant(event: React.MouseEvent<HTMLDivElement>) {
   const target = event.target
-  return target instanceof Element && target !== event.currentTarget
-    ? Boolean(target.closest(INTERACTIVE_DESCENDANT_SELECTOR))
-    : false
+  if (!(target instanceof Element) || target === event.currentTarget) {
+    return false
+  }
+
+  const interactiveElement = target.closest(INTERACTIVE_DESCENDANT_SELECTOR)
+
+  // closest() 会继续向卡片外层查找。书签外层的 dnd-kit SortableCard
+  // 会被标记为 role="button"，不能把它误判为卡片内部的操作按钮。
+  return Boolean(
+    interactiveElement &&
+    interactiveElement !== event.currentTarget &&
+    event.currentTarget.contains(interactiveElement),
+  )
 }
 
 /**
