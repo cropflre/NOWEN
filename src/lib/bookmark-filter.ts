@@ -31,10 +31,9 @@ export function buildTagUrl(href: string, tag: string | null): string {
   const url = new URL(href)
   const normalizedTag = normalizeTag(tag)
 
-  // 标签与集合筛选互斥，避免刷新后同时恢复两套条件。
-  url.searchParams.delete('collection')
-
   if (normalizedTag) {
+    // 进入标签筛选时清除集合；仅清除标签时保留可能刚刚写入的集合。
+    url.searchParams.delete('collection')
     url.searchParams.set('tag', normalizedTag)
   } else {
     url.searchParams.delete('tag')
@@ -69,10 +68,11 @@ export function writeTagToLocation(
   if (typeof window === 'undefined') return
 
   const nextUrl = buildTagUrl(window.location.href, tag)
+  const nextSearch = new URL(nextUrl, window.location.origin).search
   const state = {
     ...window.history.state,
     nowenTag: normalizeTag(tag),
-    nowenCollection: 'all',
+    nowenCollection: getCollectionFromSearch(nextSearch),
   }
 
   if (mode === 'replace') {
