@@ -20,7 +20,7 @@ afterEach(() => {
   vi.restoreAllMocks()
 })
 
-describe('SpotlightCard middle click', () => {
+describe('SpotlightCard interactions', () => {
   it('runs the bookmark action on middle click and keeps focus on the current page', () => {
     const onClick = vi.fn()
     const focusSpy = vi.spyOn(window, 'focus').mockImplementation(() => undefined)
@@ -122,6 +122,33 @@ describe('SpotlightCard middle click', () => {
     auxiliaryClick(card!, 2)
     auxiliaryClick(card!, 1)
 
+    expect(onClick).not.toHaveBeenCalled()
+  })
+
+  it.each(['Enter', ' '])('opens a focused card with the %s key', (key) => {
+    const onClick = vi.fn()
+    const { getByRole } = render(
+      <SpotlightCard lightweight onClick={onClick} ariaLabel="Open bookmark">
+        <span>Bookmark</span>
+      </SpotlightCard>,
+    )
+
+    const card = getByRole('link', { name: 'Open bookmark' })
+    expect(card.getAttribute('tabindex')).toBe('0')
+
+    fireEvent.keyDown(card, { key })
+    expect(onClick).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not let a nested button keyboard event trigger the card', () => {
+    const onClick = vi.fn()
+    const { getByRole } = render(
+      <SpotlightCard lightweight onClick={onClick}>
+        <button type="button">Pin bookmark</button>
+      </SpotlightCard>,
+    )
+
+    fireEvent.keyDown(getByRole('button', { name: 'Pin bookmark' }), { key: 'Enter' })
     expect(onClick).not.toHaveBeenCalled()
   })
 })
