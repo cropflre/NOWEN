@@ -5,23 +5,58 @@ export interface TagStat {
   count: number
 }
 
+export type BookmarkCollectionId = 'all' | 'pinned' | 'read-later' | string
+
 export function normalizeTag(value: string | null | undefined): string | null {
   const normalized = value?.trim()
   return normalized ? normalized : null
+}
+
+export function normalizeCollection(
+  value: string | null | undefined,
+): BookmarkCollectionId {
+  const normalized = value?.trim()
+  return normalized || 'all'
 }
 
 export function getTagFromSearch(search: string): string | null {
   return normalizeTag(new URLSearchParams(search).get('tag'))
 }
 
+export function getCollectionFromSearch(search: string): BookmarkCollectionId {
+  return normalizeCollection(new URLSearchParams(search).get('collection'))
+}
+
 export function buildTagUrl(href: string, tag: string | null): string {
   const url = new URL(href)
   const normalizedTag = normalizeTag(tag)
+
+  // 标签与集合筛选互斥，避免刷新后同时恢复两套条件。
+  url.searchParams.delete('collection')
 
   if (normalizedTag) {
     url.searchParams.set('tag', normalizedTag)
   } else {
     url.searchParams.delete('tag')
+  }
+
+  return `${url.pathname}${url.search}${url.hash}`
+}
+
+export function buildCollectionUrl(
+  href: string,
+  collection: BookmarkCollectionId,
+): string {
+  const url = new URL(href)
+  const normalizedCollection = normalizeCollection(collection)
+
+  // 集合筛选与标签互斥，集合回到 all 时不保留冗余查询参数。
+  url.searchParams.delete('tag')
+
+  if (normalizedCollection === 'all') {
+    url.searchParams.delete('collection')
+  } else {
+    url.searchParams.set('collection', normalizedCollection)
   }
 
   return `${url.pathname}${url.search}${url.hash}`
@@ -34,7 +69,32 @@ export function writeTagToLocation(
   if (typeof window === 'undefined') return
 
   const nextUrl = buildTagUrl(window.location.href, tag)
-  const state = { ...window.history.state, nowenTag: normalizeTag(tag) }
+  const state = {
+    ...window.history.state,
+    nowenTag: normalizeTag(tag),
+    nowenCollection: 'all',
+  }
+
+  if (mode === 'replace') {
+    window.history.replaceState(state, '', nextUrl)
+  } else {
+    window.history.pushState(state, '', nextUrl)
+  }
+}
+
+export function writeCollectionToLocation(
+  collection: BookmarkCollectionId,
+  mode: 'push' | 'replace' = 'push',
+): void {
+  if (typeof window === 'undefined') return
+
+  const normalizedCollection = normalizeCollection(collection)
+  const nextUrl = buildCollectionUrl(window.location.href, normalizedCollection)
+  const state = {
+    ...window.history.state,
+    nowenTag: null,
+    nowenCollection: normalizedCollection,
+  }
 
   if (mode === 'replace') {
     window.history.replaceState(state, '', nextUrl)
