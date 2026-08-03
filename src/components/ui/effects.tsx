@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { cn } from '../../lib/utils'
 
@@ -17,57 +17,95 @@ const METEOR_LAYOUT = [
   { left: '72%', top: '34%', delay: -4.6, duration: 8.1, distance: 230 },
 ]
 
+type MeteorStyle = React.CSSProperties & Record<`--${string}`, string | number>
+
+const METEOR_STYLES = `
+  @keyframes nowen-meteor-flight {
+    0% {
+      transform: translate3d(0, 0, 0) rotate(36deg);
+      opacity: 0;
+    }
+    10% { opacity: 0.96; }
+    78% { opacity: 0.9; }
+    90% {
+      transform: translate3d(var(--meteor-x), var(--meteor-y), 0) rotate(36deg);
+      opacity: 0;
+    }
+    100% {
+      transform: translate3d(var(--meteor-x), var(--meteor-y), 0) rotate(36deg);
+      opacity: 0;
+    }
+  }
+
+  .nowen-meteor-streak {
+    animation-name: nowen-meteor-flight;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    transform: translate3d(0, 0, 0) rotate(36deg);
+    backface-visibility: hidden;
+    will-change: transform, opacity;
+  }
+`
+
 export function Meteors({ number = MAX_VISIBLE_METEORS, className }: MeteorsProps) {
   const meteorCount = Math.max(0, Math.min(number, MAX_VISIBLE_METEORS))
   const meteors = useMemo(() => METEOR_LAYOUT.slice(0, meteorCount), [meteorCount])
+  const [isDocumentVisible, setIsDocumentVisible] = useState(() =>
+    typeof document === 'undefined' || document.visibilityState !== 'hidden',
+  )
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      setIsDocumentVisible(document.visibilityState !== 'hidden')
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [])
 
   return (
     <div
       aria-hidden="true"
       data-testid="meteor-layer"
       data-meteor-count={meteorCount}
+      data-animation-profile="compositor"
+      data-paused={isDocumentVisible ? 'false' : 'true'}
       className={cn('fixed inset-0 z-[3] overflow-hidden pointer-events-none', className)}
+      style={{ contain: 'layout paint style' }}
     >
-      {meteors.map((meteor, index) => (
-        <motion.span
-          key={index}
-          data-testid="meteor-streak"
-          className="absolute block h-[2px] w-[2px] rounded-full"
-          style={{
-            left: meteor.left,
-            top: meteor.top,
-            background: 'rgba(255,255,255,0.98)',
-            boxShadow:
-              '0 0 8px rgba(255,255,255,0.95), 0 0 18px rgba(99,102,241,0.78)',
-            rotate: 36,
-          }}
-          initial={{ x: 0, y: 0, opacity: 0 }}
-          animate={{
-            x: [0, meteor.distance * 0.18, meteor.distance],
-            y: [0, meteor.distance * 0.13, meteor.distance * 0.72],
-            opacity: [0, 0.96, 0],
-          }}
-          transition={{
-            duration: meteor.duration,
-            repeat: Infinity,
-            delay: meteor.delay,
-            repeatDelay: 1.2,
-            ease: 'linear',
-            times: [0, 0.14, 1],
-          }}
-        >
+      <style>{METEOR_STYLES}</style>
+      {meteors.map((meteor, index) => {
+        const style: MeteorStyle = {
+          left: meteor.left,
+          top: meteor.top,
+          background: 'rgba(255,255,255,0.98)',
+          boxShadow: '0 0 7px rgba(255,255,255,0.92), 0 0 15px rgba(99,102,241,0.68)',
+          animationDelay: `${meteor.delay}s`,
+          animationDuration: `${meteor.duration + 1.2}s`,
+          animationPlayState: isDocumentVisible ? 'running' : 'paused',
+          '--meteor-x': `${meteor.distance}px`,
+          '--meteor-y': `${meteor.distance * 0.72}px`,
+        }
+
+        return (
           <span
-            className="absolute right-0 top-1/2 h-[2px] -translate-y-1/2 rounded-full"
-            style={{
-              width: 150,
-              transformOrigin: 'right center',
-              background:
-                'linear-gradient(90deg, transparent 0%, rgba(99,102,241,0.18) 32%, rgba(125,211,252,0.58) 72%, rgba(255,255,255,0.92) 100%)',
-              boxShadow: '0 0 12px rgba(99,102,241,0.28)',
-            }}
-          />
-        </motion.span>
-      ))}
+            key={index}
+            data-testid="meteor-streak"
+            className="nowen-meteor-streak absolute block h-[2px] w-[2px] rounded-full"
+            style={style}
+          >
+            <span
+              className="absolute right-0 top-1/2 h-[2px] w-[150px] -translate-y-1/2 rounded-full"
+              style={{
+                transformOrigin: 'right center',
+                background:
+                  'linear-gradient(90deg, transparent 0%, rgba(99,102,241,0.18) 32%, rgba(125,211,252,0.58) 72%, rgba(255,255,255,0.92) 100%)',
+                boxShadow: '0 0 10px rgba(99,102,241,0.24)',
+              }}
+            />
+          </span>
+        )
+      })}
     </div>
   )
 }
@@ -79,14 +117,17 @@ interface SparklesProps {
 }
 
 export function Sparkles({ children, className, sparkleCount = 10 }: SparklesProps) {
-  const sparkles = Array.from({ length: sparkleCount }, (_, i) => ({
-    id: i,
-    left: `${Math.random() * 100}%`,
-    top: `${Math.random() * 100}%`,
-    delay: Math.random() * 2,
-    duration: Math.random() * 1 + 1,
-    size: Math.random() * 4 + 2,
-  }))
+  const sparkles = useMemo(
+    () => Array.from({ length: sparkleCount }, (_, i) => ({
+      id: i,
+      left: `${Math.random() * 100}%`,
+      top: `${Math.random() * 100}%`,
+      delay: Math.random() * 2,
+      duration: Math.random() * 1 + 1,
+      size: Math.random() * 4 + 2,
+    })),
+    [sparkleCount],
+  )
 
   return (
     <span className={cn('relative inline-block', className)}>
