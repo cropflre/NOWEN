@@ -1,9 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Check, FolderTree, LayoutList, Pin, Tags, X } from 'lucide-react'
+import { Check, Clock3, FolderTree, LayoutList, Pin, Tags, X } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Category } from '../../types/bookmark'
-import { TagStat } from '../../lib/bookmark-filter'
+import {
+  getCollectionFromSearch,
+  writeCollectionToLocation,
+} from '../../lib/bookmark-filter'
+import type { BookmarkCollectionId, TagStat } from '../../lib/bookmark-filter'
 import { IconRenderer } from '../IconRenderer'
 
 interface CategoryNavigationItem extends Category {
@@ -29,6 +33,7 @@ const COPY = {
     categories: '分类',
     tags: '标签',
     pinned: '常用',
+    readLater: '稍后阅读',
     allTags: '全部标签',
     popularTags: '常用标签',
     moreTags: '更多标签',
@@ -43,6 +48,7 @@ const COPY = {
     categories: 'Categories',
     tags: 'Tags',
     pinned: 'Pinned',
+    readLater: 'Read later',
     allTags: 'All tags',
     popularTags: 'Popular tags',
     moreTags: 'More tags',
@@ -57,6 +63,7 @@ const COPY = {
     categories: 'カテゴリー',
     tags: 'タグ',
     pinned: 'よく使う項目',
+    readLater: 'あとで読む',
     allTags: 'すべてのタグ',
     popularTags: 'よく使うタグ',
     moreTags: 'その他のタグ',
@@ -71,6 +78,7 @@ const COPY = {
     categories: '카테고리',
     tags: '태그',
     pinned: '자주 사용',
+    readLater: '나중에 읽기',
     allTags: '모든 태그',
     popularTags: '자주 쓰는 태그',
     moreTags: '더 많은 태그',
@@ -114,19 +122,54 @@ export function MobileContentNavigation({
   const copy = COPY[language] || COPY.en
   const [open, setOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<NavigationTab>(activeTag ? 'tags' : 'categories')
+  const [activeCollection, setActiveCollection] = useState<BookmarkCollectionId>(() =>
+    typeof window === 'undefined' ? 'all' : getCollectionFromSearch(window.location.search),
+  )
+  const [collectionFilterMode, setCollectionFilterMode] = useState(false)
+  const [readLaterCount, setReadLaterCount] = useState(0)
 
   const popularTags = useMemo(() => tags.slice(0, 12), [tags])
   const remainingTags = useMemo(() => tags.slice(12), [tags])
 
+  const activeCollectionLabel = useMemo(() => {
+    if (activeCollection === 'pinned') return copy.pinned
+    if (activeCollection === 'read-later') return copy.readLater
+    if (activeCollection === 'all') return copy.allBookmarks
+    return categories.find((category) => category.id === activeCollection)?.name || copy.allBookmarks
+  }, [activeCollection, categories, copy])
+
+  const activeCollectionCount = useMemo(() => {
+    if (activeCollection === 'pinned') return pinnedCount
+    if (activeCollection === 'read-later') return readLaterCount
+    if (activeCollection === 'all') return totalBookmarks
+    return categories.find((category) => category.id === activeCollection)?.count || 0
+  }, [activeCollection, categories, pinnedCount, readLaterCount, totalBookmarks])
+
   useEffect(() => {
-    if (activeTag) setActiveTab('tags')
+    if (activeTag) {
+      setActiveTab('tags')
+      setActiveCollection('all')
+    }
   }, [activeTag])
+
+  useEffect(() => {
+    const syncCollectionState = () => {
+      const stage = document.querySelector<HTMLElement>('[data-ambient-sparse-stage="true"]')
+      setCollectionFilterMode(Boolean(stage))
+      setReadLaterCount(Number(stage?.dataset.readLaterCount || 0))
+      setActiveCollection(activeTag ? 'all' : getCollectionFromSearch(window.location.search))
+    }
+
+    syncCollectionState()
+    window.addEventListener('popstate', syncCollectionState)
+    return () => window.removeEventListener('popstate', syncCollectionState)
+  }, [activeTag, categories.length, open, totalBookmarks])
 
   useEffect(() => {
     if (!open) return
 
     const previousOverflow = document.body.style.overflow
-    const handleKeyDown = (event: KeyboardEvent) => {
+    const handleKeyDown = (event: globalThis.KeyboardEvent) => {
       if (event.key === 'Escape') setOpen(false)
     }
     const handlePopState = () => setOpen(false)
@@ -142,16 +185,35 @@ export function MobileContentNavigation({
     }
   }, [open])
 
-  if (categories.length === 0 && tags.length === 0 && pinnedCount === 0) return null
+  if (
+    categories.length === 0 &&
+    tags.length === 0 &&
+    pinnedCount === 0 &&
+    readLaterCount === 0
+  ) return null
 
   const selectTag = (tag: string | null) => {
+    const previousCollection = activeCollection
     setOpen(false)
+    setActiveCollection('all')
     onSelectTag(tag)
+
+    if (tag === null && collectionFilterMode && previousCollection !== 'all') {
+      Promise.resolve().then(() => writeCollectionToLocation('all', 'push'))
+    }
   }
 
-  const selectCategory = (categoryId: string) => {
+  const selectCategory = (categoryId: BookmarkCollectionId) => {
+    const hadActiveTag = Boolean(activeTag)
     setOpen(false)
+    setActiveCollection(categoryId)
     onSelectCategory(categoryId)
+
+    if (collectionFilterMode) {
+      Promise.resolve().then(() => {
+        writeCollectionToLocation(categoryId, hadActiveTag ? 'replace' : 'push')
+      })
+    }
   }
 
   const renderTag = (tag: TagStat) => {
@@ -184,6 +246,21 @@ export function MobileContentNavigation({
     )
   }
 
+  const renderCollectionCheck = (selected: boolean) => selected
+    ? <Check className="h-4 w-4 flex-shrink-0" style={{ color: 'var(--color-primary)' }} />
+    : null
+
+  const collectionButtonStyle = (selected: boolean) => ({
+    background: selected ? 'var(--color-primary-light)' : 'var(--color-bg-tertiary)',
+    border: `1px solid ${selected ? 'var(--color-primary)' : 'var(--color-glass-border)'}`,
+  })
+
+  const badgeValue = activeTag
+    ? matchedCount
+    : collectionFilterMode && activeCollection !== 'all'
+      ? activeCollectionCount
+      : tags.length
+
   return (
     <>
       <motion.button
@@ -196,13 +273,13 @@ export function MobileContentNavigation({
           background: 'var(--color-glass)',
           border: '1px solid var(--color-glass-border)',
           boxShadow: '0 8px 28px rgba(0,0,0,0.22)',
-          color: activeTag ? 'var(--color-primary)' : 'var(--color-text-secondary)',
+          color: activeTag || activeCollection !== 'all' ? 'var(--color-primary)' : 'var(--color-text-secondary)',
         }}
         whileTap={{ scale: 0.9 }}
       >
         <LayoutList className="h-5 w-5" />
         <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[10px] font-semibold text-white" style={{ background: 'var(--color-primary)' }}>
-          {activeTag ? matchedCount : tags.length > 99 ? '99+' : tags.length}
+          {badgeValue > 99 ? '99+' : badgeValue}
         </span>
       </motion.button>
 
@@ -246,7 +323,11 @@ export function MobileContentNavigation({
                 <div className="min-w-0 flex-1">
                   <h2 className="font-semibold" style={{ color: 'var(--color-text-primary)' }}>{copy.navigation}</h2>
                   <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-                    {activeTag ? `${copy.selected}：#${activeTag}` : `${totalBookmarks} ${copy.allBookmarks}`}
+                    {activeTag
+                      ? `${copy.selected}：#${activeTag}`
+                      : collectionFilterMode && activeCollection !== 'all'
+                        ? `${copy.selected}：${activeCollectionLabel}`
+                        : `${totalBookmarks} ${copy.allBookmarks}`}
                   </p>
                 </div>
                 <button type="button" aria-label={copy.close} onClick={() => setOpen(false)} className="flex h-10 w-10 items-center justify-center rounded-xl" style={{ color: 'var(--color-text-muted)', background: 'var(--color-bg-tertiary)' }}>
@@ -266,32 +347,81 @@ export function MobileContentNavigation({
               <div className="flex-1 overflow-y-auto overscroll-contain px-5 pb-6">
                 {activeTab === 'categories' ? (
                   <div className="space-y-2">
+                    {collectionFilterMode && (
+                      <button
+                        type="button"
+                        aria-pressed={activeCollection === 'all'}
+                        onClick={() => selectCategory('all')}
+                        className="flex min-h-12 w-full items-center gap-3 rounded-xl px-3 py-2 text-left"
+                        style={collectionButtonStyle(activeCollection === 'all')}
+                      >
+                        <span className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ background: 'var(--color-primary-light)', color: 'var(--color-primary)' }}><LayoutList className="h-4 w-4" /></span>
+                        <span className="flex-1 text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>{copy.allBookmarks}</span>
+                        <span className="text-xs tabular-nums" style={{ color: 'var(--color-text-muted)' }}>{totalBookmarks}</span>
+                        {renderCollectionCheck(activeCollection === 'all')}
+                      </button>
+                    )}
+
                     {pinnedCount > 0 && (
-                      <button type="button" onClick={() => selectCategory('pinned')} className="flex min-h-12 w-full items-center gap-3 rounded-xl px-3 py-2 text-left" style={{ background: 'var(--color-bg-tertiary)', border: '1px solid var(--color-glass-border)' }}>
+                      <button
+                        type="button"
+                        aria-pressed={collectionFilterMode && activeCollection === 'pinned'}
+                        onClick={() => selectCategory('pinned')}
+                        className="flex min-h-12 w-full items-center gap-3 rounded-xl px-3 py-2 text-left"
+                        style={collectionButtonStyle(collectionFilterMode && activeCollection === 'pinned')}
+                      >
                         <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-yellow-500/15 text-yellow-400"><Pin className="h-4 w-4" /></span>
                         <span className="flex-1 text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>{copy.pinned}</span>
                         <span className="text-xs tabular-nums" style={{ color: 'var(--color-text-muted)' }}>{pinnedCount}</span>
+                        {renderCollectionCheck(collectionFilterMode && activeCollection === 'pinned')}
                       </button>
                     )}
-                    {categories.map((category) => (
-                      <button key={category.id} type="button" onClick={() => selectCategory(category.id)} className="flex min-h-12 w-full items-center gap-3 rounded-xl px-3 py-2 text-left" style={{ background: 'var(--color-bg-tertiary)', border: '1px solid var(--color-glass-border)' }}>
-                        <span className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ color: category.color || 'var(--color-primary)', background: `${category.color || '#667eea'}18` }}>
-                          <IconRenderer icon={category.icon} className="h-4 w-4" />
-                        </span>
-                        <span className="min-w-0 flex-1 truncate text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>{category.name}</span>
-                        <span className="text-xs tabular-nums" style={{ color: 'var(--color-text-muted)' }}>{category.count}</span>
+
+                    {collectionFilterMode && readLaterCount > 0 && (
+                      <button
+                        type="button"
+                        aria-pressed={activeCollection === 'read-later'}
+                        onClick={() => selectCategory('read-later')}
+                        className="flex min-h-12 w-full items-center gap-3 rounded-xl px-3 py-2 text-left"
+                        style={collectionButtonStyle(activeCollection === 'read-later')}
+                      >
+                        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-sky-500/15 text-sky-400"><Clock3 className="h-4 w-4" /></span>
+                        <span className="flex-1 text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>{copy.readLater}</span>
+                        <span className="text-xs tabular-nums" style={{ color: 'var(--color-text-muted)' }}>{readLaterCount}</span>
+                        {renderCollectionCheck(activeCollection === 'read-later')}
                       </button>
-                    ))}
+                    )}
+
+                    {categories.map((category) => {
+                      const selected = collectionFilterMode && activeCollection === category.id
+                      return (
+                        <button
+                          key={category.id}
+                          type="button"
+                          aria-pressed={selected}
+                          onClick={() => selectCategory(category.id)}
+                          className="flex min-h-12 w-full items-center gap-3 rounded-xl px-3 py-2 text-left"
+                          style={collectionButtonStyle(selected)}
+                        >
+                          <span className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ color: category.color || 'var(--color-primary)', background: `${category.color || '#667eea'}18` }}>
+                            <IconRenderer icon={category.icon} className="h-4 w-4" />
+                          </span>
+                          <span className="min-w-0 flex-1 truncate text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>{category.name}</span>
+                          <span className="text-xs tabular-nums" style={{ color: 'var(--color-text-muted)' }}>{category.count}</span>
+                          {renderCollectionCheck(selected)}
+                        </button>
+                      )
+                    })}
                   </div>
                 ) : tags.length > 0 ? (
                   <div className="space-y-5">
                     <div className="space-y-2">
                       <p className="px-1 text-xs font-medium uppercase tracking-wider" style={{ color: 'var(--color-text-muted)' }}>{copy.allTags}</p>
-                      <button type="button" onClick={() => selectTag(null)} className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 py-2 text-left" style={{ background: activeTag === null ? 'var(--color-primary-light)' : 'var(--color-bg-tertiary)', border: `1px solid ${activeTag === null ? 'var(--color-primary)' : 'var(--color-glass-border)'}` }}>
+                      <button type="button" onClick={() => selectTag(null)} className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 py-2 text-left" style={{ background: activeTag === null && activeCollection === 'all' ? 'var(--color-primary-light)' : 'var(--color-bg-tertiary)', border: `1px solid ${activeTag === null && activeCollection === 'all' ? 'var(--color-primary)' : 'var(--color-glass-border)'}` }}>
                         <span className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ background: 'var(--color-primary-light)', color: 'var(--color-primary)' }}><LayoutList className="h-4 w-4" /></span>
                         <span className="flex-1 text-sm font-medium" style={{ color: 'var(--color-text-primary)' }}>{copy.allBookmarks}</span>
                         <span className="text-xs tabular-nums" style={{ color: 'var(--color-text-muted)' }}>{totalBookmarks}</span>
-                        {activeTag === null && <Check className="h-4 w-4" style={{ color: 'var(--color-primary)' }} />}
+                        {activeTag === null && activeCollection === 'all' && <Check className="h-4 w-4" style={{ color: 'var(--color-primary)' }} />}
                       </button>
                     </div>
 
