@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
-import type { MouseEvent } from 'react';
+import type { CSSProperties, MouseEvent } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Layers3, Lock, Pin } from 'lucide-react';
+import { Clock3, Layers3, Lock, Pin } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Bookmark, Category } from '../../types/bookmark';
 import { IconRenderer } from '../IconRenderer';
@@ -12,7 +12,7 @@ import '../../styles/ambient-bookmark-stage.css';
 
 export const AMBIENT_SPARSE_BOOKMARK_LIMIT = 12;
 
-export type AmbientCollectionId = 'all' | 'pinned' | string;
+export type AmbientCollectionId = 'all' | 'pinned' | 'read-later' | string;
 
 type CardViewMode = 'compact' | 'standard' | 'comfortable';
 
@@ -198,9 +198,7 @@ function AmbientBookmarkCard({
 
           <div className="ambient-bookmark-card__copy">
             <h3>{bookmark.title}</h3>
-            {mode !== 'compact' && (
-              <p>{bookmark.description || hostname}</p>
-            )}
+            {mode !== 'compact' && <p>{bookmark.description || hostname}</p>}
             {mode === 'compact' && <span className="ambient-bookmark-card__domain">{hostname}</span>}
           </div>
 
@@ -250,6 +248,7 @@ export function AmbientBookmarkStage({
 
   const collections = useMemo<CollectionItem[]>(() => {
     const pinnedCount = bookmarks.filter((bookmark) => bookmark.isPinned).length;
+    const readLaterCount = bookmarks.filter((bookmark) => bookmark.isReadLater && !bookmark.isRead).length;
     const categoryItems = categories
       .map((category) => ({
         id: category.id,
@@ -269,6 +268,9 @@ export function AmbientBookmarkStage({
       ...(pinnedCount > 0
         ? [{ id: 'pinned' as const, name: t('sidebar.pinned', '常用'), count: pinnedCount, icon: 'Pin', color: '#eab308' }]
         : []),
+      ...(readLaterCount > 0
+        ? [{ id: 'read-later' as const, name: t('readLater.title', '稍后阅读'), count: readLaterCount, icon: 'Clock3', color: '#38bdf8' }]
+        : []),
       ...categoryItems,
     ];
   }, [bookmarks, categories, t]);
@@ -282,7 +284,9 @@ export function AmbientBookmarkStage({
       ? bookmarks
       : resolvedCollection === 'pinned'
         ? bookmarks.filter((bookmark) => bookmark.isPinned)
-        : bookmarks.filter((bookmark) => bookmark.category === resolvedCollection);
+        : resolvedCollection === 'read-later'
+          ? bookmarks.filter((bookmark) => bookmark.isReadLater && !bookmark.isRead)
+          : bookmarks.filter((bookmark) => bookmark.category === resolvedCollection);
 
     return [...filtered].sort((first, second) => {
       if (first.isPinned && !second.isPinned) return -1;
@@ -316,10 +320,12 @@ export function AmbientBookmarkStage({
                 aria-selected={isActive}
                 className={isActive ? 'is-active' : undefined}
                 onClick={() => onSelectCollection(collection.id)}
-                style={collection.color ? { '--collection-accent': collection.color } as React.CSSProperties : undefined}
+                style={collection.color ? { '--collection-accent': collection.color } as CSSProperties : undefined}
               >
                 {collection.id === 'pinned' ? (
                   <Pin className="h-3.5 w-3.5" />
+                ) : collection.id === 'read-later' ? (
+                  <Clock3 className="h-3.5 w-3.5" />
                 ) : collection.icon ? (
                   <IconRenderer icon={collection.icon} className="h-3.5 w-3.5" />
                 ) : null}
