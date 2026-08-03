@@ -7,27 +7,29 @@ import { BackgroundBeamsWithCollision } from '../background-beams-with-collision
 afterEach(cleanup)
 
 describe('BackgroundBeamsWithCollision', () => {
-  it('renders six balanced beams on desktop', () => {
-    const { getByTestId } = render(
+  it('renders eight full-width beams on desktop', () => {
+    const { getByTestId, getAllByTestId } = render(
       <BackgroundBeamsWithCollision isDark isMobile={false} />,
     )
 
-    expect(getByTestId('background-beams').getAttribute('data-beam-count')).toBe('6')
+    expect(getByTestId('background-beams').getAttribute('data-beam-count')).toBe('8')
+    expect(getAllByTestId('beam-streak')).toHaveLength(8)
   })
 
-  it('keeps two low-load beams on mobile', () => {
-    const { getByTestId } = render(
+  it('keeps three visible beams on mobile', () => {
+    const { getByTestId, getAllByTestId } = render(
       <BackgroundBeamsWithCollision isDark={false} isMobile />,
     )
 
-    expect(getByTestId('background-beams').getAttribute('data-beam-count')).toBe('2')
+    expect(getByTestId('background-beams').getAttribute('data-beam-count')).toBe('3')
+    expect(getAllByTestId('beam-streak')).toHaveLength(3)
   })
 
-  it('renders no animated layer when reduced motion is requested', () => {
-    const { queryByTestId } = render(
+  it('uses the restored animation profile even when the legacy reducedMotion prop is present', () => {
+    const { getByTestId } = render(
       <BackgroundBeamsWithCollision reducedMotion />,
     )
 
-    expect(queryByTestId('background-beams')).toBeNull()
+    expect(getByTestId('background-beams').getAttribute('data-animation-profile')).toBe('restored')
   })
 })
