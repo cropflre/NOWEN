@@ -26,7 +26,7 @@ jobs:
       - name: Apply staged homepage refactor
         run: |
           cat .github/phase4/part* | base64 -d | gzip -d > /tmp/phase4.diff
-          patch --batch -p3 < /tmp/phase4.diff
+          patch --batch -p2 < /tmp/phase4.diff
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
