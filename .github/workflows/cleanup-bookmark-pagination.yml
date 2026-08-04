@@ -62,3 +62,5 @@ jobs:
           git diff --cached --check
           git commit -m "refactor(ui): clean pagination integration"
           git push origin HEAD:feat/bookmark-list-pagination
+
+# This workflow is temporary and will be removed after validation.
