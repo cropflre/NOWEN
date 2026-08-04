@@ -81,7 +81,22 @@ describe('Pagination', () => {
     expect(onPageSizeChange).toHaveBeenCalledWith(20)
   })
 
-  it('does not render when every item fits on one page', () => {
+  it('keeps the page-size selector visible after choosing a size that fits every item', () => {
+    render(
+      <Pagination
+        page={1}
+        pageSize={50}
+        total={25}
+        onPageChange={() => undefined}
+        onPageSizeChange={() => undefined}
+      />,
+    )
+
+    expect(screen.getByRole('combobox', { name: 'Per page' })).toBeTruthy()
+    expect(screen.getByText('1–25 of 25')).toBeTruthy()
+  })
+
+  it('does not render when every item fits the smallest available page', () => {
     const { container } = render(
       <Pagination
         page={1}
