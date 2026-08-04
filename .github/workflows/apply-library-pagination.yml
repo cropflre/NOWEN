@@ -26,31 +26,38 @@ jobs:
         run: |
           python <<'PY'
           from pathlib import Path
+          from textwrap import dedent
+
+          def replace_once(source: str, old: str, new: str, label: str) -> str:
+              count = source.count(old)
+              if count != 1:
+                  raise SystemExit(f'{label}: expected 1 match, found {count}')
+              return source.replace(old, new, 1)
 
           page = Path('src/pages/BookmarkLibrary.tsx')
           source = page.read_text(encoding='utf-8')
 
-          replacements = [
-              (
-                  "  useDeferredValue,\n  useMemo,\n  useState,\n",
-                  "  useDeferredValue,\n  useEffect,\n  useMemo,\n  useRef,\n  useState,\n",
-              ),
-              (
-                  "  ArrowUpDown,\n  Clock3,\n",
-                  "  ArrowUpDown,\n  ChevronLeft,\n  ChevronRight,\n  Clock3,\n",
-              ),
-              (
-                  "  List,\n  Lock,\n",
-                  "  List,\n  Lock,\n  MoreHorizontal,\n",
-              ),
-          ]
-          for old, new in replacements:
-              if source.count(old) != 1:
-                  raise SystemExit(f'BookmarkLibrary import anchor mismatch: {old!r}')
-              source = source.replace(old, new, 1)
+          source = replace_once(
+              source,
+              "  useDeferredValue,\n  useMemo,\n  useState,\n",
+              "  useDeferredValue,\n  useEffect,\n  useMemo,\n  useRef,\n  useState,\n",
+              'react imports',
+          )
+          source = replace_once(
+              source,
+              "  ArrowUpDown,\n  Clock3,\n",
+              "  ArrowUpDown,\n  ChevronLeft,\n  ChevronRight,\n  Clock3,\n",
+              'chevron imports',
+          )
+          source = replace_once(
+              source,
+              "  List,\n  Lock,\n",
+              "  List,\n  Lock,\n  MoreHorizontal,\n",
+              'ellipsis import',
+          )
 
-          constants_anchor = "const LIBRARY_VIEW_KEY = 'nowen-library-view-v1'\nconst LIBRARY_SORT_KEY = 'nowen-library-sort-v1'\n"
-          constants_replacement = """const LIBRARY_VIEW_KEY = 'nowen-library-view-v1'
+          constants = dedent('''
+          const LIBRARY_VIEW_KEY = 'nowen-library-view-v1'
           const LIBRARY_SORT_KEY = 'nowen-library-sort-v1'
           const LIBRARY_PAGE_SIZE_KEY = 'nowen-library-page-size-v1'
           const LIBRARY_PAGE_SIZE_OPTIONS = [20, 40, 80] as const
@@ -94,26 +101,28 @@ jobs:
             items.push(totalPages)
             return items
           }
-          """
-          if source.count(constants_anchor) != 1:
-              raise SystemExit('BookmarkLibrary constants anchor mismatch')
-          source = source.replace(constants_anchor, constants_replacement, 1)
-
-          state_anchor = """  const [sortMode, setSortMode] = useState<SortMode>(() =>
-            readStoredValue(LIBRARY_SORT_KEY, ['custom', 'title', 'updated'] as const, 'custom'),
+          ''').lstrip()
+          source = replace_once(
+              source,
+              "const LIBRARY_VIEW_KEY = 'nowen-library-view-v1'\nconst LIBRARY_SORT_KEY = 'nowen-library-sort-v1'\n",
+              constants,
+              'library constants',
           )
-          """
-          state_replacement = state_anchor + """  const [pageSize, setPageSize] = useState(readStoredPageSize)
-            const [currentPage, setCurrentPage] = useState(1)
-            const contentRef = useRef<HTMLElement>(null)
-          """
-          if source.count(state_anchor) != 1:
-              raise SystemExit('BookmarkLibrary state anchor mismatch')
-          source = source.replace(state_anchor, state_replacement, 1)
 
-          logic_anchor = """  const activeCollectionLabel = useMemo(() => {
-          """
-          logic_block = """  const totalPages = Math.max(1, Math.ceil(filteredBookmarks.length / pageSize))
+          state_anchor = (
+              "  const [sortMode, setSortMode] = useState<SortMode>(() =>\n"
+              "    readStoredValue(LIBRARY_SORT_KEY, ['custom', 'title', 'updated'] as const, 'custom'),\n"
+              "  )\n"
+          )
+          state_insert = state_anchor + (
+              "  const [pageSize, setPageSize] = useState(readStoredPageSize)\n"
+              "  const [currentPage, setCurrentPage] = useState(1)\n"
+              "  const contentRef = useRef<HTMLElement>(null)\n"
+          )
+          source = replace_once(source, state_anchor, state_insert, 'pagination state')
+
+          pagination_logic = dedent('''
+            const totalPages = Math.max(1, Math.ceil(filteredBookmarks.length / pageSize))
             const safeCurrentPage = Math.min(currentPage, totalPages)
             const pageStart = (safeCurrentPage - 1) * pageSize
             const paginatedBookmarks = useMemo(
@@ -136,29 +145,33 @@ jobs:
               setCurrentPage((previousPage) => Math.min(previousPage, totalPages))
             }, [totalPages])
 
-          """ + logic_anchor
-          if source.count(logic_anchor) != 1:
-              raise SystemExit('BookmarkLibrary pagination logic anchor mismatch')
-          source = source.replace(logic_anchor, logic_block, 1)
+          ''')
+          source = replace_once(
+              source,
+              "  const activeCollectionLabel = useMemo(() => {\n",
+              pagination_logic + "  const activeCollectionLabel = useMemo(() => {\n",
+              'pagination calculations',
+          )
 
-          handlers_anchor = """  const clearFilters = useCallback(() => {
-            setQuery('')
-            if (activeTag) {
-              onSelectTag(null)
-            } else if (activeCollection !== 'all') {
-              onSelectCollection('all')
-            }
-          }, [activeCollection, activeTag, onSelectCollection, onSelectTag])
-
-          """
-          handlers_replacement = handlers_anchor + """  const scrollToResults = useCallback(() => {
-            const scroll = () => contentRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'start' })
-            if (typeof window.requestAnimationFrame === 'function') {
-              window.requestAnimationFrame(scroll)
-            } else {
-              scroll()
-            }
-          }, [])
+          clear_filters = (
+              "  const clearFilters = useCallback(() => {\n"
+              "    setQuery('')\n"
+              "    if (activeTag) {\n"
+              "      onSelectTag(null)\n"
+              "    } else if (activeCollection !== 'all') {\n"
+              "      onSelectCollection('all')\n"
+              "    }\n"
+              "  }, [activeCollection, activeTag, onSelectCollection, onSelectTag])\n\n"
+          )
+          pagination_handlers = dedent('''
+            const scrollToResults = useCallback(() => {
+              const scroll = () => contentRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'start' })
+              if (typeof window.requestAnimationFrame === 'function') {
+                window.requestAnimationFrame(scroll)
+              } else {
+                scroll()
+              }
+            }, [])
 
             const changePage = useCallback((nextPage: number) => {
               const clampedPage = Math.min(Math.max(nextPage, 1), totalPages)
@@ -174,39 +187,22 @@ jobs:
               scrollToResults()
             }, [scrollToResults])
 
-          """
-          if source.count(handlers_anchor) != 1:
-              raise SystemExit('BookmarkLibrary handlers anchor mismatch')
-          source = source.replace(handlers_anchor, handlers_replacement, 1)
+          ''')
+          source = replace_once(source, clear_filters, clear_filters + pagination_handlers, 'pagination handlers')
+          source = replace_once(
+              source,
+              '<main className="bookmark-library__content">',
+              '<main ref={contentRef} className="bookmark-library__content">',
+              'content ref',
+          )
+          source = replace_once(
+              source,
+              '              {filteredBookmarks.map((bookmark) => (\n',
+              '              {paginatedBookmarks.map((bookmark) => (\n',
+              'paginated result map',
+          )
 
-          main_anchor = '<main className="bookmark-library__content">'
-          if source.count(main_anchor) != 1:
-              raise SystemExit('BookmarkLibrary main anchor mismatch')
-          source = source.replace(main_anchor, '<main ref={contentRef} className="bookmark-library__content">', 1)
-
-          results_anchor = """              {filteredBookmarks.map((bookmark) => (
-          """
-          if source.count(results_anchor) != 1:
-              raise SystemExit('BookmarkLibrary result map anchor mismatch')
-          source = source.replace(results_anchor, """              {paginatedBookmarks.map((bookmark) => (
-          """, 1)
-
-          footer_anchor = """              ))}
-            </div>
-          ) : (
-          """
-          footer_replacement = """              ))}
-            </div>
-          ) : (
-          """
-          if source.count(footer_anchor) != 1:
-              raise SystemExit('BookmarkLibrary result footer anchor mismatch')
-
-          # Insert the pagination after the result/empty conditional so the footer stays stable.
-          conditional_end_anchor = """          )}
-        </main>
-          """
-          pagination_markup = """          )}
+          pagination_markup = dedent('''
 
             {showPagination && (
               <footer className="bookmark-library__pagination">
@@ -274,18 +270,19 @@ jobs:
                 </nav>
               </footer>
             )}
-          </main>
-          """
-          if source.count(conditional_end_anchor) != 1:
-              raise SystemExit('BookmarkLibrary conditional end anchor mismatch')
-          source = source.replace(conditional_end_anchor, pagination_markup, 1)
-
+          ''')
+          source = replace_once(
+              source,
+              "          )}\n        </main>\n",
+              "          )}" + pagination_markup + "        </main>\n",
+              'pagination footer',
+          )
           page.write_text(source, encoding='utf-8')
 
           css = Path('src/styles/bookmark-library.css')
           css_source = css.read_text(encoding='utf-8')
-          css_anchor = '.bookmark-library__empty {\n'
-          css_block = r'''.bookmark-library__pagination {
+          css_block = dedent('''
+          .bookmark-library__pagination {
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -420,24 +417,27 @@ jobs:
             }
           }
 
-          '''
-          if css_source.count(css_anchor) != 1:
-              raise SystemExit('BookmarkLibrary CSS anchor mismatch')
-          css_source = css_source.replace(css_anchor, css_block + css_anchor, 1)
+          ''')
+          css_source = replace_once(
+              css_source,
+              '.bookmark-library__empty {\n',
+              css_block + '.bookmark-library__empty {\n',
+              'pagination styles',
+          )
           css.write_text(css_source, encoding='utf-8')
 
           test = Path('src/pages/__tests__/BookmarkLibrary.test.tsx')
           test_source = test.read_text(encoding='utf-8')
-          test_anchor = """  it('persists the preferred list view', async () => {
-            const { getByTitle } = render(<BookmarkLibrary {...baseProps} />)
-            fireEvent.click(getByTitle('列表视图'))
-
-            await waitFor(() => {
-              expect(window.localStorage.getItem('nowen-library-view-v1')).toBe('list')
-            })
-          })
-          """
-          test_block = test_anchor + """
+          test_anchor = (
+              "  it('persists the preferred list view', async () => {\n"
+              "    const { getByTitle } = render(<BookmarkLibrary {...baseProps} />)\n"
+              "    fireEvent.click(getByTitle('列表视图'))\n\n"
+              "    await waitFor(() => {\n"
+              "      expect(window.localStorage.getItem('nowen-library-view-v1')).toBe('list')\n"
+              "    })\n"
+              "  })\n"
+          )
+          test_case = dedent('''
 
             it('paginates large result sets and keeps page-size controls available', async () => {
               const manyBookmarks: Bookmark[] = Array.from({ length: 25 }, (_, index) => ({
@@ -474,10 +474,8 @@ jobs:
                 expect(window.localStorage.getItem('nowen-library-page-size-v1')).toBe('40')
               })
             })
-          """
-          if test_source.count(test_anchor) != 1:
-              raise SystemExit('BookmarkLibrary test anchor mismatch')
-          test_source = test_source.replace(test_anchor, test_block, 1)
+          ''')
+          test_source = replace_once(test_source, test_anchor, test_anchor + test_case, 'pagination test')
           test.write_text(test_source, encoding='utf-8')
           PY
 
