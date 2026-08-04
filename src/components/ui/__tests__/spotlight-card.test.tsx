@@ -17,6 +17,7 @@ function auxiliaryClick(element: Element, button: number) {
 
 afterEach(() => {
   cleanup()
+  document.documentElement.classList.remove('dark')
   vi.restoreAllMocks()
 })
 
@@ -150,5 +151,54 @@ describe('SpotlightCard interactions', () => {
 
     fireEvent.keyDown(getByRole('button', { name: 'Pin bookmark' }), { key: 'Enter' })
     expect(onClick).not.toHaveBeenCalled()
+  })
+
+  it('does not measure pointer geometry in the light theme', () => {
+    const measureSpy = vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect')
+    const { container } = render(
+      <SpotlightCard className="test-card">
+        <span>Bookmark</span>
+      </SpotlightCard>,
+    )
+    const card = container.querySelector<HTMLElement>('.test-card')!
+
+    fireEvent.mouseEnter(card)
+    for (let index = 0; index < 12; index += 1) {
+      fireEvent.mouseMove(card, { clientX: 100 + index, clientY: 80 + index })
+    }
+
+    expect(measureSpy).not.toHaveBeenCalled()
+  })
+
+  it('measures once per dark-theme hover instead of once per mouse frame', () => {
+    document.documentElement.classList.add('dark')
+    const measureSpy = vi
+      .spyOn(HTMLElement.prototype, 'getBoundingClientRect')
+      .mockReturnValue({
+        left: 20,
+        top: 30,
+        right: 220,
+        bottom: 150,
+        width: 200,
+        height: 120,
+        x: 20,
+        y: 30,
+        toJSON: () => ({}),
+      })
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation(() => 1)
+
+    const { container } = render(
+      <SpotlightCard className="test-card">
+        <span>Bookmark</span>
+      </SpotlightCard>,
+    )
+    const card = container.querySelector<HTMLElement>('.test-card')!
+
+    fireEvent.mouseEnter(card)
+    for (let index = 0; index < 12; index += 1) {
+      fireEvent.mouseMove(card, { clientX: 100 + index, clientY: 80 + index })
+    }
+
+    expect(measureSpy).toHaveBeenCalledTimes(1)
   })
 })
