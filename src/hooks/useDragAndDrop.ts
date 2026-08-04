@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback } from 'react';
 import {
   KeyboardSensor,
   PointerSensor,
@@ -18,10 +18,13 @@ interface UseDragAndDropOptions {
   disabled?: boolean;
 }
 
-// DndContext measuring 配置：优化网格拖拽测量频率
+// Dense bookmark pages can contain hundreds of droppable nodes. MeasuringStrategy.Always
+// causes dnd-kit to synchronously read every card rect during normal scroll/hover updates.
+// Geometry is only needed after an actual drag starts, so keep the expensive measurement
+// lifecycle scoped to the drag session.
 export const measuringConfig = {
   droppable: {
-    strategy: MeasuringStrategy.Always,
+    strategy: MeasuringStrategy.WhileDragging,
   },
 };
 
@@ -29,7 +32,6 @@ export function useDragAndDrop({ bookmarks, reorderBookmarks, disabled }: UseDra
   const [activeId, setActiveId] = useState<string | null>(null);
   const activeBookmark = activeId ? bookmarks.find(b => b.id === activeId) : null;
 
-  // 拖拽传感器配置（桌面 Pointer + 移动端 Touch + 键盘无障碍）
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -47,7 +49,6 @@ export function useDragAndDrop({ bookmarks, reorderBookmarks, disabled }: UseDra
     })
   );
 
-  // 拖拽开始
   const handleDragStart = useCallback((event: DragStartEvent) => {
     if (disabled) return;
     setActiveId(event.active.id as string);
@@ -56,7 +57,6 @@ export function useDragAndDrop({ bookmarks, reorderBookmarks, disabled }: UseDra
     }
   }, [disabled]);
 
-  // 拖拽结束
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event;
     setActiveId(null);
@@ -76,9 +76,8 @@ export function useDragAndDrop({ bookmarks, reorderBookmarks, disabled }: UseDra
         }
       }
     }
-  }, [bookmarks, reorderBookmarks]);
+  }, [bookmarks, disabled, reorderBookmarks]);
 
-  // 拖拽取消
   const handleDragCancel = useCallback(() => {
     setActiveId(null);
   }, []);

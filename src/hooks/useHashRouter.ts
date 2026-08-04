@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback } from 'react'
  * 
  * 路由映射：
  *   (空)/#/             → 首页
+ *   /#/library          → 书签资源库
  *   /#/admin-login      → 后台登录
  *   /#/admin             → 后台（默认 bookmarks 标签）
  *   /#/admin/bookmarks   → 后台-书签管理
@@ -12,7 +13,7 @@ import { useState, useEffect, useCallback } from 'react'
  *   /#/admin/...         → 后台-其他标签
  */
 
-export type PageType = 'home' | 'admin' | 'admin-login' | 'force-password-change'
+export type PageType = 'home' | 'library' | 'admin' | 'admin-login' | 'force-password-change'
 
 export type AdminTabType = 
   | 'bookmarks' | 'categories' | 'tags' | 'quotes' | 'icons'
@@ -36,6 +37,10 @@ function parseHash(hash: string): HashRoute {
     return { page: 'home', adminTab: 'bookmarks' }
   }
 
+  if (path === 'library') {
+    return { page: 'library', adminTab: 'bookmarks' }
+  }
+
   if (path === 'admin-login') {
     return { page: 'admin-login', adminTab: 'bookmarks' }
   }
@@ -56,6 +61,8 @@ function buildHash(page: PageType, adminTab?: AdminTabType): string {
   switch (page) {
     case 'home':
       return ''
+    case 'library':
+      return '#/library'
     case 'admin-login':
       return '#/admin-login'
     case 'force-password-change':

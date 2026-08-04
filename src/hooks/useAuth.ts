@@ -5,7 +5,7 @@ import type { PageType, AdminTabType } from './useHashRouter';
 
 export type { PageType, AdminTabType } from './useHashRouter';
 
-type LoginRedirectTarget = 'home' | 'admin';
+type LoginRedirectTarget = 'home' | 'library' | 'admin';
 
 export function useAuth() {
   const { page: currentPage, adminTab, navigateTo, setAdminTab } = useHashRouter();

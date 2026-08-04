@@ -1,5 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { cn } from '../../lib/utils'
 import { BackgroundBeamsWithCollision } from './background-beams-with-collision'
 
@@ -15,6 +14,94 @@ interface AuroraBackgroundProps {
   transparent?: boolean
 }
 
+interface AmbientOrbProps {
+  className: string
+  background: string
+  opacity: number
+  animationName: string
+  duration: number
+  delay?: number
+  paused: boolean
+}
+
+const AURORA_STYLES = `
+  @keyframes nowen-orb-a {
+    0%, 100% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.82; }
+    34% { transform: translate3d(92px, 38px, 0) scale(1.09); opacity: 1; }
+    68% { transform: translate3d(28px, -16px, 0) scale(1.04); opacity: 0.9; }
+  }
+
+  @keyframes nowen-orb-b {
+    0%, 100% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.8; }
+    36% { transform: translate3d(-88px, 66px, 0) scale(1.1); opacity: 1; }
+    72% { transform: translate3d(-22px, 18px, 0) scale(1.04); opacity: 0.88; }
+  }
+
+  @keyframes nowen-orb-c {
+    0%, 100% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.78; }
+    38% { transform: translate3d(78px, -58px, 0) scale(1.09); opacity: 1; }
+    74% { transform: translate3d(18px, -18px, 0) scale(1.04); opacity: 0.9; }
+  }
+
+  .nowen-ambient-orb {
+    animation-timing-function: ease-in-out;
+    animation-iteration-count: infinite;
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+    will-change: transform, opacity;
+    contain: layout paint style;
+  }
+
+  .nowen-pointer-glow {
+    transform: translate3d(50vw, 42vh, 0) translate3d(-50%, -50%, 0);
+    transition: transform 90ms linear;
+    backface-visibility: hidden;
+    will-change: transform;
+    contain: strict;
+  }
+
+  @media (max-width: 767px) {
+    @keyframes nowen-orb-a {
+      0%, 100% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.84; }
+      50% { transform: translate3d(34px, 16px, 0) scale(1.045); opacity: 1; }
+    }
+
+    @keyframes nowen-orb-b {
+      0%, 100% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.82; }
+      50% { transform: translate3d(-32px, 24px, 0) scale(1.05); opacity: 1; }
+    }
+
+    @keyframes nowen-orb-c {
+      0%, 100% { transform: translate3d(0, 0, 0) scale(1); opacity: 0.8; }
+      50% { transform: translate3d(28px, -22px, 0) scale(1.045); opacity: 1; }
+    }
+  }
+`
+
+function AmbientOrb({
+  className,
+  background,
+  opacity,
+  animationName,
+  duration,
+  delay = 0,
+  paused,
+}: AmbientOrbProps) {
+  return (
+    <div
+      className={cn('nowen-ambient-orb absolute rounded-full', className)}
+      style={{
+        background,
+        opacity,
+        animationName,
+        animationDuration: `${duration}s`,
+        animationDelay: `${delay}s`,
+        animationPlayState: paused ? 'paused' : 'running',
+      }}
+    />
+  )
+}
+
 export function AuroraBackground({
   children,
   className,
@@ -22,10 +109,14 @@ export function AuroraBackground({
   showBeams = false,
   transparent = false,
 }: AuroraBackgroundProps) {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const rafIdRef = useRef<number>(0)
+  const pointerGlowRef = useRef<HTMLDivElement>(null)
+  const pointerRafRef = useRef<number | null>(null)
+  const pendingPointerRef = useRef({ x: 0, y: 0 })
   const [isDark, setIsDark] = useState(true)
-  const mobile = useMemo(() => isMobileViewport(), [])
+  const [mobile, setMobile] = useState(isMobileViewport)
+  const [isDocumentVisible, setIsDocumentVisible] = useState(() =>
+    typeof document === 'undefined' || document.visibilityState !== 'hidden',
+  )
 
   useEffect(() => {
     const syncTheme = () => {
@@ -33,7 +124,6 @@ export function AuroraBackground({
     }
 
     syncTheme()
-
     const observer = new MutationObserver(syncTheme)
     observer.observe(document.documentElement, {
       attributes: true,
@@ -43,244 +133,178 @@ export function AuroraBackground({
     return () => observer.disconnect()
   }, [])
 
-  const handleMouseMove = useCallback((event: MouseEvent) => {
-    const container = containerRef.current
-    if (!container) return
+  useEffect(() => {
+    if (typeof window.matchMedia !== 'function') return
 
-    cancelAnimationFrame(rafIdRef.current)
-    rafIdRef.current = requestAnimationFrame(() => {
-      const { clientX, clientY } = event
-      const { width, height, left, top } = container.getBoundingClientRect()
-      if (width <= 0 || height <= 0) return
+    const media = window.matchMedia('(max-width: 767px)')
+    const syncViewport = () => setMobile(media.matches)
+    syncViewport()
+    media.addEventListener?.('change', syncViewport)
 
-      container.style.setProperty('--mouse-x', `${((clientX - left) / width) * 100}%`)
-      container.style.setProperty('--mouse-y', `${((clientY - top) / height) * 100}%`)
+    return () => media.removeEventListener?.('change', syncViewport)
+  }, [])
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      setIsDocumentVisible(document.visibilityState !== 'hidden')
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [])
+
+  const handlePointerMove = useCallback((event: PointerEvent) => {
+    pendingPointerRef.current = { x: event.clientX, y: event.clientY }
+    if (pointerRafRef.current !== null) return
+
+    pointerRafRef.current = requestAnimationFrame(() => {
+      pointerRafRef.current = null
+      const glow = pointerGlowRef.current
+      if (!glow) return
+
+      const { x, y } = pendingPointerRef.current
+      glow.style.transform = `translate3d(${Math.round(x)}px, ${Math.round(y)}px, 0) translate3d(-50%, -50%, 0)`
     })
   }, [])
 
   useEffect(() => {
-    // 透明模式用于展示用户壁纸，不需要继续计算鼠标跟随动画。
-    if (transparent) return
+    if (transparent || mobile || !isDocumentVisible) return
 
-    window.addEventListener('mousemove', handleMouseMove, { passive: true })
+    window.addEventListener('pointermove', handlePointerMove, { passive: true })
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove)
-      cancelAnimationFrame(rafIdRef.current)
+      window.removeEventListener('pointermove', handlePointerMove)
+      if (pointerRafRef.current !== null) {
+        cancelAnimationFrame(pointerRafRef.current)
+        pointerRafRef.current = null
+      }
     }
-  }, [handleMouseMove, transparent])
+  }, [handlePointerMove, isDocumentVisible, mobile, transparent])
 
   const renderDecorations = !transparent
+  const animationPaused = !isDocumentVisible
 
   return (
     <div
-      ref={containerRef}
       data-testid="aurora-background"
       data-transparent={transparent ? 'true' : 'false'}
+      data-animation-profile="compositor"
+      data-paused={animationPaused ? 'true' : 'false'}
       className={cn('relative min-h-screen w-full overflow-hidden', className)}
       style={{
-        '--mouse-x': '50%',
-        '--mouse-y': '50%',
         background: transparent ? 'transparent' : 'var(--color-bg-primary)',
         transition: 'background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-      } as React.CSSProperties}
+      }}
     >
+      <style>{AURORA_STYLES}</style>
+
       {renderDecorations && (
         <div data-testid="aurora-decorations" aria-hidden="true">
-          <AnimatePresence mode="wait">
-            {isDark ? (
-              <motion.div
-                key="dark-aurora"
-                className="fixed inset-0 overflow-hidden pointer-events-none"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.5 }}
-              >
-                <div
-                  className="absolute inset-0"
-                  style={{ background: 'var(--color-bg-gradient)' }}
-                />
+          <div
+            className="fixed inset-0 z-0 overflow-hidden pointer-events-none"
+            style={{ contain: 'layout paint style' }}
+          >
+            <div
+              className="absolute inset-0 transition-colors duration-500"
+              style={{
+                background: isDark
+                  ? 'linear-gradient(180deg, #090a0f 0%, #0b0d14 52%, #090a10 100%)'
+                  : 'linear-gradient(180deg, #fafbff 0%, #f6f8ff 48%, #fafbff 100%)',
+              }}
+            />
 
-                <motion.div
-                  className="absolute -inset-[10px]"
-                  style={{
-                    background: `
-                      radial-gradient(
-                        ellipse 80% 50% at var(--mouse-x, 50%) var(--mouse-y, 50%),
-                        var(--color-glow) 0%,
-                        transparent 50%
-                      ),
-                      radial-gradient(
-                        ellipse 60% 40% at 20% 20%,
-                        var(--color-glow-secondary) 0%,
-                        transparent 50%
-                      ),
-                      radial-gradient(
-                        ellipse 50% 60% at 80% 80%,
-                        var(--color-glow) 0%,
-                        transparent 50%
-                      )
-                    `,
-                    opacity: 0.6,
-                  }}
-                  animate={mobile ? undefined : {
-                    scale: [1, 1.1, 1],
-                    opacity: [0.5, 0.7, 0.5],
-                  }}
-                  transition={mobile ? undefined : {
-                    duration: 8,
-                    repeat: Infinity,
-                    ease: 'easeInOut',
-                  }}
-                />
+            <AmbientOrb
+              className={isDark
+                ? 'left-[-10%] top-[-18%] h-[720px] w-[900px]'
+                : 'left-[-9%] top-[-20%] h-[760px] w-[940px]'}
+              background={isDark
+                ? 'radial-gradient(circle, rgba(124, 111, 255, 0.58) 0%, rgba(91, 77, 218, 0.2) 46%, transparent 72%)'
+                : 'radial-gradient(circle, rgba(173, 154, 255, 0.72) 0%, rgba(200, 187, 255, 0.28) 46%, transparent 72%)'}
+              opacity={isDark ? 0.68 : 0.58}
+              animationName="nowen-orb-a"
+              duration={18}
+              delay={-6}
+              paused={animationPaused}
+            />
 
-                {!mobile && (
-                  <>
-                    <motion.div
-                      className="absolute h-[600px] w-[600px] rounded-full will-change-transform"
-                      style={{
-                        background: 'radial-gradient(circle, var(--color-glow-secondary) 0%, transparent 70%)',
-                        left: '10%',
-                        top: '20%',
-                        filter: 'blur(60px)',
-                        opacity: 0.5,
-                      }}
-                      animate={{ x: [0, 100, 0], y: [0, -50, 0] }}
-                      transition={{ duration: 20, repeat: Infinity, ease: 'easeInOut' }}
-                    />
-                    <motion.div
-                      className="absolute h-[500px] w-[500px] rounded-full will-change-transform"
-                      style={{
-                        background: 'radial-gradient(circle, var(--color-glow) 0%, transparent 70%)',
-                        right: '10%',
-                        bottom: '20%',
-                        filter: 'blur(60px)',
-                        opacity: 0.6,
-                      }}
-                      animate={{ x: [0, -80, 0], y: [0, 60, 0] }}
-                      transition={{ duration: 15, repeat: Infinity, ease: 'easeInOut' }}
-                    />
-                  </>
-                )}
-              </motion.div>
-            ) : (
-              <motion.div
-                key="light-aurora"
-                className="fixed inset-0 overflow-hidden pointer-events-none"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.5 }}
-              >
-                <div
-                  className="absolute inset-0"
-                  style={{ background: 'var(--color-bg-gradient)' }}
-                />
+            <AmbientOrb
+              className={isDark
+                ? 'right-[-14%] top-[4%] h-[760px] w-[860px]'
+                : 'right-[-12%] top-[2%] h-[800px] w-[900px]'}
+              background={isDark
+                ? 'radial-gradient(circle, rgba(54, 194, 216, 0.52) 0%, rgba(54, 194, 216, 0.16) 48%, transparent 72%)'
+                : 'radial-gradient(circle, rgba(128, 223, 235, 0.7) 0%, rgba(189, 235, 237, 0.26) 48%, transparent 72%)'}
+              opacity={isDark ? 0.6 : 0.54}
+              animationName="nowen-orb-b"
+              duration={21}
+              delay={-11}
+              paused={animationPaused}
+            />
 
-                <motion.div
-                  className="absolute -inset-[10px]"
-                  style={{
-                    background: `
-                      radial-gradient(
-                        ellipse 80% 50% at var(--mouse-x, 50%) var(--mouse-y, 50%),
-                        rgba(59, 130, 246, 0.35) 0%,
-                        transparent 50%
-                      ),
-                      radial-gradient(
-                        ellipse 60% 40% at 20% 20%,
-                        rgba(147, 51, 234, 0.3) 0%,
-                        transparent 50%
-                      ),
-                      radial-gradient(
-                        ellipse 50% 60% at 80% 80%,
-                        rgba(59, 130, 246, 0.25) 0%,
-                        transparent 50%
-                      )
-                    `,
-                  }}
-                  animate={mobile ? undefined : {
-                    scale: [1, 1.15, 1],
-                    opacity: [0.8, 1, 0.8],
-                  }}
-                  transition={mobile ? undefined : {
-                    duration: 5,
-                    repeat: Infinity,
-                    ease: 'easeInOut',
-                  }}
-                />
+            <AmbientOrb
+              className={isDark
+                ? 'bottom-[-28%] left-[18%] h-[760px] w-[920px]'
+                : 'bottom-[-30%] left-[14%] h-[820px] w-[980px]'}
+              background={isDark
+                ? 'radial-gradient(circle, rgba(76, 120, 255, 0.48) 0%, rgba(76, 120, 255, 0.15) 50%, transparent 74%)'
+                : 'radial-gradient(circle, rgba(135, 180, 255, 0.7) 0%, rgba(191, 214, 255, 0.26) 50%, transparent 74%)'}
+              opacity={isDark ? 0.56 : 0.5}
+              animationName="nowen-orb-c"
+              duration={20}
+              delay={-3}
+              paused={animationPaused}
+            />
 
-                {!mobile ? (
-                  <>
-                    <motion.div
-                      className="absolute h-[700px] w-[700px] rounded-full will-change-transform"
-                      style={{
-                        background: 'radial-gradient(circle, rgba(59, 130, 246, 0.4) 0%, transparent 70%)',
-                        left: '5%',
-                        top: '15%',
-                        filter: 'blur(40px)',
-                        opacity: 0.8,
-                      }}
-                      animate={{ x: [0, 150, 0], y: [0, -80, 0], scale: [1, 1.1, 1] }}
-                      transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
-                    />
-                    <motion.div
-                      className="absolute h-[600px] w-[600px] rounded-full will-change-transform"
-                      style={{
-                        background: 'radial-gradient(circle, rgba(147, 51, 234, 0.35) 0%, transparent 70%)',
-                        right: '5%',
-                        bottom: '15%',
-                        filter: 'blur(40px)',
-                        opacity: 0.7,
-                      }}
-                      animate={{ x: [0, -120, 0], y: [0, 100, 0], scale: [1, 1.15, 1] }}
-                      transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
-                    />
-                  </>
-                ) : (
-                  <motion.div
-                    className="absolute"
-                    style={{
-                      width: '120%',
-                      height: '60%',
-                      left: '-10%',
-                      top: '20%',
-                      background: 'radial-gradient(ellipse at 50% 50%, rgba(59, 130, 246, 0.2) 0%, rgba(147, 51, 234, 0.12) 40%, transparent 70%)',
-                    }}
-                    animate={{ opacity: [0.6, 0.9, 0.6] }}
-                    transition={{ duration: 8, repeat: Infinity, ease: 'easeInOut' }}
-                  />
-                )}
-
-                <div
-                  className="absolute left-0 right-0 top-0 h-[40vh]"
-                  style={{
-                    background: 'linear-gradient(to bottom, rgba(255,255,255,0.3) 0%, transparent 100%)',
-                    opacity: 0.5,
-                  }}
-                />
-              </motion.div>
+            {!mobile && (
+              <div
+                ref={pointerGlowRef}
+                className="nowen-pointer-glow absolute left-0 top-0 h-[520px] w-[640px] rounded-full"
+                style={{
+                  background: isDark
+                    ? 'radial-gradient(ellipse, rgba(111, 94, 255, 0.32) 0%, rgba(75, 185, 220, 0.13) 46%, transparent 72%)'
+                    : 'radial-gradient(ellipse, rgba(99, 102, 241, 0.24) 0%, rgba(34, 211, 238, 0.11) 46%, transparent 72%)',
+                  mixBlendMode: isDark ? 'screen' : 'multiply',
+                  opacity: animationPaused ? 0.7 : 1,
+                }}
+              />
             )}
-          </AnimatePresence>
+
+            <div
+              className="absolute inset-0"
+              style={{
+                opacity: isDark ? 0.045 : 0.03,
+                backgroundImage:
+                  'radial-gradient(circle at 20% 30%, currentColor 0.5px, transparent 0.6px), radial-gradient(circle at 70% 60%, currentColor 0.4px, transparent 0.55px)',
+                backgroundSize: '11px 11px, 13px 13px',
+                color: isDark ? '#ffffff' : '#4f5d7a',
+                mixBlendMode: isDark ? 'screen' : 'multiply',
+              }}
+            />
+          </div>
 
           {showRadialGradient && (
             <div
-              className="fixed inset-0 pointer-events-none"
+              className="fixed inset-0 z-[1] pointer-events-none"
               style={{
                 background: isDark
-                  ? 'radial-gradient(ellipse 80% 80% at 50% 50%, transparent 0%, var(--color-bg-primary) 70%)'
-                  : 'radial-gradient(ellipse 100% 100% at 50% 30%, transparent 0%, var(--color-bg-primary) 80%)',
+                  ? 'radial-gradient(ellipse 96% 92% at 50% 40%, transparent 12%, rgba(5, 6, 10, 0.34) 100%)'
+                  : 'radial-gradient(ellipse 118% 110% at 50% 32%, transparent 34%, rgba(247, 248, 252, 0.28) 100%)',
                 transition: 'background 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
               }}
             />
           )}
 
           {showBeams && (
-            <div className="fixed inset-0 pointer-events-none">
+            <div
+              data-testid="aurora-beam-layer"
+              className="fixed inset-0 z-[2] pointer-events-none"
+              style={{ opacity: isDark ? 0.96 : 0.86, contain: 'layout paint style' }}
+            >
               <BackgroundBeamsWithCollision
                 containerClassName="absolute inset-0"
                 className="h-full w-full"
                 isDark={isDark}
                 isMobile={mobile}
+                paused={animationPaused}
               />
             </div>
           )}

@@ -1,0 +1,230 @@
+/*
+ * Bookmark library compact metadata and performance layer.
+ *
+ * The library can render hundreds of cards while an animated background is
+ * running. Keep the visual hierarchy, but avoid per-card backdrop sampling,
+ * unnecessary off-screen paint and expensive all-property transitions.
+ */
+
+/* ---------- Compact metadata ---------- */
+
+.bookmark-library .bookmark-library-card__meta {
+  display: flex;
+  min-width: 0;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.3rem;
+  overflow: hidden;
+  margin-top: 0.7rem;
+  white-space: nowrap;
+}
+
+.bookmark-library .bookmark-library-card__category {
+  display: inline-flex;
+  min-width: 0;
+  min-height: 1.2rem;
+  max-width: 6.4rem;
+  flex: 0 1 auto;
+  align-items: center;
+  gap: 0.22rem;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--library-category-color) 16%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--library-category-color) 6%, transparent);
+  color: color-mix(in srgb, var(--library-category-color) 68%, var(--color-text-secondary));
+  font-size: 0.56rem;
+  font-weight: 580;
+  line-height: 1;
+  padding: 0.18rem 0.34rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bookmark-library .bookmark-library-card__category svg {
+  width: 0.68rem;
+  height: 0.68rem;
+  flex: 0 0 auto;
+}
+
+.bookmark-library .bookmark-library-card__tag,
+.bookmark-library .bookmark-library-card__more {
+  display: inline-flex;
+  min-width: 0;
+  min-height: 1.2rem;
+  max-width: 5.4rem;
+  flex: 0 1 auto;
+  align-items: center;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--color-glass-border) 72%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-bg-tertiary) 52%, transparent);
+  color: color-mix(in srgb, var(--color-text-muted) 88%, transparent);
+  font-size: 0.54rem;
+  font-weight: 500;
+  line-height: 1;
+  padding: 0.17rem 0.32rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bookmark-library .bookmark-library-card__tag {
+  transition: border-color 120ms ease, background-color 120ms ease, color 120ms ease;
+}
+
+.bookmark-library .bookmark-library-card__tag:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 18%, transparent);
+  background: color-mix(in srgb, var(--color-primary) 7%, transparent);
+  color: var(--color-primary);
+  transform: none;
+}
+
+.bookmark-library .bookmark-library-card__more {
+  max-width: none;
+  flex: 0 0 auto;
+  border-color: transparent;
+  background: transparent;
+  color: var(--color-text-muted);
+  padding-inline: 0.12rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* List view keeps metadata in one reserved rail. */
+.bookmark-library .bookmark-library-card--list .bookmark-library-card__surface {
+  position: relative;
+  padding-block: 0.85rem !important;
+}
+
+.bookmark-library .bookmark-library-card--list .bookmark-library-card__content {
+  min-height: 3.3rem;
+  padding-right: clamp(20rem, 43%, 34rem);
+}
+
+.bookmark-library .bookmark-library-card--list .bookmark-library-card__meta {
+  position: absolute;
+  top: 50%;
+  right: 2.65rem;
+  bottom: auto;
+  z-index: 3;
+  width: auto;
+  max-width: min(27vw, 18rem);
+  justify-content: flex-end;
+  margin: 0;
+  transform: translateY(-50%);
+}
+
+.bookmark-library .bookmark-library-card--list .bookmark-library-card__external {
+  position: absolute;
+  top: 50%;
+  right: 0.35rem;
+  bottom: auto;
+  transform: translateY(-50%);
+}
+
+.bookmark-library
+  .bookmark-library-card--list
+  .bookmark-library-card__surface:hover
+  .bookmark-library-card__external {
+  transform: translate(1px, calc(-50% - 1px));
+}
+
+@media (max-width: 1279px) {
+  .bookmark-library .bookmark-library-card--list .bookmark-library-card__content {
+    padding-right: 15rem;
+  }
+
+  .bookmark-library .bookmark-library-card--list .bookmark-library-card__meta {
+    max-width: 11.5rem;
+  }
+}
+
+@media (max-width: 899px) {
+  .bookmark-library .bookmark-library-card--list .bookmark-library-card__content {
+    padding-right: 8rem;
+  }
+
+  .bookmark-library .bookmark-library-card--list .bookmark-library-card__tag,
+  .bookmark-library .bookmark-library-card--list .bookmark-library-card__more {
+    display: none;
+  }
+
+  .bookmark-library .bookmark-library-card--list .bookmark-library-card__category {
+    max-width: 5.7rem;
+  }
+}
+
+@media (max-width: 639px) {
+  .bookmark-library .bookmark-library-card--list .bookmark-library-card__content {
+    padding-right: 1.75rem;
+  }
+
+  .bookmark-library .bookmark-library-card--list .bookmark-library-card__meta {
+    display: none;
+  }
+}
+
+/* ---------- Rendering performance ---------- */
+
+/* Large glass surfaces sampling an animated background are expensive. A more
+ * opaque fill preserves the appearance without a live backdrop filter. */
+.bookmark-library .bookmark-library__sidebar,
+.bookmark-library .bookmark-library__content {
+  background: color-mix(in srgb, var(--color-glass) 94%, var(--color-bg-secondary)) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.bookmark-library .bookmark-library__content {
+  contain: layout paint style;
+}
+
+.bookmark-library .bookmark-library__results {
+  contain: layout style;
+}
+
+/* Skip layout and paint for cards outside the viewport. */
+.bookmark-library .bookmark-library-card {
+  content-visibility: auto;
+  contain: layout paint style;
+}
+
+.bookmark-library .bookmark-library-card--grid {
+  contain-intrinsic-size: auto 156px;
+}
+
+.bookmark-library .bookmark-library-card--list {
+  contain-intrinsic-size: auto 82px;
+}
+
+/* SpotlightCard lightweight mode still carries generic blur/transition utility
+ * classes. Override them in the dense library only. */
+.bookmark-library .bookmark-library-card__surface {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  transition-property: transform, border-color, box-shadow !important;
+  transition-duration: 140ms !important;
+  transition-timing-function: ease-out !important;
+  will-change: auto !important;
+}
+
+.bookmark-library .bookmark-library-card__surface:hover {
+  transform: translateY(-2px) !important;
+  border-color: color-mix(in srgb, var(--color-primary) 16%, var(--color-glass-border)) !important;
+  box-shadow: 0 18px 38px rgba(63, 76, 116, 0.1) !important;
+}
+
+.bookmark-library .bookmark-library-card__surface:active {
+  transform: translateY(0) scale(0.995) !important;
+}
+
+.dark .bookmark-library .bookmark-library-card__surface:hover {
+  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.24) !important;
+}
+
+/* Keep controls responsive while React completes a low-priority view change. */
+.bookmark-library.is-updating .bookmark-library__results {
+  cursor: progress;
+}
+
+.bookmark-library.is-updating .bookmark-library__view-toggle {
+  opacity: 0.72;
+}

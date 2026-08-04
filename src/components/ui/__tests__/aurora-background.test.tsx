@@ -11,6 +11,7 @@ vi.mock('../background-beams-with-collision', () => ({
 afterEach(() => {
   cleanup()
   document.documentElement.classList.remove('dark')
+  vi.restoreAllMocks()
 })
 
 describe('AuroraBackground wallpaper mode', () => {
@@ -27,7 +28,7 @@ describe('AuroraBackground wallpaper mode', () => {
     expect(queryByTestId('background-beams')).toBeNull()
   })
 
-  it('renders normal Aurora decorations when wallpaper mode is disabled', () => {
+  it('renders the visible compositor beam layer when wallpaper mode is disabled', () => {
     const { getByTestId } = render(
       <AuroraBackground showBeams>
         <span>page content</span>
@@ -35,7 +36,39 @@ describe('AuroraBackground wallpaper mode', () => {
     )
 
     expect(getByTestId('aurora-background').getAttribute('data-transparent')).toBe('false')
+    expect(getByTestId('aurora-background').getAttribute('data-animation-profile')).toBe('compositor')
     expect(getByTestId('aurora-decorations')).toBeTruthy()
     expect(getByTestId('background-beams')).toBeTruthy()
+    expect(Number(getByTestId('aurora-beam-layer').style.opacity)).toBeGreaterThanOrEqual(0.8)
+    expect(getByTestId('aurora-beam-layer').className).toContain('z-[2]')
+  })
+
+  it('moves only the pointer glow element instead of invalidating the page root', () => {
+    let scheduledFrame: FrameRequestCallback | null = null
+    vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => {
+      scheduledFrame = callback
+      return 1
+    })
+
+    const { container, getByTestId } = render(
+      <AuroraBackground>
+        <span>page content</span>
+      </AuroraBackground>,
+    )
+
+    const root = getByTestId('aurora-background')
+    const glow = container.querySelector<HTMLElement>('.nowen-pointer-glow')
+    expect(glow).toBeTruthy()
+
+    window.dispatchEvent(new MouseEvent('pointermove', {
+      bubbles: true,
+      clientX: 240,
+      clientY: 160,
+    }))
+    scheduledFrame?.(0)
+
+    expect(glow?.style.transform).toContain('translate3d(240px, 160px, 0)')
+    expect(root.style.getPropertyValue('--mouse-x-px')).toBe('')
+    expect(root.style.getPropertyValue('--mouse-y-px')).toBe('')
   })
 })
