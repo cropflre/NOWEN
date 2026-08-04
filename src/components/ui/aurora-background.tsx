@@ -53,7 +53,7 @@ const AURORA_STYLES = `
   }
 
   .nowen-pointer-glow {
-    transform: translate3d(calc(var(--mouse-x-px) - 50%), calc(var(--mouse-y-px) - 50%), 0);
+    transform: translate3d(50vw, 42vh, 0) translate3d(-50%, -50%, 0);
     transition: transform 90ms linear;
     backface-visibility: hidden;
     will-change: transform;
@@ -109,8 +109,9 @@ export function AuroraBackground({
   showBeams = false,
   transparent = false,
 }: AuroraBackgroundProps) {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const lastPointerUpdateRef = useRef(0)
+  const pointerGlowRef = useRef<HTMLDivElement>(null)
+  const pointerRafRef = useRef<number | null>(null)
+  const pendingPointerRef = useRef({ x: 0, y: 0 })
   const [isDark, setIsDark] = useState(true)
   const [mobile, setMobile] = useState(isMobileViewport)
   const [isDocumentVisible, setIsDocumentVisible] = useState(() =>
@@ -153,23 +154,30 @@ export function AuroraBackground({
   }, [])
 
   const handlePointerMove = useCallback((event: PointerEvent) => {
-    const container = containerRef.current
-    if (!container) return
+    pendingPointerRef.current = { x: event.clientX, y: event.clientY }
+    if (pointerRafRef.current !== null) return
 
-    const now = performance.now()
-    // 20fps is enough for a soft glow and avoids repaint pressure from raw pointer frequency.
-    if (now - lastPointerUpdateRef.current < 50) return
-    lastPointerUpdateRef.current = now
+    pointerRafRef.current = requestAnimationFrame(() => {
+      pointerRafRef.current = null
+      const glow = pointerGlowRef.current
+      if (!glow) return
 
-    container.style.setProperty('--mouse-x-px', `${event.clientX}px`)
-    container.style.setProperty('--mouse-y-px', `${event.clientY}px`)
+      const { x, y } = pendingPointerRef.current
+      glow.style.transform = `translate3d(${Math.round(x)}px, ${Math.round(y)}px, 0) translate3d(-50%, -50%, 0)`
+    })
   }, [])
 
   useEffect(() => {
     if (transparent || mobile || !isDocumentVisible) return
 
     window.addEventListener('pointermove', handlePointerMove, { passive: true })
-    return () => window.removeEventListener('pointermove', handlePointerMove)
+    return () => {
+      window.removeEventListener('pointermove', handlePointerMove)
+      if (pointerRafRef.current !== null) {
+        cancelAnimationFrame(pointerRafRef.current)
+        pointerRafRef.current = null
+      }
+    }
   }, [handlePointerMove, isDocumentVisible, mobile, transparent])
 
   const renderDecorations = !transparent
@@ -177,18 +185,15 @@ export function AuroraBackground({
 
   return (
     <div
-      ref={containerRef}
       data-testid="aurora-background"
       data-transparent={transparent ? 'true' : 'false'}
       data-animation-profile="compositor"
       data-paused={animationPaused ? 'true' : 'false'}
       className={cn('relative min-h-screen w-full overflow-hidden', className)}
       style={{
-        '--mouse-x-px': '50vw',
-        '--mouse-y-px': '42vh',
         background: transparent ? 'transparent' : 'var(--color-bg-primary)',
         transition: 'background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-      } as React.CSSProperties}
+      }}
     >
       <style>{AURORA_STYLES}</style>
 
@@ -251,6 +256,7 @@ export function AuroraBackground({
 
             {!mobile && (
               <div
+                ref={pointerGlowRef}
                 className="nowen-pointer-glow absolute left-0 top-0 h-[520px] w-[640px] rounded-full"
                 style={{
                   background: isDark
