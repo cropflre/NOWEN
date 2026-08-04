@@ -25,14 +25,14 @@ jobs:
 
           path = Path('.github/workflows/apply-library-pagination.yml')
           source = path.read_text(encoding='utf-8')
-          old = """                    {t('admin.bookmark.pagination_info', {
-                      start: visibleRangeStart,
-                      end: visibleRangeEnd,
-                      total: filteredBookmarks.length,
-                    })}
-          """
-          new = """                    {visibleRangeStart}–{visibleRangeEnd} / {filteredBookmarks.length}
-          """
+          old = (
+              "                    {t('admin.bookmark.pagination_info', {\n"
+              "                      start: visibleRangeStart,\n"
+              "                      end: visibleRangeEnd,\n"
+              "                      total: filteredBookmarks.length,\n"
+              "                    })}\n"
+          )
+          new = "                    {visibleRangeStart}–{visibleRangeEnd} / {filteredBookmarks.length}\n"
           if source.count(old) != 1:
               raise SystemExit(f'expected one range block, found {source.count(old)}')
           path.write_text(source.replace(old, new, 1), encoding='utf-8')
