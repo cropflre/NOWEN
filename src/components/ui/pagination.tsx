@@ -106,15 +106,19 @@ export function Pagination({
   const copy = resolveCopy(i18n.resolvedLanguage || i18n.language)
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
   const currentPage = Math.min(Math.max(page, 1), totalPages)
+  const selectablePageSizes = Array.from(new Set([...pageSizeOptions, pageSize]))
+    .filter((value) => value > 0)
+    .sort((a, b) => a - b)
+  const minimumPageSize = onPageSizeChange
+    ? (selectablePageSizes[0] ?? pageSize)
+    : pageSize
 
-  if (total <= pageSize) return null
+  // 当用户可以切换到更小页容量时，保留分页条，避免选大容量后控件消失。
+  if (total <= minimumPageSize) return null
 
   const start = (currentPage - 1) * pageSize + 1
   const end = Math.min(currentPage * pageSize, total)
   const tokens = buildPaginationTokens(currentPage, totalPages)
-  const selectablePageSizes = Array.from(new Set([...pageSizeOptions, pageSize]))
-    .filter((value) => value > 0)
-    .sort((a, b) => a - b)
 
   const goToPage = (nextPage: number) => {
     const clampedPage = Math.min(Math.max(nextPage, 1), totalPages)
