@@ -1,6 +1,12 @@
-import { useMemo, useState } from 'react'
+import {
+  memo,
+  useCallback,
+  useDeferredValue,
+  useMemo,
+  useState,
+  useTransition,
+} from 'react'
 import type { CSSProperties, MouseEvent } from 'react'
-import { motion } from 'framer-motion'
 import {
   ArrowLeft,
   ArrowUpDown,
@@ -49,6 +55,15 @@ interface CollectionCount {
   pinned: number
   readLater: number
   categories: Map<string, number>
+}
+
+interface LibraryBookmarkCardProps {
+  bookmark: Bookmark
+  category?: Category
+  view: LibraryView
+  isInternal: boolean
+  onContextMenu: (event: MouseEvent, bookmark: Bookmark) => void
+  onSelectTag: (tag: string | null) => void
 }
 
 const LIBRARY_VIEW_KEY = 'nowen-library-view-v1'
@@ -109,7 +124,7 @@ function bookmarkInitial(bookmark: Bookmark) {
   return Array.from(source)[0]?.toUpperCase() || '↗'
 }
 
-function BookmarkMark({ bookmark }: { bookmark: Bookmark }) {
+const BookmarkMark = memo(function BookmarkMark({ bookmark }: { bookmark: Bookmark }) {
   const primaryImage = bookmark.iconUrl || (!bookmark.icon ? bookmark.favicon : undefined)
   const fallbackImage = bookmark.iconUrl && bookmark.favicon ? bookmark.favicon : undefined
   const [imageSource, setImageSource] = useState(primaryImage)
@@ -150,23 +165,16 @@ function BookmarkMark({ bookmark }: { bookmark: Bookmark }) {
       {bookmarkInitial(bookmark)}
     </span>
   )
-}
+})
 
-function LibraryBookmarkCard({
+const LibraryBookmarkCard = memo(function LibraryBookmarkCard({
   bookmark,
   category,
   view,
   isInternal,
   onContextMenu,
   onSelectTag,
-}: {
-  bookmark: Bookmark
-  category?: Category
-  view: LibraryView
-  isInternal: boolean
-  onContextMenu: (event: MouseEvent, bookmark: Bookmark) => void
-  onSelectTag: (tag: string | null) => void
-}) {
+}: LibraryBookmarkCardProps) {
   const hostname = safeHostname(bookmark.url)
   const normalizedCategoryName = category?.name?.trim().toLocaleLowerCase()
   const dedupedTags = useMemo(() => {
@@ -174,22 +182,26 @@ function LibraryBookmarkCard({
     if (!normalizedCategoryName) return tags
     return tags.filter((tag) => tag.trim().toLocaleLowerCase() !== normalizedCategoryName)
   }, [bookmark.tags, normalizedCategoryName])
-  const visibleTags = dedupedTags.slice(0, view === 'grid' ? 2 : 3)
+  const visibleTags = dedupedTags.slice(0, view === 'grid' ? 1 : 2)
   const overflowCount = dedupedTags.length - visibleTags.length
 
-  const openBookmark = () => {
+  const openBookmark = useCallback(() => {
     visitsApi.track(bookmark.id).catch(console.error)
     window.open(getBookmarkUrl(bookmark, isInternal), '_blank', 'noopener,noreferrer')
-  }
+  }, [bookmark, isInternal])
+
+  const handleContextMenu = useCallback((event: MouseEvent) => {
+    onContextMenu(event, bookmark)
+  }, [bookmark, onContextMenu])
 
   return (
-    <motion.article layout className={`bookmark-library-card bookmark-library-card--${view}`}>
+    <article className={`bookmark-library-card bookmark-library-card--${view}`}>
       <SpotlightCard
+        lightweight
         className="bookmark-library-card__surface h-full"
         size={view === 'grid' ? 'md' : 'sm'}
-        spotlightColor={category?.color ? `${category.color}20` : 'rgba(129, 140, 248, 0.14)'}
         onClick={openBookmark}
-        onContextMenu={(event) => onContextMenu(event, bookmark)}
+        onContextMenu={handleContextMenu}
         ariaLabel={`打开书签：${bookmark.title}`}
       >
         <div className="bookmark-library-card__content">
@@ -242,9 +254,9 @@ function LibraryBookmarkCard({
           </div>
         )}
       </SpotlightCard>
-    </motion.article>
+    </article>
   )
-}
+})
 
 export function BookmarkLibrary({
   bookmarks,
@@ -262,6 +274,8 @@ export function BookmarkLibrary({
 }: BookmarkLibraryProps) {
   const { t } = useTranslation()
   const [query, setQuery] = useState('')
+  const deferredQuery = useDeferredValue(query)
+  const [isPending, startTransition] = useTransition()
   const [view, setView] = useState<LibraryView>(() =>
     readStoredValue(LIBRARY_VIEW_KEY, ['grid', 'list'] as const, 'grid'),
   )
@@ -290,10 +304,14 @@ export function BookmarkLibrary({
     return { pinned, readLater, categories: categoryCounts }
   }, [bookmarks])
 
+  const visibleCategories = useMemo(
+    () => categories.filter((category) => (counts.categories.get(category.id) || 0) > 0),
+    [categories, counts.categories],
+  )
   const tagStats = useMemo(() => buildTagStats(bookmarks), [bookmarks])
 
   const filteredBookmarks = useMemo(() => {
-    const normalizedQuery = query.trim().toLocaleLowerCase()
+    const normalizedQuery = deferredQuery.trim().toLocaleLowerCase()
     const filtered = bookmarks.filter((bookmark) => {
       const matchesCollection = activeCollection === 'all'
         || (activeCollection === 'pinned' && bookmark.isPinned)
@@ -324,7 +342,7 @@ export function BookmarkLibrary({
       if (!left.isPinned && right.isPinned) return 1
       return left.orderIndex - right.orderIndex
     })
-  }, [activeCollection, activeTag, bookmarks, categoryMap, query, sortMode])
+  }, [activeCollection, activeTag, bookmarks, categoryMap, deferredQuery, sortMode])
 
   const activeCollectionLabel = useMemo(() => {
     if (activeCollection === 'pinned') return t('sidebar.pinned', '常用')
@@ -333,42 +351,39 @@ export function BookmarkLibrary({
     return categoryMap.get(activeCollection)?.name || t('bookmark.all', '全部书签')
   }, [activeCollection, categoryMap, t])
 
-  const updateView = (nextView: LibraryView) => {
-    setView(nextView)
+  const updateView = useCallback((nextView: LibraryView) => {
+    if (nextView === view) return
     writeStoredValue(LIBRARY_VIEW_KEY, nextView)
-  }
+    startTransition(() => setView(nextView))
+  }, [view])
 
-  const updateSort = (nextSort: SortMode) => {
-    setSortMode(nextSort)
+  const updateSort = useCallback((nextSort: SortMode) => {
+    if (nextSort === sortMode) return
     writeStoredValue(LIBRARY_SORT_KEY, nextSort)
-  }
+    startTransition(() => setSortMode(nextSort))
+  }, [sortMode])
 
-  const selectCollection = (collection: BookmarkCollectionId) => {
+  const selectCollection = useCallback((collection: BookmarkCollectionId) => {
     onSelectCollection(collection)
     setQuery('')
-  }
+  }, [onSelectCollection])
 
-  const selectTag = (tag: string | null) => {
+  const selectTag = useCallback((tag: string | null) => {
     onSelectTag(tag)
     setQuery('')
-  }
+  }, [onSelectTag])
 
-  const clearFilters = () => {
+  const clearFilters = useCallback(() => {
     setQuery('')
     if (activeTag) {
       onSelectTag(null)
     } else if (activeCollection !== 'all') {
       onSelectCollection('all')
     }
-  }
+  }, [activeCollection, activeTag, onSelectCollection, onSelectTag])
 
   return (
-    <motion.section
-      className="bookmark-library"
-      initial={{ opacity: 0, y: 14 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-    >
+    <section className={`bookmark-library${isPending ? ' is-updating' : ''}`} aria-busy={isPending}>
       <header className="bookmark-library__header">
         <div className="bookmark-library__title-block">
           <button type="button" className="bookmark-library__back" onClick={onBack} aria-label="返回首页">
@@ -409,7 +424,7 @@ export function BookmarkLibrary({
             {t('readLater.title', '稍后阅读')} <small>{counts.readLater}</small>
           </button>
         )}
-        {categories.filter((category) => (counts.categories.get(category.id) || 0) > 0).map((category) => (
+        {visibleCategories.map((category) => (
           <button key={category.id} type="button" className={activeCollection === category.id ? 'is-active' : undefined} onClick={() => selectCollection(category.id)}>
             {category.name} <small>{counts.categories.get(category.id)}</small>
           </button>
@@ -443,7 +458,7 @@ export function BookmarkLibrary({
 
           <nav aria-label="书签分类">
             <p className="bookmark-library__section-label">{t('bookmark.categories', '分类')}</p>
-            {categories.filter((category) => (counts.categories.get(category.id) || 0) > 0).map((category) => (
+            {visibleCategories.map((category) => (
               <button key={category.id} type="button" className={activeCollection === category.id ? 'is-active' : undefined} onClick={() => selectCollection(category.id)}>
                 <span className="bookmark-library__category-dot" style={{ background: category.color || '#818cf8' }} />
                 <IconRenderer icon={category.icon} className="h-4 w-4" />
@@ -519,10 +534,7 @@ export function BookmarkLibrary({
               </div>
             </div>
             {(activeTag || activeCollection !== 'all' || query) && (
-              <button
-                type="button"
-                onClick={clearFilters}
-              >
+              <button type="button" onClick={clearFilters}>
                 {t('library.clearFilters', '清除筛选')}
               </button>
             )}
@@ -547,17 +559,14 @@ export function BookmarkLibrary({
               <span><Search className="h-6 w-6" /></span>
               <h3>{t('library.emptyTitle', '没有找到匹配的书签')}</h3>
               <p>{t('library.emptyDescription', '尝试更换分类、标签或搜索关键词')}</p>
-              <button
-                type="button"
-                onClick={clearFilters}
-              >
+              <button type="button" onClick={clearFilters}>
                 {t('library.showAll', '查看全部书签')}
               </button>
             </div>
           )}
         </main>
       </div>
-    </motion.section>
+    </section>
   )
 }
 
