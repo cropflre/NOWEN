@@ -4,6 +4,13 @@ on:
   push:
     branches:
       - feat/bookmark-list-pagination
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - ready_for_review
 
 permissions:
   contents: write
