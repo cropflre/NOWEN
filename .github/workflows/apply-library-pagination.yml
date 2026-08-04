@@ -1,0 +1,501 @@
+name: Apply bookmark library pagination
+
+on:
+  push:
+    branches:
+      - feat/ambient-homepage-v1
+
+permissions:
+  contents: write
+
+jobs:
+  apply-and-validate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout feature branch
+        uses: actions/checkout@v4
+        with:
+          ref: feat/ambient-homepage-v1
+          fetch-depth: 0
+
+      - name: Apply pagination implementation
+        shell: bash
+        run: |
+          python <<'PY'
+          from pathlib import Path
+
+          page = Path('src/pages/BookmarkLibrary.tsx')
+          source = page.read_text(encoding='utf-8')
+
+          replacements = [
+              (
+                  "  useDeferredValue,\n  useMemo,\n  useState,\n",
+                  "  useDeferredValue,\n  useEffect,\n  useMemo,\n  useRef,\n  useState,\n",
+              ),
+              (
+                  "  ArrowUpDown,\n  Clock3,\n",
+                  "  ArrowUpDown,\n  ChevronLeft,\n  ChevronRight,\n  Clock3,\n",
+              ),
+              (
+                  "  List,\n  Lock,\n",
+                  "  List,\n  Lock,\n  MoreHorizontal,\n",
+              ),
+          ]
+          for old, new in replacements:
+              if source.count(old) != 1:
+                  raise SystemExit(f'BookmarkLibrary import anchor mismatch: {old!r}')
+              source = source.replace(old, new, 1)
+
+          constants_anchor = "const LIBRARY_VIEW_KEY = 'nowen-library-view-v1'\nconst LIBRARY_SORT_KEY = 'nowen-library-sort-v1'\n"
+          constants_replacement = """const LIBRARY_VIEW_KEY = 'nowen-library-view-v1'
+          const LIBRARY_SORT_KEY = 'nowen-library-sort-v1'
+          const LIBRARY_PAGE_SIZE_KEY = 'nowen-library-page-size-v1'
+          const LIBRARY_PAGE_SIZE_OPTIONS = [20, 40, 80] as const
+
+          type PaginationItem = number | 'ellipsis-start' | 'ellipsis-end'
+
+          function readStoredPageSize() {
+            if (typeof window === 'undefined') return LIBRARY_PAGE_SIZE_OPTIONS[0]
+
+            try {
+              const value = Number(window.localStorage.getItem(LIBRARY_PAGE_SIZE_KEY))
+              return LIBRARY_PAGE_SIZE_OPTIONS.includes(value as (typeof LIBRARY_PAGE_SIZE_OPTIONS)[number])
+                ? value
+                : LIBRARY_PAGE_SIZE_OPTIONS[0]
+            } catch {
+              return LIBRARY_PAGE_SIZE_OPTIONS[0]
+            }
+          }
+
+          function buildPaginationItems(currentPage: number, totalPages: number): PaginationItem[] {
+            if (totalPages <= 7) {
+              return Array.from({ length: totalPages }, (_, index) => index + 1)
+            }
+
+            const page = Math.min(Math.max(currentPage, 1), totalPages)
+            const items: PaginationItem[] = [1]
+            let start = Math.max(2, page - 1)
+            let end = Math.min(totalPages - 1, page + 1)
+
+            if (page <= 4) {
+              start = 2
+              end = 5
+            } else if (page >= totalPages - 3) {
+              start = totalPages - 4
+              end = totalPages - 1
+            }
+
+            if (start > 2) items.push('ellipsis-start')
+            for (let value = start; value <= end; value += 1) items.push(value)
+            if (end < totalPages - 1) items.push('ellipsis-end')
+            items.push(totalPages)
+            return items
+          }
+          """
+          if source.count(constants_anchor) != 1:
+              raise SystemExit('BookmarkLibrary constants anchor mismatch')
+          source = source.replace(constants_anchor, constants_replacement, 1)
+
+          state_anchor = """  const [sortMode, setSortMode] = useState<SortMode>(() =>
+            readStoredValue(LIBRARY_SORT_KEY, ['custom', 'title', 'updated'] as const, 'custom'),
+          )
+          """
+          state_replacement = state_anchor + """  const [pageSize, setPageSize] = useState(readStoredPageSize)
+            const [currentPage, setCurrentPage] = useState(1)
+            const contentRef = useRef<HTMLElement>(null)
+          """
+          if source.count(state_anchor) != 1:
+              raise SystemExit('BookmarkLibrary state anchor mismatch')
+          source = source.replace(state_anchor, state_replacement, 1)
+
+          logic_anchor = """  const activeCollectionLabel = useMemo(() => {
+          """
+          logic_block = """  const totalPages = Math.max(1, Math.ceil(filteredBookmarks.length / pageSize))
+            const safeCurrentPage = Math.min(currentPage, totalPages)
+            const pageStart = (safeCurrentPage - 1) * pageSize
+            const paginatedBookmarks = useMemo(
+              () => filteredBookmarks.slice(pageStart, pageStart + pageSize),
+              [filteredBookmarks, pageSize, pageStart],
+            )
+            const paginationItems = useMemo(
+              () => buildPaginationItems(safeCurrentPage, totalPages),
+              [safeCurrentPage, totalPages],
+            )
+            const showPagination = filteredBookmarks.length > LIBRARY_PAGE_SIZE_OPTIONS[0]
+            const visibleRangeStart = filteredBookmarks.length === 0 ? 0 : pageStart + 1
+            const visibleRangeEnd = Math.min(pageStart + pageSize, filteredBookmarks.length)
+
+            useEffect(() => {
+              setCurrentPage(1)
+            }, [activeCollection, activeTag, deferredQuery, sortMode, view])
+
+            useEffect(() => {
+              setCurrentPage((previousPage) => Math.min(previousPage, totalPages))
+            }, [totalPages])
+
+          """ + logic_anchor
+          if source.count(logic_anchor) != 1:
+              raise SystemExit('BookmarkLibrary pagination logic anchor mismatch')
+          source = source.replace(logic_anchor, logic_block, 1)
+
+          handlers_anchor = """  const clearFilters = useCallback(() => {
+            setQuery('')
+            if (activeTag) {
+              onSelectTag(null)
+            } else if (activeCollection !== 'all') {
+              onSelectCollection('all')
+            }
+          }, [activeCollection, activeTag, onSelectCollection, onSelectTag])
+
+          """
+          handlers_replacement = handlers_anchor + """  const scrollToResults = useCallback(() => {
+            const scroll = () => contentRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'start' })
+            if (typeof window.requestAnimationFrame === 'function') {
+              window.requestAnimationFrame(scroll)
+            } else {
+              scroll()
+            }
+          }, [])
+
+            const changePage = useCallback((nextPage: number) => {
+              const clampedPage = Math.min(Math.max(nextPage, 1), totalPages)
+              if (clampedPage === safeCurrentPage) return
+              setCurrentPage(clampedPage)
+              scrollToResults()
+            }, [safeCurrentPage, scrollToResults, totalPages])
+
+            const changePageSize = useCallback((nextPageSize: number) => {
+              setPageSize(nextPageSize)
+              setCurrentPage(1)
+              writeStoredValue(LIBRARY_PAGE_SIZE_KEY, String(nextPageSize))
+              scrollToResults()
+            }, [scrollToResults])
+
+          """
+          if source.count(handlers_anchor) != 1:
+              raise SystemExit('BookmarkLibrary handlers anchor mismatch')
+          source = source.replace(handlers_anchor, handlers_replacement, 1)
+
+          main_anchor = '<main className="bookmark-library__content">'
+          if source.count(main_anchor) != 1:
+              raise SystemExit('BookmarkLibrary main anchor mismatch')
+          source = source.replace(main_anchor, '<main ref={contentRef} className="bookmark-library__content">', 1)
+
+          results_anchor = """              {filteredBookmarks.map((bookmark) => (
+          """
+          if source.count(results_anchor) != 1:
+              raise SystemExit('BookmarkLibrary result map anchor mismatch')
+          source = source.replace(results_anchor, """              {paginatedBookmarks.map((bookmark) => (
+          """, 1)
+
+          footer_anchor = """              ))}
+            </div>
+          ) : (
+          """
+          footer_replacement = """              ))}
+            </div>
+          ) : (
+          """
+          if source.count(footer_anchor) != 1:
+              raise SystemExit('BookmarkLibrary result footer anchor mismatch')
+
+          # Insert the pagination after the result/empty conditional so the footer stays stable.
+          conditional_end_anchor = """          )}
+        </main>
+          """
+          pagination_markup = """          )}
+
+            {showPagination && (
+              <footer className="bookmark-library__pagination">
+                <div className="bookmark-library__pagination-meta">
+                  <span>
+                    {t('admin.bookmark.pagination_info', {
+                      start: visibleRangeStart,
+                      end: visibleRangeEnd,
+                      total: filteredBookmarks.length,
+                    })}
+                  </span>
+                  <label>
+                    <span>{t('admin.bookmark.page_size_label', '每页')}</span>
+                    <select
+                      value={pageSize}
+                      onChange={(event) => changePageSize(Number(event.target.value))}
+                      aria-label={t('library.pageSize', '每页显示数量')}
+                    >
+                      {LIBRARY_PAGE_SIZE_OPTIONS.map((option) => (
+                        <option key={option} value={option}>{option}</option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+
+                <nav className="bookmark-library__pagination-controls" aria-label={t('library.pagination', '书签分页')}>
+                  <button
+                    type="button"
+                    onClick={() => changePage(safeCurrentPage - 1)}
+                    disabled={safeCurrentPage === 1}
+                    aria-label={t('library.previousPage', '上一页')}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+
+                  <div className="bookmark-library__pagination-pages">
+                    {paginationItems.map((item) => typeof item === 'number' ? (
+                      <button
+                        key={item}
+                        type="button"
+                        className={item === safeCurrentPage ? 'is-active' : undefined}
+                        aria-current={item === safeCurrentPage ? 'page' : undefined}
+                        aria-label={`${t('library.page', '第')} ${item} ${t('library.pageSuffix', '页')}`}
+                        onClick={() => changePage(item)}
+                      >
+                        {item}
+                      </button>
+                    ) : (
+                      <span key={item} aria-hidden="true"><MoreHorizontal className="h-4 w-4" /></span>
+                    ))}
+                  </div>
+
+                  <span className="bookmark-library__pagination-status">
+                    {safeCurrentPage} / {totalPages}
+                  </span>
+
+                  <button
+                    type="button"
+                    onClick={() => changePage(safeCurrentPage + 1)}
+                    disabled={safeCurrentPage === totalPages}
+                    aria-label={t('library.nextPage', '下一页')}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </nav>
+              </footer>
+            )}
+          </main>
+          """
+          if source.count(conditional_end_anchor) != 1:
+              raise SystemExit('BookmarkLibrary conditional end anchor mismatch')
+          source = source.replace(conditional_end_anchor, pagination_markup, 1)
+
+          page.write_text(source, encoding='utf-8')
+
+          css = Path('src/styles/bookmark-library.css')
+          css_source = css.read_text(encoding='utf-8')
+          css_anchor = '.bookmark-library__empty {\n'
+          css_block = r'''.bookmark-library__pagination {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-top: 1.15rem;
+            padding: 0.9rem 0.95rem;
+            border: 1px solid color-mix(in srgb, var(--color-glass-border) 88%, transparent);
+            border-radius: 1rem;
+            background: color-mix(in srgb, var(--color-bg-tertiary) 62%, transparent);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
+          }
+
+          .bookmark-library__pagination-meta,
+          .bookmark-library__pagination-meta label,
+          .bookmark-library__pagination-controls,
+          .bookmark-library__pagination-pages {
+            display: flex;
+            align-items: center;
+          }
+
+          .bookmark-library__pagination-meta {
+            gap: 0.9rem;
+            color: var(--color-text-muted);
+            font-size: 0.68rem;
+            font-variant-numeric: tabular-nums;
+          }
+
+          .bookmark-library__pagination-meta label {
+            gap: 0.4rem;
+          }
+
+          .bookmark-library__pagination-meta select {
+            min-width: 4.1rem;
+            height: 2.1rem;
+            border: 1px solid var(--color-glass-border);
+            border-radius: 0.7rem;
+            outline: none;
+            background: var(--color-bg-secondary);
+            color: var(--color-text-secondary);
+            font-size: 0.68rem;
+            padding: 0 0.55rem;
+          }
+
+          .bookmark-library__pagination-controls {
+            gap: 0.35rem;
+          }
+
+          .bookmark-library__pagination-controls > button,
+          .bookmark-library__pagination-pages button,
+          .bookmark-library__pagination-pages > span {
+            display: inline-grid;
+            width: 2.15rem;
+            height: 2.15rem;
+            place-items: center;
+            border-radius: 0.7rem;
+          }
+
+          .bookmark-library__pagination-controls > button,
+          .bookmark-library__pagination-pages button {
+            border: 1px solid var(--color-glass-border);
+            background: color-mix(in srgb, var(--color-glass) 74%, transparent);
+            color: var(--color-text-secondary);
+            font-size: 0.68rem;
+            font-weight: 650;
+            font-variant-numeric: tabular-nums;
+            transition: transform 160ms ease, border-color 160ms ease, background 160ms ease, color 160ms ease;
+          }
+
+          .bookmark-library__pagination-controls > button:hover:not(:disabled),
+          .bookmark-library__pagination-pages button:hover {
+            transform: translateY(-1px);
+            border-color: color-mix(in srgb, var(--color-primary) 30%, var(--color-glass-border));
+            color: var(--color-primary);
+          }
+
+          .bookmark-library__pagination-pages button.is-active {
+            border-color: color-mix(in srgb, var(--color-primary) 64%, transparent);
+            background: var(--color-primary);
+            color: white;
+            box-shadow: 0 8px 22px color-mix(in srgb, var(--color-primary) 24%, transparent);
+          }
+
+          .bookmark-library__pagination-controls > button:disabled {
+            cursor: not-allowed;
+            opacity: 0.34;
+          }
+
+          .bookmark-library__pagination-pages {
+            gap: 0.3rem;
+          }
+
+          .bookmark-library__pagination-pages > span {
+            color: var(--color-text-muted);
+          }
+
+          .bookmark-library__pagination-status {
+            display: none;
+            min-width: 3.4rem;
+            color: var(--color-text-secondary);
+            font-size: 0.7rem;
+            font-weight: 650;
+            text-align: center;
+            font-variant-numeric: tabular-nums;
+          }
+
+          @media (max-width: 639px) {
+            .bookmark-library__pagination {
+              align-items: stretch;
+              flex-direction: column;
+              gap: 0.75rem;
+              padding: 0.8rem;
+            }
+
+            .bookmark-library__pagination-meta {
+              justify-content: space-between;
+            }
+
+            .bookmark-library__pagination-controls {
+              justify-content: space-between;
+            }
+
+            .bookmark-library__pagination-pages {
+              display: none;
+            }
+
+            .bookmark-library__pagination-status {
+              display: block;
+            }
+
+            .bookmark-library__pagination-controls > button {
+              width: 2.5rem;
+            }
+          }
+
+          '''
+          if css_source.count(css_anchor) != 1:
+              raise SystemExit('BookmarkLibrary CSS anchor mismatch')
+          css_source = css_source.replace(css_anchor, css_block + css_anchor, 1)
+          css.write_text(css_source, encoding='utf-8')
+
+          test = Path('src/pages/__tests__/BookmarkLibrary.test.tsx')
+          test_source = test.read_text(encoding='utf-8')
+          test_anchor = """  it('persists the preferred list view', async () => {
+            const { getByTitle } = render(<BookmarkLibrary {...baseProps} />)
+            fireEvent.click(getByTitle('列表视图'))
+
+            await waitFor(() => {
+              expect(window.localStorage.getItem('nowen-library-view-v1')).toBe('list')
+            })
+          })
+          """
+          test_block = test_anchor + """
+
+            it('paginates large result sets and keeps page-size controls available', async () => {
+              const manyBookmarks: Bookmark[] = Array.from({ length: 25 }, (_, index) => ({
+                id: `bookmark-${index + 1}`,
+                url: `https://example.com/${index + 1}`,
+                title: `Bookmark ${String(index + 1).padStart(2, '0')}`,
+                orderIndex: index,
+                createdAt: 1,
+                updatedAt: index + 1,
+              }))
+
+              const { getByRole, queryByRole } = render(
+                <BookmarkLibrary {...baseProps} bookmarks={manyBookmarks} categories={[]} />,
+              )
+
+              expect(getByRole('heading', { name: 'Bookmark 01' })).toBeTruthy()
+              expect(getByRole('heading', { name: 'Bookmark 20' })).toBeTruthy()
+              expect(queryByRole('heading', { name: 'Bookmark 21' })).toBeNull()
+
+              fireEvent.click(getByRole('button', { name: '下一页' }))
+
+              await waitFor(() => {
+                expect(getByRole('heading', { name: 'Bookmark 21' })).toBeTruthy()
+                expect(queryByRole('heading', { name: 'Bookmark 01' })).toBeNull()
+              })
+
+              fireEvent.change(getByRole('combobox', { name: '每页显示数量' }), {
+                target: { value: '40' },
+              })
+
+              await waitFor(() => {
+                expect(getByRole('heading', { name: 'Bookmark 01' })).toBeTruthy()
+                expect(getByRole('heading', { name: 'Bookmark 25' })).toBeTruthy()
+                expect(window.localStorage.getItem('nowen-library-page-size-v1')).toBe('40')
+              })
+            })
+          """
+          if test_source.count(test_anchor) != 1:
+              raise SystemExit('BookmarkLibrary test anchor mismatch')
+          test_source = test_source.replace(test_anchor, test_block, 1)
+          test.write_text(test_source, encoding='utf-8')
+          PY
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run bookmark library tests
+        run: npm run test:run -- src/pages/__tests__/BookmarkLibrary.test.tsx
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Commit pagination implementation
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/pages/BookmarkLibrary.tsx src/styles/bookmark-library.css src/pages/__tests__/BookmarkLibrary.test.tsx
+          git diff --cached --check
+          git commit -m "feat(library): add responsive bookmark pagination"
+          git push origin HEAD:feat/ambient-homepage-v1
