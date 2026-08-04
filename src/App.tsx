@@ -7,8 +7,6 @@ import {
   Pin,
   ExternalLink,
   Edit2,
-  ChevronDown,
-  ChevronUp,
   LayoutGrid,
   Grid3X3,
   StretchHorizontal,
@@ -34,6 +32,7 @@ import { Meteors } from "./components/ui/effects";
 import { BreathingDot } from "./components/ui/advanced-effects";
 import { ScrollToTop } from "./components/ui/scroll-to-top";
 import { SidebarNav } from "./components/ui/sidebar-nav";
+import { Pagination } from "./components/ui/pagination";
 
 // 业务组件
 import { AddBookmarkModal } from "./components/AddBookmarkModal";
@@ -973,6 +972,7 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
                   totalBookmarkCount={visibleBookmarks.length}
                   collapseThreshold={categoryCollapseThreshold}
                   initialShowCount={categoryInitialShowCount}
+                  paginationKey={activeTag || 'all'}
                   cardViewMode={cardViewMode}
                   onContextMenu={handleContextMenu}
                   onEditCategory={(cat) => {
@@ -1487,7 +1487,7 @@ function WidgetSizeModeToggle({
   );
 }
 
-// ========== 分类区组件（支持折叠展开 + 懒渲染） ==========
+// ========== 分类区组件（支持分页 + 懒渲染） ==========
 function CategorySection({
   category,
   categoryBookmarks,
@@ -1497,6 +1497,7 @@ function CategorySection({
   totalBookmarkCount,
   collapseThreshold,
   initialShowCount,
+  paginationKey,
   cardViewMode = 'standard',
   onContextMenu,
   onEditCategory,
@@ -1512,6 +1513,7 @@ function CategorySection({
   totalBookmarkCount: number;
   collapseThreshold: number;
   initialShowCount: number;
+  paginationKey: string;
   cardViewMode?: 'compact' | 'standard' | 'comfortable';
   onContextMenu: (e: React.MouseEvent, bookmark: Bookmark) => void;
   onEditCategory: (cat: import("./types/bookmark").Category) => void;
@@ -1519,39 +1521,72 @@ function CategorySection({
   onTagSelect: (tag: string) => void;
   isLoggedIn?: boolean;
 }) {
-  const { t } = useTranslation();
-  const PAGE_SIZE = 100; // 每次点击加载更多的数量
-  const baseShowCount = initialShowCount || 8;
-  const needsCollapse = collapseThreshold > 0 && categoryBookmarks.length > collapseThreshold;
-  const [displayCount, setDisplayCount] = useState(needsCollapse ? baseShowCount : categoryBookmarks.length);
+  const configuredPageSize = Math.max(10, initialShowCount || 10);
+  const paginationThreshold = collapseThreshold > 0
+    ? Math.max(collapseThreshold, configuredPageSize)
+    : configuredPageSize;
+  const [pageSize, setPageSize] = useState(configuredPageSize);
+  const [currentPage, setCurrentPage] = useState(1);
 
-  // 当书签数量变化时（如新增/删除书签），自动更新显示数量
   useEffect(() => {
-    if (!needsCollapse) {
-      // 不需要折叠时，显示全部
-      setDisplayCount(categoryBookmarks.length);
-    } else {
-      // 需要折叠时，确保 displayCount 不超过实际数量
-      setDisplayCount(prev => Math.min(prev, categoryBookmarks.length));
-    }
-  }, [categoryBookmarks.length, needsCollapse]);
+    setPageSize(configuredPageSize);
+    setCurrentPage(1);
+  }, [configuredPageSize]);
 
-  const isFullyExpanded = displayCount >= categoryBookmarks.length;
-  const visibleBookmarks = isFullyExpanded ? categoryBookmarks : categoryBookmarks.slice(0, displayCount);
-  const hiddenCount = categoryBookmarks.length - displayCount;
+  // 标签筛选发生变化时，每个分类都从第一页重新开始。
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [paginationKey]);
+
+  const needsPagination = categoryBookmarks.length > paginationThreshold;
+  const totalPages = needsPagination
+    ? Math.max(1, Math.ceil(categoryBookmarks.length / pageSize))
+    : 1;
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const pageStart = (safeCurrentPage - 1) * pageSize;
+  const visibleBookmarks = needsPagination
+    ? categoryBookmarks.slice(pageStart, pageStart + pageSize)
+    : categoryBookmarks;
+
+  // 删除当前页最后一项后，自动回到仍然有效的最后一页。
+  useEffect(() => {
+    setCurrentPage((previousPage) => Math.min(previousPage, totalPages));
+  }, [totalPages]);
 
   // 懒渲染：前2个分类立即渲染，后续分类进入视口时才渲染
   const [lazyRef, shouldRender] = useLazyRender('300px');
-  const isEager = catIndex < 2; // 前2个分类立即渲染，无需等待
+  const isEager = catIndex < 2;
   const doRender = isEager || shouldRender;
 
   // 轻量模式：总书签超过 50 个时启用，减少 framer-motion 和 spotlight 开销
   const lightweight = totalBookmarkCount > 50;
 
+  const scrollToCategory = useCallback(() => {
+    window.requestAnimationFrame(() => {
+      const section = document.getElementById(`category-${category.id}`);
+      if (!section) return;
+
+      const top = section.getBoundingClientRect().top + window.scrollY - 96;
+      window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+    });
+  }, [category.id]);
+
+  const handlePageChange = useCallback((nextPage: number) => {
+    setCurrentPage(nextPage);
+    scrollToCategory();
+  }, [scrollToCategory]);
+
+  const handlePageSizeChange = useCallback((nextPageSize: number) => {
+    setPageSize(nextPageSize);
+    setCurrentPage(1);
+    scrollToCategory();
+  }, [scrollToCategory]);
+
   return (
     <motion.section
+      id={`category-${category.id}`}
       ref={isEager ? undefined : lazyRef}
-      className="mb-12 relative group"
+      className="mb-12 relative group scroll-mt-24"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: Math.min(1.2 + catIndex * 0.1, 1.8) }}
@@ -1577,13 +1612,13 @@ function CategorySection({
         <h2 className="text-xl font-medium tracking-wide" style={{ color: "var(--color-text-primary)" }}>
           {category.name}
         </h2>
-        <span className="text-sm" style={{ color: "var(--color-text-muted)" }}>
+        <span className="text-sm tabular-nums" style={{ color: "var(--color-text-muted)" }}>
           {categoryBookmarks.length}
         </span>
         {isLoggedIn && (
           <button
             onClick={() => onEditCategory(category)}
-            className="ml-2 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-white/10 transition-all"
+            className="ml-2 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-white/10 transition-all focus:opacity-100"
             style={{ color: "var(--color-text-muted)" }}
             title="编辑分类"
           >
@@ -1591,9 +1626,10 @@ function CategorySection({
           </button>
         )}
         {/* 视图切换已迁移到菜单栏 */}
+        {onViewModeChange ? null : null}
       </div>
 
-      <SortableContext items={visibleBookmarks.map(b => b.id)} strategy={rectSortingStrategy}>
+      <SortableContext items={visibleBookmarks.map((bookmark) => bookmark.id)} strategy={rectSortingStrategy}>
         <div className={`${VIEW_MODE_CONFIG[cardViewMode].gridClass} relative z-10`}>
           {doRender ? visibleBookmarks.map((bookmark, index) => (
             <MemoizedBookmarkItem
@@ -1614,41 +1650,21 @@ function CategorySection({
 
       {/* 骨架屏：懒渲染未激活时显示 */}
       {!doRender && (
-        <CategorySkeleton count={categoryBookmarks.length} color={category.color || '#667eea'} cardViewMode={cardViewMode} />
+        <CategorySkeleton
+          count={Math.min(pageSize, categoryBookmarks.length)}
+          color={category.color || '#667eea'}
+          cardViewMode={cardViewMode}
+        />
       )}
 
-      {/* 展开/折叠按钮 */}
-      {doRender && needsCollapse && !isFullyExpanded && (
-        <div className="flex justify-center mt-4 relative z-10">
-          <button
-            onClick={() => setDisplayCount(prev => Math.min(prev + PAGE_SIZE, categoryBookmarks.length))}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all hover:scale-105 active:scale-95 backdrop-blur-sm"
-            style={{
-              background: 'var(--color-glass)',
-              border: '1px solid var(--color-glass-border)',
-              color: 'var(--color-text-secondary)',
-            }}
-          >
-            <ChevronDown className="w-4 h-4" />
-            {t('bookmark.show_more', '展开更多')} ({hiddenCount})
-          </button>
-        </div>
-      )}
-      {doRender && needsCollapse && isFullyExpanded && displayCount !== baseShowCount && (
-        <div className="flex justify-center mt-4 relative z-10">
-          <button
-            onClick={() => setDisplayCount(baseShowCount)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all hover:scale-105 active:scale-95 backdrop-blur-sm"
-            style={{
-              background: 'var(--color-glass)',
-              border: '1px solid var(--color-glass-border)',
-              color: 'var(--color-text-secondary)',
-            }}
-          >
-            <ChevronUp className="w-4 h-4" />
-            {t('bookmark.collapse', '收起')}
-          </button>
-        </div>
+      {doRender && needsPagination && (
+        <Pagination
+          page={safeCurrentPage}
+          pageSize={pageSize}
+          total={categoryBookmarks.length}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+        />
       )}
     </motion.section>
   );
