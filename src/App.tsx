@@ -980,7 +980,6 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
                     setCategoryModalMode('edit');
                     setIsCategoryModalOpen(true);
                   }}
-                  onViewModeChange={handleCardViewModeChange}
                   onTagSelect={handleTagSelect}
                   isLoggedIn={isLoggedIn}
                 />
@@ -1501,7 +1500,6 @@ function CategorySection({
   cardViewMode = 'standard',
   onContextMenu,
   onEditCategory,
-  onViewModeChange,
   onTagSelect,
   isLoggedIn,
 }: {
@@ -1517,7 +1515,6 @@ function CategorySection({
   cardViewMode?: 'compact' | 'standard' | 'comfortable';
   onContextMenu: (e: React.MouseEvent, bookmark: Bookmark) => void;
   onEditCategory: (cat: import("./types/bookmark").Category) => void;
-  onViewModeChange?: (mode: 'compact' | 'standard' | 'comfortable') => void;
   onTagSelect: (tag: string) => void;
   isLoggedIn?: boolean;
 }) {
@@ -1626,7 +1623,6 @@ function CategorySection({
           </button>
         )}
         {/* 视图切换已迁移到菜单栏 */}
-        {onViewModeChange ? null : null}
       </div>
 
       <SortableContext items={visibleBookmarks.map((bookmark) => bookmark.id)} strategy={rectSortingStrategy}>
