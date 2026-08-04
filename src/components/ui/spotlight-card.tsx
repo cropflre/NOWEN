@@ -75,14 +75,10 @@ export function SpotlightCard({
   }, [])
 
   const handleMouseEnter = useCallback(() => {
-    // The spotlight layers are hidden in the light theme. Do not perform any
-    // pointer tracking or geometry reads when the visual effect cannot appear.
     const shouldTrack = document.documentElement.classList.contains('dark')
     trackingActiveRef.current = shouldTrack
 
     if (shouldTrack && containerRef.current) {
-      // Measure once per hover session. Mouse movement reuses this cached rect
-      // instead of forcing synchronous layout on every animation frame.
       rectRef.current = containerRef.current.getBoundingClientRect()
       setOpacity(1)
       setIsHovered(true)
@@ -170,20 +166,26 @@ export function SpotlightCard({
       <div
         {...interactiveProps}
         data-spotlight-card="true"
+        data-spotlight-profile="lightweight"
         data-spotlight-size={size}
         onMouseDown={handleMouseDown}
         onAuxClick={handleAuxClick}
         onClick={onClick}
         onContextMenu={onContextMenu}
         className={cn(
-          'relative overflow-hidden rounded-2xl backdrop-blur-xl',
-          'transition-all duration-300 hover:-translate-y-1',
+          'relative overflow-hidden rounded-2xl',
+          'transition-[transform,box-shadow,border-color,background-color] duration-200 hover:-translate-y-0.5',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-transparent',
-          onClick && 'cursor-pointer active:scale-[0.98]',
+          onClick && 'cursor-pointer active:scale-[0.99]',
           sizeClasses[size],
           className,
         )}
-        style={commonStyle}
+        style={{
+          ...commonStyle,
+          background: 'color-mix(in srgb, var(--color-glass) 94%, var(--color-bg-primary) 6%)',
+          backdropFilter: 'none',
+          WebkitBackdropFilter: 'none',
+        }}
       >
         <div className="relative z-10">{children}</div>
       </div>
@@ -195,6 +197,7 @@ export function SpotlightCard({
       {...interactiveProps}
       ref={containerRef}
       data-spotlight-card="true"
+      data-spotlight-profile="full"
       data-spotlight-size={size}
       onMouseMove={handleMouseMove}
       onMouseEnter={handleMouseEnter}
