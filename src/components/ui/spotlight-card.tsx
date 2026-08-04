@@ -49,20 +49,55 @@ export function SpotlightCard({
 }: SpotlightCardProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const rafIdRef = useRef<number>(0)
+  const rectRef = useRef<DOMRect | null>(null)
+  const pendingPointerRef = useRef({ x: 0, y: 0 })
+  const trackingActiveRef = useRef(false)
   const [opacity, setOpacity] = useState(0)
   const [isHovered, setIsHovered] = useState(false)
   const shouldOpenOnMiddleClick = openOnMiddleClick ?? Boolean(onContextMenu)
 
   const handleMouseMove = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
-    if (!containerRef.current) return
+    if (!trackingActiveRef.current || !containerRef.current || !rectRef.current) return
 
-    cancelAnimationFrame(rafIdRef.current)
+    pendingPointerRef.current = { x: event.clientX, y: event.clientY }
+    if (rafIdRef.current) return
+
     rafIdRef.current = requestAnimationFrame(() => {
-      if (!containerRef.current) return
-      const rect = containerRef.current.getBoundingClientRect()
-      containerRef.current.style.setProperty('--spotlight-x', `${event.clientX - rect.left}px`)
-      containerRef.current.style.setProperty('--spotlight-y', `${event.clientY - rect.top}px`)
+      rafIdRef.current = 0
+      const container = containerRef.current
+      const rect = rectRef.current
+      if (!container || !rect) return
+
+      const { x, y } = pendingPointerRef.current
+      container.style.setProperty('--spotlight-x', `${x - rect.left}px`)
+      container.style.setProperty('--spotlight-y', `${y - rect.top}px`)
     })
+  }, [])
+
+  const handleMouseEnter = useCallback(() => {
+    // The spotlight layers are hidden in the light theme. Do not perform any
+    // pointer tracking or geometry reads when the visual effect cannot appear.
+    const shouldTrack = document.documentElement.classList.contains('dark')
+    trackingActiveRef.current = shouldTrack
+
+    if (shouldTrack && containerRef.current) {
+      // Measure once per hover session. Mouse movement reuses this cached rect
+      // instead of forcing synchronous layout on every animation frame.
+      rectRef.current = containerRef.current.getBoundingClientRect()
+      setOpacity(1)
+      setIsHovered(true)
+    }
+  }, [])
+
+  const handleMouseLeave = useCallback(() => {
+    trackingActiveRef.current = false
+    rectRef.current = null
+    if (rafIdRef.current) {
+      cancelAnimationFrame(rafIdRef.current)
+      rafIdRef.current = 0
+    }
+    setOpacity(0)
+    setIsHovered(false)
   }, [])
 
   const handleMouseDown = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
@@ -162,14 +197,8 @@ export function SpotlightCard({
       data-spotlight-card="true"
       data-spotlight-size={size}
       onMouseMove={handleMouseMove}
-      onMouseEnter={() => {
-        setOpacity(1)
-        setIsHovered(true)
-      }}
-      onMouseLeave={() => {
-        setOpacity(0)
-        setIsHovered(false)
-      }}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       onMouseDown={handleMouseDown}
       onAuxClick={handleAuxClick}
       onClick={onClick}
