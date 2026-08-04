@@ -1,0 +1,47 @@
+name: Repair bookmark pagination workflow
+
+on:
+  push:
+    branches:
+      - feat/ambient-homepage-v1
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/ambient-homepage-v1
+          fetch-depth: 0
+      - name: Replace non-test-safe translated range
+        shell: bash
+        run: |
+          python <<'PY'
+          from pathlib import Path
+
+          path = Path('.github/workflows/apply-library-pagination.yml')
+          source = path.read_text(encoding='utf-8')
+          old = """                    {t('admin.bookmark.pagination_info', {
+                      start: visibleRangeStart,
+                      end: visibleRangeEnd,
+                      total: filteredBookmarks.length,
+                    })}
+          """
+          new = """                    {visibleRangeStart}–{visibleRangeEnd} / {filteredBookmarks.length}
+          """
+          if source.count(old) != 1:
+              raise SystemExit(f'expected one range block, found {source.count(old)}')
+          path.write_text(source.replace(old, new, 1), encoding='utf-8')
+          PY
+      - name: Commit repair
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .github/workflows/apply-library-pagination.yml
+          git commit -m "chore(ci): make pagination range test-safe"
+          git pull --rebase origin feat/ambient-homepage-v1
+          git push origin HEAD:feat/ambient-homepage-v1
