@@ -6,7 +6,7 @@ on:
     paths-ignore:
       - '*.md'
       - '.gitignore'
-  workflow_dispatch:  # 允许手动触发
+  workflow_dispatch:
 
 env:
   DOCKER_IMAGE: cropflre/nowen
@@ -14,8 +14,8 @@ env:
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
-    timeout-minutes: 60  # ARM64 QEMU 模拟构建较慢，给足时间
-    
+    timeout-minutes: 60
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -32,21 +32,54 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Resolve image tags
+        id: image-tags
+        shell: bash
+        run: |
+          set -euo pipefail
+          {
+            echo 'tags<<EOF'
+            echo "${DOCKER_IMAGE}:${GITHUB_SHA}"
+
+            if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+              if [[ ! "${GITHUB_REF_NAME}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([-.][0-9A-Za-z.-]+)?$ ]]; then
+                echo "Unsupported release tag: ${GITHUB_REF_NAME}" >&2
+                exit 1
+              fi
+              VERSION="${GITHUB_REF_NAME#v}"
+              echo "${DOCKER_IMAGE}:${GITHUB_REF_NAME}"
+              echo "${DOCKER_IMAGE}:${VERSION}"
+              echo "${DOCKER_IMAGE}:latest"
+              echo 'EOF'
+              echo "verify_tag=${DOCKER_IMAGE}:${GITHUB_REF_NAME}"
+              echo "channel=stable"
+            elif [[ "${GITHUB_REF_NAME}" == "main" ]]; then
+              echo "${DOCKER_IMAGE}:edge"
+              echo 'EOF'
+              echo "verify_tag=${DOCKER_IMAGE}:edge"
+              echo "channel=edge"
+            else
+              echo 'EOF'
+              echo "verify_tag=${DOCKER_IMAGE}:${GITHUB_SHA}"
+              echo "channel=commit"
+            fi
+          } >> "$GITHUB_OUTPUT"
+
       - name: Build and push (multi-arch)
         uses: docker/build-push-action@v6
         with:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: |
-            ${{ env.DOCKER_IMAGE }}:latest
-            ${{ env.DOCKER_IMAGE }}:${{ github.sha }}
-          # 暂时禁用缓存，确保 arm64 完整构建一次
+          tags: ${{ steps.image-tags.outputs.tags }}
           no-cache: true
           provenance: false
 
       - name: Verify multi-arch manifest
+        env:
+          VERIFY_TAG: ${{ steps.image-tags.outputs.verify_tag }}
+          CHANNEL: ${{ steps.image-tags.outputs.channel }}
         run: |
-          echo "=== Checking manifest for multi-arch support ==="
-          docker manifest inspect ${{ env.DOCKER_IMAGE }}:latest | grep -E '"architecture"|"os"'
+          echo "=== Checking ${CHANNEL} manifest: ${VERIFY_TAG} ==="
+          docker manifest inspect "$VERIFY_TAG" | grep -E '"architecture"|"os"'
           echo "=== Expected: both amd64 and arm64 ==="
