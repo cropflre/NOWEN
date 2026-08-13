@@ -16,6 +16,8 @@ import {
   Maximize2,
   Square,
   Lock,
+  LibraryBig,
+  ArrowRight,
 } from "lucide-react";
 
 // API
@@ -50,8 +52,10 @@ import {
   ReadLaterSection,
   EmptyState,
   BookmarkDragOverlay,
-  QuickNotes,
+  AmbientBookmarkStage,
+  AMBIENT_SPARSE_BOOKMARK_LIMIT,
 } from "./components/home";
+import type { AmbientCollectionId } from "./components/home";
 import { CloudDrawerHost } from "./components/home/notes/CloudDrawerHost";
 import { QuickNotesDrawer } from "./components/home/notes/QuickNotesDrawer";
 import { QuickNotesProvider } from "./hooks/QuickNotesContext";
@@ -89,10 +93,16 @@ import { createDockItems, filterDockItems } from "./config/dockItems";
 import {
   buildTagStats,
   filterBookmarksByTag,
+  getCollectionFromSearch,
   getTagFromSearch,
   normalizeTag,
+  writeCollectionToLocation,
   writeTagToLocation,
 } from "./lib/bookmark-filter";
+
+const BookmarkLibrary = React.lazy(() =>
+  import("./pages/BookmarkLibrary").then((module) => ({ default: module.BookmarkLibrary })),
+);
 
 // 标签颜色：基于名称哈希生成柔和的彩色药丸
 const TAG_COLORS = [
@@ -126,6 +136,12 @@ function App() {
   const [activeTag, setActiveTag] = useState<string | null>(() =>
     typeof window === 'undefined' ? null : getTagFromSearch(window.location.search)
   );
+  const [activeCollection, setActiveCollection] = useState<AmbientCollectionId>(() => {
+    if (typeof window === 'undefined') return 'all';
+    return getTagFromSearch(window.location.search)
+      ? 'all'
+      : getCollectionFromSearch(window.location.search);
+  });
 
   // 右键菜单状态
   const [contextMenu, setContextMenu] = useState<{
@@ -218,17 +234,19 @@ function App() {
     previousLoginStateRef.current = isLoggedIn;
   }, [isLoggedIn, refreshData]);
 
-  // 浏览器前进/后退时恢复 URL 中的标签筛选
+  // 浏览器前进/后退时恢复 URL 中唯一的筛选状态。
   useEffect(() => {
     const handlePopState = () => {
-      setActiveTag(getTagFromSearch(window.location.search));
+      const nextTag = getTagFromSearch(window.location.search);
+      setActiveTag(nextTag);
+      setActiveCollection(nextTag ? 'all' : getCollectionFromSearch(window.location.search));
     };
 
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
-  // 拖拽功能：标签筛选时禁用，避免局部列表重排污染完整顺序
+  // 拖拽功能：筛选状态下禁用，避免局部列表重排污染完整顺序
   const {
     activeBookmark,
     sensors,
@@ -236,10 +254,19 @@ function App() {
     handleDragEnd,
     handleDragCancel,
     measuringConfig,
-  } = useDragAndDrop({ bookmarks, reorderBookmarks, disabled: !isLoggedIn || Boolean(activeTag) });
+  } = useDragAndDrop({
+    bookmarks,
+    reorderBookmarks,
+    disabled: !isLoggedIn || Boolean(activeTag) || activeCollection !== 'all',
+  });
 
   // 天气数据
-const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather(showWeather, weatherCity, disableGeolocation, settingsLoaded);
+  const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather(
+    showWeather,
+    weatherCity,
+    disableGeolocation,
+    settingsLoaded,
+  );
 
   // 天气城市变更
   const handleWeatherCityChange = useCallback(async (city: string) => {
@@ -285,7 +312,6 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
   // 根据每个组件的访问模式和登录状态计算有效的仪表可见性
   const effectiveWidgetVisibility = useMemo(() => {
     if (isLoggedIn) return widgetVisibility
-    // 未登录时，将设置为 private 的组件隐藏
     return {
       ...widgetVisibility,
       systemMonitor: widgetVisibility.systemMonitorAccess === 'private' ? false : widgetVisibility.systemMonitor,
@@ -299,7 +325,22 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
     }
   }, [widgetVisibility, isLoggedIn])
 
-  const dockItems = createDockItems(isDark, toggleDarkMode, t, toggleLanguage, handleCardViewModeChange, cardViewMode);
+  const hasPrimaryWidgets =
+    effectiveWidgetVisibility.systemMonitor !== false ||
+    effectiveWidgetVisibility.hardwareIdentity !== false ||
+    effectiveWidgetVisibility.vitalSigns !== false ||
+    effectiveWidgetVisibility.networkTelemetry !== false ||
+    effectiveWidgetVisibility.processMatrix !== false;
+
+  const dockItems = createDockItems(
+    isDark,
+    toggleDarkMode,
+    t,
+    toggleLanguage,
+    handleCardViewModeChange,
+    cardViewMode,
+    currentPage,
+  );
   const effectiveMenuVisibility = useMemo(
     () => ({ ...menuVisibility, searchToggle: showSearch && menuVisibility.searchToggle !== false }),
     [menuVisibility, showSearch]
@@ -330,7 +371,6 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
   }, [isLoggedIn, showSearch, effectiveWidgetVisibility.aiAssistant]);
 
   // ========== Bookmarklet / 外部 URL 唤起：?action=add&url=&title= ==========
-  // 用户从任意网页点击 NOWEN Bookmarklet，会带参数跳转到本站，自动打开添加书签弹窗
   useEffect(() => {
     if (!settingsLoaded) return;
     const search = window.location.search;
@@ -342,13 +382,12 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
     const targetUrl = params.get('url') || '';
     const targetTitle = params.get('title') || '';
 
-    // 清理 URL，避免刷新页面再次触发
     const cleaned = window.location.pathname + window.location.hash;
     window.history.replaceState({}, '', cleaned);
     setActiveTag(null);
+    setActiveCollection('all');
 
     if (!isLoggedIn) {
-      // 未登录：缓存到 sessionStorage，登录成功后再恢复
       try {
         sessionStorage.setItem('pending_bookmark_add', JSON.stringify({ url: targetUrl, title: targetTitle }));
       } catch {}
@@ -358,7 +397,6 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
 
     setPendingUrl(targetUrl);
     if (targetTitle) {
-      // 把 title 暂存到 sessionStorage，AddBookmarkModal 会自动消费
       try {
         sessionStorage.setItem('pending_bookmark_title', targetTitle);
       } catch {}
@@ -390,6 +428,11 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
     switch (id) {
       case "home":
         setCurrentPage("home");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        break;
+      case "library":
+        setCurrentPage("library");
+        window.scrollTo({ top: 0, behavior: "smooth" });
         break;
       case "search":
         setIsSpotlightOpen(true);
@@ -445,7 +488,6 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
         } else {
           await addBookmark(data);
         }
-        // 保存成功后刷新数据，确保前端状态与后端一致
         await refreshData();
       } catch (err) {
         console.error('保存书签失败:', err);
@@ -468,14 +510,38 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
   const handleTagSelect = useCallback((tag: string | null) => {
     const normalizedTag = normalizeTag(tag);
     const nextTag = normalizedTag && normalizedTag === activeTag ? null : normalizedTag;
+    const replacesCollection = activeCollection !== 'all';
+
+    setActiveCollection('all');
     setActiveTag(nextTag);
-    writeTagToLocation(nextTag);
+
+    if (!nextTag && replacesCollection) {
+      writeCollectionToLocation('all', 'push');
+    } else {
+      writeTagToLocation(nextTag, replacesCollection ? 'replace' : 'push');
+    }
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [activeCollection, activeTag]);
+
+  const handleCollectionSelect = useCallback((collectionId: AmbientCollectionId) => {
+    const replacesTag = Boolean(activeTag);
+    setActiveCollection(collectionId);
+    setActiveTag(null);
+    writeCollectionToLocation(collectionId, replacesTag ? 'replace' : 'push');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [activeTag]);
 
   const handleMobileCategorySelect = useCallback((categoryId: string) => {
+    const sparseHome = bookmarks.length > 0 && bookmarks.length <= AMBIENT_SPARSE_BOOKMARK_LIMIT;
+    if (sparseHome) {
+      handleCollectionSelect(categoryId === 'pinned' ? 'pinned' : categoryId);
+      return;
+    }
+
     setActiveTag(null);
-    writeTagToLocation(null);
+    setActiveCollection('all');
+    writeCollectionToLocation('all', 'replace');
 
     window.setTimeout(() => {
       const section = categoryId === 'pinned'
@@ -485,9 +551,13 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
       if (section) {
         const top = section.getBoundingClientRect().top + window.scrollY - 88;
         window.scrollTo({ top, behavior: 'smooth' });
+        return;
       }
+
+      handleCollectionSelect(categoryId === 'pinned' ? 'pinned' : categoryId);
+      setCurrentPage('library');
     }, 0);
-  }, []);
+  }, [bookmarks.length, handleCollectionSelect, setCurrentPage]);
 
   // ========== 数据分组（useMemo 优化，避免每次渲染重新计算） ==========
   const tagStats = useMemo(() => buildTagStats(bookmarks), [bookmarks]);
@@ -497,6 +567,13 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
   );
   const pinnedBookmarks = useMemo(() => visibleBookmarks.filter((b) => b.isPinned), [visibleBookmarks]);
   const allPinnedCount = useMemo(() => bookmarks.filter((b) => b.isPinned).length, [bookmarks]);
+  const allReadLaterCount = useMemo(
+    () => bookmarks.filter((bookmark) => bookmark.isReadLater && !bookmark.isRead).length,
+    [bookmarks],
+  );
+  const isSparseHome = bookmarks.length > 0 && bookmarks.length <= AMBIENT_SPARSE_BOOKMARK_LIMIT;
+  const isLibraryPage = currentPage === "library";
+  const collectionFilterEnabled = isSparseHome || isLibraryPage;
 
   const bookmarksByCategory = useMemo(() => categories.reduce((acc, cat) => {
     const categoryBookmarks = visibleBookmarks.filter((b) => b.category === cat.id);
@@ -508,6 +585,17 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
     return acc;
   }, {} as Record<string, Bookmark[]>), [visibleBookmarks, categories]);
 
+  const homeCategorySections = useMemo(
+    () => categories
+      .filter((category) => (bookmarksByCategory[category.id] || []).length > 0)
+      .slice(0, 4),
+    [bookmarksByCategory, categories],
+  );
+  const visibleHomeCategoryCount = useMemo(
+    () => categories.filter((category) => (bookmarksByCategory[category.id] || []).length > 0).length,
+    [bookmarksByCategory, categories],
+  );
+
   const mobileCategoryItems = useMemo(() => categories
     .map((category) => ({
       ...category,
@@ -515,8 +603,39 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
     }))
     .filter((category) => category.count > 0), [bookmarks, categories]);
 
+  // 数据量增长、分类删除或筛选集合失效时，回到“全部”这一稳定状态。
+  useEffect(() => {
+    const resetCollection = () => {
+      setActiveCollection('all');
+      writeCollectionToLocation('all', 'replace');
+    };
+
+    if (!collectionFilterEnabled) {
+      if (activeCollection !== 'all') resetCollection();
+      return;
+    }
+
+    if (activeCollection === 'pinned' && allPinnedCount === 0) {
+      resetCollection();
+      return;
+    }
+
+    if (activeCollection === 'read-later' && allReadLaterCount === 0) {
+      resetCollection();
+      return;
+    }
+
+    if (
+      activeCollection !== 'all' &&
+      activeCollection !== 'pinned' &&
+      activeCollection !== 'read-later' &&
+      !categories.some((category) => category.id === activeCollection)
+    ) {
+      resetCollection();
+    }
+  }, [activeCollection, allPinnedCount, allReadLaterCount, categories, collectionFilterEnabled]);
+
   // ========== 页面路由 ==========
-  // 后台登录页面
   if (currentPage === "admin-login") {
     return (
       <AdminLogin
@@ -527,7 +646,6 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
     );
   }
 
-  // 强制修改密码页面
   if (currentPage === "force-password-change") {
     if (!isLoggedIn) {
       setCurrentPage("admin-login");
@@ -542,7 +660,6 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
     );
   }
 
-  // 后台管理页面
   if (currentPage === "admin") {
     if (!isLoggedIn) {
       navigateToLogin('admin');
@@ -610,7 +727,6 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
   if (accessMode === 'private' && !isLoggedIn) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'var(--color-bg-primary, #0a0a0f)' }}>
-        {/* 背景效果 */}
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-1/4 left-1/3 w-96 h-96 rounded-full blur-3xl" style={{ background: 'rgba(102, 126, 234, 0.08)' }} />
           <div className="absolute bottom-1/3 right-1/4 w-96 h-96 rounded-full blur-3xl" style={{ background: 'rgba(236, 72, 153, 0.08)' }} />
@@ -629,7 +745,6 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
               border: '1px solid var(--color-glass-border, rgba(255,255,255,0.08))',
             }}
           >
-            {/* 图标 */}
             <motion.div
               className="w-20 h-20 mx-auto mb-6 rounded-2xl flex items-center justify-center"
               style={{ background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.2), rgba(236, 72, 153, 0.2))' }}
@@ -640,7 +755,6 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
               <Pin className="w-10 h-10" style={{ color: 'var(--color-primary, #667eea)' }} />
             </motion.div>
 
-            {/* 站点标题 */}
             <motion.h1
               className="text-2xl font-bold mb-2"
               style={{ color: 'var(--color-text-primary, #fff)' }}
@@ -651,7 +765,6 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
               {siteSettings.siteTitle || 'NOWEN'}
             </motion.h1>
 
-            {/* 提示文字 */}
             <motion.p
               className="text-sm mb-8"
               style={{ color: 'var(--color-text-muted, rgba(255,255,255,0.4))' }}
@@ -662,9 +775,8 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
               {t('access.private_hint')}
             </motion.p>
 
-            {/* 登录按钮 */}
             <motion.button
-              onClick={() => navigateToLogin('home')}
+              onClick={() => navigateToLogin(currentPage === 'library' ? 'library' : 'home')}
               className="w-full py-3.5 rounded-xl text-white font-medium relative overflow-hidden group"
               style={{ background: 'linear-gradient(135deg, #667eea, #ec4899)' }}
               whileHover={{ scale: 1.02 }}
@@ -679,7 +791,6 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: 'linear-gradient(135deg, #ec4899, #667eea)' }} />
             </motion.button>
 
-            {/* 访问模式标识 */}
             <motion.div
               className="mt-6 flex items-center justify-center gap-2 text-xs"
               style={{ color: 'var(--color-text-muted, rgba(255,255,255,0.3))' }}
@@ -711,6 +822,48 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
     ? {}
     : { showBeams: siteSettings.enableBeamAnimation !== false };
 
+  const renderPrimaryWidgets = (standalone: boolean) => (
+    <motion.section
+      className="mb-12"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ delay: 0.65 }}
+    >
+      {hasPrimaryWidgets && (
+        <div className="flex items-center justify-end mb-4">
+          <WidgetSizeModeToggle widgetSizeMode={widgetSizeMode} onChange={handleWidgetSizeModeChange} />
+        </div>
+      )}
+      <BentoGrid>
+        {effectiveWidgetVisibility.systemMonitor !== false && (
+          <BentoGridItem key={`system-monitor-${standalone ? 'standalone' : 'pinned'}`} colSpan={2} rowSpan={widgetSizeMode === 'S' ? 1 : 2} spotlightColor={isLiteMode ? undefined : "rgba(6, 182, 212, 0.15)"} delay={0}>
+            <SystemMonitorCard forceCollapsed={widgetSizeMode === 'S' ? true : widgetSizeMode === 'L' ? false : undefined} />
+          </BentoGridItem>
+        )}
+        {effectiveWidgetVisibility.hardwareIdentity !== false && (
+          <BentoGridItem key={`hardware-specs-${standalone ? 'standalone' : 'pinned'}`} colSpan={2} rowSpan={widgetSizeMode === 'S' ? 1 : 2} spotlightColor={isLiteMode ? undefined : "rgba(6, 182, 212, 0.1)"} delay={0.1}>
+            <HardwareIdentityCard forceCollapsed={widgetSizeMode === 'S' ? true : widgetSizeMode === 'L' ? false : undefined} />
+          </BentoGridItem>
+        )}
+        {effectiveWidgetVisibility.vitalSigns !== false && (
+          <BentoGridItem key={`vital-signs-${standalone ? 'standalone' : 'pinned'}`} colSpan={2} rowSpan={widgetSizeMode === 'S' ? 1 : 2} spotlightColor={isLiteMode ? undefined : "rgba(6, 182, 212, 0.12)"} delay={0.15}>
+            <VitalSignsCard forceCollapsed={widgetSizeMode === 'S' ? true : widgetSizeMode === 'L' ? false : undefined} />
+          </BentoGridItem>
+        )}
+        {effectiveWidgetVisibility.networkTelemetry !== false && (
+          <BentoGridItem key={`network-telemetry-${standalone ? 'standalone' : 'pinned'}`} colSpan={2} rowSpan={widgetSizeMode === 'S' ? 1 : 2} spotlightColor={isLiteMode ? undefined : "rgba(168, 85, 247, 0.12)"} delay={0.2}>
+            <NetworkTelemetryCard forceCollapsed={widgetSizeMode === 'S' ? true : widgetSizeMode === 'L' ? false : undefined} />
+          </BentoGridItem>
+        )}
+        {effectiveWidgetVisibility.processMatrix !== false && (
+          <BentoGridItem key={`process-matrix-${standalone ? 'standalone' : 'pinned'}`} colSpan={2} rowSpan={widgetSizeMode === 'S' ? 1 : 2} spotlightColor={isLiteMode ? undefined : "rgba(34, 197, 94, 0.12)"} delay={0.25}>
+            <ProcessMatrixCard forceCollapsed={widgetSizeMode === 'S' ? true : widgetSizeMode === 'L' ? false : undefined} />
+          </BentoGridItem>
+        )}
+      </BentoGrid>
+    </motion.section>
+  );
+
   return (
     <QuickNotesProvider
       syncMode={nowenNote?.syncMode || 'auto'}
@@ -718,7 +871,6 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
     >
     <CloudDrawerProvider>
     <>
-      {/* 壁纸背景层 - 独立于 BackgroundWrapper，位于最底层 */}
       {wallpaperEnabled && wallpaperImageSrc && (
         <>
           <div
@@ -726,13 +878,11 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
             style={{
               backgroundImage: `url(${wallpaperImageSrc})`,
               filter: `blur(${wallpaper?.blur || 0}px)`,
-              /* 用 inset 负值代替 transform: scale，避免移动端 fixed + transform 子像素抖动 */
               inset: '-5%',
               zIndex: 0,
               willChange: 'auto',
             }}
           />
-          {/* 遮罩层 */}
           {(wallpaper?.overlay ?? 30) > 0 && (
             <div
               className="fixed inset-0"
@@ -749,15 +899,11 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
       {...backgroundProps}
       {...(wallpaperEnabled && wallpaperImageSrc ? { transparent: true } : {})}
     >
-      {/* Meteors Effect - 精简模式下不渲染 */}
-      {!isLiteMode && <Meteors number={15} />}
+      {!isLiteMode && <Meteors number={4} />}
 
-      {/* Sidebar Navigation */}
-      {enableSidebarNav && (
+      {enableSidebarNav && currentPage === "home" && !isSparseHome && (
         <SidebarNav
-          items={categories
-            .filter((cat) => (bookmarksByCategory[cat.id] || []).length > 0)
-            .map((cat) => ({
+          items={homeCategorySections.map((cat) => ({
               id: cat.id,
               name: cat.name,
               icon: cat.icon,
@@ -768,10 +914,38 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
         />
       )}
 
-      {/* Main Content */}
       <div className="min-h-screen px-4 sm:px-6 lg:px-8 pb-32">
-        <div className="max-w-6xl mx-auto">
-          {/* Hero Section */}
+        <div className={isLibraryPage ? "max-w-[1800px] mx-auto" : "max-w-6xl mx-auto"}>
+          {isLibraryPage ? (
+            <React.Suspense
+              fallback={(
+                <div
+                  className="mx-auto mt-6 min-h-[36rem] max-w-[1800px] animate-pulse rounded-[2rem]"
+                  style={{
+                    background: 'var(--color-glass)',
+                    border: '1px solid var(--color-glass-border)',
+                  }}
+                  aria-label={t('library.loading', '正在加载书签库')}
+                />
+              )}
+            >
+              <BookmarkLibrary
+                bookmarks={bookmarks}
+                categories={categories}
+                activeTag={activeTag}
+                activeCollection={activeCollection}
+                isInternal={isInternal}
+                isLoggedIn={isLoggedIn}
+                onBack={() => setCurrentPage("home")}
+                onOpenSearch={() => setIsSpotlightOpen(true)}
+                onAddBookmark={() => setIsAddModalOpen(true)}
+                onSelectTag={handleTagSelect}
+                onSelectCollection={handleCollectionSelect}
+                onContextMenu={handleContextMenu}
+              />
+            </React.Suspense>
+          ) : (
+            <>
           <HeroSection
             formattedTime={formattedTime}
             formattedDate={formattedDate}
@@ -823,23 +997,44 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
             </motion.div>
           )}
 
-          {/* Read Later Section */}
-          <ReadLaterSection
-            bookmarks={visibleBookmarks}
-            isLiteMode={isLiteMode ?? false}
-            onMarkRead={toggleRead}
-            onRemove={toggleReadLater}
-          />
+          {!isSparseHome && bookmarks.length > 0 && (
+            <motion.section
+              className="ambient-library-gateway"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.42, duration: 0.45 }}
+            >
+              <span className="ambient-library-gateway__icon" aria-hidden="true">
+                <LibraryBig className="h-5 w-5" />
+              </span>
+              <div className="ambient-library-gateway__copy">
+                <strong>{t('library.title', '书签库')}</strong>
+                <span>
+                  {bookmarks.length} {t('bookmark.items', '个书签')} · {visibleHomeCategoryCount} {t('bookmark.categories', '个分类')}
+                </span>
+              </div>
+              <button type="button" onClick={() => setCurrentPage('library')}>
+                {t('library.open', '浏览全部')}
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            </motion.section>
+          )}
 
-          {/* Quick Notes / 灵感速记 — 从首页移除，现以抽屉形式由 dock 触发 */}
+          {!isSparseHome && (
+            <ReadLaterSection
+              bookmarks={visibleBookmarks}
+              isLiteMode={isLiteMode ?? false}
+              onMarkRead={toggleRead}
+              onRemove={toggleReadLater}
+            />
+          )}
 
-          {/* Pinned Bookmarks - Bento Grid */}
-          {pinnedBookmarks.length > 0 ? (
+          {!isSparseHome && pinnedBookmarks.length > 0 ? (
             <motion.section
               className="mb-12"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 1 }}
+              transition={{ delay: 0.7 }}
               data-section="pinned"
             >
               <div className="flex items-center gap-3 mb-6">
@@ -853,8 +1048,7 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
                 <span className="text-sm" style={{ color: "var(--color-text-muted)" }}>
                   {pinnedBookmarks.length}
                 </span>
-                {/* Widget 尺寸 S/M/L 切换 */}
-                {(effectiveWidgetVisibility.systemMonitor !== false || effectiveWidgetVisibility.hardwareIdentity !== false || effectiveWidgetVisibility.vitalSigns !== false || effectiveWidgetVisibility.networkTelemetry !== false || effectiveWidgetVisibility.processMatrix !== false) && (
+                {hasPrimaryWidgets && (
                   <div className="ml-auto">
                     <WidgetSizeModeToggle widgetSizeMode={widgetSizeMode} onChange={handleWidgetSizeModeChange} />
                   </div>
@@ -862,7 +1056,6 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
               </div>
 
               <BentoGrid>
-                {/* System Monitor Cards */}
                 {effectiveWidgetVisibility.systemMonitor !== false && (
                   <BentoGridItem key="system-monitor" colSpan={2} rowSpan={widgetSizeMode === 'S' ? 1 : 2} spotlightColor={isLiteMode ? undefined : "rgba(6, 182, 212, 0.15)"} delay={0}>
                     <SystemMonitorCard forceCollapsed={widgetSizeMode === 'S' ? true : widgetSizeMode === 'L' ? false : undefined} />
@@ -917,81 +1110,65 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
                 ))}
               </BentoGrid>
             </motion.section>
-          ) : (
-            /* 独立显示系统监控卡片 */
-            <motion.section className="mb-12" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1 }}>
-              {/* Widget 尺寸 S/M/L 切换 */}
-              {(effectiveWidgetVisibility.systemMonitor !== false || effectiveWidgetVisibility.hardwareIdentity !== false || effectiveWidgetVisibility.vitalSigns !== false || effectiveWidgetVisibility.networkTelemetry !== false || effectiveWidgetVisibility.processMatrix !== false) && (
-                <div className="flex items-center justify-end mb-4">
-                  <WidgetSizeModeToggle widgetSizeMode={widgetSizeMode} onChange={handleWidgetSizeModeChange} />
-                </div>
-              )}
-              <BentoGrid>
-                {effectiveWidgetVisibility.systemMonitor !== false && (
-                  <BentoGridItem key="system-monitor-standalone" colSpan={2} rowSpan={widgetSizeMode === 'S' ? 1 : 2} spotlightColor={isLiteMode ? undefined : "rgba(6, 182, 212, 0.15)"} delay={0}>
-                    <SystemMonitorCard forceCollapsed={widgetSizeMode === 'S' ? true : widgetSizeMode === 'L' ? false : undefined} />
-                  </BentoGridItem>
-                )}
-                {effectiveWidgetVisibility.hardwareIdentity !== false && (
-                  <BentoGridItem key="hardware-specs-standalone" colSpan={2} rowSpan={widgetSizeMode === 'S' ? 1 : 2} spotlightColor={isLiteMode ? undefined : "rgba(6, 182, 212, 0.1)"} delay={0.1}>
-                    <HardwareIdentityCard forceCollapsed={widgetSizeMode === 'S' ? true : widgetSizeMode === 'L' ? false : undefined} />
-                  </BentoGridItem>
-                )}
-                {effectiveWidgetVisibility.vitalSigns !== false && (
-                  <BentoGridItem key="vital-signs-standalone" colSpan={2} rowSpan={widgetSizeMode === 'S' ? 1 : 2} spotlightColor={isLiteMode ? undefined : "rgba(6, 182, 212, 0.12)"} delay={0.15}>
-                    <VitalSignsCard forceCollapsed={widgetSizeMode === 'S' ? true : widgetSizeMode === 'L' ? false : undefined} />
-                  </BentoGridItem>
-                )}
-                {effectiveWidgetVisibility.networkTelemetry !== false && (
-                  <BentoGridItem key="network-telemetry-standalone" colSpan={2} rowSpan={widgetSizeMode === 'S' ? 1 : 2} spotlightColor={isLiteMode ? undefined : "rgba(168, 85, 247, 0.12)"} delay={0.2}>
-                    <NetworkTelemetryCard forceCollapsed={widgetSizeMode === 'S' ? true : widgetSizeMode === 'L' ? false : undefined} />
-                  </BentoGridItem>
-                )}
-                {effectiveWidgetVisibility.processMatrix !== false && (
-                  <BentoGridItem key="process-matrix-standalone" colSpan={2} rowSpan={widgetSizeMode === 'S' ? 1 : 2} spotlightColor={isLiteMode ? undefined : "rgba(34, 197, 94, 0.12)"} delay={0.25}>
-                    <ProcessMatrixCard forceCollapsed={widgetSizeMode === 'S' ? true : widgetSizeMode === 'L' ? false : undefined} />
-                  </BentoGridItem>
-                )}
-              </BentoGrid>
-            </motion.section>
-          )}
+          ) : hasPrimaryWidgets ? (
+            renderPrimaryWidgets(true)
+          ) : null}
 
-          {/* Category Sections - 支持拖拽排序 */}
-          <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragCancel={handleDragCancel} measuring={measuringConfig}>
-            {categories.map((category, catIndex) => {
-              const categoryBookmarks = bookmarksByCategory[category.id] || [];
-              if (categoryBookmarks.length === 0) return null;
+          {isSparseHome && visibleBookmarks.length > 0 ? (
+            <AmbientBookmarkStage
+              bookmarks={visibleBookmarks}
+              categories={categories}
+              activeCollection={activeCollection}
+              cardViewMode={cardViewMode}
+              isInternal={isInternal}
+              isLiteMode={isLiteMode}
+              activeTag={activeTag}
+              onSelectCollection={handleCollectionSelect}
+              onContextMenu={handleContextMenu}
+              onTagSelect={(tag) => handleTagSelect(tag)}
+            />
+          ) : !isSparseHome ? (
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCorners}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+              onDragCancel={handleDragCancel}
+              measuring={measuringConfig}
+            >
+              {homeCategorySections.map((category, catIndex) => {
+                const categoryBookmarks = bookmarksByCategory[category.id] || [];
+                if (categoryBookmarks.length === 0) return null;
 
-              return (
-                <CategorySection
-                  key={category.id}
-                  category={category}
-                  categoryBookmarks={categoryBookmarks}
-                  catIndex={catIndex}
-                  isLiteMode={isLiteMode}
-                  isInternal={isInternal}
-                  totalBookmarkCount={visibleBookmarks.length}
-                  collapseThreshold={categoryCollapseThreshold}
-                  initialShowCount={categoryInitialShowCount}
-                  cardViewMode={cardViewMode}
-                  onContextMenu={handleContextMenu}
-                  onEditCategory={(cat) => {
-                    setEditingCategory(cat);
-                    setCategoryModalMode('edit');
-                    setIsCategoryModalOpen(true);
-                  }}
-                  onViewModeChange={handleCardViewModeChange}
-                  onTagSelect={handleTagSelect}
-                  isLoggedIn={isLoggedIn}
-                />
-              );
-            })}
+                return (
+                  <CategorySection
+                    key={category.id}
+                    category={category}
+                    categoryBookmarks={categoryBookmarks}
+                    catIndex={catIndex}
+                    isLiteMode={isLiteMode}
+                    isInternal={isInternal}
+                    totalBookmarkCount={visibleBookmarks.length}
+                    collapseThreshold={categoryCollapseThreshold}
+                    initialShowCount={categoryInitialShowCount}
+                    cardViewMode={cardViewMode}
+                    onContextMenu={handleContextMenu}
+                    onEditCategory={(cat) => {
+                      setEditingCategory(cat);
+                      setCategoryModalMode('edit');
+                      setIsCategoryModalOpen(true);
+                    }}
+                    onViewModeChange={handleCardViewModeChange}
+                    onTagSelect={handleTagSelect}
+                    isLoggedIn={isLoggedIn}
+                  />
+                );
+              })}
 
-            {/* 拖拽覆盖层 */}
-            <BookmarkDragOverlay activeBookmark={activeBookmark} cardViewMode={cardViewMode} />
-          </DndContext>
+              <BookmarkDragOverlay activeBookmark={activeBookmark} cardViewMode={cardViewMode} />
+            </DndContext>
+          ) : null}
 
-          {/* Empty State */}
           {activeTag && visibleBookmarks.length === 0 && !isLoading && (
             <motion.div
               className="mb-12 flex flex-col items-center justify-center rounded-3xl px-6 py-14 text-center"
@@ -1016,11 +1193,12 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
           {!activeTag && bookmarks.length === 0 && !isLoading && (
             <EmptyState isLiteMode={isLiteMode ?? false} isLoggedIn={isLoggedIn} onAddBookmark={() => setIsAddModalOpen(true)} />
           )}
+            </>
+          )}
         </div>
       </div>
 
-      {/* Footer 备案信息 */}
-      {siteSettings.footerText && (
+      {!isLibraryPage && siteSettings.footerText && (
         <div className="w-full text-center pb-20 md:pb-24 pt-8 px-4">
           <p
             className="text-xs leading-relaxed"
@@ -1030,7 +1208,6 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
         </div>
       )}
 
-      {/* Modals */}
       {showSearch && (
         <SpotlightSearch
           isOpen={isSpotlightOpen}
@@ -1061,10 +1238,10 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
         initialUrl={pendingUrl}
         editBookmark={editingBookmark}
         onOpenIconManager={() => setIsIconManagerOpen(true)}
-          onCategoryAdded={(newCategory) => appendCategory(newCategory)}
-          enableAutoAi={enableAutoAi}
-          defaultVisibility={defaultBookmarkVisibility}
-        />
+        onCategoryAdded={(newCategory) => appendCategory(newCategory)}
+        enableAutoAi={enableAutoAi}
+        defaultVisibility={defaultBookmarkVisibility}
+      />
 
       <IconManager
         isOpen={isIconManagerOpen}
@@ -1087,7 +1264,6 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
         onAdd={(category) => addCategory(category)}
       />
 
-      {/* Context Menu */}
       {contextMenu.bookmark && (
         <ContextMenu
           isOpen={contextMenu.isOpen}
@@ -1116,22 +1292,22 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
       <ScrollToTop threshold={400} />
     </BackgroundWrapper>
 
-    {/* 以下组件放在 BackgroundWrapper 外部，避免被其 stacking context 限制 z-index */}
-
-    {enableSidebarNav && (
+    {enableSidebarNav && currentPage === "home" && (
       <MobileContentNavigation
         categories={mobileCategoryItems}
         tags={tagStats}
         pinnedCount={allPinnedCount}
         totalBookmarks={bookmarks.length}
         activeTag={activeTag}
+        activeCollection={activeCollection}
+        readLaterCount={allReadLaterCount}
+        collectionFilterMode={isSparseHome}
         matchedCount={visibleBookmarks.length}
         onSelectTag={handleTagSelect}
         onSelectCategory={handleMobileCategorySelect}
       />
     )}
 
-    {/* 桌面端：Dock（自主管理 fixed 定位 + 自由拖拽） */}
     <div className="hidden md:block">
       <FloatingDock
         items={filteredDockItems.map((item) => ({
@@ -1141,25 +1317,22 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
       />
     </div>
 
-    {/* 桌面端迷你监控 — 固定位置 */}
-    {effectiveWidgetVisibility.dockMiniMonitor !== false && (
+    {currentPage === "home" && effectiveWidgetVisibility.dockMiniMonitor !== false && (
       <div className="hidden md:flex fixed bottom-6 left-1/2 -translate-x-1/2 z-40">
         <SystemMonitor initialMode="mini" size="sm" showLoading={false} />
       </div>
     )}
 
-    {/* 移动端：底部固定栏（状态栏 + 能量球） */}
     <div className="md:hidden">
       <MobileFloatingDock
-          items={filteredDockItems
-            .filter((item) => item.id !== "home")
-            .map((item) => ({
+        items={filteredDockItems
+          .filter((item) => currentPage === "home" ? item.id !== "home" : true)
+          .map((item) => ({
             id: item.id,
             label: item.title,
             icon: item.IconComponent,
             onClick: item.onClick || (() => handleDockClick(item.id)),
-            isActive: item.id === "home",
-            // 透传子菜单（如"视图"项有 卡片/列表/紧凑 等子项）
+            isActive: item.isActive,
             subItems: item.subItems?.map((sub) => ({
               id: sub.id,
               label: sub.title,
@@ -1176,7 +1349,6 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
       />
     </div>
 
-    {/* 灵感云·同步中心抽屉（被 SidebarNav 模块项触发） */}
     <CloudDrawerHost
       remoteConfigured={!!nowenNote?.hasToken && !!nowenNote?.baseUrl}
       remoteBaseUrl={nowenNote?.baseUrl || undefined}
@@ -1184,7 +1356,6 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
       onOpenSettings={() => { setAdminTab('settings'); navigateToAdmin(); }}
     />
 
-    {/* 灵感速记抽屉（被 dock “灵感”按钮触发） */}
     {enableQuickNotes && (
       <QuickNotesDrawer
         open={isQuickNotesDrawerOpen}
@@ -1201,8 +1372,9 @@ const { weather, loading: weatherLoading, refresh: refreshWeather } = useWeather
     </QuickNotesProvider>
   );
 }
+
 // ========== 分类区书签卡片（React.memo 优化） ==========
-const MAX_ANIMATED_INDEX = 12; // 超过此索引的卡片不再有递增延迟动画
+const MAX_ANIMATED_INDEX = 12;
 
 const MemoizedBookmarkItem = React.memo(function MemoizedBookmarkItem({
   bookmark,
@@ -1228,7 +1400,6 @@ const MemoizedBookmarkItem = React.memo(function MemoizedBookmarkItem({
   const animDelay = index < MAX_ANIMATED_INDEX ? index * 0.04 : 0;
   const isCompact = cardViewMode === 'compact';
 
-  // 轻量模式：跳过 framer-motion 入场动画
   const card = (
     <SpotlightCard
       className="h-full cursor-pointer"
@@ -1239,7 +1410,6 @@ const MemoizedBookmarkItem = React.memo(function MemoizedBookmarkItem({
       onContextMenu={(e) => onContextMenu(e, bookmark)}
     >
       <div className={`relative flex ${isCompact ? 'flex-row items-center gap-3' : 'flex-col'} h-full`}>
-        {/* 私人书签标识 - 右上角小锁图标 */}
         {bookmark.visibility === 'private' && (
           <div
             className="absolute top-0 right-0 z-10 transition-transform duration-200 hover:scale-110"
@@ -1263,7 +1433,6 @@ const MemoizedBookmarkItem = React.memo(function MemoizedBookmarkItem({
           {bookmark.iconUrl ? (
             <img src={bookmark.iconUrl} alt="" className={`${isCompact ? 'w-4 h-4' : 'w-5 h-5'} object-contain`} loading="lazy" onError={(e) => {
               const img = e.target as HTMLImageElement;
-              // iconUrl 加载失败时，尝试回退到 favicon
               if (bookmark.favicon) {
                 img.src = bookmark.favicon;
                 img.onerror = () => { img.style.display = 'none'; };
@@ -1324,7 +1493,7 @@ const MemoizedBookmarkItem = React.memo(function MemoizedBookmarkItem({
             {bookmark.tags.length > 3 && (
               <span
                 className="px-1.5 py-0.5 rounded-md text-[10px] leading-tight font-medium"
-                style={{ 
+                style={{
                   color: 'var(--color-text-muted)',
                   background: 'var(--color-bg-tertiary)',
                 }}
@@ -1339,7 +1508,6 @@ const MemoizedBookmarkItem = React.memo(function MemoizedBookmarkItem({
   );
 
   if (lightweight) {
-    // 轻量模式：不使用 framer-motion 包裹
     return (
       <SortableCard id={bookmark.id}>
         <div className="h-full">{card}</div>
@@ -1377,7 +1545,6 @@ const VIEW_MODE_CONFIG = {
   },
 } as const;
 
-// ========== 分类骨架屏占位 ==========
 function CategorySkeleton({ count, color, cardViewMode = 'standard' }: { count: number; color: string; cardViewMode?: 'compact' | 'standard' | 'comfortable' }) {
   const displayCount = Math.min(count, 8);
   const config = VIEW_MODE_CONFIG[cardViewMode];
@@ -1403,7 +1570,6 @@ function CategorySkeleton({ count, color, cardViewMode = 'standard' }: { count: 
   );
 }
 
-// ========== 视图切换按钮组 ==========
 const VIEW_MODES = [
   { key: 'compact' as const, icon: Grid3X3, titleKey: 'bookmark.view_compact' },
   { key: 'standard' as const, icon: LayoutGrid, titleKey: 'bookmark.view_standard' },
@@ -1445,7 +1611,6 @@ function ViewModeToggle({
   );
 }
 
-// ========== Widget 尺寸 S/M/L 切换按钮 ==========
 const WIDGET_SIZE_MODES = [
   { key: 'S' as const, icon: Minimize2, titleKey: 'monitor.widget_size_small' },
   { key: 'M' as const, icon: Square, titleKey: 'monitor.widget_size_medium' },
@@ -1487,7 +1652,6 @@ function WidgetSizeModeToggle({
   );
 }
 
-// ========== 分类区组件（支持折叠展开 + 懒渲染） ==========
 function CategorySection({
   category,
   categoryBookmarks,
@@ -1520,18 +1684,15 @@ function CategorySection({
   isLoggedIn?: boolean;
 }) {
   const { t } = useTranslation();
-  const PAGE_SIZE = 100; // 每次点击加载更多的数量
+  const PAGE_SIZE = 100;
   const baseShowCount = initialShowCount || 8;
   const needsCollapse = collapseThreshold > 0 && categoryBookmarks.length > collapseThreshold;
   const [displayCount, setDisplayCount] = useState(needsCollapse ? baseShowCount : categoryBookmarks.length);
 
-  // 当书签数量变化时（如新增/删除书签），自动更新显示数量
   useEffect(() => {
     if (!needsCollapse) {
-      // 不需要折叠时，显示全部
       setDisplayCount(categoryBookmarks.length);
     } else {
-      // 需要折叠时，确保 displayCount 不超过实际数量
       setDisplayCount(prev => Math.min(prev, categoryBookmarks.length));
     }
   }, [categoryBookmarks.length, needsCollapse]);
@@ -1540,12 +1701,9 @@ function CategorySection({
   const visibleBookmarks = isFullyExpanded ? categoryBookmarks : categoryBookmarks.slice(0, displayCount);
   const hiddenCount = categoryBookmarks.length - displayCount;
 
-  // 懒渲染：前2个分类立即渲染，后续分类进入视口时才渲染
   const [lazyRef, shouldRender] = useLazyRender('300px');
-  const isEager = catIndex < 2; // 前2个分类立即渲染，无需等待
+  const isEager = catIndex < 2;
   const doRender = isEager || shouldRender;
-
-  // 轻量模式：总书签超过 50 个时启用，减少 framer-motion 和 spotlight 开销
   const lightweight = totalBookmarkCount > 50;
 
   return (
@@ -1557,7 +1715,6 @@ function CategorySection({
       transition={{ delay: Math.min(1.2 + catIndex * 0.1, 1.8) }}
       data-category-id={category.id}
     >
-      {/* 背景装饰文字 */}
       {!isLiteMode && (
         <div
           className="absolute -top-8 left-0 text-[120px] font-bold pointer-events-none select-none leading-none"
@@ -1590,7 +1747,7 @@ function CategorySection({
             <Edit2 className="w-4 h-4" />
           </button>
         )}
-        {/* 视图切换已迁移到菜单栏 */}
+        {onViewModeChange && <span className="sr-only" />}
       </div>
 
       <SortableContext items={visibleBookmarks.map(b => b.id)} strategy={rectSortingStrategy}>
@@ -1612,12 +1769,10 @@ function CategorySection({
         </div>
       </SortableContext>
 
-      {/* 骨架屏：懒渲染未激活时显示 */}
       {!doRender && (
         <CategorySkeleton count={categoryBookmarks.length} color={category.color || '#667eea'} cardViewMode={cardViewMode} />
       )}
 
-      {/* 展开/折叠按钮 */}
       {doRender && needsCollapse && !isFullyExpanded && (
         <div className="flex justify-center mt-4 relative z-10">
           <button

@@ -1,0 +1,336 @@
+/*
+ * System workspace
+ *
+ * Monitoring modules and pinned bookmarks used to share one flat Bento grid.
+ * This layer gives them separate product roles: a calm, collapsible monitoring
+ * workspace followed by a denser shortcut area.
+ */
+
+.system-workspace-stack {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.system-workspace {
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--color-glass-border) 88%, transparent);
+  border-radius: 1.75rem;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 5%, transparent), transparent 38%),
+    color-mix(in srgb, var(--color-glass) 94%, var(--color-bg-primary));
+  box-shadow: 0 22px 70px rgba(62, 76, 120, 0.08);
+  contain: layout paint style;
+}
+
+.dark .system-workspace {
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 8%, transparent), transparent 42%),
+    color-mix(in srgb, var(--color-glass) 96%, #0d1018);
+  box-shadow: 0 24px 72px rgba(0, 0, 0, 0.24);
+}
+
+.system-workspace__header {
+  display: grid;
+  grid-template-columns: minmax(15rem, 1.2fr) minmax(17rem, auto) auto;
+  align-items: center;
+  gap: 1rem;
+  min-height: 5.25rem;
+  padding: 1rem 1.125rem;
+}
+
+.system-workspace__heading {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.system-workspace__heading-icon {
+  display: grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 18%, transparent);
+  border-radius: 0.8rem;
+  color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+}
+
+.system-workspace__title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.system-workspace__title-row h3,
+.system-shortcuts__header h3 {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 0.98rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+.system-workspace__heading p,
+.system-shortcuts__header p {
+  overflow: hidden;
+  margin: 0.2rem 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.system-workspace__live {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: color-mix(in srgb, #16a34a 82%, var(--color-text-secondary));
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.system-workspace__live > span,
+.system-workspace__summary-item i {
+  width: 0.34rem;
+  height: 0.34rem;
+  border-radius: 999px;
+  background: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+}
+
+.system-workspace__summary {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.45rem;
+  overflow: hidden;
+}
+
+.system-workspace__summary-item {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.38rem;
+  padding: 0.42rem 0.58rem;
+  border: 1px solid color-mix(in srgb, var(--color-glass-border) 78%, transparent);
+  border-radius: 0.72rem;
+  color: var(--color-text-secondary);
+  background: color-mix(in srgb, var(--color-bg-primary) 62%, transparent);
+  font-size: 0.66rem;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.system-workspace__summary-item svg {
+  color: var(--color-primary);
+}
+
+.system-workspace__summary-item i {
+  width: 0.28rem;
+  height: 0.28rem;
+  margin-left: 0.05rem;
+  box-shadow: none;
+}
+
+.system-workspace__toggle {
+  display: inline-flex;
+  height: 2.25rem;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 0.38rem;
+  padding: 0 0.7rem;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 16%, var(--color-glass-border));
+  border-radius: 0.75rem;
+  color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 7%, transparent);
+  font-size: 0.68rem;
+  font-weight: 600;
+  transition: transform 160ms ease, background-color 160ms ease;
+}
+
+.system-workspace__toggle:hover {
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  transform: translateY(-1px);
+}
+
+.system-workspace__grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 0.85rem;
+  padding: 0 1.125rem 1.125rem;
+}
+
+.system-workspace__module {
+  min-width: 0;
+  min-height: 15rem;
+  contain: layout paint style;
+}
+
+.system-workspace__module--system-monitor,
+.system-workspace__module--process-matrix {
+  grid-column: span 6;
+  min-height: 21rem;
+}
+
+.system-workspace__module--network-telemetry,
+.system-workspace__module--hardware-specs,
+.system-workspace__module--vital-signs {
+  grid-column: span 4;
+  min-height: 15.5rem;
+}
+
+.system-workspace__card {
+  overflow: hidden;
+  border-radius: 1.35rem !important;
+  background: color-mix(in srgb, var(--color-bg-primary) 88%, transparent) !important;
+  box-shadow: 0 12px 38px rgba(69, 83, 125, 0.07) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  transform: translateZ(0);
+}
+
+.dark .system-workspace__card {
+  background: color-mix(in srgb, #111522 91%, transparent) !important;
+  box-shadow: 0 14px 42px rgba(0, 0, 0, 0.2) !important;
+}
+
+.system-workspace__card:hover {
+  transform: translateY(-2px);
+}
+
+.system-workspace__card > .relative.z-10,
+.system-workspace__card > .relative.z-10 > * {
+  height: 100%;
+}
+
+.system-shortcuts {
+  padding: 1rem 1.05rem 1.05rem;
+  border: 1px solid color-mix(in srgb, var(--color-glass-border) 78%, transparent);
+  border-radius: 1.5rem;
+  background: color-mix(in srgb, var(--color-glass) 80%, transparent);
+  contain: layout paint style;
+}
+
+.system-shortcuts__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0 0.15rem 0.8rem;
+}
+
+.system-shortcuts__header > span {
+  display: grid;
+  min-width: 1.65rem;
+  height: 1.65rem;
+  place-items: center;
+  border-radius: 999px;
+  color: var(--color-text-muted);
+  background: color-mix(in srgb, var(--color-text-muted) 8%, transparent);
+  font-size: 0.65rem;
+}
+
+.system-shortcuts__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.system-shortcuts__grid > * {
+  min-width: 0;
+}
+
+@media (min-width: 768px) {
+  .system-shortcuts__grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .system-shortcuts__grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1023px) {
+  .system-workspace__header {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .system-workspace__summary {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-content: flex-start;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .system-workspace__summary::-webkit-scrollbar {
+    display: none;
+  }
+
+  .system-workspace__module--system-monitor,
+  .system-workspace__module--process-matrix,
+  .system-workspace__module--network-telemetry,
+  .system-workspace__module--hardware-specs,
+  .system-workspace__module--vital-signs {
+    grid-column: span 6;
+  }
+}
+
+@media (max-width: 767px) {
+  .system-workspace {
+    border-radius: 1.35rem;
+  }
+
+  .system-workspace__header {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.75rem;
+    min-height: auto;
+    padding: 0.9rem;
+  }
+
+  .system-workspace__heading p {
+    white-space: normal;
+  }
+
+  .system-workspace__summary-item {
+    padding: 0.38rem 0.48rem;
+  }
+
+  .system-workspace__toggle span {
+    display: none;
+  }
+
+  .system-workspace__toggle {
+    width: 2.25rem;
+    padding: 0;
+  }
+
+  .system-workspace__grid {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 0 0.75rem 0.75rem;
+  }
+
+  .system-workspace__module--system-monitor,
+  .system-workspace__module--process-matrix,
+  .system-workspace__module--network-telemetry,
+  .system-workspace__module--hardware-specs,
+  .system-workspace__module--vital-signs {
+    grid-column: 1;
+    min-height: auto;
+  }
+
+  .system-shortcuts {
+    padding: 0.85rem;
+    border-radius: 1.25rem;
+  }
+}

@@ -13,6 +13,7 @@ import {
   StretchHorizontal,
   Eye,
   Lightbulb,
+  LibraryBig,
 } from "lucide-react";
 import { TFunction } from "i18next";
 
@@ -57,13 +58,22 @@ export const createDockItems = (
   t: TFunction,
   onToggleLanguage: () => void,
   onViewModeChange?: (mode: 'compact' | 'standard' | 'comfortable') => void,
-  currentViewMode?: 'compact' | 'standard' | 'comfortable'
+  currentViewMode?: 'compact' | 'standard' | 'comfortable',
+  currentPage?: string,
 ): DockItem[] => [
   {
     id: "home",
     title: t("dock.home"),
     icon: <Home className="w-5 h-5" />,
     IconComponent: Home,
+    isActive: currentPage === "home",
+  },
+  {
+    id: "library",
+    title: t("dock.library", "书签库"),
+    icon: <LibraryBig className="w-5 h-5" />,
+    IconComponent: LibraryBig,
+    isActive: currentPage === "library",
   },
   {
     id: "search",

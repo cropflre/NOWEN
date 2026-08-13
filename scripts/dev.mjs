@@ -8,6 +8,8 @@ const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const serverDir = path.join(rootDir, 'server')
 const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm'
 const isWindows = process.platform === 'win32'
+const dockerMonitorEnabled =
+  process.env.NOWEN_DOCKER_MONITOR_ENABLED ?? (isWindows ? 'false' : 'true')
 
 const DEFAULT_DEV_WEB_PORT = 39100
 const DEFAULT_DEV_API_PORT = 39101
@@ -149,6 +151,9 @@ startService('API server', ['run', 'dev'], {
     DB_PATH:
       process.env.DB_PATH ??
       path.join(rootDir, 'server', 'data', 'zen-garden.db'),
+    DOCKER_MONITOR_ENABLED: dockerMonitorEnabled,
+    BROWSERSLIST_IGNORE_OLD_DATA:
+      process.env.BROWSERSLIST_IGNORE_OLD_DATA ?? 'true',
   },
 })
 
@@ -157,6 +162,10 @@ startService('Web client', ['run', 'dev:web', '--', '--port', String(webPort), '
   env: {
     ...process.env,
     VITE_API_BASE: apiUrl,
+    VITE_DOCKER_MONITOR_ENABLED:
+      process.env.VITE_DOCKER_MONITOR_ENABLED ?? dockerMonitorEnabled,
+    BROWSERSLIST_IGNORE_OLD_DATA:
+      process.env.BROWSERSLIST_IGNORE_OLD_DATA ?? 'true',
   },
 })
 

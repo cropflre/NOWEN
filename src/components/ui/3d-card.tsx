@@ -16,6 +16,7 @@ export function Card3D({
   glowColor = 'rgba(102, 126, 234, 0.4)',
 }: Card3DProps) {
   const ref = useRef<HTMLDivElement>(null)
+  const rectRef = useRef<DOMRect | null>(null)
   const [isHovered, setIsHovered] = useState(false)
 
   const x = useMotionValue(0)
@@ -27,23 +28,23 @@ export function Card3D({
   const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], ['12deg', '-12deg'])
   const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], ['-12deg', '12deg'])
 
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!ref.current) return
+  const handleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
+    const rect = rectRef.current
+    if (!rect || rect.width === 0 || rect.height === 0) return
 
-    const rect = ref.current.getBoundingClientRect()
-    const width = rect.width
-    const height = rect.height
-    const mouseX = e.clientX - rect.left
-    const mouseY = e.clientY - rect.top
-    const xPct = mouseX / width - 0.5
-    const yPct = mouseY / height - 0.5
-
-    x.set(xPct)
-    y.set(yPct)
+    const mouseX = event.clientX - rect.left
+    const mouseY = event.clientY - rect.top
+    x.set(mouseX / rect.width - 0.5)
+    y.set(mouseY / rect.height - 0.5)
   }
 
-  const handleMouseEnter = () => setIsHovered(true)
+  const handleMouseEnter = () => {
+    rectRef.current = ref.current?.getBoundingClientRect() ?? null
+    setIsHovered(true)
+  }
+
   const handleMouseLeave = () => {
+    rectRef.current = null
     setIsHovered(false)
     x.set(0)
     y.set(0)
@@ -67,10 +68,9 @@ export function Card3D({
         className={cn(
           'relative rounded-2xl transition-shadow duration-500',
           isHovered && 'shadow-glow-md',
-          className
+          className,
         )}
       >
-        {/* Glow Border */}
         <motion.div
           className="absolute -inset-[1px] rounded-2xl opacity-0 transition-opacity duration-500"
           style={{
@@ -79,31 +79,23 @@ export function Card3D({
           animate={{ opacity: isHovered ? 1 : 0 }}
         />
 
-        {/* Border Beam Effect */}
         {isHovered && (
-          <div className="absolute inset-0 rounded-2xl overflow-hidden">
+          <div className="absolute inset-0 overflow-hidden rounded-2xl">
             <motion.div
-              className="absolute w-20 h-20 rounded-full"
+              className="absolute h-20 w-20 rounded-full"
               style={{
                 background: `radial-gradient(circle, ${glowColor} 0%, transparent 70%)`,
                 filter: 'blur(10px)',
               }}
-              animate={{
-                rotate: 360,
-              }}
-              transition={{
-                duration: 3,
-                repeat: Infinity,
-                ease: 'linear',
-              }}
+              animate={{ rotate: 360 }}
+              transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
             />
           </div>
         )}
 
-        {/* Card Content */}
         <div
           className="relative z-10 rounded-2xl backdrop-blur-xl"
-          style={{ 
+          style={{
             transform: 'translateZ(0)',
             background: 'var(--color-glass)',
             border: '1px solid var(--color-glass-border)',
@@ -113,9 +105,8 @@ export function Card3D({
           {children}
         </div>
 
-        {/* Inner Highlight */}
         <motion.div
-          className="absolute inset-0 rounded-2xl pointer-events-none"
+          className="pointer-events-none absolute inset-0 rounded-2xl"
           style={{
             background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, transparent 50%)',
             transform: 'translateZ(20px)',
@@ -126,7 +117,6 @@ export function Card3D({
   )
 }
 
-// Card子组件 - 带视差效果
 interface CardItemProps {
   children: React.ReactNode
   className?: string

@@ -1,0 +1,204 @@
+/** @vitest-environment jsdom */
+
+import React from 'react';
+import { cleanup, fireEvent, render, waitFor } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { Bookmark, Category } from '../../../types/bookmark';
+import { AmbientBookmarkStage } from '../AmbientBookmarkStage';
+
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (_key: string, fallback?: string) => fallback || _key,
+  }),
+}));
+
+vi.mock('framer-motion', () => ({
+  AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  motion: new Proxy({}, {
+    get: (_target, tag: string) => ({
+      children,
+      ...props
+    }: React.HTMLAttributes<HTMLElement> & Record<string, unknown>) => {
+      const domProps = { ...props };
+      delete domProps.initial;
+      delete domProps.animate;
+      delete domProps.exit;
+      delete domProps.transition;
+      delete domProps.layout;
+      return React.createElement(tag, domProps, children);
+    },
+  }),
+}));
+
+vi.mock('../../ui/spotlight-card', () => ({
+  SpotlightCard: ({ children, onClick, onContextMenu, className, ariaLabel }: {
+    children: React.ReactNode;
+    onClick?: () => void;
+    onContextMenu?: React.MouseEventHandler<HTMLDivElement>;
+    className?: string;
+    ariaLabel?: string;
+  }) => (
+    <div
+      role={onClick ? 'link' : undefined}
+      aria-label={ariaLabel}
+      className={className}
+      onClick={onClick}
+      onContextMenu={onContextMenu}
+    >
+      {children}
+    </div>
+  ),
+}));
+
+vi.mock('../../IconRenderer', () => ({
+  IconRenderer: () => <span aria-hidden="true" />,
+}));
+
+vi.mock('../../../lib/api', () => ({
+  visitsApi: { track: vi.fn().mockResolvedValue(undefined) },
+}));
+
+vi.mock('../../../hooks/useNetworkEnv', () => ({
+  getBookmarkUrl: (bookmark: Bookmark) => bookmark.url,
+}));
+
+const categories: Category[] = [
+  { id: 'dev', name: '开发', icon: 'Code', color: '#667eea', orderIndex: 0 },
+  { id: 'productivity', name: '效率', icon: 'Zap', color: '#f093fb', orderIndex: 1 },
+];
+
+const bookmarks: Bookmark[] = [
+  {
+    id: 'linux',
+    url: 'https://linux.do',
+    title: 'linux.do',
+    category: 'dev',
+    orderIndex: 0,
+    createdAt: 1,
+    updatedAt: 1,
+    isPinned: true,
+  },
+  {
+    id: 'note',
+    url: 'https://note.example.com',
+    title: '异文笔记',
+    category: 'productivity',
+    orderIndex: 1,
+    createdAt: 1,
+    updatedAt: 1,
+    isReadLater: true,
+    isRead: false,
+  },
+  {
+    id: 'bookmark',
+    url: 'https://bookmark.example.com',
+    title: '异文书签',
+    category: 'productivity',
+    orderIndex: 2,
+    createdAt: 1,
+    updatedAt: 1,
+  },
+];
+
+const baseProps = {
+  bookmarks,
+  categories,
+  cardViewMode: 'standard' as const,
+  isInternal: false,
+  onSelectCollection: vi.fn(),
+  onContextMenu: vi.fn(),
+  onTagSelect: vi.fn(),
+};
+
+beforeEach(() => {
+  window.history.replaceState({}, '', '/');
+});
+
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+});
+
+describe('AmbientBookmarkStage', () => {
+  it('renders all sparse bookmarks and deliberate fallback initials', () => {
+    const { getByRole, getByText } = render(
+      <AmbientBookmarkStage {...baseProps} activeCollection="all" />,
+    );
+
+    expect(getByRole('heading', { name: 'linux.do' })).toBeTruthy();
+    expect(getByRole('heading', { name: '异文笔记' })).toBeTruthy();
+    expect(getByRole('heading', { name: '异文书签' })).toBeTruthy();
+    expect(getByText('L', { selector: '.ambient-bookmark-mark--initial' })).toBeTruthy();
+    expect(getByRole('link', { name: 'linux.do · linux.do' })).toBeTruthy();
+  });
+
+  it('filters the stage by category', () => {
+    const { getByRole, queryByRole } = render(
+      <AmbientBookmarkStage {...baseProps} activeCollection="dev" />,
+    );
+
+    expect(getByRole('heading', { name: 'linux.do' })).toBeTruthy();
+    expect(queryByRole('heading', { name: '异文笔记' })).toBeNull();
+    expect(queryByRole('heading', { name: '异文书签' })).toBeNull();
+  });
+
+  it('supports pinned and read-later collections', () => {
+    const { getByRole, queryByRole, rerender } = render(
+      <AmbientBookmarkStage {...baseProps} activeCollection="pinned" />,
+    );
+
+    expect(getByRole('heading', { name: 'linux.do' })).toBeTruthy();
+    expect(queryByRole('heading', { name: '异文笔记' })).toBeNull();
+
+    rerender(<AmbientBookmarkStage {...baseProps} activeCollection="read-later" />);
+    expect(getByRole('heading', { name: '异文笔记' })).toBeTruthy();
+    expect(queryByRole('heading', { name: 'linux.do' })).toBeNull();
+  });
+
+  it('reports collection chip selection and writes a shareable URL', () => {
+    const onSelectCollection = vi.fn();
+    const { getByRole } = render(
+      <AmbientBookmarkStage
+        {...baseProps}
+        activeCollection="all"
+        onSelectCollection={onSelectCollection}
+      />,
+    );
+
+    fireEvent.click(getByRole('tab', { name: /效率.*2/ }));
+    expect(onSelectCollection).toHaveBeenCalledWith('productivity');
+    expect(window.location.search).toBe('?collection=productivity');
+  });
+
+  it('restores a valid collection from the URL', async () => {
+    window.history.replaceState({}, '', '/?collection=productivity');
+    const onSelectCollection = vi.fn();
+
+    render(
+      <AmbientBookmarkStage
+        {...baseProps}
+        activeCollection="all"
+        onSelectCollection={onSelectCollection}
+      />,
+    );
+
+    await waitFor(() => {
+      expect(onSelectCollection).toHaveBeenCalledWith('productivity');
+    });
+  });
+
+  it('supports arrow-key navigation across collection tabs', () => {
+    const onSelectCollection = vi.fn();
+    const { getByRole } = render(
+      <AmbientBookmarkStage
+        {...baseProps}
+        activeCollection="all"
+        onSelectCollection={onSelectCollection}
+      />,
+    );
+
+    fireEvent.keyDown(getByRole('tab', { name: /全部.*3/ }), { key: 'ArrowRight' });
+    expect(onSelectCollection).toHaveBeenCalledWith('pinned');
+    expect(window.location.search).toBe('?collection=pinned');
+  });
+});

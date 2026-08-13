@@ -1,0 +1,325 @@
+/*
+ * NOWEN Ambient Homepage V1
+ * A quiet, centered visual system for the personal start page.
+ * This file is intentionally scoped to pages containing .ambient-hero.
+ */
+
+[data-testid="aurora-background"]:has(.ambient-hero) {
+  --ambient-stage-bg: rgba(255, 255, 255, 0.34);
+  --ambient-stage-border: rgba(255, 255, 255, 0.66);
+  --ambient-stage-shadow: 0 30px 90px rgba(75, 91, 135, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  --ambient-card-bg: rgba(255, 255, 255, 0.78);
+  --ambient-card-border: rgba(255, 255, 255, 0.86);
+  --ambient-card-shadow: 0 12px 38px rgba(59, 72, 112, 0.08), 0 2px 8px rgba(59, 72, 112, 0.04);
+  --ambient-card-shadow-hover: 0 24px 60px rgba(59, 72, 112, 0.14), 0 6px 16px rgba(59, 72, 112, 0.08);
+  --ambient-control-bg: rgba(255, 255, 255, 0.58);
+  --ambient-control-border: rgba(255, 255, 255, 0.78);
+  --ambient-muted-line: rgba(89, 101, 135, 0.1);
+}
+
+.dark [data-testid="aurora-background"]:has(.ambient-hero) {
+  --ambient-stage-bg: rgba(14, 16, 24, 0.42);
+  --ambient-stage-border: rgba(255, 255, 255, 0.08);
+  --ambient-stage-shadow: 0 34px 100px rgba(0, 0, 0, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  --ambient-card-bg: rgba(23, 25, 36, 0.68);
+  --ambient-card-border: rgba(255, 255, 255, 0.08);
+  --ambient-card-shadow: 0 18px 48px rgba(0, 0, 0, 0.22);
+  --ambient-card-shadow-hover: 0 28px 72px rgba(0, 0, 0, 0.34), 0 0 0 1px rgba(129, 140, 248, 0.12);
+  --ambient-control-bg: rgba(18, 20, 30, 0.56);
+  --ambient-control-border: rgba(255, 255, 255, 0.08);
+  --ambient-muted-line: rgba(255, 255, 255, 0.07);
+}
+
+/* One centered coordinate system for hero, collections and dock. */
+[data-testid="aurora-background"]:has(.ambient-hero)
+  [class~="max-w-6xl"][class~="mx-auto"] {
+  width: min(100%, 1400px);
+  max-width: 1400px !important;
+}
+
+[data-testid="aurora-background"]:has(.ambient-hero)
+  [class~="min-h-screen"][class*="pb-32"] {
+  padding-bottom: 180px !important;
+}
+
+/* Hero ------------------------------------------------------------- */
+.ambient-hero {
+  width: min(100%, 880px);
+  margin-inline: auto;
+  padding-top: clamp(42px, 6vh, 72px) !important;
+  padding-bottom: clamp(30px, 4vh, 52px) !important;
+}
+
+.ambient-hero__time {
+  letter-spacing: -0.055em;
+  text-wrap: balance;
+}
+
+.ambient-hero__meta {
+  letter-spacing: 0.08em !important;
+}
+
+.ambient-hero__quote {
+  width: min(100%, 720px);
+  min-height: 52px;
+  margin-inline: auto;
+  line-height: 1.85;
+  text-wrap: balance;
+}
+
+.ambient-hero__search {
+  width: min(100%, 560px);
+  margin-inline: auto;
+}
+
+.ambient-hero [data-ambient-control="true"] {
+  background: var(--ambient-control-bg) !important;
+  border-color: var(--ambient-control-border) !important;
+  box-shadow: 0 12px 36px rgba(64, 76, 112, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.5) !important;
+  backdrop-filter: blur(28px) saturate(145%);
+  -webkit-backdrop-filter: blur(28px) saturate(145%);
+}
+
+/* Remove decorative category typography that competes with content. */
+[data-testid="aurora-background"]:has(.ambient-hero)
+  section[data-category-id]
+  > div[class*="text-[120px]"] {
+  display: none !important;
+}
+
+/* Collections become deliberate translucent stages. */
+[data-testid="aurora-background"]:has(.ambient-hero)
+  section[data-category-id],
+[data-testid="aurora-background"]:has(.ambient-hero)
+  section[data-section="pinned"] {
+  width: min(100%, 1240px);
+  margin: 0 auto 24px !important;
+  padding: clamp(20px, 2.1vw, 32px);
+  border: 1px solid var(--ambient-stage-border);
+  border-radius: 32px;
+  background: var(--ambient-stage-bg);
+  box-shadow: var(--ambient-stage-shadow);
+  backdrop-filter: blur(32px) saturate(135%);
+  -webkit-backdrop-filter: blur(32px) saturate(135%);
+}
+
+[data-testid="aurora-background"]:has(.ambient-hero)
+  section[data-category-id]
+  > div[class*="items-center"][class*="mb-6"] {
+  margin-bottom: 22px !important;
+}
+
+[data-testid="aurora-background"]:has(.ambient-hero)
+  section[data-category-id]
+  h2 {
+  letter-spacing: -0.02em !important;
+  font-weight: 600 !important;
+}
+
+/* View modes are three genuinely different visual models. */
+[data-testid="aurora-background"]:has(.ambient-hero)
+  section[data-category-id]
+  div[class~="grid"][class*="xl:grid-cols-6"] {
+  grid-template-columns: repeat(auto-fit, minmax(108px, 128px)) !important;
+  justify-content: center;
+  gap: 14px !important;
+}
+
+[data-testid="aurora-background"]:has(.ambient-hero)
+  section[data-category-id]
+  div[class~="grid"][class*="lg:grid-cols-4"] {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 260px)) !important;
+  justify-content: center;
+  gap: 18px !important;
+}
+
+[data-testid="aurora-background"]:has(.ambient-hero)
+  section[data-category-id]
+  div[class~="grid"][class*="lg:grid-cols-3"] {
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)) !important;
+  justify-content: center;
+  gap: 22px !important;
+}
+
+/* Card material. */
+[data-testid="aurora-background"]:has(.ambient-hero)
+  section[data-category-id]
+  [data-spotlight-card="true"] {
+  background: var(--ambient-card-bg) !important;
+  border-color: var(--ambient-card-border) !important;
+  box-shadow: var(--ambient-card-shadow) !important;
+  backdrop-filter: blur(18px) saturate(120%) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(120%) !important;
+}
+
+[data-testid="aurora-background"]:has(.ambient-hero)
+  section[data-category-id]
+  [data-spotlight-card="true"]:hover {
+  box-shadow: var(--ambient-card-shadow-hover) !important;
+}
+
+/* Compact = app launcher, not a shrunken information card. */
+[data-testid="aurora-background"]:has(.ambient-hero)
+  div[class~="grid"][class*="xl:grid-cols-6"]
+  [data-spotlight-card="true"] {
+  min-height: 104px;
+  padding: 16px 12px !important;
+  border-radius: 22px !important;
+}
+
+[data-testid="aurora-background"]:has(.ambient-hero)
+  div[class~="grid"][class*="xl:grid-cols-6"]
+  [data-spotlight-card="true"]
+  > div:last-child
+  > div {
+  flex-direction: column !important;
+  justify-content: center;
+  text-align: center;
+  gap: 0 !important;
+}
+
+[data-testid="aurora-background"]:has(.ambient-hero)
+  div[class~="grid"][class*="xl:grid-cols-6"]
+  [data-spotlight-card="true"] p {
+  display: none !important;
+}
+
+[data-testid="aurora-background"]:has(.ambient-hero)
+  div[class~="grid"][class*="xl:grid-cols-6"]
+  [data-spotlight-card="true"]
+  div[class*="w-8"][class*="h-8"][class*="rounded-xl"] {
+  width: 44px !important;
+  height: 44px !important;
+  margin: 0 0 10px !important;
+  border-radius: 14px !important;
+}
+
+/* Standard = concise information card. */
+[data-testid="aurora-background"]:has(.ambient-hero)
+  div[class~="grid"][class*="lg:grid-cols-4"]
+  [data-spotlight-card="true"] {
+  min-height: 148px;
+  border-radius: 24px !important;
+}
+
+[data-testid="aurora-background"]:has(.ambient-hero)
+  div[class~="grid"][class*="lg:grid-cols-4"]
+  [data-spotlight-card="true"] p {
+  -webkit-line-clamp: 1 !important;
+}
+
+/* Comfortable = editorial card with a soft visual header. */
+[data-testid="aurora-background"]:has(.ambient-hero)
+  div[class~="grid"][class*="lg:grid-cols-3"]
+  [data-spotlight-card="true"] {
+  min-height: 210px;
+  padding-top: 88px !important;
+  border-radius: 28px !important;
+}
+
+[data-testid="aurora-background"]:has(.ambient-hero)
+  div[class~="grid"][class*="lg:grid-cols-3"]
+  [data-spotlight-card="true"]::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 72px;
+  background:
+    radial-gradient(circle at 16% 28%, var(--spotlight-color, rgba(99, 102, 241, 0.28)), transparent 48%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.24), rgba(129, 140, 248, 0.07));
+  border-bottom: 1px solid var(--ambient-muted-line);
+  pointer-events: none;
+}
+
+.dark [data-testid="aurora-background"]:has(.ambient-hero)
+  div[class~="grid"][class*="lg:grid-cols-3"]
+  [data-spotlight-card="true"]::before {
+  background:
+    radial-gradient(circle at 16% 28%, var(--spotlight-color, rgba(99, 102, 241, 0.2)), transparent 52%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.04), rgba(129, 140, 248, 0.03));
+}
+
+/* A designed fallback remains visible behind failed favicon images. */
+[data-testid="aurora-background"]:has(.ambient-hero)
+  section[data-category-id]
+  [data-bookmark-icon-shell="true"]::before {
+  content: attr(data-fallback-label);
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  color: var(--color-primary);
+  background: linear-gradient(145deg, rgba(129, 140, 248, 0.16), rgba(34, 211, 238, 0.08));
+}
+
+[data-testid="aurora-background"]:has(.ambient-hero)
+  section[data-category-id]
+  [data-bookmark-icon-shell="true"] > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Tags become quiet metadata; the selected filter keeps the accent. */
+[data-testid="aurora-background"]:has(.ambient-hero)
+  section[data-category-id]
+  div[class*="flex-wrap"][class*="gap-1"] > button {
+  background: rgba(95, 104, 128, 0.07) !important;
+  border-color: rgba(95, 104, 128, 0.1) !important;
+  color: var(--color-text-muted) !important;
+}
+
+.dark [data-testid="aurora-background"]:has(.ambient-hero)
+  section[data-category-id]
+  div[class*="flex-wrap"][class*="gap-1"] > button {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-color: rgba(255, 255, 255, 0.07) !important;
+}
+
+/* Active filter gets the same material as the content stage. */
+[data-testid="aurora-background"]:has(.ambient-hero)
+  .ambient-active-filter {
+  width: min(100%, 820px);
+  margin-inline: auto;
+  background: var(--ambient-stage-bg) !important;
+  border-color: var(--ambient-stage-border) !important;
+  box-shadow: var(--ambient-stage-shadow);
+}
+
+@media (max-width: 767px) {
+  .ambient-hero {
+    width: 100%;
+    padding-top: 34px !important;
+    padding-bottom: 28px !important;
+  }
+
+  .ambient-hero__quote {
+    width: min(100%, 540px);
+    min-height: 44px;
+    font-size: 14px !important;
+  }
+
+  [data-testid="aurora-background"]:has(.ambient-hero)
+    section[data-category-id],
+  [data-testid="aurora-background"]:has(.ambient-hero)
+    section[data-section="pinned"] {
+    padding: 18px;
+    border-radius: 26px;
+  }
+
+  [data-testid="aurora-background"]:has(.ambient-hero)
+    section[data-category-id]
+    div[class~="grid"][class*="lg:grid-cols-3"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-testid="aurora-background"]:has(.ambient-hero) *,
+  [data-testid="aurora-background"]:has(.ambient-hero) *::before,
+  [data-testid="aurora-background"]:has(.ambient-hero) *::after {
+    scroll-behavior: auto !important;
+  }
+}

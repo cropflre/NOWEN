@@ -1,0 +1,427 @@
+.ambient-bookmark-stage {
+  --stage-surface: color-mix(in srgb, var(--color-glass) 78%, transparent);
+  --stage-border: color-mix(in srgb, var(--color-glass-border) 80%, rgba(255, 255, 255, 0.22));
+  position: relative;
+  width: min(100%, 1080px);
+  margin: 0 auto 3rem;
+  padding: clamp(1rem, 2.4vw, 1.8rem);
+  border: 1px solid var(--stage-border);
+  border-radius: clamp(1.5rem, 2vw, 2rem);
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.08), transparent 42%),
+    var(--stage-surface);
+  box-shadow:
+    0 34px 90px rgba(55, 66, 104, 0.09),
+    inset 0 1px 0 rgba(255, 255, 255, 0.42);
+  backdrop-filter: blur(34px) saturate(145%);
+  -webkit-backdrop-filter: blur(34px) saturate(145%);
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.ambient-bookmark-stage::before {
+  content: '';
+  position: absolute;
+  width: 380px;
+  height: 240px;
+  top: -150px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(129, 140, 248, 0.13), transparent 70%);
+  filter: blur(18px);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.dark .ambient-bookmark-stage {
+  --stage-surface: rgba(16, 18, 28, 0.48);
+  --stage-border: rgba(255, 255, 255, 0.085);
+  box-shadow:
+    0 34px 100px rgba(0, 0, 0, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.055);
+}
+
+.ambient-bookmark-stage__toolbar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.9rem;
+  margin-bottom: 1.35rem;
+}
+
+.ambient-bookmark-stage__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--color-text-muted);
+  font-size: 0.72rem;
+  font-weight: 620;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.ambient-bookmark-stage__collections {
+  display: flex;
+  max-width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding: 0.2rem 0.25rem 0.35rem;
+  scrollbar-width: none;
+}
+
+.ambient-bookmark-stage__collections::-webkit-scrollbar {
+  display: none;
+}
+
+.ambient-bookmark-stage__collections button {
+  --collection-accent: var(--color-primary);
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 36px;
+  padding: 0.48rem 0.72rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-bg-tertiary) 52%, transparent);
+  color: var(--color-text-secondary);
+  font-size: 0.78rem;
+  font-weight: 520;
+  transition:
+    transform 180ms ease,
+    background 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.ambient-bookmark-stage__collections button:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--collection-accent) 22%, var(--color-glass-border));
+  background: color-mix(in srgb, var(--collection-accent) 8%, var(--color-bg-tertiary));
+}
+
+.ambient-bookmark-stage__collections button.is-active {
+  border-color: color-mix(in srgb, var(--collection-accent) 32%, transparent);
+  background: color-mix(in srgb, var(--collection-accent) 12%, var(--color-glass));
+  color: var(--color-text-primary);
+  box-shadow:
+    0 8px 24px color-mix(in srgb, var(--collection-accent) 12%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.ambient-bookmark-stage__collections small {
+  display: grid;
+  min-width: 1.15rem;
+  height: 1.15rem;
+  place-items: center;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-text-primary) 7%, transparent);
+  color: var(--color-text-muted);
+  font-size: 0.62rem;
+  line-height: 1;
+}
+
+.ambient-bookmark-stage__grid {
+  display: grid;
+  justify-content: center;
+  align-items: stretch;
+}
+
+.ambient-bookmark-stage__grid--compact {
+  grid-template-columns: repeat(auto-fit, minmax(116px, 148px));
+  gap: 0.78rem;
+}
+
+.ambient-bookmark-stage__grid--standard {
+  grid-template-columns: repeat(auto-fit, minmax(210px, 250px));
+  gap: 0.9rem;
+}
+
+.ambient-bookmark-stage__grid--comfortable {
+  grid-template-columns: repeat(auto-fit, minmax(260px, 310px));
+  gap: 1rem;
+}
+
+.ambient-bookmark-card {
+  min-width: 0;
+}
+
+.ambient-bookmark-card--compact {
+  min-height: 132px;
+}
+
+.ambient-bookmark-card--standard {
+  min-height: 154px;
+}
+
+.ambient-bookmark-card--comfortable {
+  min-height: 286px;
+}
+
+.ambient-bookmark-card__surface {
+  background: var(--ambient-card-bg, var(--color-glass)) !important;
+  border-color: var(--ambient-card-border, var(--color-glass-border)) !important;
+  box-shadow: var(--ambient-card-shadow, var(--color-shadow)) !important;
+}
+
+.ambient-bookmark-card__surface:hover {
+  box-shadow: var(--ambient-card-shadow-hover, var(--color-shadow-hover)) !important;
+}
+
+.ambient-bookmark-card__private {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 4;
+  display: grid;
+  width: 1.55rem;
+  height: 1.55rem;
+  place-items: center;
+  border: 1px solid rgba(245, 158, 11, 0.2);
+  border-radius: 999px;
+  background: rgba(245, 158, 11, 0.11);
+  color: rgb(217, 119, 6);
+}
+
+.ambient-bookmark-card__body {
+  display: flex;
+  height: 100%;
+  min-width: 0;
+}
+
+.ambient-bookmark-card--compact .ambient-bookmark-card__body {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem;
+  text-align: center;
+}
+
+.ambient-bookmark-card--standard .ambient-bookmark-card__body {
+  align-items: flex-start;
+  gap: 0.85rem;
+}
+
+.ambient-bookmark-card--comfortable .ambient-bookmark-card__body {
+  align-items: flex-start;
+  gap: 0.85rem;
+  padding-top: 0.9rem;
+}
+
+.ambient-bookmark-mark {
+  position: relative;
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  border-radius: 1rem;
+  color: white;
+  box-shadow:
+    0 8px 20px rgba(72, 80, 128, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
+.ambient-bookmark-mark--image {
+  background: color-mix(in srgb, var(--color-bg-tertiary) 76%, transparent);
+  color: var(--color-primary);
+}
+
+.ambient-bookmark-mark--initial {
+  font-size: 1rem;
+  font-weight: 720;
+  letter-spacing: -0.04em;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.16);
+}
+
+.ambient-bookmark-card__copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.ambient-bookmark-card__copy h3 {
+  overflow: hidden;
+  color: var(--color-text-primary);
+  font-size: 0.9rem;
+  font-weight: 630;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ambient-bookmark-card__copy p {
+  display: -webkit-box;
+  overflow: hidden;
+  margin-top: 0.32rem;
+  color: var(--color-text-muted);
+  font-size: 0.74rem;
+  line-height: 1.55;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.ambient-bookmark-card--standard .ambient-bookmark-card__copy p {
+  -webkit-line-clamp: 2;
+}
+
+.ambient-bookmark-card--comfortable .ambient-bookmark-card__copy h3 {
+  font-size: 0.98rem;
+}
+
+.ambient-bookmark-card__domain {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  margin-top: 0.22rem;
+  color: var(--color-text-muted);
+  font-size: 0.65rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ambient-bookmark-card__tags {
+  position: absolute;
+  right: 1rem;
+  bottom: 0.9rem;
+  left: 1rem;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.38rem;
+}
+
+.ambient-bookmark-card__tags button,
+.ambient-bookmark-card__tags span {
+  max-width: 8rem;
+  overflow: hidden;
+  border: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-primary) 7%, transparent);
+  color: var(--color-text-muted);
+  font-size: 0.62rem;
+  font-weight: 560;
+  line-height: 1;
+  padding: 0.34rem 0.5rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ambient-bookmark-card__tags button:hover {
+  background: color-mix(in srgb, var(--color-primary) 13%, transparent);
+  color: var(--color-primary);
+}
+
+.ambient-bookmark-card__visual {
+  position: relative;
+  height: 126px;
+  margin: -1.5rem -1.5rem 0;
+  overflow: hidden;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  background-position: center;
+  background-size: cover;
+}
+
+.ambient-bookmark-card__visual::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent 34%),
+    linear-gradient(0deg, rgba(10, 12, 20, 0.42), transparent 58%);
+}
+
+.ambient-bookmark-card__visual-letter {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 1;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 3.5rem;
+  font-weight: 760;
+  letter-spacing: -0.08em;
+  transform: translate(-50%, -52%);
+  text-shadow: 0 14px 42px rgba(0, 0, 0, 0.2);
+}
+
+.ambient-bookmark-card__visual-domain {
+  position: absolute;
+  right: 0.85rem;
+  bottom: 0.65rem;
+  z-index: 2;
+  max-width: calc(100% - 1.7rem);
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.65rem;
+  font-weight: 560;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ambient-bookmark-stage__empty {
+  display: flex;
+  min-height: 160px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+}
+
+.ambient-bookmark-stage__empty button {
+  border: 1px solid color-mix(in srgb, var(--color-primary) 24%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-primary) 9%, transparent);
+  color: var(--color-primary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.5rem 0.85rem;
+}
+
+@media (max-width: 639px) {
+  .ambient-bookmark-stage {
+    width: 100%;
+    margin-bottom: 2rem;
+    padding: 0.9rem;
+    border-radius: 1.35rem;
+  }
+
+  .ambient-bookmark-stage__toolbar {
+    align-items: stretch;
+  }
+
+  .ambient-bookmark-stage__eyebrow {
+    justify-content: center;
+  }
+
+  .ambient-bookmark-stage__collections {
+    justify-content: flex-start;
+  }
+
+  .ambient-bookmark-stage__grid--compact {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ambient-bookmark-stage__grid--standard,
+  .ambient-bookmark-stage__grid--comfortable {
+    grid-template-columns: 1fr;
+  }
+
+  .ambient-bookmark-card--comfortable {
+    min-height: 270px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ambient-bookmark-stage *,
+  .ambient-bookmark-stage *::before,
+  .ambient-bookmark-stage *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
